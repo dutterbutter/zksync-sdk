@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/@zksync-interop/core"
+    },
+    {
+      "path": "packages/@zksync-interop/viem"
+    },
+    {
+      "path": "packages/@zksync-interop/ethers"
+    },
+    {
+      "path": "packages/@zksync-interop/sdk"
+    }
+  ]
+}

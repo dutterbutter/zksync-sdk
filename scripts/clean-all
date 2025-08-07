@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+bun run -C packages/@zksync-interop/core clean || true
+bun run -C packages/@zksync-interop/viem clean || true
+bun run -C packages/@zksync-interop/ethers clean || true
+bun run -C packages/@zksync-interop/sdk clean || true

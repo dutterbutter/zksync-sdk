@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+bun run -C packages/@zksync-interop/core build
+bun run -C packages/@zksync-interop/viem build
+bun run -C packages/@zksync-interop/ethers build
+bun run -C packages/@zksync-interop/sdk build

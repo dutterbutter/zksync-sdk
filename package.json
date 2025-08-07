@@ -1,0 +1,32 @@
+{
+  "name": "zksync-sdk-monorepo",
+  "private": true,
+  "packageManager": "bun@^1.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "bootstrap": "bun install",
+    "build": "bun run -A scripts/build-all",
+    "clean": "bun run -A scripts/clean-all",
+    "typecheck": "tsc -b tsconfig.build.json",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier . --write",
+    "test": "bun test",
+    "docs": "typedoc",
+    "prepublishOnly": "bun run build && bun run typecheck"
+  },
+  "devDependencies": {
+    "ethers": "^6.15.0",
+    "@eslint/js": "^9.7.0",
+    "@types/bun": "latest",
+    "bun-types": "^1.2.19",
+    "eslint": "^9.7.0",
+    "prettier": "^3.3.3",
+    "tsup": "^8.0.1",
+    "typedoc": "^0.26.0",
+    "typedoc-plugin-markdown": "^4.2.3",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.1"
+  }
+}

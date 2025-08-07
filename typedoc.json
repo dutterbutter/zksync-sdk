@@ -1,0 +1,14 @@
+{
+  "entryPoints": [
+    "packages/@zksync-interop/core/src/index.ts",
+    "packages/@zksync-interop/viem/src/index.ts",
+    "packages/@zksync-interop/ethers/src/index.ts",
+    "packages/@zksync-interop/sdk/src/index.ts"
+  ],
+  "out": "docs",
+  "excludePrivate": true,
+  "excludeExternals": false,
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ]
+}

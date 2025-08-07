@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@zksync-sdk/core": ["packages/core/src", "packages/core/dist/index.d.ts"]
+    },
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "types": [
+      "node", "bun-types"
+    ],
+    // Bundler mode
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true
+  },
+  "files": [],
+  "references": [
+    { "path": "packages/core/src/**/*" },
+    { "path": "packages/ethers" }
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "examples/*"
+  ]
+}

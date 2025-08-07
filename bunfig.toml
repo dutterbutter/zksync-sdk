@@ -1,0 +1,5 @@
+[install]
+autoInstallPeers = true
+
+[test]
+# Customize test behavior if needed

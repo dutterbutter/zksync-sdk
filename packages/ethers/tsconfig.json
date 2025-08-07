@@ -1,0 +1,36 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "sourceMap": true,
+    "inlineSources": false,
+
+    "strict": true,
+    "noEmitOnError": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+
+    "verbatimModuleSyntax": true,
+    // Disable TS extension imports inherited from the base config
+    "allowImportingTsExtensions": false,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+
+    "types": ["node", "bun-types"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules"],
+
+  "references": [
+    { "path": "../core" }
+  ]
+}
