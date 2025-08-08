@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "bootstrap": "bun install",
-    "build": "bun run -A scripts/build-all",
+    "build": "bun run scripts/build-all",
     "clean": "bun run -A scripts/clean-all",
     "typecheck": "tsc -b tsconfig.build.json",
     "lint": "eslint . --ext .ts,.tsx",
