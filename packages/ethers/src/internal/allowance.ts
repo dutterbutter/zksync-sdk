@@ -1,47 +1,28 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-import { Contract } from 'ethers';
+// packages/ethers/src/internal/allowance.ts
 import type { Signer } from 'ethers';
+import { Contract } from 'ethers';
 import { ERC20Abi } from '@zksync-sdk/core/abis/ERC20';
+import type { Hex } from '@zksync-sdk/core';
 
-export interface PermitEIP2612 {
-  /** UNIX-seconds deadline (0 => unlimited) */
-  deadline: number;
-  /** v,r,s produced by the wallet */
-  v: number;
-  r: `0x${string}`;
-  s: `0x${string}`;
+interface ERC20Like {
+  allowance(owner: string, spender: string): Promise<bigint>;
+  approve(spender: string, amount: bigint): Promise<{ wait(): Promise<unknown> }>;
 }
 
-type Hex = `0x${string}`;
-
-/**
- * Makes sure `signer` has at least `amount` allowance towards `ntvAddr`.
- * – If a Permit struct is supplied, tries it first.
- * – Otherwise calls `approve` for <2 × amount> (so the next transfer is free).
- *
- * Throws **plain** `Error` — the high-level action converts it to `InteropError`.
- */
 export async function ensureAllowance(
   signer: Signer,
   token: Hex,
   ntvAddr: Hex,
   amount: bigint,
 ): Promise<void> {
-  const erc20 = new Contract(token, ERC20Abi, signer);
+  const owner = await signer.getAddress();
 
-  /* ------------------------------------------------------------------ fast-path */
-  const owner = await signer.getAddress(); // obtain address from signer
-  const current = (await erc20.allowance(owner, ntvAddr)) as bigint; // cast to bigint
+  const erc20 = new Contract(token, ERC20Abi, signer) as unknown as ERC20Like;
+
+  const current = await erc20.allowance(owner, ntvAddr);
   if (current >= amount) return;
 
-  // TODO: consider adding permit support
-
-  /* ------------------------------------------------------------------ approve */
-  const newAllowance = amount * 2n;
-  // TODO: resolve this eslint
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const tx = await erc20.approve(ntvAddr, newAllowance);
+  // (permit to be added later)
+  const tx = await erc20.approve(ntvAddr, amount * 2n);
   await tx.wait();
 }

@@ -3,10 +3,9 @@
 /* -------------------------------------------------------------------------- */
 
 import { parseRevertData, InteropError } from '@zksync-sdk/core';
+import type { Hex } from '@zksync-sdk/core';
 
-type Hex = `0x${string}`;
-
-/** Simple hex guard */
+// TODO - move to core?
 function isHexString(v: unknown): v is Hex {
   return typeof v === 'string' && v.startsWith('0x');
 }

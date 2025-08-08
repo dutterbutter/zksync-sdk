@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'bun:test';
 import { encodeEvmV1, encodeEvmV1ChainOnly, encodeEvmV1AddressOnly } from './7930';
-import { hexToBytes as _hexToBytes, bytesToHex as _bytesToHex } from '@noble/hashes/utils';
+import { hexToBytes, bytesToHex } from '../internal/hex';
 
-// helpers: compare as 0x-hex; and convert 0x-hex -> bytes for noble
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-const to0x = (u8: Uint8Array) => `0x${_bytesToHex(u8)}` as `0x${string}`;
-const from0x = (hex: string) => _hexToBytes(hex.startsWith('0x') ? hex.slice(2) : hex);
+const to0x = (u8: Uint8Array) => bytesToHex(u8);
+const from0x = (h: string) => hexToBytes(h as `0x${string}`);
 
 describe('encodeEvmV1ChainOnly', () => {
   it('encodes version, chainType, chainRefLen, chainRef, addrLen=0', () => {

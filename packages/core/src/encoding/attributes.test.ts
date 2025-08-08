@@ -1,25 +1,13 @@
-/// <reference types="bun-types" />
-
 import { describe, it, expect } from 'bun:test';
 import { ATTR } from './attributes';
 import { encodeEvmV1AddressOnly } from './7930';
 import { keccak_256 } from '@noble/hashes/sha3';
-import { hexToBytes, bytesToHex } from '@noble/hashes/utils';
+import { hexToBytes, bytesToHex } from '../internal/hex';
+import { u256Bytes } from '../internal';
 
 // helpers
-const from0x = (hex: string) => hexToBytes(hex.startsWith('0x') ? hex.slice(2) : hex);
+const from0x = (h: string) => hexToBytes(h as `0x${string}`);
 const to0x = (u8: Uint8Array) => `0x${bytesToHex(u8)}`;
-
-function u256(n: bigint): Uint8Array {
-  if (n < 0n) throw new Error('uint256 underflow');
-  let hex = n.toString(16);
-  if (hex.length % 2) hex = '0' + hex;
-  const src = from0x(hex);
-  if (src.length > 32) throw new Error('uint256 overflow');
-  const out = new Uint8Array(32);
-  out.set(src, 32 - src.length);
-  return out;
-}
 
 function selector(sig: string): Uint8Array {
   return keccak_256(new TextEncoder().encode(sig)).slice(0, 4);
@@ -36,7 +24,7 @@ describe('ATTR.interopCallValue(uint256)', () => {
 
     // one 32-byte head argument: uint256(123)
     expect(bytes.length).toBe(4 + 32);
-    expect(to0x(bytes.slice(4))).toBe(to0x(u256(123n)));
+    expect(to0x(bytes.slice(4))).toBe(to0x(u256Bytes(123n)));
   });
 });
 
@@ -49,7 +37,7 @@ describe('ATTR.indirectCall(uint256)', () => {
     expect(to0x(bytes.slice(0, 4))).toBe(to0x(sel));
 
     expect(bytes.length).toBe(4 + 32);
-    expect(to0x(bytes.slice(4))).toBe(to0x(u256(5n)));
+    expect(to0x(bytes.slice(4))).toBe(to0x(u256Bytes(5n)));
   });
 });
 
@@ -68,11 +56,11 @@ describe('ATTR.executionAddress(bytes)', () => {
 
     // Head (single arg): offset to tail = 0x20
     const head = bytes.slice(4, 4 + 32);
-    expect(to0x(head)).toBe(to0x(u256(32n)));
+    expect(to0x(head)).toBe(to0x(u256Bytes(32n)));
 
     // Tail: [len][data][padding]
     const lenU256 = bytes.slice(4 + 32, 4 + 64);
-    const len = BigInt('0x' + bytesToHex(lenU256));
+    const len = BigInt(bytesToHex(lenU256));
     expect(len).toBe(BigInt(evmBytes.length));
 
     const tailDataStart = 4 + 64;
@@ -101,11 +89,11 @@ describe('ATTR.unbundlerAddress(bytes)', () => {
     expect(to0x(bytes.slice(0, 4))).toBe(to0x(sel));
 
     // offset = 0x20
-    expect(to0x(bytes.slice(4, 36))).toBe(to0x(u256(32n)));
+    expect(to0x(bytes.slice(4, 36))).toBe(to0x(u256Bytes(32n)));
 
     // length
     const lenU256 = bytes.slice(36, 68);
-    const len = BigInt('0x' + bytesToHex(lenU256));
+    const len = BigInt(bytesToHex(lenU256));
     expect(len).toBe(BigInt(evmBytes.length));
 
     // data

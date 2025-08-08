@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { parseSendIdFromLogs } from './utils';
+import { parseSendIdFromLogs } from './internal/logs';
 
 // topic0 for MessageSent(bytes32,bytes,bytes,bytes,uint256,bytes[])
 const TOPIC0 = '0x6a2465c86a65f8b496f2e1f4c9b9a1e5b5f9d9a3c9f4a6e4a2e62d7c9b7f1f5a'; // placeholder

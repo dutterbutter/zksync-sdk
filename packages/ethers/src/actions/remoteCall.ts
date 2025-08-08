@@ -1,4 +1,4 @@
-import type { RemoteCallInput, SentMessage, ChainRegistry } from '@zksync-sdk/core';
+import type { RemoteCallInput, SentMessage, ChainRegistry, Hex } from '@zksync-sdk/core';
 
 import {
   ATTR,
@@ -11,10 +11,11 @@ import {
 import type { Signer } from 'ethers';
 import { Center } from '../internal/abi';
 import { resolveChain } from '../internal/chain';
-import { indexFromReceipt } from '../internal/cache';
-import { fromEthersError } from '../internal/errors';
+import { fromEthersError as _fromEthersError } from '../internal/errors';
+import type { InteropError } from '@zksync-sdk/core';
 
-type Hex = `0x${string}`;
+// 👇 give the imported function an explicit, safe type for the linter
+const fromEthersError: (e: unknown, ctx?: string) => InteropError = _fromEthersError;
 
 /**
  * Low-friction helper that wraps a single `sendMessage` on the InteropCenter.
@@ -67,11 +68,6 @@ export async function remoteCall(
 
     /* ---------------- post-process ---------------- */
     const sendId = parseSendIdFromLogs(rc);
-    try {
-      indexFromReceipt(sendId, tx.hash as Hex, rc);
-    } catch {
-      // Ignore indexing errors
-    }
 
     if (!sendId && !input.allowMissingSendId) {
       throw new Error('SEND_FAILED: MessageSent sendId not found in receipt logs');

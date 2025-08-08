@@ -1,18 +1,8 @@
 // packages/core/src/encoding/7930.ts
-import { hexToBytes, bytesToHex, concatBytes } from '@noble/hashes/utils';
+import { hexToBytes, bytesToHex, concatBytes } from '../internal';
+import { beTrim } from '../internal';
 
-const from0x = (hex: string): Uint8Array => hexToBytes(hex.startsWith('0x') ? hex.slice(2) : hex);
-
-function beTrim(n: bigint): Uint8Array {
-  if (n < 0n) throw new Error('negative bigint not supported');
-  // big-endian, no leading zeros
-  let hex = n.toString(16);
-  if (hex.length % 2) hex = '0' + hex;
-  const bytes = hexToBytes(hex);
-  let i = 0;
-  while (i < bytes.length && bytes[i] === 0) i++;
-  return bytes.slice(i);
-}
+const from0x = (hex: string) => hexToBytes(hex as `0x${string}`);
 
 export function encodeEvmV1(chainRef?: bigint, addr?: `0x${string}`): `0x${string}` {
   const version = new Uint8Array([0x00, 0x01]);
@@ -27,7 +17,7 @@ export function encodeEvmV1(chainRef?: bigint, addr?: `0x${string}`): `0x${strin
   const addrLen = new Uint8Array([addrBytes.length]);
 
   const out = concatBytes(version, chainType, chainRefLen, chainRefBytes, addrLen, addrBytes);
-  return `0x${bytesToHex(out)}`;
+  return bytesToHex(out);
 }
 
 export function encodeEvmV1ChainOnly(chainId: number | bigint): `0x${string}` {

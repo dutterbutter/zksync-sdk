@@ -7,7 +7,7 @@ import { Chains } from '@zksync-sdk/core';
 /*  Minimal demo set-up                                                        */
 /* -------------------------------------------------------------------------- */
 const signer = new Wallet(
-  process.env.PRIVATE_KEY!, // <– put key in env
+  process.env.PRIVATE_KEY!,
   new JsonRpcProvider('https://mainnet.era.zksync.io'),
 );
 

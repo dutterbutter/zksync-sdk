@@ -1,9 +1,8 @@
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
-import type { InteropErrorCode } from './types';
+// packages/core/src/errors.ts
 
-function strip0x(h: string): string {
-  return h.startsWith('0x') || h.startsWith('0X') ? h.slice(2) : h;
-}
+import type { InteropErrorCode } from './types';
+import type { Hex } from './internal/hex';
+import { readAsBigHex, hexToBytes } from './internal/hex';
 
 export type InteropErrorDetails = { cause?: unknown } & Record<string, unknown>;
 
@@ -27,16 +26,6 @@ export class InteropError extends Error {
   }
 }
 
-/* -------------------------------------------------------------------------------------------------
- * EVM revert decoding (pure)
- * - Decodes custom interop errors (selectors provided)
- * - Also handles Error(string) and Panic(uint256)
- * - No ethers/viem/provider coupling
- * ------------------------------------------------------------------------------------------------ */
-
-type Hex = `0x${string}`;
-
-// 4-byte selectors (from InteropErrors.sol)
 const SEL = {
   AttributeAlreadySet: '0x9031f751',
   AttributeViolatesRestriction: '0xbcb41ec7',
@@ -55,39 +44,41 @@ const SEL = {
   WrongCallStatusLength: '0x801534e9',
   WrongDestinationChainId: '0x4534e972',
 
-  // Standard:
-  ErrorString: '0x08c379a0', // Error(string)
-  Panic: '0x4e487b71', // Panic(uint256)
+  ErrorString: '0x08c379a0',
+  Panic: '0x4e487b71',
 } as const;
 
 type Arg = string | bigint;
 
-/** Minimal decoder for the types we need: bytes4, bytes32, bytes, uint256, address, string. */
 function decodeArgs(types: string[], data: Hex): Arg[] {
-  const u8 = hexToBytes(strip0x(data));
+  // selector (4 bytes) + body
+  const u8 = hexToBytes(data);
   if (u8.length < 4) return [];
 
-  const body = u8.slice(4);
+  const body = u8.subarray(4);
 
-  const readU256 = (start: number) => {
-    const v = body.slice(start, start + 32);
-    const hex = bytesToHex(v); // no .slice(2) !
-    return BigInt('0x' + hex);
+  const readU256 = (headOffset: number): bigint => {
+    const hex = readAsBigHex(body, headOffset, 32);
+    if (!hex) return 0n; // OOB → 0
+    return BigInt(hex); // hex is already 0x-prefixed
   };
 
-  const readAddress = (start: number) => {
-    const v = body.slice(start + 12, start + 32);
-    return ('0x' + bytesToHex(v)) as Hex; // 20 bytes, 0x-prefixed
+  const readAddress = (headOffset: number): Hex => {
+    // address is last 20 bytes of the 32B head word
+    return readAsBigHex(body, headOffset + 12, 20) ?? '0x';
   };
 
-  const readFixed = (start: number, size: number) =>
-    ('0x' + bytesToHex(body.slice(start, start + size))) as Hex;
+  const readFixed = (headOffset: number, size: number): Hex => {
+    return readAsBigHex(body, headOffset, size) ?? '0x';
+  };
 
-  const readDyn = (offset: number) => {
-    const off = Number(readU256(offset));
+  const readDyn = (headOffset: number): Hex => {
+    const off = Number(readU256(headOffset)); // byte offset into body
+    if (!Number.isFinite(off) || off < 0 || off + 32 > body.length) return '0x';
     const len = Number(readU256(off));
-    const v = body.slice(off + 32, off + 32 + len);
-    return ('0x' + bytesToHex(v)) as Hex; // 0x-prefixed
+    const dataHex =
+      readAsBigHex(body, off + 32, Math.max(0, Math.min(len, body.length - (off + 32)))) ?? '0x';
+    return dataHex;
   };
 
   const out: Arg[] = [];
@@ -110,8 +101,8 @@ function decodeArgs(types: string[], data: Hex): Arg[] {
         out.push(readDyn(head));
         break;
       case 'string': {
-        const hex = readDyn(head); // 0x-prefixed
-        const buf = hexToBytes(strip0x(hex));
+        const hex = readDyn(head);
+        const buf = hexToBytes(hex);
         out.push(new TextDecoder().decode(buf));
         break;
       }
@@ -126,25 +117,21 @@ type KnownDecoded =
   | { code: InteropErrorCode; name: string; args?: Record<string, Arg> }
   | undefined;
 
-/** Pure decoder: feed it a revert data hex, get a normalized shape or undefined. */
 export function parseRevertData(data: Hex): KnownDecoded {
   if (!data || data === '0x' || data.length < 10) return;
 
   const selector = data.slice(0, 10).toLowerCase();
 
-  // Error(string)
   if (selector === SEL.ErrorString) {
     const [message] = decodeArgs(['string'], data) as [string];
     return { code: 'EVM_ERROR', name: 'Error(string)', args: { message } };
   }
 
-  // Panic(uint256)
   if (selector === SEL.Panic) {
     const [panicCode] = decodeArgs(['uint256'], data) as [bigint];
     return { code: 'EVM_PANIC', name: 'Panic(uint256)', args: { panicCode } };
   }
 
-  // Custom interop errors
   switch (selector) {
     case SEL.AttributeAlreadySet: {
       const [sel] = decodeArgs(['bytes4'], data);
@@ -192,7 +179,7 @@ export function parseRevertData(data: Hex): KnownDecoded {
     }
     case SEL.CanNotUnbundle: {
       const [bundleHash] = decodeArgs(['bytes32'], data);
-      return { code: 'CANNOT_UNBUNDLE', name: 'CanNotUnbundle', args: { bundleHash } };
+      return { code: 'CANNOT_UNBUNDLE', name: 'CannotUnbundle', args: { bundleHash } };
     }
     case SEL.ExecutingNotAllowed: {
       const [bundleHash, callerAddress, executionAddress] = decodeArgs(
@@ -229,9 +216,8 @@ export function parseRevertData(data: Hex): KnownDecoded {
         args: { interoperableAddress },
       };
     }
-    case SEL.MessageNotIncluded: {
+    case SEL.MessageNotIncluded:
       return { code: 'MESSAGE_NOT_INCLUDED', name: 'MessageNotIncluded' };
-    }
     case SEL.UnauthorizedMessageSender: {
       const [expected, actual] = decodeArgs(['address', 'address'], data);
       return {
@@ -272,11 +258,9 @@ export function parseRevertData(data: Hex): KnownDecoded {
     }
   }
 
-  // Unknown selector
   return { code: 'SEND_FAILED', name: 'UnknownRevert', args: { selector } };
 }
 
-/** Build an InteropError from a revert data hex (adapters should call this). */
 export function interopErrorFromRevertData(
   data: Hex,
   cause?: unknown,
@@ -290,9 +274,6 @@ export function interopErrorFromRevertData(
   return new InteropError(
     'SEND_FAILED',
     context ? `${context}: EVM call failed` : 'EVM call failed',
-    {
-      revertData: data,
-      cause,
-    },
+    { revertData: data, cause },
   );
 }

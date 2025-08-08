@@ -1,7 +1,7 @@
-// ---- Public types/constants first (source of truth) ----
+// ---- Public types/constants ----
 export * from './types';
 
-// ---- Encoding helpers (pure, runtime-agnostic) ----
+// ---- Encoding helpers ----
 export * from './encoding/7930';
 export * from './encoding/attributes';
 
@@ -33,3 +33,7 @@ export * from './errors';
 // ---- Chain registry ----
 export { ChainRegistry, defaultRegistry } from './chains/registry';
 export { builtinChains, Chains } from './chains';
+
+// --- Logs parsing helpers ---
+export { parseSendIdFromLogs, parseBundleHashFromLogs } from './internal';
+export type { Hex } from './internal';

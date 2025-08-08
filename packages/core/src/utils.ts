@@ -2,30 +2,17 @@
 import type { BundleItem, ERC7786Attribute } from './types';
 import { ATTR } from './encoding/attributes';
 import { encodeEvmV1AddressOnly } from './encoding/7930';
-import { bytesToHex } from '@noble/hashes/utils';
-import { keccak_256 } from '@noble/hashes/sha3';
-
-type Hex = `0x${string}`;
-
-/** Minimal log shape used by parsers (runtime-agnostic). */
-export interface LogLike {
-  topics?: readonly unknown[]; // we only expect string topics, but keep defensive typing
-  data?: unknown;
-}
-
-/** Precomputed topic0 for ERC-7786 MessageSent(bytes32,bytes,bytes,bytes,uint256,bytes[]) */
-const MESSAGE_SENT_SIG = 'MessageSent(bytes32,bytes,bytes,bytes,uint256,bytes[])';
-export const MESSAGE_SENT_TOPIC0: Hex = (() => {
-  const u8 = new TextEncoder().encode(MESSAGE_SENT_SIG);
-  const h = bytesToHex(keccak_256(u8));
-  return `0x${h.slice(2)}`;
-})();
+import { encodeBridgeBurnData, erc20TransferCalldata } from './internal';
+import type { Hex } from './internal/hex';
 
 /**
  * Convert a BundleItem to the InteropCallStarter wire shape.
  * Pure transformation; no provider dependencies.
  */
-export function toCallStarter(item: BundleItem): {
+export function toCallStarter(
+  item: BundleItem,
+  opts?: { assetRouter?: `0x${string}` },
+): {
   starter: { to: Hex; data: Hex; callAttributes: Hex[] };
   value?: bigint;
 } {
@@ -47,15 +34,19 @@ export function toCallStarter(item: BundleItem): {
   }
 
   if (item.kind === 'erc20Transfer' && item._indirect) {
+    if (!opts?.assetRouter) {
+      // keep generic: the ethers layer wraps into InteropError
+      throw new Error('CONFIG_MISSING: assetRouter address is required for indirect ERC20');
+    }
     const attrs = [ATTR.indirectCall(item._bridgeMsgValue ?? 0n)];
-    const data = erc20TransferCalldata(item.to, item.amount);
+    const data = encodeBridgeBurnData(item.amount, item.to, item.token); // see helper below
     return {
       starter: {
-        to: encodeEvmV1AddressOnly(item.token),
+        to: encodeEvmV1AddressOnly(opts.assetRouter), // ROUTER, not token
         data,
         callAttributes: attrs,
       },
-      value: item._bridgeMsgValue ?? 0n,
+      value: item._bridgeMsgValue ?? 0n, // contributes to msg.value
     };
   }
 
@@ -82,17 +73,6 @@ export function toCallStarter(item: BundleItem): {
   throw new Error('UNSUPPORTED_OPERATION');
 }
 
-/**
- * Minimal ERC-20 transfer calldata encoding.
- * selector = keccak256("transfer(address,uint256)").slice(0,4) = 0xa9059cbb
- */
-export function erc20TransferCalldata(to: Hex, amount: bigint): Hex {
-  const selector = 'a9059cbb';
-  const toPadded = to.toLowerCase().replace(/^0x/, '').padStart(64, '0');
-  const amountHex = amount.toString(16).padStart(64, '0');
-  return `0x${selector}${toPadded}${amountHex}` as Hex;
-}
-
 /** Merge user-provided structured attributes with extra encoded attributes. */
 export function mergeAttributes(base: ERC7786Attribute[] | undefined, extra: Hex[]): Hex[] {
   return [...(base ?? []).map((a) => a.data), ...extra];
@@ -104,60 +84,7 @@ export function computeBundleMessageValue(items: BundleItem[]): bigint {
   for (const it of items) {
     if (it.kind === 'nativeTransfer') total += it.amount;
     else if (it.kind === 'remoteCall' && it.value) total += it.value;
+    else if (it.kind === 'erc20Transfer' && it._indirect) total += it._bridgeMsgValue ?? 0n;
   }
   return total;
-}
-
-// TODO: remove these helpers
-function isLogLikeArray(x: unknown): x is readonly LogLike[] {
-  return Array.isArray(x);
-}
-function isLogsContainer(x: unknown): x is { logs?: readonly LogLike[] } {
-  return !!x && typeof x === 'object' && Array.isArray((x as { logs?: unknown }).logs);
-}
-/**
- * Extract sendId from logs of a tx receipt by recognizing the ERC-7786 MessageSent event.
- * - Prefers matching topic0 to the MessageSent signature (strict).
- * - Falls back to returning topics[1] of any log that *appears* to be MessageSent (defensive).
- *
- * Works with any receipt-like shape that exposes { logs?: LogLike[] } or a direct LogLike[].
- */
-export function parseSendIdFromLogs(
-  input: { logs?: readonly LogLike[] } | readonly LogLike[] | null | undefined,
-): Hex | undefined {
-  let logs: readonly LogLike[] = [];
-
-  if (isLogLikeArray(input)) {
-    logs = input;
-  } else if (isLogsContainer(input)) {
-    logs = input.logs ?? [];
-  }
-
-  for (const l of logs) {
-    const topicsUnknown =
-      l && typeof l === 'object' ? (l as Record<string, unknown>).topics : undefined;
-
-    if (Array.isArray(topicsUnknown) && topicsUnknown.length >= 2) {
-      const topic0 = typeof topicsUnknown[0] === 'string' ? topicsUnknown[0].toLowerCase() : '';
-      if (topic0 === MESSAGE_SENT_TOPIC0.toLowerCase()) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const id = topicsUnknown[1];
-        if (typeof id === 'string' && id.startsWith('0x')) return id as Hex;
-      }
-    }
-  }
-
-  // 2) Fallback
-  for (const l of logs) {
-    const topicsUnknown =
-      l && typeof l === 'object' ? (l as Record<string, unknown>).topics : undefined;
-
-    if (Array.isArray(topicsUnknown) && topicsUnknown.length >= 2) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const id = topicsUnknown[1];
-      if (typeof id === 'string' && id.startsWith('0x')) return id as Hex;
-    }
-  }
-
-  return undefined;
 }

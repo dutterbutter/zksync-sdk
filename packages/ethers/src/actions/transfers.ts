@@ -12,6 +12,7 @@ import { sendBundle } from './sendBundle';
 
 import { ensureAllowance } from '../internal/allowance';
 import { resolveChain } from '../internal/chain';
+import { ensureRegisteredInNTV } from '../internal/register';
 
 /* -------------------------------------------------------------------------- */
 /*  Helper – build a single-item bundle                                       */
@@ -55,19 +56,23 @@ export async function sendERC20(
 ): Promise<SentMessage> {
   if (!signer.provider) throw new Error('PROVIDER_UNAVAILABLE: signer has no provider');
 
-  /* -------- 1.  Allowance on the source chain ------------------- */
-  if (input.approveIfNeeded ?? true) {
-    const reg = input.registry ?? defaultRegistry;
-    const src = resolveChain(reg, input.src!);
-    const ntv = src.addresses.nativeTokenVault;
+  const reg = input.registry ?? defaultRegistry;
+  const src = resolveChain(reg, input.src!);
+  const ntv = src.addresses.nativeTokenVault;
 
-    // TODO: remove adding addresses to chaininfo
+  if (input.indirect) {
     if (!ntv) throw new Error('CONFIG_MISSING: nativeTokenVault address not set for source chain');
 
-    await ensureAllowance(signer, input.token, ntv, input.amount);
+    // 1) Make sure NTV knows this token (one-time per token/chain)
+    await ensureRegisteredInNTV(signer, ntv, input.token);
+
+    // 2) Make sure allowance is set (permit/approve)
+    if (input.approveIfNeeded ?? true) {
+      await ensureAllowance(signer, input.token, ntv, input.amount);
+    }
   }
 
-  /* -------- 2.  Build bundle item --------------------------------------- */
+  // build bundle item (unchanged)
   const item = bundle.erc20({
     token: input.token,
     to: input.to,
@@ -77,7 +82,6 @@ export async function sendERC20(
     approveIfNeeded: input.approveIfNeeded,
   });
 
-  /* -------- 3.  Wrap in a bundle & send --------------------------------- */
   const txBundle = asBundle(input, [item], input.registry);
   return sendBundle(signer, txBundle);
 }

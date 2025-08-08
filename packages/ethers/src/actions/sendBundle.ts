@@ -1,23 +1,22 @@
 // packages/ethers/src/actions/sendBundle.ts
-import type { BundleInput, ChainRegistry, SentMessage, Estimate } from '@zksync-sdk/core';
+import type { BundleInput, ChainRegistry, SentMessage, Estimate, Hex } from '@zksync-sdk/core';
 
 import {
   encodeEvmV1ChainOnly,
   toCallStarter,
+  parseBundleHashFromLogs,
   parseSendIdFromLogs,
   defaultRegistry,
   InteropError,
+  computeBundleMessageValue,
 } from '@zksync-sdk/core';
 
 import type { Signer, TransactionReceipt, TransactionRequest, Provider } from 'ethers';
+import { keccak256, AbiCoder } from 'ethers';
 
 import { Center } from '../internal/abi';
 import { resolveChain } from '../internal/chain';
-import { indexFromReceipt } from '../internal/cache';
-import { computeMsgValue } from '../internal/compute';
 import { fromEthersError } from '../internal/errors';
-
-type Hex = `0x${string}`;
 
 /**
  * Send an Interop bundle with an Ethers v6 Signer.
@@ -71,12 +70,14 @@ export async function sendBundle(
 
   /* ───────────────────── encode call data ────────────────────── */
 
-  const starters = input.items.map(toCallStarter).map(({ starter }) => starter);
+  const starters = input.items
+    .map((it) => toCallStarter(it, { assetRouter: src.addresses.assetRouter }))
+    .map(({ starter }) => starter);
   const bundleArgs = (input.attributes ?? []).map((a) => a.data);
   const encodedDst = encodeEvmV1ChainOnly(BigInt(dest.chainId));
 
   const data = Center.encodeFunctionData('sendBundle', [encodedDst, starters, bundleArgs]);
-  const value = computeMsgValue(input.items);
+  const value = computeBundleMessageValue(input.items);
 
   /* ───────────────────── build tx request ────────────────────── */
 
@@ -109,13 +110,17 @@ export async function sendBundle(
 
   /* ───────────────────── post-processing ─────────────────────── */
 
-  const sendId = parseSendIdFromLogs(receipt);
+  let sendId = parseSendIdFromLogs(receipt);
 
-  // best-effort cache for follow-up helpers (finalization, etc.)
-  try {
-    indexFromReceipt(sendId, receipt.hash as Hex, receipt);
-  } catch {
-    /* non-fatal */
+  // If single-item bundle and no MessageSent found, derive from bundleHash
+  if (!sendId && input.items.length === 1) {
+    const bundleHash = parseBundleHashFromLogs(receipt);
+    if (bundleHash) {
+      // sendId = keccak256(abi.encodePacked(bundleHash, uint256(0)))
+      const abi = new AbiCoder();
+      const packed = abi.encode(['bytes32', 'uint256'], [bundleHash, 0]);
+      sendId = keccak256(packed) as `0x${string}`;
+    }
   }
 
   if (!sendId && !input.allowMissingSendId) {
