@@ -1,1056 +1,1056 @@
 export const L2AssetRouterAbi = [
   {
-    "type": "constructor",
-    "inputs": [
+    type: 'constructor',
+    inputs: [
       {
-        "name": "_l1ChainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_l1ChainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_eraChainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_eraChainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_l1AssetRouter",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1AssetRouter',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_legacySharedBridge",
-        "type": "address",
-        "internalType": "address"
+        name: '_legacySharedBridge',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_baseTokenAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_baseTokenAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_aliasedOwner",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_aliasedOwner',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "BASE_TOKEN_ASSET_ID",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'BASE_TOKEN_ASSET_ID',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "BRIDGE_HUB",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'BRIDGE_HUB',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IBridgehub"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'contract IBridgehub',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "ERA_CHAIN_ID",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'ERA_CHAIN_ID',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "INTEROP_CENTER",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'INTEROP_CENTER',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IInteropCenter"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'contract IInteropCenter',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "L1_ASSET_ROUTER",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'L1_ASSET_ROUTER',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "L1_CHAIN_ID",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'L1_CHAIN_ID',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "L2_LEGACY_SHARED_BRIDGE",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'L2_LEGACY_SHARED_BRIDGE',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "acceptOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'acceptOwnership',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "assetDeploymentTracker",
-    "inputs": [
+    type: 'function',
+    name: 'assetDeploymentTracker',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "assetDeploymentTracker",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'assetDeploymentTracker',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "assetHandlerAddress",
-    "inputs": [
+    type: 'function',
+    name: 'assetHandlerAddress',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "assetHandlerAddress",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'assetHandlerAddress',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "bridgehubDepositBaseToken",
-    "inputs": [
+    type: 'function',
+    name: 'bridgehubDepositBaseToken',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_originalCaller",
-        "type": "address",
-        "internalType": "address"
+        name: '_originalCaller',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_amount',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "payable"
+    outputs: [],
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "finalizeDeposit",
-    "inputs": [
+    type: 'function',
+    name: 'finalizeDeposit',
+    inputs: [
       {
-        "name": "_originChainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_originChainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_transferData",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_transferData',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "payable"
+    outputs: [],
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "finalizeDeposit",
-    "inputs": [
+    type: 'function',
+    name: 'finalizeDeposit',
+    inputs: [
       {
-        "name": "_l1Sender",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1Sender',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l2Receiver",
-        "type": "address",
-        "internalType": "address"
+        name: '_l2Receiver',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l1Token",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1Token',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_amount",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_amount',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_data',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "payable"
+    outputs: [],
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "finalizeDepositLegacyBridge",
-    "inputs": [
+    type: 'function',
+    name: 'finalizeDepositLegacyBridge',
+    inputs: [
       {
-        "name": "_l1Sender",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1Sender',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l2Receiver",
-        "type": "address",
-        "internalType": "address"
+        name: '_l2Receiver',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l1Token",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1Token',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_amount",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_amount',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_data',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "getDepositCalldata",
-    "inputs": [
+    type: 'function',
+    name: 'getDepositCalldata',
+    inputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
+        name: '',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetData",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_assetData',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "initiateBridging",
-    "inputs": [
+    type: 'function',
+    name: 'initiateBridging',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_originalCaller",
-        "type": "address",
-        "internalType": "address"
+        name: '_originalCaller',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_value",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_value',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_data',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "interopCallStarter",
-        "type": "tuple",
-        "internalType": "struct InteropCallStarter",
-        "components": [
+        name: 'interopCallStarter',
+        type: 'tuple',
+        internalType: 'struct InteropCallStarter',
+        components: [
           {
-            "name": "to",
-            "type": "bytes",
-            "internalType": "bytes"
+            name: 'to',
+            type: 'bytes',
+            internalType: 'bytes',
           },
           {
-            "name": "data",
-            "type": "bytes",
-            "internalType": "bytes"
+            name: 'data',
+            type: 'bytes',
+            internalType: 'bytes',
           },
           {
-            "name": "callAttributes",
-            "type": "bytes[]",
-            "internalType": "bytes[]"
-          }
-        ]
-      }
+            name: 'callAttributes',
+            type: 'bytes[]',
+            internalType: 'bytes[]',
+          },
+        ],
+      },
     ],
-    "stateMutability": "payable"
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "l1Bridge",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'l1Bridge',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "l1TokenAddress",
-    "inputs": [
+    type: 'function',
+    name: 'l1TokenAddress',
+    inputs: [
       {
-        "name": "_l2Token",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_l2Token',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "l2TokenAddress",
-    "inputs": [
+    type: 'function',
+    name: 'l2TokenAddress',
+    inputs: [
       {
-        "name": "_l1Token",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_l1Token',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "owner",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'owner',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "pause",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'pause',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "paused",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'paused',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "pendingOwner",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'pendingOwner',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "receiveMessage",
-    "inputs": [
+    type: 'function',
+    name: 'receiveMessage',
+    inputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "sender",
-        "type": "bytes",
-        "internalType": "bytes"
+        name: 'sender',
+        type: 'bytes',
+        internalType: 'bytes',
       },
       {
-        "name": "payload",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: 'payload',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes4",
-        "internalType": "bytes4"
-      }
+        name: '',
+        type: 'bytes4',
+        internalType: 'bytes4',
+      },
     ],
-    "stateMutability": "payable"
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'renounceOwnership',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "setAssetHandlerAddress",
-    "inputs": [
+    type: 'function',
+    name: 'setAssetHandlerAddress',
+    inputs: [
       {
-        "name": "_originChainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_originChainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetHandlerAddress",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_assetHandlerAddress',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "setAssetHandlerAddressThisChain",
-    "inputs": [
+    type: 'function',
+    name: 'setAssetHandlerAddressThisChain',
+    inputs: [
       {
-        "name": "_assetRegistrationData",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetRegistrationData',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetHandlerAddress",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_assetHandlerAddress',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "setLegacyTokenAssetHandler",
-    "inputs": [
+    type: 'function',
+    name: 'setLegacyTokenAssetHandler',
+    inputs: [
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "transferOwnership",
-    "inputs": [
+    type: 'function',
+    name: 'transferOwnership',
+    inputs: [
       {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'newOwner',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "unpause",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'unpause',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "withdraw",
-    "inputs": [
+    type: 'function',
+    name: 'withdraw',
+    inputs: [
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetData",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_assetData',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "withdraw",
-    "inputs": [
+    type: 'function',
+    name: 'withdraw',
+    inputs: [
       {
-        "name": "_l1Receiver",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1Receiver',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l2Token",
-        "type": "address",
-        "internalType": "address"
+        name: '_l2Token',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_amount',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "withdrawLegacyBridge",
-    "inputs": [
+    type: 'function',
+    name: 'withdrawLegacyBridge',
+    inputs: [
       {
-        "name": "_l1Receiver",
-        "type": "address",
-        "internalType": "address"
+        name: '_l1Receiver',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l2Token",
-        "type": "address",
-        "internalType": "address"
+        name: '_l2Token',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_amount",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_amount',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_sender",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_sender',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "event",
-    "name": "AssetDeploymentTrackerRegistered",
-    "inputs": [
+    type: 'event',
+    name: 'AssetDeploymentTrackerRegistered',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "additionalData",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'additionalData',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "assetDeploymentTracker",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: 'assetDeploymentTracker',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "AssetHandlerRegistered",
-    "inputs": [
+    type: 'event',
+    name: 'AssetHandlerRegistered',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetHandlerAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: '_assetHandlerAddress',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "BridgehubDepositBaseTokenInitiated",
-    "inputs": [
+    type: 'event',
+    name: 'BridgehubDepositBaseTokenInitiated',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "from",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'from',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: false,
+        internalType: 'bytes32',
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: 'amount',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "BridgehubDepositInitiated",
-    "inputs": [
+    type: 'event',
+    name: 'BridgehubDepositInitiated',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "txDataHash",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'txDataHash',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "from",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'from',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: false,
+        internalType: 'bytes32',
       },
       {
-        "name": "bridgeMintCalldata",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
+        name: 'bridgeMintCalldata',
+        type: 'bytes',
+        indexed: false,
+        internalType: 'bytes',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "BridgehubWithdrawalInitiated",
-    "inputs": [
+    type: 'event',
+    name: 'BridgehubWithdrawalInitiated',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
       },
       {
-        "name": "sender",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'sender',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "assetDataHash",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
-      }
+        name: 'assetDataHash',
+        type: 'bytes32',
+        indexed: false,
+        internalType: 'bytes32',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "DepositFinalizedAssetRouter",
-    "inputs": [
+    type: 'event',
+    name: 'DepositFinalizedAssetRouter',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "assetData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
+        name: 'assetData',
+        type: 'bytes',
+        indexed: false,
+        internalType: 'bytes',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Initialized",
-    "inputs": [
+    type: 'event',
+    name: 'Initialized',
+    inputs: [
       {
-        "name": "version",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "uint8"
-      }
+        name: 'version',
+        type: 'uint8',
+        indexed: false,
+        internalType: 'uint8',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "OwnershipTransferStarted",
-    "inputs": [
+    type: 'event',
+    name: 'OwnershipTransferStarted',
+    inputs: [
       {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'previousOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'newOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "OwnershipTransferred",
-    "inputs": [
+    type: 'event',
+    name: 'OwnershipTransferred',
+    inputs: [
       {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'previousOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'newOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Paused",
-    "inputs": [
+    type: 'event',
+    name: 'Paused',
+    inputs: [
       {
-        "name": "account",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: 'account',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "Unpaused",
-    "inputs": [
+    type: 'event',
+    name: 'Unpaused',
+    inputs: [
       {
-        "name": "account",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: 'account',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "WithdrawalInitiatedAssetRouter",
-    "inputs": [
+    type: 'event',
+    name: 'WithdrawalInitiatedAssetRouter',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
       },
       {
-        "name": "l2Sender",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l2Sender',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "assetData",
-        "type": "bytes",
-        "indexed": false,
-        "internalType": "bytes"
-      }
+        name: 'assetData',
+        type: 'bytes',
+        indexed: false,
+        internalType: 'bytes',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "error",
-    "name": "AmountMustBeGreaterThanZero",
-    "inputs": []
+    type: 'error',
+    name: 'AmountMustBeGreaterThanZero',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "AssetHandlerDoesNotExist",
-    "inputs": [
+    type: 'error',
+    name: 'AssetHandlerDoesNotExist',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ]
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "AssetIdNotSupported",
-    "inputs": [
+    type: 'error',
+    name: 'AssetIdNotSupported',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ]
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "BadTransferDataLength",
-    "inputs": []
+    type: 'error',
+    name: 'BadTransferDataLength',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "EmptyAddress",
-    "inputs": []
+    type: 'error',
+    name: 'EmptyAddress',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "ExecuteMessageFailed",
-    "inputs": []
+    type: 'error',
+    name: 'ExecuteMessageFailed',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "IncorrectTokenAddressFromNTV",
-    "inputs": [
+    type: 'error',
+    name: 'IncorrectTokenAddressFromNTV',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "tokenAddress",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+        name: 'tokenAddress',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "InteroperableAddressParsingError",
-    "inputs": [
+    type: 'error',
+    name: 'InteroperableAddressParsingError',
+    inputs: [
       {
-        "name": "",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ]
+        name: '',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "InvalidNTVBurnData",
-    "inputs": []
+    type: 'error',
+    name: 'InvalidNTVBurnData',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InvalidSelector",
-    "inputs": [
+    type: 'error',
+    name: 'InvalidSelector',
+    inputs: [
       {
-        "name": "func",
-        "type": "bytes4",
-        "internalType": "bytes4"
-      }
-    ]
+        name: 'func',
+        type: 'bytes4',
+        internalType: 'bytes4',
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "NotInitializedReentrancyGuard",
-    "inputs": []
+    type: 'error',
+    name: 'NotInitializedReentrancyGuard',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "PayloadTooShort",
-    "inputs": []
+    type: 'error',
+    name: 'PayloadTooShort',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "Reentrancy",
-    "inputs": []
+    type: 'error',
+    name: 'Reentrancy',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "SlotOccupied",
-    "inputs": []
+    type: 'error',
+    name: 'SlotOccupied',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "TokenNotLegacy",
-    "inputs": []
+    type: 'error',
+    name: 'TokenNotLegacy',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "Unauthorized",
-    "inputs": [
+    type: 'error',
+    name: 'Unauthorized',
+    inputs: [
       {
-        "name": "caller",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+        name: 'caller',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
   },
   {
-    "type": "error",
-    "name": "UnsupportedEncodingVersion",
-    "inputs": []
-  }
+    type: 'error',
+    name: 'UnsupportedEncodingVersion',
+    inputs: [],
+  },
 ] as const;
 export type L2AssetRouterAbi = typeof L2AssetRouterAbi;

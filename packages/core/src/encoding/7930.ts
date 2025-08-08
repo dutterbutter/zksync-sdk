@@ -1,8 +1,7 @@
 // packages/core/src/encoding/7930.ts
 import { hexToBytes, bytesToHex, concatBytes } from '@noble/hashes/utils';
 
-const from0x = (hex: string): Uint8Array =>
-  hexToBytes(hex.startsWith('0x') ? hex.slice(2) : hex);
+const from0x = (hex: string): Uint8Array => hexToBytes(hex.startsWith('0x') ? hex.slice(2) : hex);
 
 function beTrim(n: bigint): Uint8Array {
   if (n < 0n) throw new Error('negative bigint not supported');
@@ -15,10 +14,7 @@ function beTrim(n: bigint): Uint8Array {
   return bytes.slice(i);
 }
 
-export function encodeEvmV1(
-  chainRef?: bigint,
-  addr?: `0x${string}`
-): `0x${string}` {
+export function encodeEvmV1(chainRef?: bigint, addr?: `0x${string}`): `0x${string}` {
   const version = new Uint8Array([0x00, 0x01]);
   const chainType = new Uint8Array([0x00, 0x00]);
 
@@ -30,15 +26,8 @@ export function encodeEvmV1(
   if (addrBytes.length > 255) throw new Error('address too long');
   const addrLen = new Uint8Array([addrBytes.length]);
 
-  const out = concatBytes(
-    version,
-    chainType,
-    chainRefLen,
-    chainRefBytes,
-    addrLen,
-    addrBytes
-  );
-  return (`0x${bytesToHex(out)}`);
+  const out = concatBytes(version, chainType, chainRefLen, chainRefBytes, addrLen, addrBytes);
+  return `0x${bytesToHex(out)}`;
 }
 
 export function encodeEvmV1ChainOnly(chainId: number | bigint): `0x${string}` {

@@ -1,95 +1,95 @@
 export const L2InteropRootStorageAbi = [
   {
-    "type": "function",
-    "name": "addInteropRoot",
-    "inputs": [
+    type: 'function',
+    name: 'addInteropRoot',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "blockOrBatchNumber",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: 'blockOrBatchNumber',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "sides",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
+        name: 'sides',
+        type: 'bytes32[]',
+        internalType: 'bytes32[]',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "interopRoots",
-    "inputs": [
+    type: 'function',
+    name: 'interopRoots',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "blockOrBatchNumber",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: 'blockOrBatchNumber',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "interopRoot",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'interopRoot',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "event",
-    "name": "InteropRootAdded",
-    "inputs": [
+    type: 'event',
+    name: 'InteropRootAdded',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "blockNumber",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'blockNumber',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "sides",
-        "type": "bytes32[]",
-        "indexed": false,
-        "internalType": "bytes32[]"
-      }
+        name: 'sides',
+        type: 'bytes32[]',
+        indexed: false,
+        internalType: 'bytes32[]',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "error",
-    "name": "CallerMustBeBootloader",
-    "inputs": []
+    type: 'error',
+    name: 'CallerMustBeBootloader',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "InteropRootAlreadyExists",
-    "inputs": []
+    type: 'error',
+    name: 'InteropRootAlreadyExists',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "MessageRootIsZero",
-    "inputs": []
+    type: 'error',
+    name: 'MessageRootIsZero',
+    inputs: [],
   },
   {
-    "type": "error",
-    "name": "SidesLengthNotOne",
-    "inputs": []
-  }
+    type: 'error',
+    name: 'SidesLengthNotOne',
+    inputs: [],
+  },
 ] as const;
 export type L2InteropRootStorageAbi = typeof L2InteropRootStorageAbi;

@@ -3,30 +3,42 @@ import { Center } from './abi';
 import { id } from 'ethers';
 
 type Hex = `0x${string}`;
-const MESSAGE_SENT_TOPIC0 = id('MessageSent(bytes32,bytes,bytes,bytes,uint256,bytes[])').toLowerCase();
+const MESSAGE_SENT_TOPIC0 = id(
+  'MessageSent(bytes32,bytes,bytes,bytes,uint256,bytes[])',
+).toLowerCase();
 
 export const bundleIndex = new Map<string, { bundleHash?: Hex; srcTxHash?: Hex }>();
 
-export function indexFromReceipt(sendId: Hex | undefined, srcTxHash: Hex, receipt: TransactionReceipt): void {
+export function indexFromReceipt(
+  sendId: Hex | undefined,
+  srcTxHash: Hex,
+  receipt: TransactionReceipt,
+): void {
   const logs: readonly Log[] = receipt.logs ?? [];
   let bundleHash: Hex | undefined;
 
   for (const log of logs) {
     try {
       const dec = Center.parseLog(log);
-      if (dec?.name === 'InteropBundleSent') { bundleHash = dec.args.interopBundleHash as Hex; break; }
+      if (dec?.name === 'InteropBundleSent') {
+        bundleHash = dec.args.interopBundleHash as Hex;
+        break;
+      }
     } catch {
-        // intentionally ignore errors from parsing logs
-        // this can happen if the log is not from the expected contract
-        // or if the log format has changed unexpectedly
-        // we just skip this log and continue processing others
+      // intentionally ignore errors from parsing logs
+      // this can happen if the log is not from the expected contract
+      // or if the log format has changed unexpectedly
+      // we just skip this log and continue processing others
     }
   }
 
   if (sendId) {
     const key = sendId.toLowerCase();
     const prev = bundleIndex.get(key) ?? {};
-    bundleIndex.set(key, { bundleHash: bundleHash ?? prev.bundleHash, srcTxHash: srcTxHash ?? prev.srcTxHash });
+    bundleIndex.set(key, {
+      bundleHash: bundleHash ?? prev.bundleHash,
+      srcTxHash: srcTxHash ?? prev.srcTxHash,
+    });
   }
 
   if (bundleHash) {

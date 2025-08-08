@@ -1,1214 +1,1214 @@
 export const IBridgehubAbi = [
   {
-    "type": "function",
-    "name": "L1_CHAIN_ID",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'L1_CHAIN_ID',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "acceptAdmin",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'acceptAdmin',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "addChainTypeManager",
-    "inputs": [
+    type: 'function',
+    name: 'addChainTypeManager',
+    inputs: [
       {
-        "name": "_chainTypeManager",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_chainTypeManager',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "addTokenAssetId",
-    "inputs": [
+    type: 'function',
+    name: 'addTokenAssetId',
+    inputs: [
       {
-        "name": "_baseTokenAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_baseTokenAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "admin",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'admin',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "assetIdIsRegistered",
-    "inputs": [
+    type: 'function',
+    name: 'assetIdIsRegistered',
+    inputs: [
       {
-        "name": "_baseTokenAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_baseTokenAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "assetRouter",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'assetRouter',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "baseToken",
-    "inputs": [
+    type: 'function',
+    name: 'baseToken',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "baseTokenAssetId",
-    "inputs": [
+    type: 'function',
+    name: 'baseTokenAssetId',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "chainAssetHandler",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'chainAssetHandler',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "chainRegistrationSender",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'chainRegistrationSender',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "chainTypeManager",
-    "inputs": [
+    type: 'function',
+    name: 'chainTypeManager',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "chainTypeManagerIsRegistered",
-    "inputs": [
+    type: 'function',
+    name: 'chainTypeManagerIsRegistered',
+    inputs: [
       {
-        "name": "_chainTypeManager",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_chainTypeManager',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "createNewChain",
-    "inputs": [
+    type: 'function',
+    name: 'createNewChain',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_chainTypeManager",
-        "type": "address",
-        "internalType": "address"
+        name: '_chainTypeManager',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_baseTokenAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_baseTokenAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_salt",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_salt',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_admin",
-        "type": "address",
-        "internalType": "address"
+        name: '_admin',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_initData",
-        "type": "bytes",
-        "internalType": "bytes"
+        name: '_initData',
+        type: 'bytes',
+        internalType: 'bytes',
       },
       {
-        "name": "_factoryDeps",
-        "type": "bytes[]",
-        "internalType": "bytes[]"
-      }
+        name: '_factoryDeps',
+        type: 'bytes[]',
+        internalType: 'bytes[]',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: 'chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "ctmAssetIdFromAddress",
-    "inputs": [
+    type: 'function',
+    name: 'ctmAssetIdFromAddress',
+    inputs: [
       {
-        "name": "_ctmAddress",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_ctmAddress',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "ctmAssetIdFromChainId",
-    "inputs": [
+    type: 'function',
+    name: 'ctmAssetIdFromChainId',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "ctmAssetIdToAddress",
-    "inputs": [
+    type: 'function',
+    name: 'ctmAssetIdToAddress',
+    inputs: [
       {
-        "name": "_assetInfo",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_assetInfo',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "forwardTransactionOnGateway",
-    "inputs": [
+    type: 'function',
+    name: 'forwardTransactionOnGateway',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_canonicalTxHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_canonicalTxHash',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_expirationTimestamp",
-        "type": "uint64",
-        "internalType": "uint64"
-      }
+        name: '_expirationTimestamp',
+        type: 'uint64',
+        internalType: 'uint64',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "forwardedBridgeBurnSetSettlementLayer",
-    "inputs": [
+    type: 'function',
+    name: 'forwardedBridgeBurnSetSettlementLayer',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_newSettlementLayerChainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_newSettlementLayerChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "zkChain",
-        "type": "address",
-        "internalType": "address"
+        name: 'zkChain',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "ctm",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'ctm',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "forwardedBridgeMint",
-    "inputs": [
+    type: 'function',
+    name: 'forwardedBridgeMint',
+    inputs: [
       {
-        "name": "_assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_baseTokenAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_baseTokenAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "zkChain",
-        "type": "address",
-        "internalType": "address"
+        name: 'zkChain',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "ctm",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'ctm',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "forwardedBridgeRecoverFailedTransfer",
-    "inputs": [
+    type: 'function',
+    name: 'forwardedBridgeRecoverFailedTransfer',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "zkChain",
-        "type": "address",
-        "internalType": "address"
+        name: 'zkChain',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "ctm",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'ctm',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "getAllZKChainChainIDs",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'getAllZKChainChainIDs',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
+        name: '',
+        type: 'uint256[]',
+        internalType: 'uint256[]',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "getAllZKChains",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'getAllZKChains',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
+        name: '',
+        type: 'address[]',
+        internalType: 'address[]',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "getZKChain",
-    "inputs": [
+    type: 'function',
+    name: 'getZKChain',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "interopCenter",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'interopCenter',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IInteropCenter"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'contract IInteropCenter',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "l1CtmDeployer",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'l1CtmDeployer',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ICTMDeploymentTracker"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'contract ICTMDeploymentTracker',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "l2TransactionBaseCost",
-    "inputs": [
+    type: 'function',
+    name: 'l2TransactionBaseCost',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_gasPrice",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_gasPrice',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_l2GasLimit",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_l2GasLimit',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_l2GasPerPubdataByteLimit",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_l2GasPerPubdataByteLimit',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "messageRoot",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'messageRoot',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IMessageRoot"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'contract IMessageRoot',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "migrationPaused",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'migrationPaused',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "pauseMigration",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'pauseMigration',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "proveL1ToL2TransactionStatus",
-    "inputs": [
+    type: 'function',
+    name: 'proveL1ToL2TransactionStatus',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_l2TxHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_l2TxHash',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_l2BatchNumber",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_l2BatchNumber',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_l2MessageIndex",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_l2MessageIndex',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_l2TxNumberInBatch",
-        "type": "uint16",
-        "internalType": "uint16"
+        name: '_l2TxNumberInBatch',
+        type: 'uint16',
+        internalType: 'uint16',
       },
       {
-        "name": "_merkleProof",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
+        name: '_merkleProof',
+        type: 'bytes32[]',
+        internalType: 'bytes32[]',
       },
       {
-        "name": "_status",
-        "type": "uint8",
-        "internalType": "enum TxStatus"
-      }
+        name: '_status',
+        type: 'uint8',
+        internalType: 'enum TxStatus',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "proveL2LogInclusion",
-    "inputs": [
+    type: 'function',
+    name: 'proveL2LogInclusion',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_batchNumber",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_batchNumber',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_index",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_index',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_log",
-        "type": "tuple",
-        "internalType": "struct L2Log",
-        "components": [
+        name: '_log',
+        type: 'tuple',
+        internalType: 'struct L2Log',
+        components: [
           {
-            "name": "l2ShardId",
-            "type": "uint8",
-            "internalType": "uint8"
+            name: 'l2ShardId',
+            type: 'uint8',
+            internalType: 'uint8',
           },
           {
-            "name": "isService",
-            "type": "bool",
-            "internalType": "bool"
+            name: 'isService',
+            type: 'bool',
+            internalType: 'bool',
           },
           {
-            "name": "txNumberInBatch",
-            "type": "uint16",
-            "internalType": "uint16"
+            name: 'txNumberInBatch',
+            type: 'uint16',
+            internalType: 'uint16',
           },
           {
-            "name": "sender",
-            "type": "address",
-            "internalType": "address"
+            name: 'sender',
+            type: 'address',
+            internalType: 'address',
           },
           {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            name: 'key',
+            type: 'bytes32',
+            internalType: 'bytes32',
           },
           {
-            "name": "value",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          }
-        ]
+            name: 'value',
+            type: 'bytes32',
+            internalType: 'bytes32',
+          },
+        ],
       },
       {
-        "name": "_proof",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
+        name: '_proof',
+        type: 'bytes32[]',
+        internalType: 'bytes32[]',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "proveL2MessageInclusion",
-    "inputs": [
+    type: 'function',
+    name: 'proveL2MessageInclusion',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_batchNumber",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_batchNumber',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_index",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_index',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_message",
-        "type": "tuple",
-        "internalType": "struct L2Message",
-        "components": [
+        name: '_message',
+        type: 'tuple',
+        internalType: 'struct L2Message',
+        components: [
           {
-            "name": "txNumberInBatch",
-            "type": "uint16",
-            "internalType": "uint16"
+            name: 'txNumberInBatch',
+            type: 'uint16',
+            internalType: 'uint16',
           },
           {
-            "name": "sender",
-            "type": "address",
-            "internalType": "address"
+            name: 'sender',
+            type: 'address',
+            internalType: 'address',
           },
           {
-            "name": "data",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
+            name: 'data',
+            type: 'bytes',
+            internalType: 'bytes',
+          },
+        ],
       },
       {
-        "name": "_proof",
-        "type": "bytes32[]",
-        "internalType": "bytes32[]"
-      }
+        name: '_proof',
+        type: 'bytes32[]',
+        internalType: 'bytes32[]',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "registerAlreadyDeployedZKChain",
-    "inputs": [
+    type: 'function',
+    name: 'registerAlreadyDeployedZKChain',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_hyperchain",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_hyperchain',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "registerChainForInterop",
-    "inputs": [
+    type: 'function',
+    name: 'registerChainForInterop',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_baseTokenAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_baseTokenAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "registerNewZKChain",
-    "inputs": [
+    type: 'function',
+    name: 'registerNewZKChain',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_zkChain",
-        "type": "address",
-        "internalType": "address"
+        name: '_zkChain',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_checkMaxNumberOfZKChains",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '_checkMaxNumberOfZKChains',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "registerSettlementLayer",
-    "inputs": [
+    type: 'function',
+    name: 'registerSettlementLayer',
+    inputs: [
       {
-        "name": "_newSettlementLayerChainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_newSettlementLayerChainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_isWhitelisted",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '_isWhitelisted',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "removeChainTypeManager",
-    "inputs": [
+    type: 'function',
+    name: 'removeChainTypeManager',
+    inputs: [
       {
-        "name": "_chainTypeManager",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_chainTypeManager',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "requestL2TransactionDirect",
-    "inputs": [
+    type: 'function',
+    name: 'requestL2TransactionDirect',
+    inputs: [
       {
-        "name": "_request",
-        "type": "tuple",
-        "internalType": "struct L2TransactionRequestDirect",
-        "components": [
+        name: '_request',
+        type: 'tuple',
+        internalType: 'struct L2TransactionRequestDirect',
+        components: [
           {
-            "name": "chainId",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'chainId',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "mintValue",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'mintValue',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "l2Contract",
-            "type": "address",
-            "internalType": "address"
+            name: 'l2Contract',
+            type: 'address',
+            internalType: 'address',
           },
           {
-            "name": "l2Value",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'l2Value',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "l2Calldata",
-            "type": "bytes",
-            "internalType": "bytes"
+            name: 'l2Calldata',
+            type: 'bytes',
+            internalType: 'bytes',
           },
           {
-            "name": "l2GasLimit",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'l2GasLimit',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "l2GasPerPubdataByteLimit",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'l2GasPerPubdataByteLimit',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "factoryDeps",
-            "type": "bytes[]",
-            "internalType": "bytes[]"
+            name: 'factoryDeps',
+            type: 'bytes[]',
+            internalType: 'bytes[]',
           },
           {
-            "name": "refundRecipient",
-            "type": "address",
-            "internalType": "address"
-          }
-        ]
-      }
+            name: 'refundRecipient',
+            type: 'address',
+            internalType: 'address',
+          },
+        ],
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "canonicalTxHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'canonicalTxHash',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "payable"
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "requestL2TransactionTwoBridges",
-    "inputs": [
+    type: 'function',
+    name: 'requestL2TransactionTwoBridges',
+    inputs: [
       {
-        "name": "_request",
-        "type": "tuple",
-        "internalType": "struct L2TransactionRequestTwoBridgesOuter",
-        "components": [
+        name: '_request',
+        type: 'tuple',
+        internalType: 'struct L2TransactionRequestTwoBridgesOuter',
+        components: [
           {
-            "name": "chainId",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'chainId',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "mintValue",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'mintValue',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "l2Value",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'l2Value',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "l2GasLimit",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'l2GasLimit',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "l2GasPerPubdataByteLimit",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'l2GasPerPubdataByteLimit',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "refundRecipient",
-            "type": "address",
-            "internalType": "address"
+            name: 'refundRecipient',
+            type: 'address',
+            internalType: 'address',
           },
           {
-            "name": "secondBridgeAddress",
-            "type": "address",
-            "internalType": "address"
+            name: 'secondBridgeAddress',
+            type: 'address',
+            internalType: 'address',
           },
           {
-            "name": "secondBridgeValue",
-            "type": "uint256",
-            "internalType": "uint256"
+            name: 'secondBridgeValue',
+            type: 'uint256',
+            internalType: 'uint256',
           },
           {
-            "name": "secondBridgeCalldata",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      }
+            name: 'secondBridgeCalldata',
+            type: 'bytes',
+            internalType: 'bytes',
+          },
+        ],
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "canonicalTxHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'canonicalTxHash',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "payable"
+    stateMutability: 'payable',
   },
   {
-    "type": "function",
-    "name": "setAddresses",
-    "inputs": [
+    type: 'function',
+    name: 'setAddresses',
+    inputs: [
       {
-        "name": "_sharedBridge",
-        "type": "address",
-        "internalType": "address"
+        name: '_sharedBridge',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_l1CtmDeployer",
-        "type": "address",
-        "internalType": "contract ICTMDeploymentTracker"
+        name: '_l1CtmDeployer',
+        type: 'address',
+        internalType: 'contract ICTMDeploymentTracker',
       },
       {
-        "name": "_messageRoot",
-        "type": "address",
-        "internalType": "contract IMessageRoot"
+        name: '_messageRoot',
+        type: 'address',
+        internalType: 'contract IMessageRoot',
       },
       {
-        "name": "_chainAssetHandler",
-        "type": "address",
-        "internalType": "address"
+        name: '_chainAssetHandler',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_interopCenter",
-        "type": "address",
-        "internalType": "address"
+        name: '_interopCenter',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_chainRegistrationSender",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_chainRegistrationSender',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "setCTMAssetAddress",
-    "inputs": [
+    type: 'function',
+    name: 'setCTMAssetAddress',
+    inputs: [
       {
-        "name": "_additionalData",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        name: '_additionalData',
+        type: 'bytes32',
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetAddress",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_assetAddress',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "setPendingAdmin",
-    "inputs": [
+    type: 'function',
+    name: 'setPendingAdmin',
+    inputs: [
       {
-        "name": "_newPendingAdmin",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_newPendingAdmin',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "settlementLayer",
-    "inputs": [
+    type: 'function',
+    name: 'settlementLayer',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "unpauseMigration",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    type: 'function',
+    name: 'unpauseMigration',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "whitelistedSettlementLayers",
-    "inputs": [
+    type: 'function',
+    name: 'whitelistedSettlementLayers',
+    inputs: [
       {
-        "name": "_chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_chainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "event",
-    "name": "AssetRegistered",
-    "inputs": [
+    type: 'event',
+    name: 'AssetRegistered',
+    inputs: [
       {
-        "name": "assetInfo",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'assetInfo',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "_assetAddress",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: '_assetAddress',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "additionalData",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
+        name: 'additionalData',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
       },
       {
-        "name": "sender",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
+        name: 'sender',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "BaseTokenAssetIdRegistered",
-    "inputs": [
+    type: 'event',
+    name: 'BaseTokenAssetIdRegistered',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      }
+        name: 'assetId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "ChainTypeManagerAdded",
-    "inputs": [
+    type: 'event',
+    name: 'ChainTypeManagerAdded',
+    inputs: [
       {
-        "name": "chainTypeManager",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'chainTypeManager',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "ChainTypeManagerRemoved",
-    "inputs": [
+    type: 'event',
+    name: 'ChainTypeManagerRemoved',
+    inputs: [
       {
-        "name": "chainTypeManager",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'chainTypeManager',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "NewAdmin",
-    "inputs": [
+    type: 'event',
+    name: 'NewAdmin',
+    inputs: [
       {
-        "name": "oldAdmin",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'oldAdmin',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "newAdmin",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'newAdmin',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "NewChain",
-    "inputs": [
+    type: 'event',
+    name: 'NewChain',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "chainTypeManager",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
+        name: 'chainTypeManager',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
       },
       {
-        "name": "chainGovernance",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'chainGovernance',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "NewPendingAdmin",
-    "inputs": [
+    type: 'event',
+    name: 'NewPendingAdmin',
+    inputs: [
       {
-        "name": "oldPendingAdmin",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'oldPendingAdmin',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "newPendingAdmin",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+        name: 'newPendingAdmin',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "SettlementLayerRegistered",
-    "inputs": [
+    type: 'event',
+    name: 'SettlementLayerRegistered',
+    inputs: [
       {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
+        name: 'chainId',
+        type: 'uint256',
+        indexed: true,
+        internalType: 'uint256',
       },
       {
-        "name": "isWhitelisted",
-        "type": "bool",
-        "indexed": true,
-        "internalType": "bool"
-      }
+        name: 'isWhitelisted',
+        type: 'bool',
+        indexed: true,
+        internalType: 'bool',
+      },
     ],
-    "anonymous": false
-  }
+    anonymous: false,
+  },
 ] as const;
 export type IBridgehubAbi = typeof IBridgehubAbi;

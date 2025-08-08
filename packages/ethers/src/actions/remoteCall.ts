@@ -1,8 +1,4 @@
-import type {
-  RemoteCallInput,
-  SentMessage,
-  ChainRegistry,
-} from '@zksync-sdk/core';
+import type { RemoteCallInput, SentMessage, ChainRegistry } from '@zksync-sdk/core';
 
 import {
   ATTR,
@@ -13,10 +9,10 @@ import {
 } from '@zksync-sdk/core';
 
 import type { Signer } from 'ethers';
-import { Center }              from '../internal/abi';
-import { resolveChain }        from '../internal/chain';
-import { indexFromReceipt }    from '../internal/cache';
-import { fromEthersError }     from '../internal/errors';
+import { Center } from '../internal/abi';
+import { resolveChain } from '../internal/chain';
+import { indexFromReceipt } from '../internal/cache';
+import { fromEthersError } from '../internal/errors';
 
 type Hex = `0x${string}`;
 
@@ -34,23 +30,20 @@ type Hex = `0x${string}`;
  * ```
  */
 export async function remoteCall(
-  signer : Signer,
-  input  : RemoteCallInput & { registry?: ChainRegistry; allowMissingSendId?: boolean },
+  signer: Signer,
+  input: RemoteCallInput & { registry?: ChainRegistry; allowMissingSendId?: boolean },
 ): Promise<SentMessage> {
-
   try {
     /* ---------------- pre-checks ---------------- */
     if (!signer.provider) {
       throw new Error('PROVIDER_UNAVAILABLE: signer has no provider');
     }
 
-    const reg   = input.registry ?? defaultRegistry;
-    const src   = resolveChain(reg,  input.src!);
+    const reg = input.registry ?? defaultRegistry;
+    const src = resolveChain(reg, input.src!);
 
     /* ---------------- encode ---------------- */
-    const extraAttrs = input.value && input.value > 0n
-      ? [ATTR.interopCallValue(input.value)]
-      : [];
+    const extraAttrs = input.value && input.value > 0n ? [ATTR.interopCallValue(input.value)] : [];
 
     const attributes = mergeAttributes(input.attributes, extraAttrs);
 
@@ -62,7 +55,7 @@ export async function remoteCall(
 
     /* ---------------- send ---------------- */
     const tx = await signer.sendTransaction({
-      to   : src.addresses.interopCenter,
+      to: src.addresses.interopCenter,
       data,
       value: input.value ?? 0n,
     });
@@ -74,8 +67,10 @@ export async function remoteCall(
 
     /* ---------------- post-process ---------------- */
     const sendId = parseSendIdFromLogs(rc);
-    try { indexFromReceipt(sendId, tx.hash as Hex, rc); } catch {
-        // Ignore indexing errors
+    try {
+      indexFromReceipt(sendId, tx.hash as Hex, rc);
+    } catch {
+      // Ignore indexing errors
     }
 
     if (!sendId && !input.allowMissingSendId) {
@@ -83,7 +78,6 @@ export async function remoteCall(
     }
 
     return { sendId: sendId ?? '0x', srcTxHash: tx.hash as Hex };
-
   } catch (err) {
     throw fromEthersError(err, 'remoteCall');
   }

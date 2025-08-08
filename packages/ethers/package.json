@@ -6,7 +6,7 @@
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-   "exports": {
+  "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
@@ -32,7 +32,9 @@
       "types": "./dist/actions/finalization.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p ."
   },
@@ -42,7 +44,11 @@
   "dependencies": {
     "@zksync-sdk/core": "workspace:*"
   },
-  "engines": { "node": ">=18.17" },
-  "publishConfig": { "access": "public" },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT"
 }

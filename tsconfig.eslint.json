@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
   "include": ["packages/**/*.ts", "packages/**/*.tsx"],
-  "exclude": ["node_modules", "build", "examples/*"]
+  "exclude": ["node_modules", "build", "examples/*", "eslint.config.mjs"]
 }

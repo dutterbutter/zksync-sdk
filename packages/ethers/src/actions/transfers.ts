@@ -1,4 +1,3 @@
-// packages/ethers/src/actions/transfers.ts
 import type {
   ChainRegistry,
   NativeTransferInput,
@@ -11,15 +10,16 @@ import { bundle, defaultRegistry } from '@zksync-sdk/core';
 import type { Signer } from 'ethers';
 import { sendBundle } from './sendBundle';
 
-/* -------------------------------------------------------------------------- */
-/*  Internal helper                                                           */
-/* -------------------------------------------------------------------------- */
+import { ensureAllowance } from '../internal/allowance';
+import { resolveChain } from '../internal/chain';
 
-/** Builds a single-item bundle, merging caller-supplied MessageOptions. */
+/* -------------------------------------------------------------------------- */
+/*  Helper – build a single-item bundle                                       */
+/* -------------------------------------------------------------------------- */
 function asBundle(
-  base   : Omit<BundleInput, 'items'>,
-  items  : BundleInput['items'],
-  reg    : ChainRegistry | undefined,
+  base: Omit<BundleInput, 'items'>,
+  items: BundleInput['items'],
+  reg: ChainRegistry | undefined,
 ): BundleInput & { registry: ChainRegistry } {
   return {
     registry: reg ?? defaultRegistry,
@@ -29,49 +29,55 @@ function asBundle(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Actions                                                                   */
+/*  Native ETH transfer                                                       */
 /* -------------------------------------------------------------------------- */
-
-/** Transfer native ETH (wrapped in a 1-call bundle). */
 export async function sendNative(
-  signer : Signer,
-  input  : NativeTransferInput & { registry?: ChainRegistry },
+  signer: Signer,
+  input: NativeTransferInput & { registry?: ChainRegistry },
 ): Promise<SentMessage> {
-
-  if (!signer.provider) {
-    // keep it simple: throw a *plain* Error – sendBundle will convert to InteropError
-    throw new Error('PROVIDER_UNAVAILABLE: signer has no provider attached');
-  }
+  if (!signer.provider) throw new Error('PROVIDER_UNAVAILABLE: signer has no provider');
 
   const txBundle = asBundle(
     input,
-    [ bundle.native({ to: input.to, amount: input.amount }) ],
+    [bundle.native({ to: input.to, amount: input.amount })],
     input.registry,
   );
 
   return sendBundle(signer, txBundle);
 }
 
-/** Transfer an ERC-20 token (auto-approve when `approveIfNeeded` is true). */
+/* -------------------------------------------------------------------------- */
+/*  ERC-20 transfer (direct or indirect)                                      */
+/* -------------------------------------------------------------------------- */
 export async function sendERC20(
-  signer : Signer,
-  input  : ERC20TransferInput & { registry?: ChainRegistry },
+  signer: Signer,
+  input: ERC20TransferInput & { registry?: ChainRegistry },
 ): Promise<SentMessage> {
+  if (!signer.provider) throw new Error('PROVIDER_UNAVAILABLE: signer has no provider');
 
-  if (!signer.provider) {
-    throw new Error('PROVIDER_UNAVAILABLE: signer has no provider attached');
+  /* -------- 1.  Allowance on the source chain ------------------- */
+  if (input.approveIfNeeded ?? true) {
+    const reg = input.registry ?? defaultRegistry;
+    const src = resolveChain(reg, input.src!);
+    const ntv = src.addresses.nativeTokenVault;
+
+    // TODO: remove adding addresses to chaininfo
+    if (!ntv) throw new Error('CONFIG_MISSING: nativeTokenVault address not set for source chain');
+
+    await ensureAllowance(signer, input.token, ntv, input.amount);
   }
 
-  const txBundle = asBundle(
-    input,
-    [ bundle.erc20({
-        token : input.token,
-        to    : input.to,
-        amount: input.amount,
-        approveIfNeeded: input.approveIfNeeded,
-      }) ],
-    input.registry,
-  );
+  /* -------- 2.  Build bundle item --------------------------------------- */
+  const item = bundle.erc20({
+    token: input.token,
+    to: input.to,
+    amount: input.amount,
+    indirect: input.indirect,
+    bridgeMsgValue: input.bridgeMsgValue,
+    approveIfNeeded: input.approveIfNeeded,
+  });
 
+  /* -------- 3.  Wrap in a bundle & send --------------------------------- */
+  const txBundle = asBundle(input, [item], input.registry);
   return sendBundle(signer, txBundle);
 }

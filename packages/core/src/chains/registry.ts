@@ -3,14 +3,14 @@ import { builtinChains } from '.';
 import type { ChainInfo, ChainRef, ChainRegistryInit } from '../types';
 
 export class ChainRegistry {
-  private readonly byKey  = new Map<string, ChainInfo>();
-  private readonly byId   = new Map<number, ChainInfo>();
-  private readonly alias  = new Map<string, string>(); // alias -> key
+  private readonly byKey = new Map<string, ChainInfo>();
+  private readonly byId = new Map<number, ChainInfo>();
+  private readonly alias = new Map<string, string>(); // alias -> key
 
   constructor(init?: ChainRegistryInit) {
     const base = [...builtinChains, ...(init?.builtins ?? [])];
 
-    for (const c of base)   this.add(c, false);
+    for (const c of base) this.add(c, false);
     for (const o of init?.overrides ?? []) this.add(o, true);
   }
 

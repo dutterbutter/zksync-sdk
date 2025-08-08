@@ -17,7 +17,7 @@ export default {
   sendNative,
   sendERC20,
   remoteCall,
-//   estimateBundle,
-//   awaitFinalization,
-//   getMessageStatus,
+  //   estimateBundle,
+  //   awaitFinalization,
+  //   getMessageStatus,
 };

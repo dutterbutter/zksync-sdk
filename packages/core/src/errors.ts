@@ -57,7 +57,7 @@ const SEL = {
 
   // Standard:
   ErrorString: '0x08c379a0', // Error(string)
-  Panic: '0x4e487b71',       // Panic(uint256)
+  Panic: '0x4e487b71', // Panic(uint256)
 } as const;
 
 type Arg = string | bigint;
@@ -71,13 +71,13 @@ function decodeArgs(types: string[], data: Hex): Arg[] {
 
   const readU256 = (start: number) => {
     const v = body.slice(start, start + 32);
-    const hex = bytesToHex(v);               // no .slice(2) !
+    const hex = bytesToHex(v); // no .slice(2) !
     return BigInt('0x' + hex);
   };
 
   const readAddress = (start: number) => {
     const v = body.slice(start + 12, start + 32);
-    return ('0x' + bytesToHex(v)) as Hex;    // 20 bytes, 0x-prefixed
+    return ('0x' + bytesToHex(v)) as Hex; // 20 bytes, 0x-prefixed
   };
 
   const readFixed = (start: number, size: number) =>
@@ -87,20 +87,30 @@ function decodeArgs(types: string[], data: Hex): Arg[] {
     const off = Number(readU256(offset));
     const len = Number(readU256(off));
     const v = body.slice(off + 32, off + 32 + len);
-    return ('0x' + bytesToHex(v)) as Hex;    // 0x-prefixed
+    return ('0x' + bytesToHex(v)) as Hex; // 0x-prefixed
   };
 
   const out: Arg[] = [];
   for (let i = 0; i < types.length; i++) {
     const head = i * 32;
     switch (types[i]) {
-      case 'uint256': out.push(readU256(head)); break;
-      case 'bytes4':  out.push(readFixed(head + 28, 4)); break;
-      case 'bytes32': out.push(readFixed(head, 32)); break;
-      case 'address': out.push(readAddress(head)); break;
-      case 'bytes':   out.push(readDyn(head)); break;
+      case 'uint256':
+        out.push(readU256(head));
+        break;
+      case 'bytes4':
+        out.push(readFixed(head + 28, 4));
+        break;
+      case 'bytes32':
+        out.push(readFixed(head, 32));
+        break;
+      case 'address':
+        out.push(readAddress(head));
+        break;
+      case 'bytes':
+        out.push(readDyn(head));
+        break;
       case 'string': {
-        const hex = readDyn(head);           // 0x-prefixed
+        const hex = readDyn(head); // 0x-prefixed
         const buf = hexToBytes(strip0x(hex));
         out.push(new TextDecoder().decode(buf));
         break;
@@ -111,7 +121,6 @@ function decodeArgs(types: string[], data: Hex): Arg[] {
   }
   return out;
 }
-
 
 type KnownDecoded =
   | { code: InteropErrorCode; name: string; args?: Record<string, Arg> }
@@ -143,62 +152,123 @@ export function parseRevertData(data: Hex): KnownDecoded {
     }
     case SEL.AttributeViolatesRestriction: {
       const [sel, restriction] = decodeArgs(['bytes4', 'uint256'], data);
-      return { code: 'ATTR_VIOLATES_RESTRICTION', name: 'AttributeViolatesRestriction', args: { selector: sel, restriction } };
+      return {
+        code: 'ATTR_VIOLATES_RESTRICTION',
+        name: 'AttributeViolatesRestriction',
+        args: { selector: sel, restriction },
+      };
     }
     case SEL.BundleAlreadyProcessed: {
       const [bundleHash] = decodeArgs(['bytes32'], data);
-      return { code: 'BUNDLE_ALREADY_PROCESSED', name: 'BundleAlreadyProcessed', args: { bundleHash } };
+      return {
+        code: 'BUNDLE_ALREADY_PROCESSED',
+        name: 'BundleAlreadyProcessed',
+        args: { bundleHash },
+      };
     }
     case SEL.BundleVerifiedAlready: {
       const [bundleHash] = decodeArgs(['bytes32'], data);
-      return { code: 'BUNDLE_ALREADY_VERIFIED', name: 'BundleVerifiedAlready', args: { bundleHash } };
+      return {
+        code: 'BUNDLE_ALREADY_VERIFIED',
+        name: 'BundleVerifiedAlready',
+        args: { bundleHash },
+      };
     }
     case SEL.CallAlreadyExecuted: {
       const [bundleHash, callIndex] = decodeArgs(['bytes32', 'uint256'], data);
-      return { code: 'CALL_ALREADY_EXECUTED', name: 'CallAlreadyExecuted', args: { bundleHash, callIndex } };
+      return {
+        code: 'CALL_ALREADY_EXECUTED',
+        name: 'CallAlreadyExecuted',
+        args: { bundleHash, callIndex },
+      };
     }
     case SEL.CallNotExecutable: {
       const [bundleHash, callIndex] = decodeArgs(['bytes32', 'uint256'], data);
-      return { code: 'CALL_NOT_EXECUTABLE', name: 'CallNotExecutable', args: { bundleHash, callIndex } };
+      return {
+        code: 'CALL_NOT_EXECUTABLE',
+        name: 'CallNotExecutable',
+        args: { bundleHash, callIndex },
+      };
     }
     case SEL.CanNotUnbundle: {
       const [bundleHash] = decodeArgs(['bytes32'], data);
       return { code: 'CANNOT_UNBUNDLE', name: 'CanNotUnbundle', args: { bundleHash } };
     }
     case SEL.ExecutingNotAllowed: {
-      const [bundleHash, callerAddress, executionAddress] = decodeArgs(['bytes32', 'bytes', 'bytes'], data);
-      return { code: 'EXECUTING_NOT_ALLOWED', name: 'ExecutingNotAllowed', args: { bundleHash, callerAddress, executionAddress } };
+      const [bundleHash, callerAddress, executionAddress] = decodeArgs(
+        ['bytes32', 'bytes', 'bytes'],
+        data,
+      );
+      return {
+        code: 'EXECUTING_NOT_ALLOWED',
+        name: 'ExecutingNotAllowed',
+        args: { bundleHash, callerAddress, executionAddress },
+      };
     }
     case SEL.IndirectCallValueMismatch: {
       const [expected, actual] = decodeArgs(['uint256', 'uint256'], data);
-      return { code: 'INDIRECT_CALL_VALUE_MISMATCH', name: 'IndirectCallValueMismatch', args: { expected, actual } };
+      return {
+        code: 'INDIRECT_CALL_VALUE_MISMATCH',
+        name: 'IndirectCallValueMismatch',
+        args: { expected, actual },
+      };
     }
     case SEL.InteroperableAddressChainReferenceNotEmpty: {
       const [interoperableAddress] = decodeArgs(['bytes'], data);
-      return { code: 'CHAIN_REFERENCE_NOT_EMPTY', name: 'InteroperableAddressChainReferenceNotEmpty', args: { interoperableAddress } };
+      return {
+        code: 'CHAIN_REFERENCE_NOT_EMPTY',
+        name: 'InteroperableAddressChainReferenceNotEmpty',
+        args: { interoperableAddress },
+      };
     }
     case SEL.InteroperableAddressNotEmpty: {
       const [interoperableAddress] = decodeArgs(['bytes'], data);
-      return { code: 'INTEROP_ADDRESS_NOT_EMPTY', name: 'InteroperableAddressNotEmpty', args: { interoperableAddress } };
+      return {
+        code: 'INTEROP_ADDRESS_NOT_EMPTY',
+        name: 'InteroperableAddressNotEmpty',
+        args: { interoperableAddress },
+      };
     }
     case SEL.MessageNotIncluded: {
       return { code: 'MESSAGE_NOT_INCLUDED', name: 'MessageNotIncluded' };
     }
     case SEL.UnauthorizedMessageSender: {
       const [expected, actual] = decodeArgs(['address', 'address'], data);
-      return { code: 'UNAUTHORIZED_MESSAGE_SENDER', name: 'UnauthorizedMessageSender', args: { expected, actual } };
+      return {
+        code: 'UNAUTHORIZED_MESSAGE_SENDER',
+        name: 'UnauthorizedMessageSender',
+        args: { expected, actual },
+      };
     }
     case SEL.UnbundlingNotAllowed: {
-      const [bundleHash, callerAddress, unbundlerAddress] = decodeArgs(['bytes32', 'bytes', 'bytes'], data);
-      return { code: 'UNBUNDLING_NOT_ALLOWED', name: 'UnbundlingNotAllowed', args: { bundleHash, callerAddress, unbundlerAddress } };
+      const [bundleHash, callerAddress, unbundlerAddress] = decodeArgs(
+        ['bytes32', 'bytes', 'bytes'],
+        data,
+      );
+      return {
+        code: 'UNBUNDLING_NOT_ALLOWED',
+        name: 'UnbundlingNotAllowed',
+        args: { bundleHash, callerAddress, unbundlerAddress },
+      };
     }
     case SEL.WrongCallStatusLength: {
-      const [bundleCallsLength, providedCallStatusLength] = decodeArgs(['uint256', 'uint256'], data);
-      return { code: 'WRONG_CALL_STATUS_LENGTH', name: 'WrongCallStatusLength', args: { bundleCallsLength, providedCallStatusLength } };
+      const [bundleCallsLength, providedCallStatusLength] = decodeArgs(
+        ['uint256', 'uint256'],
+        data,
+      );
+      return {
+        code: 'WRONG_CALL_STATUS_LENGTH',
+        name: 'WrongCallStatusLength',
+        args: { bundleCallsLength, providedCallStatusLength },
+      };
     }
     case SEL.WrongDestinationChainId: {
       const [bundleHash, expected, actual] = decodeArgs(['bytes32', 'uint256', 'uint256'], data);
-      return { code: 'WRONG_DESTINATION_CHAIN_ID', name: 'WrongDestinationChainId', args: { bundleHash, expected, actual } };
+      return {
+        code: 'WRONG_DESTINATION_CHAIN_ID',
+        name: 'WrongDestinationChainId',
+        args: { bundleHash, expected, actual },
+      };
     }
   }
 
@@ -210,15 +280,19 @@ export function parseRevertData(data: Hex): KnownDecoded {
 export function interopErrorFromRevertData(
   data: Hex,
   cause?: unknown,
-  context?: string
+  context?: string,
 ): InteropError {
   const decoded = parseRevertData(data);
   if (decoded) {
     const msg = context ? `${context}: ${decoded.name}` : decoded.name;
     return new InteropError(decoded.code, msg, { decoded, revertData: data, cause });
   }
-  return new InteropError('SEND_FAILED', context ? `${context}: EVM call failed` : 'EVM call failed', {
-    revertData: data,
-    cause
-  });
+  return new InteropError(
+    'SEND_FAILED',
+    context ? `${context}: EVM call failed` : 'EVM call failed',
+    {
+      revertData: data,
+      cause,
+    },
+  );
 }

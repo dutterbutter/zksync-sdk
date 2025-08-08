@@ -18,7 +18,7 @@ const MESSAGE_SENT_SIG = 'MessageSent(bytes32,bytes,bytes,bytes,uint256,bytes[])
 export const MESSAGE_SENT_TOPIC0: Hex = (() => {
   const u8 = new TextEncoder().encode(MESSAGE_SENT_SIG);
   const h = bytesToHex(keccak_256(u8));
-  return (`0x${h.slice(2)}`);
+  return `0x${h.slice(2)}`;
 })();
 
 /**
@@ -46,6 +46,19 @@ export function toCallStarter(item: BundleItem): {
     };
   }
 
+  if (item.kind === 'erc20Transfer' && item._indirect) {
+    const attrs = [ATTR.indirectCall(item._bridgeMsgValue ?? 0n)];
+    const data = erc20TransferCalldata(item.to, item.amount);
+    return {
+      starter: {
+        to: encodeEvmV1AddressOnly(item.token),
+        data,
+        callAttributes: attrs,
+      },
+      value: item._bridgeMsgValue ?? 0n,
+    };
+  }
+
   if (item.kind === 'erc20Transfer') {
     const data = erc20TransferCalldata(item.to, item.amount);
     return {
@@ -56,7 +69,11 @@ export function toCallStarter(item: BundleItem): {
 
   if (item.kind === 'permit') {
     return {
-      starter: { to: encodeEvmV1AddressOnly(item.token), data: item.permitData, callAttributes: [] },
+      starter: {
+        to: encodeEvmV1AddressOnly(item.token),
+        data: item.permitData,
+        callAttributes: [],
+      },
       value: 0n,
     };
   }
@@ -106,7 +123,7 @@ function isLogsContainer(x: unknown): x is { logs?: readonly LogLike[] } {
  * Works with any receipt-like shape that exposes { logs?: LogLike[] } or a direct LogLike[].
  */
 export function parseSendIdFromLogs(
-  input: { logs?: readonly LogLike[] } | readonly LogLike[] | null | undefined
+  input: { logs?: readonly LogLike[] } | readonly LogLike[] | null | undefined,
 ): Hex | undefined {
   let logs: readonly LogLike[] = [];
 
@@ -114,16 +131,14 @@ export function parseSendIdFromLogs(
     logs = input;
   } else if (isLogsContainer(input)) {
     logs = input.logs ?? [];
-  } 
+  }
 
   for (const l of logs) {
     const topicsUnknown =
       l && typeof l === 'object' ? (l as Record<string, unknown>).topics : undefined;
 
     if (Array.isArray(topicsUnknown) && topicsUnknown.length >= 2) {
-      const topic0 = typeof topicsUnknown[0] === 'string'
-        ? topicsUnknown[0].toLowerCase()
-        : '';
+      const topic0 = typeof topicsUnknown[0] === 'string' ? topicsUnknown[0].toLowerCase() : '';
       if (topic0 === MESSAGE_SENT_TOPIC0.toLowerCase()) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const id = topicsUnknown[1];

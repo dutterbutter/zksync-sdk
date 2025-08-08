@@ -9,12 +9,12 @@ function errorStringHex(s: string): `0x${string}` {
   const padLen = (32 - (len % 32 || 32)) % 32;
 
   const selector = '08c379a0';
-  const offset   = (32).toString(16).padStart(64, '0');   // 0x20 as 32-byte word
-  const length   = len.toString(16).padStart(64, '0');    // string length as 32-byte word
-  const dataHex  = bytesToHex(enc);                       // no 0x
-  const padding  = '00'.repeat(padLen);
+  const offset = (32).toString(16).padStart(64, '0'); // 0x20 as 32-byte word
+  const length = len.toString(16).padStart(64, '0'); // string length as 32-byte word
+  const dataHex = bytesToHex(enc); // no 0x
+  const padding = '00'.repeat(padLen);
 
-  return (`0x${selector}${offset}${length}${dataHex}${padding}`) as `0x${string}`;
+  return `0x${selector}${offset}${length}${dataHex}${padding}` as `0x${string}`;
 }
 
 describe('parseRevertData', () => {

@@ -1,361 +1,361 @@
 export const IL2NativeTokenVaultAbi = [
   {
-    "type": "function",
-    "name": "ASSET_ROUTER",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'ASSET_ROUTER',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IAssetRouterBase"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'contract IAssetRouterBase',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "L1_CHAIN_ID",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'L1_CHAIN_ID',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "WETH_TOKEN",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'WETH_TOKEN',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "assetId",
-    "inputs": [
+    type: 'function',
+    name: 'assetId',
+    inputs: [
       {
-        "name": "token",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: 'token',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "bridgedTokens",
-    "inputs": [
+    type: 'function',
+    name: 'bridgedTokens',
+    inputs: [
       {
-        "name": "index",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: 'index',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "bridgedTokensCount",
-    "inputs": [],
-    "outputs": [
+    type: 'function',
+    name: 'bridgedTokensCount',
+    inputs: [],
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "calculateCreate2TokenAddress",
-    "inputs": [
+    type: 'function',
+    name: 'calculateCreate2TokenAddress',
+    inputs: [
       {
-        "name": "_originChainId",
-        "type": "uint256",
-        "internalType": "uint256"
+        name: '_originChainId',
+        type: 'uint256',
+        internalType: 'uint256',
       },
       {
-        "name": "_originToken",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_originToken',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "ensureTokenIsRegistered",
-    "inputs": [
+    type: 'function',
+    name: 'ensureTokenIsRegistered',
+    inputs: [
       {
-        "name": "_nativeToken",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_nativeToken',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "stateMutability": "nonpayable"
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "getERC20Getters",
-    "inputs": [
+    type: 'function',
+    name: 'getERC20Getters',
+    inputs: [
       {
-        "name": "_token",
-        "type": "address",
-        "internalType": "address"
+        name: '_token',
+        type: 'address',
+        internalType: 'address',
       },
       {
-        "name": "_originChainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_originChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "l2TokenAddress",
-    "inputs": [
+    type: 'function',
+    name: 'l2TokenAddress',
+    inputs: [
       {
-        "name": "_l1Token",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_l1Token',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "originChainId",
-    "inputs": [
+    type: 'function',
+    name: 'originChainId',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "registerToken",
-    "inputs": [
+    type: 'function',
+    name: 'registerToken',
+    inputs: [
       {
-        "name": "_l1Token",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_l1Token',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "setLegacyTokenAssetId",
-    "inputs": [
+    type: 'function',
+    name: 'setLegacyTokenAssetId',
+    inputs: [
       {
-        "name": "_l2TokenAddress",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '_l2TokenAddress',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "function",
-    "name": "tokenAddress",
-    "inputs": [
+    type: 'function',
+    name: 'tokenAddress',
+    inputs: [
       {
-        "name": "assetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: 'assetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: 'view',
   },
   {
-    "type": "function",
-    "name": "tryRegisterTokenFromBurnData",
-    "inputs": [
+    type: 'function',
+    name: 'tryRegisterTokenFromBurnData',
+    inputs: [
       {
-        "name": "_burnData",
-        "type": "bytes",
-        "internalType": "bytes"
+        name: '_burnData',
+        type: 'bytes',
+        internalType: 'bytes',
       },
       {
-        "name": "_expectedAssetId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: '_expectedAssetId',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
-    "type": "event",
-    "name": "BridgedTokenBeaconUpdated",
-    "inputs": [
+    type: 'event',
+    name: 'BridgedTokenBeaconUpdated',
+    inputs: [
       {
-        "name": "bridgedTokenBeacon",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
+        name: 'bridgedTokenBeacon',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
       },
       {
-        "name": "bridgedTokenProxyBytecodeHash",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
-      }
+        name: 'bridgedTokenProxyBytecodeHash',
+        type: 'bytes32',
+        indexed: false,
+        internalType: 'bytes32',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "FinalizeDeposit",
-    "inputs": [
+    type: 'event',
+    name: 'FinalizeDeposit',
+    inputs: [
       {
-        "name": "l1Sender",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l1Sender',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "l2Receiver",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l2Receiver',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "l2Token",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l2Token',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: 'amount',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "L2TokenBeaconUpdated",
-    "inputs": [
+    type: 'event',
+    name: 'L2TokenBeaconUpdated',
+    inputs: [
       {
-        "name": "l2TokenBeacon",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l2TokenBeacon',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "l2TokenProxyBytecodeHash",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      }
+        name: 'l2TokenProxyBytecodeHash',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
+      },
     ],
-    "anonymous": false
+    anonymous: false,
   },
   {
-    "type": "event",
-    "name": "WithdrawalInitiated",
-    "inputs": [
+    type: 'event',
+    name: 'WithdrawalInitiated',
+    inputs: [
       {
-        "name": "l2Sender",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l2Sender',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "l1Receiver",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l1Receiver',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "l2Token",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        name: 'l2Token',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
       },
       {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+        name: 'amount',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
+      },
     ],
-    "anonymous": false
-  }
+    anonymous: false,
+  },
 ] as const;
 export type IL2NativeTokenVaultAbi = typeof IL2NativeTokenVaultAbi;

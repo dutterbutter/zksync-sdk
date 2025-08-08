@@ -25,7 +25,7 @@ export default [
       '@typescript-eslint/consistent-type-imports': 'warn',
     },
 
-    /* ②  Ignore build artefacts everywhere */
-    ignores: ['**/dist/**', '**/node_modules/**', 'examples/**', 'scripts/**'],
+    /* ②  Ignore build artifacts everywhere */
+    ignores: ['**/dist/**', '**/node_modules/**', 'examples/**', 'scripts/**', "eslint.config.mjs"],
   },
 ];

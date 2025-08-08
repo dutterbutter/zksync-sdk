@@ -9,7 +9,7 @@ export const era: ChainInfo = {
   explorer: { baseUrl: 'https://explorer.zksync.io' },
   addresses: {
     interopCenter: '0x1111111111111111111111111111111111111111',
-    handler:       '0x2222222222222222222222222222222222222222',
+    handler: '0x2222222222222222222222222222222222222222',
   },
   gas: { gasBufferPct: 30, minGasLimit: 120_000n },
 };
@@ -23,7 +23,7 @@ export const era_testnet: ChainInfo = {
   explorer: { baseUrl: 'https://explorer.zksync.io' },
   addresses: {
     interopCenter: '0x1111111111111111111111111111111111111111',
-    handler:       '0x2222222222222222222222222222222222222222',
+    handler: '0x2222222222222222222222222222222222222222',
   },
   gas: { gasBufferPct: 30, minGasLimit: 120_000n },
 };

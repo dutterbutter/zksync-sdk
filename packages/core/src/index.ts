@@ -17,12 +17,8 @@ export { IInteropHandlerAbi } from './abis/IInteropHandler';
 export type { IInteropHandlerAbi as InteropHandlerAbiType } from './abis/IInteropHandler';
 
 // Aliases:
-export {
-  IInteropHandlerAbi as InteropHandlerAbi,
-} from './abis/IInteropHandler';
-export {
-    IInteropCenterAbi as InteropCenterAbi,
-} from './abis/IInteropCenter';
+export { IInteropHandlerAbi as InteropHandlerAbi } from './abis/IInteropHandler';
+export { IInteropCenterAbi as InteropCenterAbi } from './abis/IInteropCenter';
 export { IERC7786GatewaySourceAbi as ERC7786GatewaySourceAbi } from './abis/IERC7786GatewaySource';
 
 // ---- Bundle ----

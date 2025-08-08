@@ -47,8 +47,7 @@ function encodeFunctionData(
       // head = offset; tail = [len][data][zero-padding]
       heads.push(u256(BigInt(dynamicOffset)));
 
-      const data: Uint8Array =
-        typeof arg === 'string' ? from0x(arg) : (arg as Uint8Array);
+      const data: Uint8Array = typeof arg === 'string' ? from0x(arg) : (arg as Uint8Array);
 
       const len = u256(BigInt(data.length));
       const padLen = (32 - (data.length % 32 || 32)) % 32;
@@ -64,7 +63,7 @@ function encodeFunctionData(
 
   const body = concatBytes(...heads, ...tails);
 
-  return (`0x${bytesToHex(concatBytes(sel, body))}`);
+  return `0x${bytesToHex(concatBytes(sel, body))}`;
 }
 
 // ---- public API ----
@@ -79,8 +78,8 @@ export const ATTR = {
   interopCallValue: (value: bigint): `0x${string}` =>
     encodeFunctionData(SIG.interopCallValue, ['uint256'], [value]),
 
-  indirectCall: (indirectValue: bigint): `0x${string}` =>
-    encodeFunctionData(SIG.indirectCall, ['uint256'], [indirectValue]),
+  indirectCall: (bridgeMsgValue: bigint): `0x${string}` =>
+    encodeFunctionData(SIG.indirectCall, ['uint256'], [bridgeMsgValue]),
 
   executionAddress: (erc7930: `0x${string}`): `0x${string}` =>
     encodeFunctionData(SIG.executionAddress, ['bytes'], [erc7930]),

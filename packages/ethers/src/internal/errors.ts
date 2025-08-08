@@ -27,10 +27,7 @@ export function extractRevertDataEthers(err: unknown): Hex | undefined {
   /* -------------------------------------------------------------------- */
   /*  1.  ethers v6 common shapes: { error: { data } } or { data }        */
   /* -------------------------------------------------------------------- */
-  if (
-    hasProp<{ data?: unknown }, 'data'>(err, 'data') &&
-    isHexString(err.data)
-  ) {
+  if (hasProp<{ data?: unknown }, 'data'>(err, 'data') && isHexString(err.data)) {
     return err.data;
   }
 
@@ -48,18 +45,20 @@ export function extractRevertDataEthers(err: unknown): Hex | undefined {
     try {
       // narrow after parse
       interface BodyShape {
-        error?: {
-          data?: unknown;
-        } | {
-          data?: { data?: unknown };
-        };
+        error?:
+          | {
+              data?: unknown;
+            }
+          | {
+              data?: { data?: unknown };
+            };
       }
 
       const rawParsed: unknown = JSON.parse(err.body);
       if (typeof rawParsed === 'object' && rawParsed !== null) {
         const parsed = rawParsed as BodyShape;
 
-        if (isHexString(parsed.error?.data))                return parsed.error.data;
+        if (isHexString(parsed.error?.data)) return parsed.error.data;
         const nestedData = (parsed.error?.data as { data?: unknown })?.data;
         if (isHexString(nestedData)) return nestedData;
       }
@@ -89,11 +88,11 @@ export function fromEthersError(e: unknown, ctx = 'ethers-call'): InteropError {
   if (data) {
     const decoded = parseRevertData(data);
     if (decoded) {
-      return new InteropError(
-        decoded.code,
-        `${ctx}: ${decoded.name}`,
-        { revertData: data, args: decoded.args, cause: e },
-      );
+      return new InteropError(decoded.code, `${ctx}: ${decoded.name}`, {
+        revertData: data,
+        args: decoded.args,
+        cause: e,
+      });
     }
   }
   return new InteropError('SEND_FAILED', `${ctx}: EVM call failed`, { cause: e });

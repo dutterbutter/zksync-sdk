@@ -1,1 +1,1297 @@
-{"abi":[{"type":"function","name":"BRIDGE_HUB","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IBridgehub"}],"stateMutability":"view"},{"type":"function","name":"ETH_TOKEN_ASSET_ID","inputs":[],"outputs":[{"name":"","type":"bytes32","internalType":"bytes32"}],"stateMutability":"view"},{"type":"function","name":"INTEROP_CENTER","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IInteropCenter"}],"stateMutability":"view"},{"type":"function","name":"L1_CHAIN_ID","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"L1_NULLIFIER","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IL1Nullifier"}],"stateMutability":"view"},{"type":"function","name":"L1_WETH_TOKEN","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"assetHandlerAddress","inputs":[{"name":"_assetId","type":"bytes32","internalType":"bytes32"}],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"bridgeRecoverFailedTransfer","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_depositSender","type":"address","internalType":"address"},{"name":"_assetId","type":"bytes32","internalType":"bytes32"},{"name":"_assetData","type":"bytes","internalType":"bytes"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"bridgeRecoverFailedTransfer","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_depositSender","type":"address","internalType":"address"},{"name":"_assetId","type":"bytes32","internalType":"bytes32"},{"name":"_assetData","type":"bytes","internalType":"bytes"},{"name":"_l2TxHash","type":"bytes32","internalType":"bytes32"},{"name":"_l2BatchNumber","type":"uint256","internalType":"uint256"},{"name":"_l2MessageIndex","type":"uint256","internalType":"uint256"},{"name":"_l2TxNumberInBatch","type":"uint16","internalType":"uint16"},{"name":"_merkleProof","type":"bytes32[]","internalType":"bytes32[]"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"bridgehubConfirmL2Transaction","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_txDataHash","type":"bytes32","internalType":"bytes32"},{"name":"_txHash","type":"bytes32","internalType":"bytes32"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"bridgehubDeposit","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_originalCaller","type":"address","internalType":"address"},{"name":"_value","type":"uint256","internalType":"uint256"},{"name":"_data","type":"bytes","internalType":"bytes"}],"outputs":[{"name":"request","type":"tuple","internalType":"struct L2TransactionRequestTwoBridgesInner","components":[{"name":"magicValue","type":"bytes32","internalType":"bytes32"},{"name":"l2Contract","type":"address","internalType":"address"},{"name":"l2Calldata","type":"bytes","internalType":"bytes"},{"name":"factoryDeps","type":"bytes[]","internalType":"bytes[]"},{"name":"txDataHash","type":"bytes32","internalType":"bytes32"}]}],"stateMutability":"payable"},{"type":"function","name":"bridgehubDepositBaseToken","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_assetId","type":"bytes32","internalType":"bytes32"},{"name":"_originalCaller","type":"address","internalType":"address"},{"name":"_amount","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"payable"},{"type":"function","name":"depositLegacyErc20Bridge","inputs":[{"name":"_originalCaller","type":"address","internalType":"address"},{"name":"_l2Receiver","type":"address","internalType":"address"},{"name":"_l1Token","type":"address","internalType":"address"},{"name":"_amount","type":"uint256","internalType":"uint256"},{"name":"_l2TxGasLimit","type":"uint256","internalType":"uint256"},{"name":"_l2TxGasPerPubdataByte","type":"uint256","internalType":"uint256"},{"name":"_refundRecipient","type":"address","internalType":"address"}],"outputs":[{"name":"txHash","type":"bytes32","internalType":"bytes32"}],"stateMutability":"payable"},{"type":"function","name":"finalizeDeposit","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_assetId","type":"bytes32","internalType":"bytes32"},{"name":"_transferData","type":"bytes","internalType":"bytes"}],"outputs":[],"stateMutability":"payable"},{"type":"function","name":"finalizeWithdrawal","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_l2BatchNumber","type":"uint256","internalType":"uint256"},{"name":"_l2MessageIndex","type":"uint256","internalType":"uint256"},{"name":"_l2TxNumberInBatch","type":"uint16","internalType":"uint16"},{"name":"_message","type":"bytes","internalType":"bytes"},{"name":"_merkleProof","type":"bytes32[]","internalType":"bytes32[]"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"getDepositCalldata","inputs":[{"name":"_sender","type":"address","internalType":"address"},{"name":"_assetId","type":"bytes32","internalType":"bytes32"},{"name":"_assetData","type":"bytes","internalType":"bytes"}],"outputs":[{"name":"","type":"bytes","internalType":"bytes"}],"stateMutability":"view"},{"type":"function","name":"isWithdrawalFinalized","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"},{"name":"_l2BatchNumber","type":"uint256","internalType":"uint256"},{"name":"_l2MessageIndex","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"view"},{"type":"function","name":"l2BridgeAddress","inputs":[{"name":"_chainId","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"nativeTokenVault","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract INativeTokenVault"}],"stateMutability":"view"},{"type":"function","name":"setAssetDeploymentTracker","inputs":[{"name":"_assetRegistrationData","type":"bytes32","internalType":"bytes32"},{"name":"_assetDeploymentTracker","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setAssetHandlerAddressThisChain","inputs":[{"name":"_assetRegistrationData","type":"bytes32","internalType":"bytes32"},{"name":"_assetHandlerAddress","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setL1Erc20Bridge","inputs":[{"name":"_legacyBridge","type":"address","internalType":"contract IL1ERC20Bridge"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setNativeTokenVault","inputs":[{"name":"_nativeTokenVault","type":"address","internalType":"contract INativeTokenVault"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"transferFundsToNTV","inputs":[{"name":"_assetId","type":"bytes32","internalType":"bytes32"},{"name":"_amount","type":"uint256","internalType":"uint256"},{"name":"_originalCaller","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"event","name":"AssetDeploymentTrackerRegistered","inputs":[{"name":"assetId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"additionalData","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"assetDeploymentTracker","type":"address","indexed":false,"internalType":"address"}],"anonymous":false},{"type":"event","name":"AssetDeploymentTrackerSet","inputs":[{"name":"assetId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"assetDeploymentTracker","type":"address","indexed":true,"internalType":"address"},{"name":"additionalData","type":"bytes32","indexed":true,"internalType":"bytes32"}],"anonymous":false},{"type":"event","name":"AssetHandlerRegistered","inputs":[{"name":"assetId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"_assetHandlerAddress","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"BridgehubDepositBaseTokenInitiated","inputs":[{"name":"chainId","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"from","type":"address","indexed":true,"internalType":"address"},{"name":"assetId","type":"bytes32","indexed":false,"internalType":"bytes32"},{"name":"amount","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"BridgehubDepositFinalized","inputs":[{"name":"chainId","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"txDataHash","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"l2DepositTxHash","type":"bytes32","indexed":true,"internalType":"bytes32"}],"anonymous":false},{"type":"event","name":"BridgehubDepositInitiated","inputs":[{"name":"chainId","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"txDataHash","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"from","type":"address","indexed":true,"internalType":"address"},{"name":"assetId","type":"bytes32","indexed":false,"internalType":"bytes32"},{"name":"bridgeMintCalldata","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false},{"type":"event","name":"BridgehubMintData","inputs":[{"name":"bridgeMintData","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false},{"type":"event","name":"BridgehubWithdrawalInitiated","inputs":[{"name":"chainId","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"sender","type":"address","indexed":true,"internalType":"address"},{"name":"assetId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"assetDataHash","type":"bytes32","indexed":false,"internalType":"bytes32"}],"anonymous":false},{"type":"event","name":"ClaimedFailedDepositAssetRouter","inputs":[{"name":"chainId","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"assetId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"assetData","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false},{"type":"event","name":"DepositFinalizedAssetRouter","inputs":[{"name":"chainId","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"assetId","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"assetData","type":"bytes","indexed":false,"internalType":"bytes"}],"anonymous":false},{"type":"event","name":"LegacyDepositInitiated","inputs":[{"name":"chainId","type":"uint256","indexed":true,"internalType":"uint256"},{"name":"l2DepositTxHash","type":"bytes32","indexed":true,"internalType":"bytes32"},{"name":"from","type":"address","indexed":true,"internalType":"address"},{"name":"to","type":"address","indexed":false,"internalType":"address"},{"name":"l1Token","type":"address","indexed":false,"internalType":"address"},{"name":"amount","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false}],"bytecode":{"object":"0x","sourceMap":"","linkReferences":{}},"deployedBytecode":{"object":"0x","sourceMap":"","linkReferences":{}},"methodIdentifiers":{"BRIDGE_HUB()":"5d4edca7","ETH_TOKEN_ASSET_ID()":"81eccdd4","INTEROP_CENTER()":"5ecd0e3a","L1_CHAIN_ID()":"2f90b184","L1_NULLIFIER()":"e60ccaba","L1_WETH_TOKEN()":"41c841c3","assetHandlerAddress(bytes32)":"53b9e632","bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)":"1346ca3b","bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes,bytes32,uint256,uint256,uint16,bytes32[])":"3601e63e","bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)":"8eb7db57","bridgehubDeposit(uint256,address,uint256,bytes)":"ca408c23","bridgehubDepositBaseToken(uint256,bytes32,address,uint256)":"c4879440","depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)":"9e6ea417","finalizeDeposit(uint256,bytes32,bytes)":"9c884fd1","finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])":"c87325f1","getDepositCalldata(address,bytes32,bytes)":"2ff0b2ea","isWithdrawalFinalized(uint256,uint256,uint256)":"8f31f052","l2BridgeAddress(uint256)":"07ee9355","nativeTokenVault()":"64e130cf","setAssetDeploymentTracker(bytes32,address)":"c0a16dda","setAssetHandlerAddressThisChain(bytes32,address)":"548a5a33","setL1Erc20Bridge(address)":"30bda03e","setNativeTokenVault(address)":"0f3fa211","transferFundsToNTV(bytes32,uint256,address)":"57d4ca5c"},"rawMetadata":"{\"compiler\":{\"version\":\"0.8.28+commit.7893614a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"additionalData\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"assetDeploymentTracker\",\"type\":\"address\"}],\"name\":\"AssetDeploymentTrackerRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"assetDeploymentTracker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"additionalData\",\"type\":\"bytes32\"}],\"name\":\"AssetDeploymentTrackerSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_assetHandlerAddress\",\"type\":\"address\"}],\"name\":\"AssetHandlerRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BridgehubDepositBaseTokenInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"txDataHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"l2DepositTxHash\",\"type\":\"bytes32\"}],\"name\":\"BridgehubDepositFinalized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"txDataHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"bridgeMintCalldata\",\"type\":\"bytes\"}],\"name\":\"BridgehubDepositInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"bridgeMintData\",\"type\":\"bytes\"}],\"name\":\"BridgehubMintData\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"assetDataHash\",\"type\":\"bytes32\"}],\"name\":\"BridgehubWithdrawalInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"assetData\",\"type\":\"bytes\"}],\"name\":\"ClaimedFailedDepositAssetRouter\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"assetData\",\"type\":\"bytes\"}],\"name\":\"DepositFinalizedAssetRouter\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"l2DepositTxHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"l1Token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"LegacyDepositInitiated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"BRIDGE_HUB\",\"outputs\":[{\"internalType\":\"contract IBridgehub\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ETH_TOKEN_ASSET_ID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"INTEROP_CENTER\",\"outputs\":[{\"internalType\":\"contract IInteropCenter\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"L1_CHAIN_ID\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"L1_NULLIFIER\",\"outputs\":[{\"internalType\":\"contract IL1Nullifier\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"L1_WETH_TOKEN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"}],\"name\":\"assetHandlerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_depositSender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_assetData\",\"type\":\"bytes\"}],\"name\":\"bridgeRecoverFailedTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_depositSender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_assetData\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"_l2TxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_l2BatchNumber\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2MessageIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"_l2TxNumberInBatch\",\"type\":\"uint16\"},{\"internalType\":\"bytes32[]\",\"name\":\"_merkleProof\",\"type\":\"bytes32[]\"}],\"name\":\"bridgeRecoverFailedTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_txDataHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_txHash\",\"type\":\"bytes32\"}],\"name\":\"bridgehubConfirmL2Transaction\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_value\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"name\":\"bridgehubDeposit\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"magicValue\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"l2Contract\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"l2Calldata\",\"type\":\"bytes\"},{\"internalType\":\"bytes[]\",\"name\":\"factoryDeps\",\"type\":\"bytes[]\"},{\"internalType\":\"bytes32\",\"name\":\"txDataHash\",\"type\":\"bytes32\"}],\"internalType\":\"struct L2TransactionRequestTwoBridgesInner\",\"name\":\"request\",\"type\":\"tuple\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"bridgehubDepositBaseToken\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_l2Receiver\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_l1Token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2TxGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2TxGasPerPubdataByte\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_refundRecipient\",\"type\":\"address\"}],\"name\":\"depositLegacyErc20Bridge\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"txHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_transferData\",\"type\":\"bytes\"}],\"name\":\"finalizeDeposit\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2BatchNumber\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2MessageIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"_l2TxNumberInBatch\",\"type\":\"uint16\"},{\"internalType\":\"bytes\",\"name\":\"_message\",\"type\":\"bytes\"},{\"internalType\":\"bytes32[]\",\"name\":\"_merkleProof\",\"type\":\"bytes32[]\"}],\"name\":\"finalizeWithdrawal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_assetData\",\"type\":\"bytes\"}],\"name\":\"getDepositCalldata\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2BatchNumber\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2MessageIndex\",\"type\":\"uint256\"}],\"name\":\"isWithdrawalFinalized\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"}],\"name\":\"l2BridgeAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nativeTokenVault\",\"outputs\":[{\"internalType\":\"contract INativeTokenVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetRegistrationData\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_assetDeploymentTracker\",\"type\":\"address\"}],\"name\":\"setAssetDeploymentTracker\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetRegistrationData\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_assetHandlerAddress\",\"type\":\"address\"}],\"name\":\"setAssetHandlerAddressThisChain\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IL1ERC20Bridge\",\"name\":\"_legacyBridge\",\"type\":\"address\"}],\"name\":\"setL1Erc20Bridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract INativeTokenVault\",\"name\":\"_nativeTokenVault\",\"type\":\"address\"}],\"name\":\"setNativeTokenVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"}],\"name\":\"transferFundsToNTV\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"Matter Labs\",\"custom:security-contact\":\"security@matterlabs.dev\",\"kind\":\"dev\",\"methods\":{\"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)\":{\"details\":\"Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.\",\"params\":{\"_assetData\":\"The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.\",\"_assetId\":\"The unique identifier of the deposited L1 token.\",\"_chainId\":\"The ZK chain id to which the deposit was initiated.\",\"_depositSender\":\"The address of the entity that initiated the deposit.\"}},\"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes,bytes32,uint256,uint256,uint16,bytes32[])\":{\"details\":\"Withdraw funds from the initiated deposit, that failed when finalizing on L2.Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.\",\"params\":{\"_assetData\":\"The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.\",\"_assetId\":\"The unique identifier of the deposited L1 token.\",\"_chainId\":\"The ZK chain id to which deposit was initiated.\",\"_depositSender\":\"The address of the entity that initiated the deposit.\",\"_l2BatchNumber\":\"The L2 batch number where the deposit finalization was processed.\",\"_l2MessageIndex\":\"The position in the L2 logs Merkle tree of the l2Log that was sent with the message.\",\"_l2TxHash\":\"The L2 transaction hash of the failed deposit finalization.\",\"_l2TxNumberInBatch\":\"The L2 transaction number in a batch, in which the log was sent.\",\"_merkleProof\":\"The Merkle proof of the processing L1 -> L2 transaction with deposit finalization.\"}},\"bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)\":{\"params\":{\"_chainId\":\"Destination chain ID.\",\"_txDataHash\":\"The keccak256 hash of 0x01 || abi.encode(bytes32, bytes) to identify deposits.\",\"_txHash\":\"The hash of the L1->L2 transaction to confirm the deposit.\"}},\"bridgehubDeposit(uint256,address,uint256,bytes)\":{\"details\":\"Data has the following abi encoding for legacy deposits: address _l1Token, uint256 _amount, address _l2Receiver for new deposits: bytes32 _assetId, bytes _transferData\",\"params\":{\"_chainId\":\"Destination chain ID.\",\"_data\":\"The calldata for the second bridge deposit.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\",\"_value\":\"The `msg.value` to be deposited on the target chain.\"},\"returns\":{\"request\":\"The data used by the bridgehub to create L2 transaction request to specific ZK chain.\"}},\"bridgehubDepositBaseToken(uint256,bytes32,address,uint256)\":{\"details\":\"If the corresponding L2 transaction fails, refunds are issued to a refund recipient on L2.\",\"params\":{\"_amount\":\"The total amount of tokens to be bridged.\",\"_assetId\":\"The deposited asset ID.\",\"_chainId\":\"The chain ID of the ZK chain to which deposit.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\"}},\"depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)\":{\"details\":\"If the token is bridged for the first time, the L2 token contract will be deployed. Note however, that the newly-deployed token does not support any custom logic, i.e. rebase tokens' functionality is not supported.If the L2 deposit finalization transaction fails, the `_refundRecipient` will receive the `_l2Value`. Please note, the contract may change the refund recipient's address to eliminate sending funds to addresses out of control. - If `_refundRecipient` is a contract on L1, the refund will be sent to the aliased `_refundRecipient`. - If `_refundRecipient` is set to `address(0)` and the sender has NO deployed bytecode on L1, the refund will be sent to the `msg.sender` address. - If `_refundRecipient` is set to `address(0)` and the sender has deployed bytecode on L1, the refund will be sent to the aliased `msg.sender` address.The address aliasing of L1 contracts as refund recipient on L2 is necessary to guarantee that the funds are controllable through the Mailbox, since the Mailbox applies address aliasing to the from address for the L2 tx if the L1 msg.sender is a contract. Without address aliasing for L1 contracts as refund recipients they would not be able to make proper L2 tx requests through the Mailbox to use or withdraw the funds from L2, and the funds would be lost.\",\"params\":{\"_amount\":\"The total amount of tokens to be bridged.\",\"_l1Token\":\"The L1 token address which is deposited.\",\"_l2Receiver\":\"The account address that should receive funds on L2.\",\"_l2TxGasLimit\":\"The L2 gas limit to be used in the corresponding L2 transaction.\",\"_l2TxGasPerPubdataByte\":\"The gasPerPubdataByteLimit to be used in the corresponding L2 transaction.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\",\"_refundRecipient\":\"The address on L2 that will receive the refund for the transaction.\"},\"returns\":{\"txHash\":\"The L2 transaction hash of deposit finalization.\"}},\"finalizeDeposit(uint256,bytes32,bytes)\":{\"details\":\"We have both the legacy finalizeWithdrawal and the new finalizeDeposit functions, finalizeDeposit uses the new format. On the L2 we have finalizeDeposit with new and old formats both.\",\"params\":{\"_assetId\":\"The bridged asset ID.\",\"_chainId\":\"The chain ID of the transaction to check.\",\"_transferData\":\"The position in the L2 logs Merkle tree of the l2Log that was sent with the message.\"}},\"finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])\":{\"params\":{\"_chainId\":\"The chain ID of the transaction to check\",\"_l2BatchNumber\":\"The L2 batch number where the withdrawal was processed\",\"_l2MessageIndex\":\"The position in the L2 logs Merkle tree of the l2Log that was sent with the message\",\"_l2TxNumberInBatch\":\"The L2 transaction number in the batch, in which the log was sent\",\"_merkleProof\":\"The Merkle proof of the inclusion L2 -> L1 message about withdrawal initialization\",\"_message\":\"The L2 withdraw data, stored in an L2 -> L1 message\"}},\"getDepositCalldata(address,bytes32,bytes)\":{\"params\":{\"_assetData\":\"The encoded data, which is used by the asset handler to determine L2 recipient and amount. Might include extra information.\",\"_assetId\":\"The deposited asset ID.\",\"_sender\":\"The address of the deposit initiator.\"},\"returns\":{\"_0\":\"Returns calldata used on ZK chain.\"}},\"setAssetHandlerAddressThisChain(bytes32,address)\":{\"details\":\"The caller of this function is encoded within the `assetId`, therefore, it should be invoked by the asset deployment tracker contract.No access control on the caller, as msg.sender is encoded in the assetId.Typically, for most tokens, ADT is the native token vault. However, custom tokens may have their own specific asset deployment trackers.`setAssetHandlerAddressOnCounterpart` should be called on L1 to set asset handlers on L2 chains for a specific asset ID.\",\"params\":{\"_assetHandlerAddress\":\"The address of the asset handler to be set for the provided asset.\",\"_assetRegistrationData\":\"The asset data which may include the asset address and any additional required data or encodings.\"}},\"transferFundsToNTV(bytes32,uint256,address)\":{\"details\":\"assetId is not the padded address, but the correct encoded id (NTV stores respective format for IDs)\",\"params\":{\"_amount\":\"The asset amount to be transferred to native token vault.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\"}}},\"title\":\"L1 Bridge contract interface\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)\":{\"notice\":\"Withdraw funds from the initiated deposit, that failed when finalizing on L2.\"},\"bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)\":{\"notice\":\"Routes the confirmation to nullifier for backward compatibility.Confirms the acceptance of a transaction by the Mailbox, as part of the L2 transaction process within Bridgehub. This function is utilized by `requestL2TransactionTwoBridges` to validate the execution of a transaction.\"},\"bridgehubDeposit(uint256,address,uint256,bytes)\":{\"notice\":\"Initiates a transfer transaction within Bridgehub, used by `requestL2TransactionTwoBridges`.\"},\"bridgehubDepositBaseToken(uint256,bytes32,address,uint256)\":{\"notice\":\"Allows bridgehub to acquire mintValue for L1->L2 and L2->L2 transactions.\"},\"depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)\":{\"notice\":\"Initiates a deposit by locking funds on the contract and sending the request of processing an L2 transaction where tokens would be minted.\"},\"finalizeDeposit(uint256,bytes32,bytes)\":{\"notice\":\"Finalize the withdrawal and release funds.\"},\"finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])\":{\"notice\":\"Finalize the withdrawal and release funds\"},\"getDepositCalldata(address,bytes32,bytes)\":{\"notice\":\"Generates a calldata for calling the deposit finalization on the L2 native token contract.\"},\"setAssetHandlerAddressThisChain(bytes32,address)\":{\"notice\":\"Sets the asset handler address for a specified asset ID on the chain of the asset deployment tracker.\"},\"transferFundsToNTV(bytes32,uint256,address)\":{\"notice\":\"Transfers funds to Native Token Vault, if the asset is registered with it. Does nothing for ETH or non-registered tokens.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/bridge/asset-router/IL1AssetRouter.sol\":\"IL1AssetRouter\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":9999999},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/contracts-master/=lib/openzeppelin-contracts-master/contracts/\",\":@openzeppelin/contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/contracts/\",\":@openzeppelin/contracts-v4/=lib/openzeppelin-contracts-v4/contracts/\",\":@openzeppelin/contracts/=lib/openzeppelin-contracts-master/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts-master/lib/erc4626-tests/\",\":eth-gas-reporter/=node_modules/eth-gas-reporter/\",\":forge-std/=lib/forge-std/src/\",\":foundry-test/=test/foundry/\",\":halmos-cheatcodes/=lib/openzeppelin-contracts-master/lib/halmos-cheatcodes/src/\",\":hardhat/=node_modules/hardhat/\",\":l2-contracts/=../l2-contracts/contracts/\",\":murky/=lib/murky/src/\",\":openzeppelin-contracts-master/=lib/openzeppelin-contracts-master/\",\":openzeppelin-contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/\",\":openzeppelin-contracts-v4/=lib/openzeppelin-contracts-v4/\",\":openzeppelin-contracts/=lib/murky/lib/openzeppelin-contracts/\"]},\"sources\":{\"contracts/bridge/asset-router/IAssetRouterBase.sol\":{\"keccak256\":\"0x45224b53e88e7a9af471644435326cfb9339b853a6f1158db349ab991e75b7b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4c27fd12a4b40916f1c72e7660f9a98c35bde0efd1e00e1de0a2cfb4586463d0\",\"dweb:/ipfs/QmTBvWnZLLodvz6v76Sc8gc2YrddNwFGH6gNayQLbRGTVm\"]},\"contracts/bridge/asset-router/IL1AssetRouter.sol\":{\"keccak256\":\"0x8c6d915c51ec21a2b891688bb25e44dd5ae00c6e8d3d84a1ab0c040f5a522a02\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e4767ecc2d245ba2ed08d9de93622e5797aafe44719452143d3e294c5e08e777\",\"dweb:/ipfs/QmV4fpsCEeCSbUMj4KDKbAzZswyh8MKCeMsbXqhB2SubUJ\"]},\"contracts/bridge/asset-tracker/IAssetTrackerBase.sol\":{\"keccak256\":\"0x7f6c4591e74bac5f7227dbd67a030565c0316b886fa69883e42b27a76d9828e5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e161c36b7f6b72ea8db2a21dfee059969215cd3d6984f6dabc9daef4bc36bedf\",\"dweb:/ipfs/QmTJqhZNg5djGzWmfbYPmegVsCzWPfhbfgYYSdwtAw58XC\"]},\"contracts/bridge/asset-tracker/IL2AssetTracker.sol\":{\"keccak256\":\"0x8da7d429a331b61fdceaf7ceb85c11fa480fe24b96159dae54eebb3b299b987f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e7db8a9e91a84e50fcc85fd7db3a7e908569b9c401613382e447339e9222a032\",\"dweb:/ipfs/QmZNxHKfaZjaZZyRuyGuWomXaAjQB767ppLa8ni4PGzvU4\"]},\"contracts/bridge/interfaces/IAssetHandler.sol\":{\"keccak256\":\"0xc79f3ac3119814c246c9fe32ff4e644796428a44a74e13a7fc690fa188a86a72\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://467fe78ec0d8d3f458912d5ba0227e568d87666e8bcede35f9560f8b58bb1776\",\"dweb:/ipfs/QmQFsWV9Z1XgEfhaCyDwuVucgvqWxUSPTp2bpsb8rZqoke\"]},\"contracts/bridge/interfaces/IL1AssetDeploymentTracker.sol\":{\"keccak256\":\"0xa3e861213159310b287ba8cce396b8ff4dffa7f8869fe012413d0481fce9c50a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c33dcc891a298dcc310f97f189ed0a39813e8636422e620725b0611e3974a836\",\"dweb:/ipfs/QmWrfjGV6rFQDGMmGFbF8y7iKQwJPU3wViS3DVRmo2aSC9\"]},\"contracts/bridge/interfaces/IL1AssetHandler.sol\":{\"keccak256\":\"0x9de4855ee1fe103e010c37cc1e8497c77bb4263b096635293289065e3dc35806\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://513172cfe69ac0d5f53de3ff7c8d9ba3edbde3d50a7700333b9259a44c6f703b\",\"dweb:/ipfs/QmeQzJizqh8JCZNkwQLPcoeS867yKMv6EJqvACndsJfWd4\"]},\"contracts/bridge/interfaces/IL1CrossChainSender.sol\":{\"keccak256\":\"0x69e37fdc57668a4243a73c8ba018d5dc4af9419bc984e8799b168cb67bb22950\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://27dddad22863478e43fdf43c7a85a8bc222d51ce4270f69a60ac6611a7f07312\",\"dweb:/ipfs/QmU2i1KhNGDssVfxH9eKQfxiEATsjNvVwUT2Qz4jVahXm9\"]},\"contracts/bridge/interfaces/IL1ERC20Bridge.sol\":{\"keccak256\":\"0xf3540c809d4dcaff17a8c45a4f88677f69bbc04e414513c6a166dbbf08043b80\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0e139ac2997f590773320fdeebc856e4f5eee5da8106df52e85507c0d8f2cb71\",\"dweb:/ipfs/QmeXmie3PXC1BMmzjpXwWFZaTkkqMh3devuyzEuavZ1DbP\"]},\"contracts/bridge/interfaces/IL1Nullifier.sol\":{\"keccak256\":\"0x17d485335f80eec2a32487024aa9ffeb618162c5fbf360a4b62ccafedfe96e30\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://bebe6c82a53be797209b7caff944e638806163ed37f2dd40038fdfaf927709b2\",\"dweb:/ipfs/QmaEdK7rgxwSwADfpE6AYyiq8tFBuDYr1efuoQNYV2pNmo\"]},\"contracts/bridge/interfaces/IL1SharedBridgeLegacy.sol\":{\"keccak256\":\"0x3fc6b0f6948e0365198c3f15b03e8a33f5ce00a6f17227205fd235143eb38147\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1eaf26b87c46ba15f19fa9e9f620b99f9b90cc9e6cf0289bb8c8264c2873567c\",\"dweb:/ipfs/QmSt9RoBgRZnw2BiJE5KGNYRcfaRF3VKca7Ac9fLs3ZLYD\"]},\"contracts/bridge/ntv/IL1NativeTokenVault.sol\":{\"keccak256\":\"0xfb5c60cfc8dd9461cc87d0dd56cac685dd5b0390afec1d6a9299a8c8dbd7d3db\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://86641a4b17f60ccd5ed3928944c9aec159ee0db35e816ef011bf15911ff15878\",\"dweb:/ipfs/QmZRzc1adBhyYkCoq2nYeH91R1UMQXMCJV1LtHuFZoy8cq\"]},\"contracts/bridge/ntv/IL2NativeTokenVault.sol\":{\"keccak256\":\"0xe3a4266c819c6f3ce1359cd16fd999e4a045b1b41c50e3c01ec01b0e9f9d5b89\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6a4543e8302395c286eb9f40aef2287bdd128746e4dca557a5be989e40b3f0ed\",\"dweb:/ipfs/QmfNApggA61S8q3wtYetYBx7fZEQtw6uRHWgFc8TBsQk5d\"]},\"contracts/bridge/ntv/INativeTokenVault.sol\":{\"keccak256\":\"0x67ccf56babdbedd06cde1ddce8308523e220d4e4548c69c7dade3bbefd3fb406\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c75b92e1ac6f65c65f06ab34cd3e1ba1d60da0dd38ebcad1310d1d149a9a6867\",\"dweb:/ipfs/QmSkQdNcUWHyxAhowRx6NcEQgbygvqTVDctd4dvPocAoom\"]},\"contracts/bridgehub/IBridgehub.sol\":{\"keccak256\":\"0x20b0564fba0c5a244ff847e3629826f21226e3ec011be22125dc359ebbaac21a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6e69e3bb97885e171424b204f3ee7364db4b936568d13675d09a3bf2559828c5\",\"dweb:/ipfs/Qmdo4oXfsjBVM5Hh52fDeXqnz1qebthrd3gDC4csF8QY68\"]},\"contracts/bridgehub/ICTMDeploymentTracker.sol\":{\"keccak256\":\"0xb8686200049daa7b71fb8ba3d8a08863a3a8dedac07f51bee2d77286d0010e1e\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b05d8ee606a16ac33ffaf40e1eeab86971f47517c7cd1efdc1c76edca45e314b\",\"dweb:/ipfs/QmSnsR6iWEJ6V25qXD8xxbGyTf2ozdHL8C8aM3QNwo9zic\"]},\"contracts/bridgehub/IChainAssetHandler.sol\":{\"keccak256\":\"0xe0e62e66809b5e0906be2513e35878854ab50cd872faba1a906ade0193ffeec7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://797b14dd8f43971e1e884760efc87934ae938044595d2c9fe19ea19d39c7750a\",\"dweb:/ipfs/QmdVSEfmSpaengu5FcKhzYLh2CmtHzpVUhLGNqWVkW8GGa\"]},\"contracts/bridgehub/IMessageRoot.sol\":{\"keccak256\":\"0xb63ffb2925570ec605a37e59bb9816f8b1d0323ff3257f2d93e8c9827802655a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e8bdb72dd57b5339a42f2ac18507a64145db90f97611444cf78fe2d4ca42295a\",\"dweb:/ipfs/QmQGzLfNUiBNGxfQp2Kxv1qPJJ1xSENGb8ZVfeAZhgipuP\"]},\"contracts/common/Config.sol\":{\"keccak256\":\"0xab2390db71b8d000c7c286aa718256113bef677ba8253d2e22d18495877bf412\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1e37eb3822c5d4c38d5c0a2ab460a07349aa85fc84cab8e7df3b9c16de3e83f1\",\"dweb:/ipfs/QmeP4FqEYzSSCUHtcetAKGkSYuFoDaqu3CPEdbgbaxHGnR\"]},\"contracts/common/L1ContractErrors.sol\":{\"keccak256\":\"0x925ba6d3147ee1f1e8d09a2995da3480f8cd46a8a31bf244964acc1e809676f4\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a9590796fc185897ac48df4426998e1ea693f719985779a14eb733b8516b2175\",\"dweb:/ipfs/QmX9BbXo7JAfjkmkgwGxY3vgHuzJDY7ma6DyR6W6KieUky\"]},\"contracts/common/Messaging.sol\":{\"keccak256\":\"0x24cf25a25c33d21d0f293e18f45b3cc51ae41c02f4b062ac9340eb1e89159630\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://91bfbb8682504581896740226ec884a79bd3dcc37a6fadcc37f2922a73506ce5\",\"dweb:/ipfs/QmcZj8Aez4Yewjez1aKJb5u6nSori91JsaibChjcktTfob\"]},\"contracts/common/interfaces/IL2ContractDeployer.sol\":{\"keccak256\":\"0xa03848d792f166433282dc620e9b087fb3929fde12d9c96ea2d245a92552d371\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8fae684b28877c4c0778bc5c1d0c44fa08890b520dcd24fc574ed68405852370\",\"dweb:/ipfs/QmZjdWtEskToFiu3RwnyAMvkMrv3MMnR2MPv7bHfnPKN23\"]},\"contracts/common/interfaces/IL2InteropRootStorage.sol\":{\"keccak256\":\"0x3e2950976665d6e7ebffb4834b58117c8ec48ab95cdb77a1164f1bef6a648d79\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://766f21866ecde1f967d2f952888b2ea183315d92dbf9a2b22f4db637cf07c785\",\"dweb:/ipfs/QmcggwNfV8RqmCmzSrEkfdNXUofttWFYNhYgPzk7FNqvbe\"]},\"contracts/common/interfaces/ISystemContext.sol\":{\"keccak256\":\"0x5cf0e55becd6a0456a6e3634456f6c61c1de833319dcacfebdf8f1e3d8875258\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a540c39201540e27a2488e2f8ddb8fcd934e0ba1811a0a5c61eb5b75930d2df4\",\"dweb:/ipfs/QmazbWo5bCcEDr1admp7wmVRm4C2Yvx2s7wbT1kXiJMFpj\"]},\"contracts/common/l2-helpers/IBaseToken.sol\":{\"keccak256\":\"0xe7257aa568ebc554817a0e79fdfbbd86fa9ea291a572ce2955b435b34c3155f1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8136bee42e55b2c17f6f9b82d43748d82af3abf93293bcd2927cd95fba6e6143\",\"dweb:/ipfs/QmeeFVQdYKgoivpxUMLNLNNVJKYmHXhvP49rtjnmDNHcbu\"]},\"contracts/common/l2-helpers/IL2ToL1Messenger.sol\":{\"keccak256\":\"0x2b087d83b96c92e5472c58c27148460445e7d99b2221f3abebfaec06585a31f1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e55e320076393b63f1ff6bda9013c45a7ceff05d8954b41d71488d18c33c550f\",\"dweb:/ipfs/Qmeiibb8zh87WkKBenvTbQoLRvNRE8RKvdPvkYmFueRbQw\"]},\"contracts/common/l2-helpers/L2ContractAddresses.sol\":{\"keccak256\":\"0xb8d312c52dbfdf02ef65c3614b57f49cdb34783f9107fcacdf9c483aed93196a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://819765a7ec6ea40cdd974c12aacd0f94dd354aca9956c37e49c6ed62cc9d95fa\",\"dweb:/ipfs/QmdjudbvfYZcTRtGocd4ENHuAdyEujJD5FpGDYKMNPY7V1\"]},\"contracts/common/libraries/Merkle.sol\":{\"keccak256\":\"0xc53f505619f7e7dc9b276a63d1bc743a588633457cefbb3a9bc8b20b42ada35f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b13d1dead050a82e4ad6c5013c9f176818933ba4b843110dbaf0bbe6c1259ee8\",\"dweb:/ipfs/Qmac9pko9bhqY4NzM9MeAdxumenNFwKNE5qY4gV3z2zDpz\"]},\"contracts/common/libraries/MessageHashing.sol\":{\"keccak256\":\"0xe02ef5a079765ba06bdc562388741b2b72aabcdc743a37e0c141d2f6dabb9cfe\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://83abf84b0d0c6018a63751b007aab8871b000bbf95291382a405c5ffa71d319e\",\"dweb:/ipfs/QmTA1EZ9nMmEjri1oWnBx7ALimX2wKu3WERg9e6Tz8eHs2\"]},\"contracts/common/libraries/UncheckedMath.sol\":{\"keccak256\":\"0x0ff1407bcabd5a4349a0da1372afe1f2e449bbb5271a2d88d5b999e4dffe9728\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b9fde36c3cf8c7989ebe20c1a52676870e0d820dc43afd8f789b09eff620dd9b\",\"dweb:/ipfs/QmbMNcimFvgE44idT1ZUSAEv74FkePodWQfCg4f8GhmHR8\"]},\"contracts/interop/IInteropCenter.sol\":{\"keccak256\":\"0x0e4d4f1d926ce45f8f4febb35cc7eb8bbe64de86faf62bca8968c55b8d92539d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f0035024a8f063a58b04a238a1c841757e766a3f708f587020e256c6ef6ec81f\",\"dweb:/ipfs/QmWo4kRT2VmVoZxtoAvgnrkWTj8Fo4rLfjTQ1UAgetX5qv\"]},\"contracts/state-transition/L1StateTransitionErrors.sol\":{\"keccak256\":\"0xfda1e60dd1c29248e94e80a62a364d15a9f048f290e8723c02b2325a2f3e8bcb\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a38bbdb624b45348d3ff92482afffd995a83c642671b819ff4fd1e2f0f1aa92c\",\"dweb:/ipfs/QmVdxyYkFwAePTMsn4jvL19iCvSpWpqh35CS14KhzFiF8n\"]},\"contracts/state-transition/chain-interfaces/IExecutor.sol\":{\"keccak256\":\"0x4fde7c5ce7ea8764c62c48451f5b35bfffe92c02556ca30e59c2c8bd6b65b75f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://96cfa3f8b3328e23848d6a43643c25b715613a170248126f4a95ca263b099746\",\"dweb:/ipfs/QmZaMZZwXJJLgujyHSxoeWQEcNgMvQ7Li9tcL5S5ZdU1mh\"]},\"contracts/state-transition/chain-interfaces/IMessageVerification.sol\":{\"keccak256\":\"0xe79021eb8d0bdd7da63d962fe7686109e04c244a60e2050b0b87b3d896f374d1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8299f2fde94229e9cd8e0417e53378612b56544344186134fde0175fed215ef2\",\"dweb:/ipfs/Qmck9SmwajAF46rWiaVkrgyWe2MdpxckB8RMwHebEwPmev\"]},\"contracts/state-transition/chain-interfaces/IZKChainBase.sol\":{\"keccak256\":\"0xee753576cca182c55b1bddb792eec0d60d83bdd3d7978049054fe9ad68423ab0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://01d17078b900f8c255cff82cd5691b1b520d54e15443396df69ce4a066eed9cb\",\"dweb:/ipfs/QmaZnEav6Frr2wxrWiySwCJbXZrJXmu7kg42E86mUQf3fy\"]}},\"version\":1}","metadata":{"compiler":{"version":"0.8.28+commit.7893614a"},"language":"Solidity","output":{"abi":[{"inputs":[{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":true},{"internalType":"bytes32","name":"additionalData","type":"bytes32","indexed":true},{"internalType":"address","name":"assetDeploymentTracker","type":"address","indexed":false}],"type":"event","name":"AssetDeploymentTrackerRegistered","anonymous":false},{"inputs":[{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":true},{"internalType":"address","name":"assetDeploymentTracker","type":"address","indexed":true},{"internalType":"bytes32","name":"additionalData","type":"bytes32","indexed":true}],"type":"event","name":"AssetDeploymentTrackerSet","anonymous":false},{"inputs":[{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":true},{"internalType":"address","name":"_assetHandlerAddress","type":"address","indexed":true}],"type":"event","name":"AssetHandlerRegistered","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":true},{"internalType":"address","name":"from","type":"address","indexed":true},{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":false},{"internalType":"uint256","name":"amount","type":"uint256","indexed":false}],"type":"event","name":"BridgehubDepositBaseTokenInitiated","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":true},{"internalType":"bytes32","name":"txDataHash","type":"bytes32","indexed":true},{"internalType":"bytes32","name":"l2DepositTxHash","type":"bytes32","indexed":true}],"type":"event","name":"BridgehubDepositFinalized","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":true},{"internalType":"bytes32","name":"txDataHash","type":"bytes32","indexed":true},{"internalType":"address","name":"from","type":"address","indexed":true},{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":false},{"internalType":"bytes","name":"bridgeMintCalldata","type":"bytes","indexed":false}],"type":"event","name":"BridgehubDepositInitiated","anonymous":false},{"inputs":[{"internalType":"bytes","name":"bridgeMintData","type":"bytes","indexed":false}],"type":"event","name":"BridgehubMintData","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":false},{"internalType":"address","name":"sender","type":"address","indexed":true},{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":true},{"internalType":"bytes32","name":"assetDataHash","type":"bytes32","indexed":false}],"type":"event","name":"BridgehubWithdrawalInitiated","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":true},{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":true},{"internalType":"bytes","name":"assetData","type":"bytes","indexed":false}],"type":"event","name":"ClaimedFailedDepositAssetRouter","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":true},{"internalType":"bytes32","name":"assetId","type":"bytes32","indexed":true},{"internalType":"bytes","name":"assetData","type":"bytes","indexed":false}],"type":"event","name":"DepositFinalizedAssetRouter","anonymous":false},{"inputs":[{"internalType":"uint256","name":"chainId","type":"uint256","indexed":true},{"internalType":"bytes32","name":"l2DepositTxHash","type":"bytes32","indexed":true},{"internalType":"address","name":"from","type":"address","indexed":true},{"internalType":"address","name":"to","type":"address","indexed":false},{"internalType":"address","name":"l1Token","type":"address","indexed":false},{"internalType":"uint256","name":"amount","type":"uint256","indexed":false}],"type":"event","name":"LegacyDepositInitiated","anonymous":false},{"inputs":[],"stateMutability":"view","type":"function","name":"BRIDGE_HUB","outputs":[{"internalType":"contract IBridgehub","name":"","type":"address"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"ETH_TOKEN_ASSET_ID","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"INTEROP_CENTER","outputs":[{"internalType":"contract IInteropCenter","name":"","type":"address"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"L1_CHAIN_ID","outputs":[{"internalType":"uint256","name":"","type":"uint256"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"L1_NULLIFIER","outputs":[{"internalType":"contract IL1Nullifier","name":"","type":"address"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"L1_WETH_TOKEN","outputs":[{"internalType":"address","name":"","type":"address"}]},{"inputs":[{"internalType":"bytes32","name":"_assetId","type":"bytes32"}],"stateMutability":"view","type":"function","name":"assetHandlerAddress","outputs":[{"internalType":"address","name":"","type":"address"}]},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"address","name":"_depositSender","type":"address"},{"internalType":"bytes32","name":"_assetId","type":"bytes32"},{"internalType":"bytes","name":"_assetData","type":"bytes"}],"stateMutability":"nonpayable","type":"function","name":"bridgeRecoverFailedTransfer"},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"address","name":"_depositSender","type":"address"},{"internalType":"bytes32","name":"_assetId","type":"bytes32"},{"internalType":"bytes","name":"_assetData","type":"bytes"},{"internalType":"bytes32","name":"_l2TxHash","type":"bytes32"},{"internalType":"uint256","name":"_l2BatchNumber","type":"uint256"},{"internalType":"uint256","name":"_l2MessageIndex","type":"uint256"},{"internalType":"uint16","name":"_l2TxNumberInBatch","type":"uint16"},{"internalType":"bytes32[]","name":"_merkleProof","type":"bytes32[]"}],"stateMutability":"nonpayable","type":"function","name":"bridgeRecoverFailedTransfer"},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"bytes32","name":"_txDataHash","type":"bytes32"},{"internalType":"bytes32","name":"_txHash","type":"bytes32"}],"stateMutability":"nonpayable","type":"function","name":"bridgehubConfirmL2Transaction"},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"address","name":"_originalCaller","type":"address"},{"internalType":"uint256","name":"_value","type":"uint256"},{"internalType":"bytes","name":"_data","type":"bytes"}],"stateMutability":"payable","type":"function","name":"bridgehubDeposit","outputs":[{"internalType":"struct L2TransactionRequestTwoBridgesInner","name":"request","type":"tuple","components":[{"internalType":"bytes32","name":"magicValue","type":"bytes32"},{"internalType":"address","name":"l2Contract","type":"address"},{"internalType":"bytes","name":"l2Calldata","type":"bytes"},{"internalType":"bytes[]","name":"factoryDeps","type":"bytes[]"},{"internalType":"bytes32","name":"txDataHash","type":"bytes32"}]}]},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"bytes32","name":"_assetId","type":"bytes32"},{"internalType":"address","name":"_originalCaller","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"}],"stateMutability":"payable","type":"function","name":"bridgehubDepositBaseToken"},{"inputs":[{"internalType":"address","name":"_originalCaller","type":"address"},{"internalType":"address","name":"_l2Receiver","type":"address"},{"internalType":"address","name":"_l1Token","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint256","name":"_l2TxGasLimit","type":"uint256"},{"internalType":"uint256","name":"_l2TxGasPerPubdataByte","type":"uint256"},{"internalType":"address","name":"_refundRecipient","type":"address"}],"stateMutability":"payable","type":"function","name":"depositLegacyErc20Bridge","outputs":[{"internalType":"bytes32","name":"txHash","type":"bytes32"}]},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"bytes32","name":"_assetId","type":"bytes32"},{"internalType":"bytes","name":"_transferData","type":"bytes"}],"stateMutability":"payable","type":"function","name":"finalizeDeposit"},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"uint256","name":"_l2BatchNumber","type":"uint256"},{"internalType":"uint256","name":"_l2MessageIndex","type":"uint256"},{"internalType":"uint16","name":"_l2TxNumberInBatch","type":"uint16"},{"internalType":"bytes","name":"_message","type":"bytes"},{"internalType":"bytes32[]","name":"_merkleProof","type":"bytes32[]"}],"stateMutability":"nonpayable","type":"function","name":"finalizeWithdrawal"},{"inputs":[{"internalType":"address","name":"_sender","type":"address"},{"internalType":"bytes32","name":"_assetId","type":"bytes32"},{"internalType":"bytes","name":"_assetData","type":"bytes"}],"stateMutability":"view","type":"function","name":"getDepositCalldata","outputs":[{"internalType":"bytes","name":"","type":"bytes"}]},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"},{"internalType":"uint256","name":"_l2BatchNumber","type":"uint256"},{"internalType":"uint256","name":"_l2MessageIndex","type":"uint256"}],"stateMutability":"view","type":"function","name":"isWithdrawalFinalized","outputs":[{"internalType":"bool","name":"","type":"bool"}]},{"inputs":[{"internalType":"uint256","name":"_chainId","type":"uint256"}],"stateMutability":"view","type":"function","name":"l2BridgeAddress","outputs":[{"internalType":"address","name":"","type":"address"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"nativeTokenVault","outputs":[{"internalType":"contract INativeTokenVault","name":"","type":"address"}]},{"inputs":[{"internalType":"bytes32","name":"_assetRegistrationData","type":"bytes32"},{"internalType":"address","name":"_assetDeploymentTracker","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"setAssetDeploymentTracker"},{"inputs":[{"internalType":"bytes32","name":"_assetRegistrationData","type":"bytes32"},{"internalType":"address","name":"_assetHandlerAddress","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"setAssetHandlerAddressThisChain"},{"inputs":[{"internalType":"contract IL1ERC20Bridge","name":"_legacyBridge","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"setL1Erc20Bridge"},{"inputs":[{"internalType":"contract INativeTokenVault","name":"_nativeTokenVault","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"setNativeTokenVault"},{"inputs":[{"internalType":"bytes32","name":"_assetId","type":"bytes32"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"address","name":"_originalCaller","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"transferFundsToNTV","outputs":[{"internalType":"bool","name":"","type":"bool"}]}],"devdoc":{"kind":"dev","methods":{"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)":{"details":"Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.","params":{"_assetData":"The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.","_assetId":"The unique identifier of the deposited L1 token.","_chainId":"The ZK chain id to which the deposit was initiated.","_depositSender":"The address of the entity that initiated the deposit."}},"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes,bytes32,uint256,uint256,uint16,bytes32[])":{"details":"Withdraw funds from the initiated deposit, that failed when finalizing on L2.Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.","params":{"_assetData":"The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.","_assetId":"The unique identifier of the deposited L1 token.","_chainId":"The ZK chain id to which deposit was initiated.","_depositSender":"The address of the entity that initiated the deposit.","_l2BatchNumber":"The L2 batch number where the deposit finalization was processed.","_l2MessageIndex":"The position in the L2 logs Merkle tree of the l2Log that was sent with the message.","_l2TxHash":"The L2 transaction hash of the failed deposit finalization.","_l2TxNumberInBatch":"The L2 transaction number in a batch, in which the log was sent.","_merkleProof":"The Merkle proof of the processing L1 -> L2 transaction with deposit finalization."}},"bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)":{"params":{"_chainId":"Destination chain ID.","_txDataHash":"The keccak256 hash of 0x01 || abi.encode(bytes32, bytes) to identify deposits.","_txHash":"The hash of the L1->L2 transaction to confirm the deposit."}},"bridgehubDeposit(uint256,address,uint256,bytes)":{"details":"Data has the following abi encoding for legacy deposits: address _l1Token, uint256 _amount, address _l2Receiver for new deposits: bytes32 _assetId, bytes _transferData","params":{"_chainId":"Destination chain ID.","_data":"The calldata for the second bridge deposit.","_originalCaller":"The `msg.sender` address from the external call that initiated current one.","_value":"The `msg.value` to be deposited on the target chain."},"returns":{"request":"The data used by the bridgehub to create L2 transaction request to specific ZK chain."}},"bridgehubDepositBaseToken(uint256,bytes32,address,uint256)":{"details":"If the corresponding L2 transaction fails, refunds are issued to a refund recipient on L2.","params":{"_amount":"The total amount of tokens to be bridged.","_assetId":"The deposited asset ID.","_chainId":"The chain ID of the ZK chain to which deposit.","_originalCaller":"The `msg.sender` address from the external call that initiated current one."}},"depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)":{"details":"If the token is bridged for the first time, the L2 token contract will be deployed. Note however, that the newly-deployed token does not support any custom logic, i.e. rebase tokens' functionality is not supported.If the L2 deposit finalization transaction fails, the `_refundRecipient` will receive the `_l2Value`. Please note, the contract may change the refund recipient's address to eliminate sending funds to addresses out of control. - If `_refundRecipient` is a contract on L1, the refund will be sent to the aliased `_refundRecipient`. - If `_refundRecipient` is set to `address(0)` and the sender has NO deployed bytecode on L1, the refund will be sent to the `msg.sender` address. - If `_refundRecipient` is set to `address(0)` and the sender has deployed bytecode on L1, the refund will be sent to the aliased `msg.sender` address.The address aliasing of L1 contracts as refund recipient on L2 is necessary to guarantee that the funds are controllable through the Mailbox, since the Mailbox applies address aliasing to the from address for the L2 tx if the L1 msg.sender is a contract. Without address aliasing for L1 contracts as refund recipients they would not be able to make proper L2 tx requests through the Mailbox to use or withdraw the funds from L2, and the funds would be lost.","params":{"_amount":"The total amount of tokens to be bridged.","_l1Token":"The L1 token address which is deposited.","_l2Receiver":"The account address that should receive funds on L2.","_l2TxGasLimit":"The L2 gas limit to be used in the corresponding L2 transaction.","_l2TxGasPerPubdataByte":"The gasPerPubdataByteLimit to be used in the corresponding L2 transaction.","_originalCaller":"The `msg.sender` address from the external call that initiated current one.","_refundRecipient":"The address on L2 that will receive the refund for the transaction."},"returns":{"txHash":"The L2 transaction hash of deposit finalization."}},"finalizeDeposit(uint256,bytes32,bytes)":{"details":"We have both the legacy finalizeWithdrawal and the new finalizeDeposit functions, finalizeDeposit uses the new format. On the L2 we have finalizeDeposit with new and old formats both.","params":{"_assetId":"The bridged asset ID.","_chainId":"The chain ID of the transaction to check.","_transferData":"The position in the L2 logs Merkle tree of the l2Log that was sent with the message."}},"finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])":{"params":{"_chainId":"The chain ID of the transaction to check","_l2BatchNumber":"The L2 batch number where the withdrawal was processed","_l2MessageIndex":"The position in the L2 logs Merkle tree of the l2Log that was sent with the message","_l2TxNumberInBatch":"The L2 transaction number in the batch, in which the log was sent","_merkleProof":"The Merkle proof of the inclusion L2 -> L1 message about withdrawal initialization","_message":"The L2 withdraw data, stored in an L2 -> L1 message"}},"getDepositCalldata(address,bytes32,bytes)":{"params":{"_assetData":"The encoded data, which is used by the asset handler to determine L2 recipient and amount. Might include extra information.","_assetId":"The deposited asset ID.","_sender":"The address of the deposit initiator."},"returns":{"_0":"Returns calldata used on ZK chain."}},"setAssetHandlerAddressThisChain(bytes32,address)":{"details":"The caller of this function is encoded within the `assetId`, therefore, it should be invoked by the asset deployment tracker contract.No access control on the caller, as msg.sender is encoded in the assetId.Typically, for most tokens, ADT is the native token vault. However, custom tokens may have their own specific asset deployment trackers.`setAssetHandlerAddressOnCounterpart` should be called on L1 to set asset handlers on L2 chains for a specific asset ID.","params":{"_assetHandlerAddress":"The address of the asset handler to be set for the provided asset.","_assetRegistrationData":"The asset data which may include the asset address and any additional required data or encodings."}},"transferFundsToNTV(bytes32,uint256,address)":{"details":"assetId is not the padded address, but the correct encoded id (NTV stores respective format for IDs)","params":{"_amount":"The asset amount to be transferred to native token vault.","_originalCaller":"The `msg.sender` address from the external call that initiated current one."}}},"version":1},"userdoc":{"kind":"user","methods":{"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)":{"notice":"Withdraw funds from the initiated deposit, that failed when finalizing on L2."},"bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)":{"notice":"Routes the confirmation to nullifier for backward compatibility.Confirms the acceptance of a transaction by the Mailbox, as part of the L2 transaction process within Bridgehub. This function is utilized by `requestL2TransactionTwoBridges` to validate the execution of a transaction."},"bridgehubDeposit(uint256,address,uint256,bytes)":{"notice":"Initiates a transfer transaction within Bridgehub, used by `requestL2TransactionTwoBridges`."},"bridgehubDepositBaseToken(uint256,bytes32,address,uint256)":{"notice":"Allows bridgehub to acquire mintValue for L1->L2 and L2->L2 transactions."},"depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)":{"notice":"Initiates a deposit by locking funds on the contract and sending the request of processing an L2 transaction where tokens would be minted."},"finalizeDeposit(uint256,bytes32,bytes)":{"notice":"Finalize the withdrawal and release funds."},"finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])":{"notice":"Finalize the withdrawal and release funds"},"getDepositCalldata(address,bytes32,bytes)":{"notice":"Generates a calldata for calling the deposit finalization on the L2 native token contract."},"setAssetHandlerAddressThisChain(bytes32,address)":{"notice":"Sets the asset handler address for a specified asset ID on the chain of the asset deployment tracker."},"transferFundsToNTV(bytes32,uint256,address)":{"notice":"Transfers funds to Native Token Vault, if the asset is registered with it. Does nothing for ETH or non-registered tokens."}},"version":1}},"settings":{"remappings":["@ensdomains/=node_modules/@ensdomains/","@openzeppelin/contracts-master/=lib/openzeppelin-contracts-master/contracts/","@openzeppelin/contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/contracts/","@openzeppelin/contracts-v4/=lib/openzeppelin-contracts-v4/contracts/","@openzeppelin/contracts/=lib/openzeppelin-contracts-master/contracts/","ds-test/=lib/forge-std/lib/ds-test/src/","erc4626-tests/=lib/openzeppelin-contracts-master/lib/erc4626-tests/","eth-gas-reporter/=node_modules/eth-gas-reporter/","forge-std/=lib/forge-std/src/","foundry-test/=test/foundry/","halmos-cheatcodes/=lib/openzeppelin-contracts-master/lib/halmos-cheatcodes/src/","hardhat/=node_modules/hardhat/","l2-contracts/=../l2-contracts/contracts/","murky/=lib/murky/src/","openzeppelin-contracts-master/=lib/openzeppelin-contracts-master/","openzeppelin-contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/","openzeppelin-contracts-v4/=lib/openzeppelin-contracts-v4/","openzeppelin-contracts/=lib/murky/lib/openzeppelin-contracts/"],"optimizer":{"enabled":true,"runs":9999999},"metadata":{"bytecodeHash":"ipfs"},"compilationTarget":{"contracts/bridge/asset-router/IL1AssetRouter.sol":"IL1AssetRouter"},"evmVersion":"cancun","libraries":{}},"sources":{"contracts/bridge/asset-router/IAssetRouterBase.sol":{"keccak256":"0x45224b53e88e7a9af471644435326cfb9339b853a6f1158db349ab991e75b7b2","urls":["bzz-raw://4c27fd12a4b40916f1c72e7660f9a98c35bde0efd1e00e1de0a2cfb4586463d0","dweb:/ipfs/QmTBvWnZLLodvz6v76Sc8gc2YrddNwFGH6gNayQLbRGTVm"],"license":"MIT"},"contracts/bridge/asset-router/IL1AssetRouter.sol":{"keccak256":"0x8c6d915c51ec21a2b891688bb25e44dd5ae00c6e8d3d84a1ab0c040f5a522a02","urls":["bzz-raw://e4767ecc2d245ba2ed08d9de93622e5797aafe44719452143d3e294c5e08e777","dweb:/ipfs/QmV4fpsCEeCSbUMj4KDKbAzZswyh8MKCeMsbXqhB2SubUJ"],"license":"MIT"},"contracts/bridge/asset-tracker/IAssetTrackerBase.sol":{"keccak256":"0x7f6c4591e74bac5f7227dbd67a030565c0316b886fa69883e42b27a76d9828e5","urls":["bzz-raw://e161c36b7f6b72ea8db2a21dfee059969215cd3d6984f6dabc9daef4bc36bedf","dweb:/ipfs/QmTJqhZNg5djGzWmfbYPmegVsCzWPfhbfgYYSdwtAw58XC"],"license":"MIT"},"contracts/bridge/asset-tracker/IL2AssetTracker.sol":{"keccak256":"0x8da7d429a331b61fdceaf7ceb85c11fa480fe24b96159dae54eebb3b299b987f","urls":["bzz-raw://e7db8a9e91a84e50fcc85fd7db3a7e908569b9c401613382e447339e9222a032","dweb:/ipfs/QmZNxHKfaZjaZZyRuyGuWomXaAjQB767ppLa8ni4PGzvU4"],"license":"MIT"},"contracts/bridge/interfaces/IAssetHandler.sol":{"keccak256":"0xc79f3ac3119814c246c9fe32ff4e644796428a44a74e13a7fc690fa188a86a72","urls":["bzz-raw://467fe78ec0d8d3f458912d5ba0227e568d87666e8bcede35f9560f8b58bb1776","dweb:/ipfs/QmQFsWV9Z1XgEfhaCyDwuVucgvqWxUSPTp2bpsb8rZqoke"],"license":"MIT"},"contracts/bridge/interfaces/IL1AssetDeploymentTracker.sol":{"keccak256":"0xa3e861213159310b287ba8cce396b8ff4dffa7f8869fe012413d0481fce9c50a","urls":["bzz-raw://c33dcc891a298dcc310f97f189ed0a39813e8636422e620725b0611e3974a836","dweb:/ipfs/QmWrfjGV6rFQDGMmGFbF8y7iKQwJPU3wViS3DVRmo2aSC9"],"license":"MIT"},"contracts/bridge/interfaces/IL1AssetHandler.sol":{"keccak256":"0x9de4855ee1fe103e010c37cc1e8497c77bb4263b096635293289065e3dc35806","urls":["bzz-raw://513172cfe69ac0d5f53de3ff7c8d9ba3edbde3d50a7700333b9259a44c6f703b","dweb:/ipfs/QmeQzJizqh8JCZNkwQLPcoeS867yKMv6EJqvACndsJfWd4"],"license":"MIT"},"contracts/bridge/interfaces/IL1CrossChainSender.sol":{"keccak256":"0x69e37fdc57668a4243a73c8ba018d5dc4af9419bc984e8799b168cb67bb22950","urls":["bzz-raw://27dddad22863478e43fdf43c7a85a8bc222d51ce4270f69a60ac6611a7f07312","dweb:/ipfs/QmU2i1KhNGDssVfxH9eKQfxiEATsjNvVwUT2Qz4jVahXm9"],"license":"MIT"},"contracts/bridge/interfaces/IL1ERC20Bridge.sol":{"keccak256":"0xf3540c809d4dcaff17a8c45a4f88677f69bbc04e414513c6a166dbbf08043b80","urls":["bzz-raw://0e139ac2997f590773320fdeebc856e4f5eee5da8106df52e85507c0d8f2cb71","dweb:/ipfs/QmeXmie3PXC1BMmzjpXwWFZaTkkqMh3devuyzEuavZ1DbP"],"license":"MIT"},"contracts/bridge/interfaces/IL1Nullifier.sol":{"keccak256":"0x17d485335f80eec2a32487024aa9ffeb618162c5fbf360a4b62ccafedfe96e30","urls":["bzz-raw://bebe6c82a53be797209b7caff944e638806163ed37f2dd40038fdfaf927709b2","dweb:/ipfs/QmaEdK7rgxwSwADfpE6AYyiq8tFBuDYr1efuoQNYV2pNmo"],"license":"MIT"},"contracts/bridge/interfaces/IL1SharedBridgeLegacy.sol":{"keccak256":"0x3fc6b0f6948e0365198c3f15b03e8a33f5ce00a6f17227205fd235143eb38147","urls":["bzz-raw://1eaf26b87c46ba15f19fa9e9f620b99f9b90cc9e6cf0289bb8c8264c2873567c","dweb:/ipfs/QmSt9RoBgRZnw2BiJE5KGNYRcfaRF3VKca7Ac9fLs3ZLYD"],"license":"MIT"},"contracts/bridge/ntv/IL1NativeTokenVault.sol":{"keccak256":"0xfb5c60cfc8dd9461cc87d0dd56cac685dd5b0390afec1d6a9299a8c8dbd7d3db","urls":["bzz-raw://86641a4b17f60ccd5ed3928944c9aec159ee0db35e816ef011bf15911ff15878","dweb:/ipfs/QmZRzc1adBhyYkCoq2nYeH91R1UMQXMCJV1LtHuFZoy8cq"],"license":"MIT"},"contracts/bridge/ntv/IL2NativeTokenVault.sol":{"keccak256":"0xe3a4266c819c6f3ce1359cd16fd999e4a045b1b41c50e3c01ec01b0e9f9d5b89","urls":["bzz-raw://6a4543e8302395c286eb9f40aef2287bdd128746e4dca557a5be989e40b3f0ed","dweb:/ipfs/QmfNApggA61S8q3wtYetYBx7fZEQtw6uRHWgFc8TBsQk5d"],"license":"MIT"},"contracts/bridge/ntv/INativeTokenVault.sol":{"keccak256":"0x67ccf56babdbedd06cde1ddce8308523e220d4e4548c69c7dade3bbefd3fb406","urls":["bzz-raw://c75b92e1ac6f65c65f06ab34cd3e1ba1d60da0dd38ebcad1310d1d149a9a6867","dweb:/ipfs/QmSkQdNcUWHyxAhowRx6NcEQgbygvqTVDctd4dvPocAoom"],"license":"MIT"},"contracts/bridgehub/IBridgehub.sol":{"keccak256":"0x20b0564fba0c5a244ff847e3629826f21226e3ec011be22125dc359ebbaac21a","urls":["bzz-raw://6e69e3bb97885e171424b204f3ee7364db4b936568d13675d09a3bf2559828c5","dweb:/ipfs/Qmdo4oXfsjBVM5Hh52fDeXqnz1qebthrd3gDC4csF8QY68"],"license":"MIT"},"contracts/bridgehub/ICTMDeploymentTracker.sol":{"keccak256":"0xb8686200049daa7b71fb8ba3d8a08863a3a8dedac07f51bee2d77286d0010e1e","urls":["bzz-raw://b05d8ee606a16ac33ffaf40e1eeab86971f47517c7cd1efdc1c76edca45e314b","dweb:/ipfs/QmSnsR6iWEJ6V25qXD8xxbGyTf2ozdHL8C8aM3QNwo9zic"],"license":"MIT"},"contracts/bridgehub/IChainAssetHandler.sol":{"keccak256":"0xe0e62e66809b5e0906be2513e35878854ab50cd872faba1a906ade0193ffeec7","urls":["bzz-raw://797b14dd8f43971e1e884760efc87934ae938044595d2c9fe19ea19d39c7750a","dweb:/ipfs/QmdVSEfmSpaengu5FcKhzYLh2CmtHzpVUhLGNqWVkW8GGa"],"license":"MIT"},"contracts/bridgehub/IMessageRoot.sol":{"keccak256":"0xb63ffb2925570ec605a37e59bb9816f8b1d0323ff3257f2d93e8c9827802655a","urls":["bzz-raw://e8bdb72dd57b5339a42f2ac18507a64145db90f97611444cf78fe2d4ca42295a","dweb:/ipfs/QmQGzLfNUiBNGxfQp2Kxv1qPJJ1xSENGb8ZVfeAZhgipuP"],"license":"MIT"},"contracts/common/Config.sol":{"keccak256":"0xab2390db71b8d000c7c286aa718256113bef677ba8253d2e22d18495877bf412","urls":["bzz-raw://1e37eb3822c5d4c38d5c0a2ab460a07349aa85fc84cab8e7df3b9c16de3e83f1","dweb:/ipfs/QmeP4FqEYzSSCUHtcetAKGkSYuFoDaqu3CPEdbgbaxHGnR"],"license":"MIT"},"contracts/common/L1ContractErrors.sol":{"keccak256":"0x925ba6d3147ee1f1e8d09a2995da3480f8cd46a8a31bf244964acc1e809676f4","urls":["bzz-raw://a9590796fc185897ac48df4426998e1ea693f719985779a14eb733b8516b2175","dweb:/ipfs/QmX9BbXo7JAfjkmkgwGxY3vgHuzJDY7ma6DyR6W6KieUky"],"license":"MIT"},"contracts/common/Messaging.sol":{"keccak256":"0x24cf25a25c33d21d0f293e18f45b3cc51ae41c02f4b062ac9340eb1e89159630","urls":["bzz-raw://91bfbb8682504581896740226ec884a79bd3dcc37a6fadcc37f2922a73506ce5","dweb:/ipfs/QmcZj8Aez4Yewjez1aKJb5u6nSori91JsaibChjcktTfob"],"license":"MIT"},"contracts/common/interfaces/IL2ContractDeployer.sol":{"keccak256":"0xa03848d792f166433282dc620e9b087fb3929fde12d9c96ea2d245a92552d371","urls":["bzz-raw://8fae684b28877c4c0778bc5c1d0c44fa08890b520dcd24fc574ed68405852370","dweb:/ipfs/QmZjdWtEskToFiu3RwnyAMvkMrv3MMnR2MPv7bHfnPKN23"],"license":"MIT"},"contracts/common/interfaces/IL2InteropRootStorage.sol":{"keccak256":"0x3e2950976665d6e7ebffb4834b58117c8ec48ab95cdb77a1164f1bef6a648d79","urls":["bzz-raw://766f21866ecde1f967d2f952888b2ea183315d92dbf9a2b22f4db637cf07c785","dweb:/ipfs/QmcggwNfV8RqmCmzSrEkfdNXUofttWFYNhYgPzk7FNqvbe"],"license":"MIT"},"contracts/common/interfaces/ISystemContext.sol":{"keccak256":"0x5cf0e55becd6a0456a6e3634456f6c61c1de833319dcacfebdf8f1e3d8875258","urls":["bzz-raw://a540c39201540e27a2488e2f8ddb8fcd934e0ba1811a0a5c61eb5b75930d2df4","dweb:/ipfs/QmazbWo5bCcEDr1admp7wmVRm4C2Yvx2s7wbT1kXiJMFpj"],"license":"MIT"},"contracts/common/l2-helpers/IBaseToken.sol":{"keccak256":"0xe7257aa568ebc554817a0e79fdfbbd86fa9ea291a572ce2955b435b34c3155f1","urls":["bzz-raw://8136bee42e55b2c17f6f9b82d43748d82af3abf93293bcd2927cd95fba6e6143","dweb:/ipfs/QmeeFVQdYKgoivpxUMLNLNNVJKYmHXhvP49rtjnmDNHcbu"],"license":"MIT"},"contracts/common/l2-helpers/IL2ToL1Messenger.sol":{"keccak256":"0x2b087d83b96c92e5472c58c27148460445e7d99b2221f3abebfaec06585a31f1","urls":["bzz-raw://e55e320076393b63f1ff6bda9013c45a7ceff05d8954b41d71488d18c33c550f","dweb:/ipfs/Qmeiibb8zh87WkKBenvTbQoLRvNRE8RKvdPvkYmFueRbQw"],"license":"MIT"},"contracts/common/l2-helpers/L2ContractAddresses.sol":{"keccak256":"0xb8d312c52dbfdf02ef65c3614b57f49cdb34783f9107fcacdf9c483aed93196a","urls":["bzz-raw://819765a7ec6ea40cdd974c12aacd0f94dd354aca9956c37e49c6ed62cc9d95fa","dweb:/ipfs/QmdjudbvfYZcTRtGocd4ENHuAdyEujJD5FpGDYKMNPY7V1"],"license":"MIT"},"contracts/common/libraries/Merkle.sol":{"keccak256":"0xc53f505619f7e7dc9b276a63d1bc743a588633457cefbb3a9bc8b20b42ada35f","urls":["bzz-raw://b13d1dead050a82e4ad6c5013c9f176818933ba4b843110dbaf0bbe6c1259ee8","dweb:/ipfs/Qmac9pko9bhqY4NzM9MeAdxumenNFwKNE5qY4gV3z2zDpz"],"license":"MIT"},"contracts/common/libraries/MessageHashing.sol":{"keccak256":"0xe02ef5a079765ba06bdc562388741b2b72aabcdc743a37e0c141d2f6dabb9cfe","urls":["bzz-raw://83abf84b0d0c6018a63751b007aab8871b000bbf95291382a405c5ffa71d319e","dweb:/ipfs/QmTA1EZ9nMmEjri1oWnBx7ALimX2wKu3WERg9e6Tz8eHs2"],"license":"MIT"},"contracts/common/libraries/UncheckedMath.sol":{"keccak256":"0x0ff1407bcabd5a4349a0da1372afe1f2e449bbb5271a2d88d5b999e4dffe9728","urls":["bzz-raw://b9fde36c3cf8c7989ebe20c1a52676870e0d820dc43afd8f789b09eff620dd9b","dweb:/ipfs/QmbMNcimFvgE44idT1ZUSAEv74FkePodWQfCg4f8GhmHR8"],"license":"MIT"},"contracts/interop/IInteropCenter.sol":{"keccak256":"0x0e4d4f1d926ce45f8f4febb35cc7eb8bbe64de86faf62bca8968c55b8d92539d","urls":["bzz-raw://f0035024a8f063a58b04a238a1c841757e766a3f708f587020e256c6ef6ec81f","dweb:/ipfs/QmWo4kRT2VmVoZxtoAvgnrkWTj8Fo4rLfjTQ1UAgetX5qv"],"license":"MIT"},"contracts/state-transition/L1StateTransitionErrors.sol":{"keccak256":"0xfda1e60dd1c29248e94e80a62a364d15a9f048f290e8723c02b2325a2f3e8bcb","urls":["bzz-raw://a38bbdb624b45348d3ff92482afffd995a83c642671b819ff4fd1e2f0f1aa92c","dweb:/ipfs/QmVdxyYkFwAePTMsn4jvL19iCvSpWpqh35CS14KhzFiF8n"],"license":"MIT"},"contracts/state-transition/chain-interfaces/IExecutor.sol":{"keccak256":"0x4fde7c5ce7ea8764c62c48451f5b35bfffe92c02556ca30e59c2c8bd6b65b75f","urls":["bzz-raw://96cfa3f8b3328e23848d6a43643c25b715613a170248126f4a95ca263b099746","dweb:/ipfs/QmZaMZZwXJJLgujyHSxoeWQEcNgMvQ7Li9tcL5S5ZdU1mh"],"license":"MIT"},"contracts/state-transition/chain-interfaces/IMessageVerification.sol":{"keccak256":"0xe79021eb8d0bdd7da63d962fe7686109e04c244a60e2050b0b87b3d896f374d1","urls":["bzz-raw://8299f2fde94229e9cd8e0417e53378612b56544344186134fde0175fed215ef2","dweb:/ipfs/Qmck9SmwajAF46rWiaVkrgyWe2MdpxckB8RMwHebEwPmev"],"license":"MIT"},"contracts/state-transition/chain-interfaces/IZKChainBase.sol":{"keccak256":"0xee753576cca182c55b1bddb792eec0d60d83bdd3d7978049054fe9ad68423ab0","urls":["bzz-raw://01d17078b900f8c255cff82cd5691b1b520d54e15443396df69ce4a066eed9cb","dweb:/ipfs/QmaZnEav6Frr2wxrWiySwCJbXZrJXmu7kg42E86mUQf3fy"],"license":"MIT"}},"version":1},"id":10}
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "BRIDGE_HUB",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "contract IBridgehub" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "ETH_TOKEN_ASSET_ID",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "INTEROP_CENTER",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "contract IInteropCenter" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "L1_CHAIN_ID",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "L1_NULLIFIER",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "contract IL1Nullifier" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "L1_WETH_TOKEN",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "assetHandlerAddress",
+      "inputs": [{ "name": "_assetId", "type": "bytes32", "internalType": "bytes32" }],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "bridgeRecoverFailedTransfer",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_depositSender", "type": "address", "internalType": "address" },
+        { "name": "_assetId", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_assetData", "type": "bytes", "internalType": "bytes" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "bridgeRecoverFailedTransfer",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_depositSender", "type": "address", "internalType": "address" },
+        { "name": "_assetId", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_assetData", "type": "bytes", "internalType": "bytes" },
+        { "name": "_l2TxHash", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_l2BatchNumber", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2MessageIndex", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2TxNumberInBatch", "type": "uint16", "internalType": "uint16" },
+        { "name": "_merkleProof", "type": "bytes32[]", "internalType": "bytes32[]" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "bridgehubConfirmL2Transaction",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_txDataHash", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_txHash", "type": "bytes32", "internalType": "bytes32" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "bridgehubDeposit",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_originalCaller", "type": "address", "internalType": "address" },
+        { "name": "_value", "type": "uint256", "internalType": "uint256" },
+        { "name": "_data", "type": "bytes", "internalType": "bytes" }
+      ],
+      "outputs": [
+        {
+          "name": "request",
+          "type": "tuple",
+          "internalType": "struct L2TransactionRequestTwoBridgesInner",
+          "components": [
+            { "name": "magicValue", "type": "bytes32", "internalType": "bytes32" },
+            { "name": "l2Contract", "type": "address", "internalType": "address" },
+            { "name": "l2Calldata", "type": "bytes", "internalType": "bytes" },
+            { "name": "factoryDeps", "type": "bytes[]", "internalType": "bytes[]" },
+            { "name": "txDataHash", "type": "bytes32", "internalType": "bytes32" }
+          ]
+        }
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "bridgehubDepositBaseToken",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_assetId", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_originalCaller", "type": "address", "internalType": "address" },
+        { "name": "_amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "depositLegacyErc20Bridge",
+      "inputs": [
+        { "name": "_originalCaller", "type": "address", "internalType": "address" },
+        { "name": "_l2Receiver", "type": "address", "internalType": "address" },
+        { "name": "_l1Token", "type": "address", "internalType": "address" },
+        { "name": "_amount", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2TxGasLimit", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2TxGasPerPubdataByte", "type": "uint256", "internalType": "uint256" },
+        { "name": "_refundRecipient", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "txHash", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "finalizeDeposit",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_assetId", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_transferData", "type": "bytes", "internalType": "bytes" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "finalizeWithdrawal",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2BatchNumber", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2MessageIndex", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2TxNumberInBatch", "type": "uint16", "internalType": "uint16" },
+        { "name": "_message", "type": "bytes", "internalType": "bytes" },
+        { "name": "_merkleProof", "type": "bytes32[]", "internalType": "bytes32[]" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getDepositCalldata",
+      "inputs": [
+        { "name": "_sender", "type": "address", "internalType": "address" },
+        { "name": "_assetId", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_assetData", "type": "bytes", "internalType": "bytes" }
+      ],
+      "outputs": [{ "name": "", "type": "bytes", "internalType": "bytes" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "isWithdrawalFinalized",
+      "inputs": [
+        { "name": "_chainId", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2BatchNumber", "type": "uint256", "internalType": "uint256" },
+        { "name": "_l2MessageIndex", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "l2BridgeAddress",
+      "inputs": [{ "name": "_chainId", "type": "uint256", "internalType": "uint256" }],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nativeTokenVault",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "contract INativeTokenVault" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "setAssetDeploymentTracker",
+      "inputs": [
+        { "name": "_assetRegistrationData", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_assetDeploymentTracker", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setAssetHandlerAddressThisChain",
+      "inputs": [
+        { "name": "_assetRegistrationData", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_assetHandlerAddress", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setL1Erc20Bridge",
+      "inputs": [
+        { "name": "_legacyBridge", "type": "address", "internalType": "contract IL1ERC20Bridge" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setNativeTokenVault",
+      "inputs": [
+        {
+          "name": "_nativeTokenVault",
+          "type": "address",
+          "internalType": "contract INativeTokenVault"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "transferFundsToNTV",
+      "inputs": [
+        { "name": "_assetId", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "_amount", "type": "uint256", "internalType": "uint256" },
+        { "name": "_originalCaller", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "AssetDeploymentTrackerRegistered",
+      "inputs": [
+        { "name": "assetId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        { "name": "additionalData", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        {
+          "name": "assetDeploymentTracker",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "AssetDeploymentTrackerSet",
+      "inputs": [
+        { "name": "assetId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        {
+          "name": "assetDeploymentTracker",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        { "name": "additionalData", "type": "bytes32", "indexed": true, "internalType": "bytes32" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "AssetHandlerRegistered",
+      "inputs": [
+        { "name": "assetId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        {
+          "name": "_assetHandlerAddress",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "BridgehubDepositBaseTokenInitiated",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+        { "name": "from", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "assetId", "type": "bytes32", "indexed": false, "internalType": "bytes32" },
+        { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "BridgehubDepositFinalized",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+        { "name": "txDataHash", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        { "name": "l2DepositTxHash", "type": "bytes32", "indexed": true, "internalType": "bytes32" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "BridgehubDepositInitiated",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+        { "name": "txDataHash", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        { "name": "from", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "assetId", "type": "bytes32", "indexed": false, "internalType": "bytes32" },
+        { "name": "bridgeMintCalldata", "type": "bytes", "indexed": false, "internalType": "bytes" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "BridgehubMintData",
+      "inputs": [
+        { "name": "bridgeMintData", "type": "bytes", "indexed": false, "internalType": "bytes" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "BridgehubWithdrawalInitiated",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": false, "internalType": "uint256" },
+        { "name": "sender", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "assetId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        { "name": "assetDataHash", "type": "bytes32", "indexed": false, "internalType": "bytes32" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "ClaimedFailedDepositAssetRouter",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+        { "name": "assetId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        { "name": "assetData", "type": "bytes", "indexed": false, "internalType": "bytes" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "DepositFinalizedAssetRouter",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+        { "name": "assetId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+        { "name": "assetData", "type": "bytes", "indexed": false, "internalType": "bytes" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "LegacyDepositInitiated",
+      "inputs": [
+        { "name": "chainId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+        {
+          "name": "l2DepositTxHash",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        { "name": "from", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "to", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "l1Token", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    }
+  ],
+  "bytecode": { "object": "0x", "sourceMap": "", "linkReferences": {} },
+  "deployedBytecode": { "object": "0x", "sourceMap": "", "linkReferences": {} },
+  "methodIdentifiers": {
+    "BRIDGE_HUB()": "5d4edca7",
+    "ETH_TOKEN_ASSET_ID()": "81eccdd4",
+    "INTEROP_CENTER()": "5ecd0e3a",
+    "L1_CHAIN_ID()": "2f90b184",
+    "L1_NULLIFIER()": "e60ccaba",
+    "L1_WETH_TOKEN()": "41c841c3",
+    "assetHandlerAddress(bytes32)": "53b9e632",
+    "bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)": "1346ca3b",
+    "bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes,bytes32,uint256,uint256,uint16,bytes32[])": "3601e63e",
+    "bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)": "8eb7db57",
+    "bridgehubDeposit(uint256,address,uint256,bytes)": "ca408c23",
+    "bridgehubDepositBaseToken(uint256,bytes32,address,uint256)": "c4879440",
+    "depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)": "9e6ea417",
+    "finalizeDeposit(uint256,bytes32,bytes)": "9c884fd1",
+    "finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])": "c87325f1",
+    "getDepositCalldata(address,bytes32,bytes)": "2ff0b2ea",
+    "isWithdrawalFinalized(uint256,uint256,uint256)": "8f31f052",
+    "l2BridgeAddress(uint256)": "07ee9355",
+    "nativeTokenVault()": "64e130cf",
+    "setAssetDeploymentTracker(bytes32,address)": "c0a16dda",
+    "setAssetHandlerAddressThisChain(bytes32,address)": "548a5a33",
+    "setL1Erc20Bridge(address)": "30bda03e",
+    "setNativeTokenVault(address)": "0f3fa211",
+    "transferFundsToNTV(bytes32,uint256,address)": "57d4ca5c"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.28+commit.7893614a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"additionalData\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"assetDeploymentTracker\",\"type\":\"address\"}],\"name\":\"AssetDeploymentTrackerRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"assetDeploymentTracker\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"additionalData\",\"type\":\"bytes32\"}],\"name\":\"AssetDeploymentTrackerSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_assetHandlerAddress\",\"type\":\"address\"}],\"name\":\"AssetHandlerRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BridgehubDepositBaseTokenInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"txDataHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"l2DepositTxHash\",\"type\":\"bytes32\"}],\"name\":\"BridgehubDepositFinalized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"txDataHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"bridgeMintCalldata\",\"type\":\"bytes\"}],\"name\":\"BridgehubDepositInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"bridgeMintData\",\"type\":\"bytes\"}],\"name\":\"BridgehubMintData\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"assetDataHash\",\"type\":\"bytes32\"}],\"name\":\"BridgehubWithdrawalInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"assetData\",\"type\":\"bytes\"}],\"name\":\"ClaimedFailedDepositAssetRouter\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"assetId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"assetData\",\"type\":\"bytes\"}],\"name\":\"DepositFinalizedAssetRouter\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"l2DepositTxHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"l1Token\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"LegacyDepositInitiated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"BRIDGE_HUB\",\"outputs\":[{\"internalType\":\"contract IBridgehub\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ETH_TOKEN_ASSET_ID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"INTEROP_CENTER\",\"outputs\":[{\"internalType\":\"contract IInteropCenter\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"L1_CHAIN_ID\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"L1_NULLIFIER\",\"outputs\":[{\"internalType\":\"contract IL1Nullifier\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"L1_WETH_TOKEN\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"}],\"name\":\"assetHandlerAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_depositSender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_assetData\",\"type\":\"bytes\"}],\"name\":\"bridgeRecoverFailedTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_depositSender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_assetData\",\"type\":\"bytes\"},{\"internalType\":\"bytes32\",\"name\":\"_l2TxHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_l2BatchNumber\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2MessageIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"_l2TxNumberInBatch\",\"type\":\"uint16\"},{\"internalType\":\"bytes32[]\",\"name\":\"_merkleProof\",\"type\":\"bytes32[]\"}],\"name\":\"bridgeRecoverFailedTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_txDataHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_txHash\",\"type\":\"bytes32\"}],\"name\":\"bridgehubConfirmL2Transaction\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_value\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"name\":\"bridgehubDeposit\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"magicValue\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"l2Contract\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"l2Calldata\",\"type\":\"bytes\"},{\"internalType\":\"bytes[]\",\"name\":\"factoryDeps\",\"type\":\"bytes[]\"},{\"internalType\":\"bytes32\",\"name\":\"txDataHash\",\"type\":\"bytes32\"}],\"internalType\":\"struct L2TransactionRequestTwoBridgesInner\",\"name\":\"request\",\"type\":\"tuple\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"bridgehubDepositBaseToken\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_l2Receiver\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_l1Token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2TxGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2TxGasPerPubdataByte\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_refundRecipient\",\"type\":\"address\"}],\"name\":\"depositLegacyErc20Bridge\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"txHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_transferData\",\"type\":\"bytes\"}],\"name\":\"finalizeDeposit\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2BatchNumber\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2MessageIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"_l2TxNumberInBatch\",\"type\":\"uint16\"},{\"internalType\":\"bytes\",\"name\":\"_message\",\"type\":\"bytes\"},{\"internalType\":\"bytes32[]\",\"name\":\"_merkleProof\",\"type\":\"bytes32[]\"}],\"name\":\"finalizeWithdrawal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_sender\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_assetData\",\"type\":\"bytes\"}],\"name\":\"getDepositCalldata\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2BatchNumber\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_l2MessageIndex\",\"type\":\"uint256\"}],\"name\":\"isWithdrawalFinalized\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"}],\"name\":\"l2BridgeAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nativeTokenVault\",\"outputs\":[{\"internalType\":\"contract INativeTokenVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetRegistrationData\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_assetDeploymentTracker\",\"type\":\"address\"}],\"name\":\"setAssetDeploymentTracker\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetRegistrationData\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_assetHandlerAddress\",\"type\":\"address\"}],\"name\":\"setAssetHandlerAddressThisChain\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IL1ERC20Bridge\",\"name\":\"_legacyBridge\",\"type\":\"address\"}],\"name\":\"setL1Erc20Bridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract INativeTokenVault\",\"name\":\"_nativeTokenVault\",\"type\":\"address\"}],\"name\":\"setNativeTokenVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_assetId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_originalCaller\",\"type\":\"address\"}],\"name\":\"transferFundsToNTV\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"Matter Labs\",\"custom:security-contact\":\"security@matterlabs.dev\",\"kind\":\"dev\",\"methods\":{\"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)\":{\"details\":\"Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.\",\"params\":{\"_assetData\":\"The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.\",\"_assetId\":\"The unique identifier of the deposited L1 token.\",\"_chainId\":\"The ZK chain id to which the deposit was initiated.\",\"_depositSender\":\"The address of the entity that initiated the deposit.\"}},\"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes,bytes32,uint256,uint256,uint16,bytes32[])\":{\"details\":\"Withdraw funds from the initiated deposit, that failed when finalizing on L2.Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.\",\"params\":{\"_assetData\":\"The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.\",\"_assetId\":\"The unique identifier of the deposited L1 token.\",\"_chainId\":\"The ZK chain id to which deposit was initiated.\",\"_depositSender\":\"The address of the entity that initiated the deposit.\",\"_l2BatchNumber\":\"The L2 batch number where the deposit finalization was processed.\",\"_l2MessageIndex\":\"The position in the L2 logs Merkle tree of the l2Log that was sent with the message.\",\"_l2TxHash\":\"The L2 transaction hash of the failed deposit finalization.\",\"_l2TxNumberInBatch\":\"The L2 transaction number in a batch, in which the log was sent.\",\"_merkleProof\":\"The Merkle proof of the processing L1 -> L2 transaction with deposit finalization.\"}},\"bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)\":{\"params\":{\"_chainId\":\"Destination chain ID.\",\"_txDataHash\":\"The keccak256 hash of 0x01 || abi.encode(bytes32, bytes) to identify deposits.\",\"_txHash\":\"The hash of the L1->L2 transaction to confirm the deposit.\"}},\"bridgehubDeposit(uint256,address,uint256,bytes)\":{\"details\":\"Data has the following abi encoding for legacy deposits: address _l1Token, uint256 _amount, address _l2Receiver for new deposits: bytes32 _assetId, bytes _transferData\",\"params\":{\"_chainId\":\"Destination chain ID.\",\"_data\":\"The calldata for the second bridge deposit.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\",\"_value\":\"The `msg.value` to be deposited on the target chain.\"},\"returns\":{\"request\":\"The data used by the bridgehub to create L2 transaction request to specific ZK chain.\"}},\"bridgehubDepositBaseToken(uint256,bytes32,address,uint256)\":{\"details\":\"If the corresponding L2 transaction fails, refunds are issued to a refund recipient on L2.\",\"params\":{\"_amount\":\"The total amount of tokens to be bridged.\",\"_assetId\":\"The deposited asset ID.\",\"_chainId\":\"The chain ID of the ZK chain to which deposit.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\"}},\"depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)\":{\"details\":\"If the token is bridged for the first time, the L2 token contract will be deployed. Note however, that the newly-deployed token does not support any custom logic, i.e. rebase tokens' functionality is not supported.If the L2 deposit finalization transaction fails, the `_refundRecipient` will receive the `_l2Value`. Please note, the contract may change the refund recipient's address to eliminate sending funds to addresses out of control. - If `_refundRecipient` is a contract on L1, the refund will be sent to the aliased `_refundRecipient`. - If `_refundRecipient` is set to `address(0)` and the sender has NO deployed bytecode on L1, the refund will be sent to the `msg.sender` address. - If `_refundRecipient` is set to `address(0)` and the sender has deployed bytecode on L1, the refund will be sent to the aliased `msg.sender` address.The address aliasing of L1 contracts as refund recipient on L2 is necessary to guarantee that the funds are controllable through the Mailbox, since the Mailbox applies address aliasing to the from address for the L2 tx if the L1 msg.sender is a contract. Without address aliasing for L1 contracts as refund recipients they would not be able to make proper L2 tx requests through the Mailbox to use or withdraw the funds from L2, and the funds would be lost.\",\"params\":{\"_amount\":\"The total amount of tokens to be bridged.\",\"_l1Token\":\"The L1 token address which is deposited.\",\"_l2Receiver\":\"The account address that should receive funds on L2.\",\"_l2TxGasLimit\":\"The L2 gas limit to be used in the corresponding L2 transaction.\",\"_l2TxGasPerPubdataByte\":\"The gasPerPubdataByteLimit to be used in the corresponding L2 transaction.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\",\"_refundRecipient\":\"The address on L2 that will receive the refund for the transaction.\"},\"returns\":{\"txHash\":\"The L2 transaction hash of deposit finalization.\"}},\"finalizeDeposit(uint256,bytes32,bytes)\":{\"details\":\"We have both the legacy finalizeWithdrawal and the new finalizeDeposit functions, finalizeDeposit uses the new format. On the L2 we have finalizeDeposit with new and old formats both.\",\"params\":{\"_assetId\":\"The bridged asset ID.\",\"_chainId\":\"The chain ID of the transaction to check.\",\"_transferData\":\"The position in the L2 logs Merkle tree of the l2Log that was sent with the message.\"}},\"finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])\":{\"params\":{\"_chainId\":\"The chain ID of the transaction to check\",\"_l2BatchNumber\":\"The L2 batch number where the withdrawal was processed\",\"_l2MessageIndex\":\"The position in the L2 logs Merkle tree of the l2Log that was sent with the message\",\"_l2TxNumberInBatch\":\"The L2 transaction number in the batch, in which the log was sent\",\"_merkleProof\":\"The Merkle proof of the inclusion L2 -> L1 message about withdrawal initialization\",\"_message\":\"The L2 withdraw data, stored in an L2 -> L1 message\"}},\"getDepositCalldata(address,bytes32,bytes)\":{\"params\":{\"_assetData\":\"The encoded data, which is used by the asset handler to determine L2 recipient and amount. Might include extra information.\",\"_assetId\":\"The deposited asset ID.\",\"_sender\":\"The address of the deposit initiator.\"},\"returns\":{\"_0\":\"Returns calldata used on ZK chain.\"}},\"setAssetHandlerAddressThisChain(bytes32,address)\":{\"details\":\"The caller of this function is encoded within the `assetId`, therefore, it should be invoked by the asset deployment tracker contract.No access control on the caller, as msg.sender is encoded in the assetId.Typically, for most tokens, ADT is the native token vault. However, custom tokens may have their own specific asset deployment trackers.`setAssetHandlerAddressOnCounterpart` should be called on L1 to set asset handlers on L2 chains for a specific asset ID.\",\"params\":{\"_assetHandlerAddress\":\"The address of the asset handler to be set for the provided asset.\",\"_assetRegistrationData\":\"The asset data which may include the asset address and any additional required data or encodings.\"}},\"transferFundsToNTV(bytes32,uint256,address)\":{\"details\":\"assetId is not the padded address, but the correct encoded id (NTV stores respective format for IDs)\",\"params\":{\"_amount\":\"The asset amount to be transferred to native token vault.\",\"_originalCaller\":\"The `msg.sender` address from the external call that initiated current one.\"}}},\"title\":\"L1 Bridge contract interface\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)\":{\"notice\":\"Withdraw funds from the initiated deposit, that failed when finalizing on L2.\"},\"bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)\":{\"notice\":\"Routes the confirmation to nullifier for backward compatibility.Confirms the acceptance of a transaction by the Mailbox, as part of the L2 transaction process within Bridgehub. This function is utilized by `requestL2TransactionTwoBridges` to validate the execution of a transaction.\"},\"bridgehubDeposit(uint256,address,uint256,bytes)\":{\"notice\":\"Initiates a transfer transaction within Bridgehub, used by `requestL2TransactionTwoBridges`.\"},\"bridgehubDepositBaseToken(uint256,bytes32,address,uint256)\":{\"notice\":\"Allows bridgehub to acquire mintValue for L1->L2 and L2->L2 transactions.\"},\"depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)\":{\"notice\":\"Initiates a deposit by locking funds on the contract and sending the request of processing an L2 transaction where tokens would be minted.\"},\"finalizeDeposit(uint256,bytes32,bytes)\":{\"notice\":\"Finalize the withdrawal and release funds.\"},\"finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])\":{\"notice\":\"Finalize the withdrawal and release funds\"},\"getDepositCalldata(address,bytes32,bytes)\":{\"notice\":\"Generates a calldata for calling the deposit finalization on the L2 native token contract.\"},\"setAssetHandlerAddressThisChain(bytes32,address)\":{\"notice\":\"Sets the asset handler address for a specified asset ID on the chain of the asset deployment tracker.\"},\"transferFundsToNTV(bytes32,uint256,address)\":{\"notice\":\"Transfers funds to Native Token Vault, if the asset is registered with it. Does nothing for ETH or non-registered tokens.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/bridge/asset-router/IL1AssetRouter.sol\":\"IL1AssetRouter\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":9999999},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/contracts-master/=lib/openzeppelin-contracts-master/contracts/\",\":@openzeppelin/contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/contracts/\",\":@openzeppelin/contracts-v4/=lib/openzeppelin-contracts-v4/contracts/\",\":@openzeppelin/contracts/=lib/openzeppelin-contracts-master/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts-master/lib/erc4626-tests/\",\":eth-gas-reporter/=node_modules/eth-gas-reporter/\",\":forge-std/=lib/forge-std/src/\",\":foundry-test/=test/foundry/\",\":halmos-cheatcodes/=lib/openzeppelin-contracts-master/lib/halmos-cheatcodes/src/\",\":hardhat/=node_modules/hardhat/\",\":l2-contracts/=../l2-contracts/contracts/\",\":murky/=lib/murky/src/\",\":openzeppelin-contracts-master/=lib/openzeppelin-contracts-master/\",\":openzeppelin-contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/\",\":openzeppelin-contracts-v4/=lib/openzeppelin-contracts-v4/\",\":openzeppelin-contracts/=lib/murky/lib/openzeppelin-contracts/\"]},\"sources\":{\"contracts/bridge/asset-router/IAssetRouterBase.sol\":{\"keccak256\":\"0x45224b53e88e7a9af471644435326cfb9339b853a6f1158db349ab991e75b7b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4c27fd12a4b40916f1c72e7660f9a98c35bde0efd1e00e1de0a2cfb4586463d0\",\"dweb:/ipfs/QmTBvWnZLLodvz6v76Sc8gc2YrddNwFGH6gNayQLbRGTVm\"]},\"contracts/bridge/asset-router/IL1AssetRouter.sol\":{\"keccak256\":\"0x8c6d915c51ec21a2b891688bb25e44dd5ae00c6e8d3d84a1ab0c040f5a522a02\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e4767ecc2d245ba2ed08d9de93622e5797aafe44719452143d3e294c5e08e777\",\"dweb:/ipfs/QmV4fpsCEeCSbUMj4KDKbAzZswyh8MKCeMsbXqhB2SubUJ\"]},\"contracts/bridge/asset-tracker/IAssetTrackerBase.sol\":{\"keccak256\":\"0x7f6c4591e74bac5f7227dbd67a030565c0316b886fa69883e42b27a76d9828e5\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e161c36b7f6b72ea8db2a21dfee059969215cd3d6984f6dabc9daef4bc36bedf\",\"dweb:/ipfs/QmTJqhZNg5djGzWmfbYPmegVsCzWPfhbfgYYSdwtAw58XC\"]},\"contracts/bridge/asset-tracker/IL2AssetTracker.sol\":{\"keccak256\":\"0x8da7d429a331b61fdceaf7ceb85c11fa480fe24b96159dae54eebb3b299b987f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e7db8a9e91a84e50fcc85fd7db3a7e908569b9c401613382e447339e9222a032\",\"dweb:/ipfs/QmZNxHKfaZjaZZyRuyGuWomXaAjQB767ppLa8ni4PGzvU4\"]},\"contracts/bridge/interfaces/IAssetHandler.sol\":{\"keccak256\":\"0xc79f3ac3119814c246c9fe32ff4e644796428a44a74e13a7fc690fa188a86a72\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://467fe78ec0d8d3f458912d5ba0227e568d87666e8bcede35f9560f8b58bb1776\",\"dweb:/ipfs/QmQFsWV9Z1XgEfhaCyDwuVucgvqWxUSPTp2bpsb8rZqoke\"]},\"contracts/bridge/interfaces/IL1AssetDeploymentTracker.sol\":{\"keccak256\":\"0xa3e861213159310b287ba8cce396b8ff4dffa7f8869fe012413d0481fce9c50a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c33dcc891a298dcc310f97f189ed0a39813e8636422e620725b0611e3974a836\",\"dweb:/ipfs/QmWrfjGV6rFQDGMmGFbF8y7iKQwJPU3wViS3DVRmo2aSC9\"]},\"contracts/bridge/interfaces/IL1AssetHandler.sol\":{\"keccak256\":\"0x9de4855ee1fe103e010c37cc1e8497c77bb4263b096635293289065e3dc35806\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://513172cfe69ac0d5f53de3ff7c8d9ba3edbde3d50a7700333b9259a44c6f703b\",\"dweb:/ipfs/QmeQzJizqh8JCZNkwQLPcoeS867yKMv6EJqvACndsJfWd4\"]},\"contracts/bridge/interfaces/IL1CrossChainSender.sol\":{\"keccak256\":\"0x69e37fdc57668a4243a73c8ba018d5dc4af9419bc984e8799b168cb67bb22950\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://27dddad22863478e43fdf43c7a85a8bc222d51ce4270f69a60ac6611a7f07312\",\"dweb:/ipfs/QmU2i1KhNGDssVfxH9eKQfxiEATsjNvVwUT2Qz4jVahXm9\"]},\"contracts/bridge/interfaces/IL1ERC20Bridge.sol\":{\"keccak256\":\"0xf3540c809d4dcaff17a8c45a4f88677f69bbc04e414513c6a166dbbf08043b80\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0e139ac2997f590773320fdeebc856e4f5eee5da8106df52e85507c0d8f2cb71\",\"dweb:/ipfs/QmeXmie3PXC1BMmzjpXwWFZaTkkqMh3devuyzEuavZ1DbP\"]},\"contracts/bridge/interfaces/IL1Nullifier.sol\":{\"keccak256\":\"0x17d485335f80eec2a32487024aa9ffeb618162c5fbf360a4b62ccafedfe96e30\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://bebe6c82a53be797209b7caff944e638806163ed37f2dd40038fdfaf927709b2\",\"dweb:/ipfs/QmaEdK7rgxwSwADfpE6AYyiq8tFBuDYr1efuoQNYV2pNmo\"]},\"contracts/bridge/interfaces/IL1SharedBridgeLegacy.sol\":{\"keccak256\":\"0x3fc6b0f6948e0365198c3f15b03e8a33f5ce00a6f17227205fd235143eb38147\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1eaf26b87c46ba15f19fa9e9f620b99f9b90cc9e6cf0289bb8c8264c2873567c\",\"dweb:/ipfs/QmSt9RoBgRZnw2BiJE5KGNYRcfaRF3VKca7Ac9fLs3ZLYD\"]},\"contracts/bridge/ntv/IL1NativeTokenVault.sol\":{\"keccak256\":\"0xfb5c60cfc8dd9461cc87d0dd56cac685dd5b0390afec1d6a9299a8c8dbd7d3db\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://86641a4b17f60ccd5ed3928944c9aec159ee0db35e816ef011bf15911ff15878\",\"dweb:/ipfs/QmZRzc1adBhyYkCoq2nYeH91R1UMQXMCJV1LtHuFZoy8cq\"]},\"contracts/bridge/ntv/IL2NativeTokenVault.sol\":{\"keccak256\":\"0xe3a4266c819c6f3ce1359cd16fd999e4a045b1b41c50e3c01ec01b0e9f9d5b89\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6a4543e8302395c286eb9f40aef2287bdd128746e4dca557a5be989e40b3f0ed\",\"dweb:/ipfs/QmfNApggA61S8q3wtYetYBx7fZEQtw6uRHWgFc8TBsQk5d\"]},\"contracts/bridge/ntv/INativeTokenVault.sol\":{\"keccak256\":\"0x67ccf56babdbedd06cde1ddce8308523e220d4e4548c69c7dade3bbefd3fb406\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c75b92e1ac6f65c65f06ab34cd3e1ba1d60da0dd38ebcad1310d1d149a9a6867\",\"dweb:/ipfs/QmSkQdNcUWHyxAhowRx6NcEQgbygvqTVDctd4dvPocAoom\"]},\"contracts/bridgehub/IBridgehub.sol\":{\"keccak256\":\"0x20b0564fba0c5a244ff847e3629826f21226e3ec011be22125dc359ebbaac21a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6e69e3bb97885e171424b204f3ee7364db4b936568d13675d09a3bf2559828c5\",\"dweb:/ipfs/Qmdo4oXfsjBVM5Hh52fDeXqnz1qebthrd3gDC4csF8QY68\"]},\"contracts/bridgehub/ICTMDeploymentTracker.sol\":{\"keccak256\":\"0xb8686200049daa7b71fb8ba3d8a08863a3a8dedac07f51bee2d77286d0010e1e\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b05d8ee606a16ac33ffaf40e1eeab86971f47517c7cd1efdc1c76edca45e314b\",\"dweb:/ipfs/QmSnsR6iWEJ6V25qXD8xxbGyTf2ozdHL8C8aM3QNwo9zic\"]},\"contracts/bridgehub/IChainAssetHandler.sol\":{\"keccak256\":\"0xe0e62e66809b5e0906be2513e35878854ab50cd872faba1a906ade0193ffeec7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://797b14dd8f43971e1e884760efc87934ae938044595d2c9fe19ea19d39c7750a\",\"dweb:/ipfs/QmdVSEfmSpaengu5FcKhzYLh2CmtHzpVUhLGNqWVkW8GGa\"]},\"contracts/bridgehub/IMessageRoot.sol\":{\"keccak256\":\"0xb63ffb2925570ec605a37e59bb9816f8b1d0323ff3257f2d93e8c9827802655a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e8bdb72dd57b5339a42f2ac18507a64145db90f97611444cf78fe2d4ca42295a\",\"dweb:/ipfs/QmQGzLfNUiBNGxfQp2Kxv1qPJJ1xSENGb8ZVfeAZhgipuP\"]},\"contracts/common/Config.sol\":{\"keccak256\":\"0xab2390db71b8d000c7c286aa718256113bef677ba8253d2e22d18495877bf412\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1e37eb3822c5d4c38d5c0a2ab460a07349aa85fc84cab8e7df3b9c16de3e83f1\",\"dweb:/ipfs/QmeP4FqEYzSSCUHtcetAKGkSYuFoDaqu3CPEdbgbaxHGnR\"]},\"contracts/common/L1ContractErrors.sol\":{\"keccak256\":\"0x925ba6d3147ee1f1e8d09a2995da3480f8cd46a8a31bf244964acc1e809676f4\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a9590796fc185897ac48df4426998e1ea693f719985779a14eb733b8516b2175\",\"dweb:/ipfs/QmX9BbXo7JAfjkmkgwGxY3vgHuzJDY7ma6DyR6W6KieUky\"]},\"contracts/common/Messaging.sol\":{\"keccak256\":\"0x24cf25a25c33d21d0f293e18f45b3cc51ae41c02f4b062ac9340eb1e89159630\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://91bfbb8682504581896740226ec884a79bd3dcc37a6fadcc37f2922a73506ce5\",\"dweb:/ipfs/QmcZj8Aez4Yewjez1aKJb5u6nSori91JsaibChjcktTfob\"]},\"contracts/common/interfaces/IL2ContractDeployer.sol\":{\"keccak256\":\"0xa03848d792f166433282dc620e9b087fb3929fde12d9c96ea2d245a92552d371\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8fae684b28877c4c0778bc5c1d0c44fa08890b520dcd24fc574ed68405852370\",\"dweb:/ipfs/QmZjdWtEskToFiu3RwnyAMvkMrv3MMnR2MPv7bHfnPKN23\"]},\"contracts/common/interfaces/IL2InteropRootStorage.sol\":{\"keccak256\":\"0x3e2950976665d6e7ebffb4834b58117c8ec48ab95cdb77a1164f1bef6a648d79\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://766f21866ecde1f967d2f952888b2ea183315d92dbf9a2b22f4db637cf07c785\",\"dweb:/ipfs/QmcggwNfV8RqmCmzSrEkfdNXUofttWFYNhYgPzk7FNqvbe\"]},\"contracts/common/interfaces/ISystemContext.sol\":{\"keccak256\":\"0x5cf0e55becd6a0456a6e3634456f6c61c1de833319dcacfebdf8f1e3d8875258\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a540c39201540e27a2488e2f8ddb8fcd934e0ba1811a0a5c61eb5b75930d2df4\",\"dweb:/ipfs/QmazbWo5bCcEDr1admp7wmVRm4C2Yvx2s7wbT1kXiJMFpj\"]},\"contracts/common/l2-helpers/IBaseToken.sol\":{\"keccak256\":\"0xe7257aa568ebc554817a0e79fdfbbd86fa9ea291a572ce2955b435b34c3155f1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8136bee42e55b2c17f6f9b82d43748d82af3abf93293bcd2927cd95fba6e6143\",\"dweb:/ipfs/QmeeFVQdYKgoivpxUMLNLNNVJKYmHXhvP49rtjnmDNHcbu\"]},\"contracts/common/l2-helpers/IL2ToL1Messenger.sol\":{\"keccak256\":\"0x2b087d83b96c92e5472c58c27148460445e7d99b2221f3abebfaec06585a31f1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e55e320076393b63f1ff6bda9013c45a7ceff05d8954b41d71488d18c33c550f\",\"dweb:/ipfs/Qmeiibb8zh87WkKBenvTbQoLRvNRE8RKvdPvkYmFueRbQw\"]},\"contracts/common/l2-helpers/L2ContractAddresses.sol\":{\"keccak256\":\"0xb8d312c52dbfdf02ef65c3614b57f49cdb34783f9107fcacdf9c483aed93196a\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://819765a7ec6ea40cdd974c12aacd0f94dd354aca9956c37e49c6ed62cc9d95fa\",\"dweb:/ipfs/QmdjudbvfYZcTRtGocd4ENHuAdyEujJD5FpGDYKMNPY7V1\"]},\"contracts/common/libraries/Merkle.sol\":{\"keccak256\":\"0xc53f505619f7e7dc9b276a63d1bc743a588633457cefbb3a9bc8b20b42ada35f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b13d1dead050a82e4ad6c5013c9f176818933ba4b843110dbaf0bbe6c1259ee8\",\"dweb:/ipfs/Qmac9pko9bhqY4NzM9MeAdxumenNFwKNE5qY4gV3z2zDpz\"]},\"contracts/common/libraries/MessageHashing.sol\":{\"keccak256\":\"0xe02ef5a079765ba06bdc562388741b2b72aabcdc743a37e0c141d2f6dabb9cfe\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://83abf84b0d0c6018a63751b007aab8871b000bbf95291382a405c5ffa71d319e\",\"dweb:/ipfs/QmTA1EZ9nMmEjri1oWnBx7ALimX2wKu3WERg9e6Tz8eHs2\"]},\"contracts/common/libraries/UncheckedMath.sol\":{\"keccak256\":\"0x0ff1407bcabd5a4349a0da1372afe1f2e449bbb5271a2d88d5b999e4dffe9728\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b9fde36c3cf8c7989ebe20c1a52676870e0d820dc43afd8f789b09eff620dd9b\",\"dweb:/ipfs/QmbMNcimFvgE44idT1ZUSAEv74FkePodWQfCg4f8GhmHR8\"]},\"contracts/interop/IInteropCenter.sol\":{\"keccak256\":\"0x0e4d4f1d926ce45f8f4febb35cc7eb8bbe64de86faf62bca8968c55b8d92539d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f0035024a8f063a58b04a238a1c841757e766a3f708f587020e256c6ef6ec81f\",\"dweb:/ipfs/QmWo4kRT2VmVoZxtoAvgnrkWTj8Fo4rLfjTQ1UAgetX5qv\"]},\"contracts/state-transition/L1StateTransitionErrors.sol\":{\"keccak256\":\"0xfda1e60dd1c29248e94e80a62a364d15a9f048f290e8723c02b2325a2f3e8bcb\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a38bbdb624b45348d3ff92482afffd995a83c642671b819ff4fd1e2f0f1aa92c\",\"dweb:/ipfs/QmVdxyYkFwAePTMsn4jvL19iCvSpWpqh35CS14KhzFiF8n\"]},\"contracts/state-transition/chain-interfaces/IExecutor.sol\":{\"keccak256\":\"0x4fde7c5ce7ea8764c62c48451f5b35bfffe92c02556ca30e59c2c8bd6b65b75f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://96cfa3f8b3328e23848d6a43643c25b715613a170248126f4a95ca263b099746\",\"dweb:/ipfs/QmZaMZZwXJJLgujyHSxoeWQEcNgMvQ7Li9tcL5S5ZdU1mh\"]},\"contracts/state-transition/chain-interfaces/IMessageVerification.sol\":{\"keccak256\":\"0xe79021eb8d0bdd7da63d962fe7686109e04c244a60e2050b0b87b3d896f374d1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8299f2fde94229e9cd8e0417e53378612b56544344186134fde0175fed215ef2\",\"dweb:/ipfs/Qmck9SmwajAF46rWiaVkrgyWe2MdpxckB8RMwHebEwPmev\"]},\"contracts/state-transition/chain-interfaces/IZKChainBase.sol\":{\"keccak256\":\"0xee753576cca182c55b1bddb792eec0d60d83bdd3d7978049054fe9ad68423ab0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://01d17078b900f8c255cff82cd5691b1b520d54e15443396df69ce4a066eed9cb\",\"dweb:/ipfs/QmaZnEav6Frr2wxrWiySwCJbXZrJXmu7kg42E86mUQf3fy\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": { "version": "0.8.28+commit.7893614a" },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": true },
+            {
+              "internalType": "bytes32",
+              "name": "additionalData",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "assetDeploymentTracker",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "AssetDeploymentTrackerRegistered",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": true },
+            {
+              "internalType": "address",
+              "name": "assetDeploymentTracker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "bytes32",
+              "name": "additionalData",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "AssetDeploymentTrackerSet",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": true },
+            {
+              "internalType": "address",
+              "name": "_assetHandlerAddress",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "AssetHandlerRegistered",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": true },
+            { "internalType": "address", "name": "from", "type": "address", "indexed": true },
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": false },
+            { "internalType": "uint256", "name": "amount", "type": "uint256", "indexed": false }
+          ],
+          "type": "event",
+          "name": "BridgehubDepositBaseTokenInitiated",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": true },
+            { "internalType": "bytes32", "name": "txDataHash", "type": "bytes32", "indexed": true },
+            {
+              "internalType": "bytes32",
+              "name": "l2DepositTxHash",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "BridgehubDepositFinalized",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": true },
+            { "internalType": "bytes32", "name": "txDataHash", "type": "bytes32", "indexed": true },
+            { "internalType": "address", "name": "from", "type": "address", "indexed": true },
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": false },
+            {
+              "internalType": "bytes",
+              "name": "bridgeMintCalldata",
+              "type": "bytes",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "BridgehubDepositInitiated",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes", "name": "bridgeMintData", "type": "bytes", "indexed": false }
+          ],
+          "type": "event",
+          "name": "BridgehubMintData",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": false },
+            { "internalType": "address", "name": "sender", "type": "address", "indexed": true },
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": true },
+            {
+              "internalType": "bytes32",
+              "name": "assetDataHash",
+              "type": "bytes32",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "BridgehubWithdrawalInitiated",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": true },
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": true },
+            { "internalType": "bytes", "name": "assetData", "type": "bytes", "indexed": false }
+          ],
+          "type": "event",
+          "name": "ClaimedFailedDepositAssetRouter",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": true },
+            { "internalType": "bytes32", "name": "assetId", "type": "bytes32", "indexed": true },
+            { "internalType": "bytes", "name": "assetData", "type": "bytes", "indexed": false }
+          ],
+          "type": "event",
+          "name": "DepositFinalizedAssetRouter",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "chainId", "type": "uint256", "indexed": true },
+            {
+              "internalType": "bytes32",
+              "name": "l2DepositTxHash",
+              "type": "bytes32",
+              "indexed": true
+            },
+            { "internalType": "address", "name": "from", "type": "address", "indexed": true },
+            { "internalType": "address", "name": "to", "type": "address", "indexed": false },
+            { "internalType": "address", "name": "l1Token", "type": "address", "indexed": false },
+            { "internalType": "uint256", "name": "amount", "type": "uint256", "indexed": false }
+          ],
+          "type": "event",
+          "name": "LegacyDepositInitiated",
+          "anonymous": false
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "BRIDGE_HUB",
+          "outputs": [{ "internalType": "contract IBridgehub", "name": "", "type": "address" }]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "ETH_TOKEN_ASSET_ID",
+          "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "INTEROP_CENTER",
+          "outputs": [{ "internalType": "contract IInteropCenter", "name": "", "type": "address" }]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "L1_CHAIN_ID",
+          "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "L1_NULLIFIER",
+          "outputs": [{ "internalType": "contract IL1Nullifier", "name": "", "type": "address" }]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "L1_WETH_TOKEN",
+          "outputs": [{ "internalType": "address", "name": "", "type": "address" }]
+        },
+        {
+          "inputs": [{ "internalType": "bytes32", "name": "_assetId", "type": "bytes32" }],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "assetHandlerAddress",
+          "outputs": [{ "internalType": "address", "name": "", "type": "address" }]
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "address", "name": "_depositSender", "type": "address" },
+            { "internalType": "bytes32", "name": "_assetId", "type": "bytes32" },
+            { "internalType": "bytes", "name": "_assetData", "type": "bytes" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "bridgeRecoverFailedTransfer"
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "address", "name": "_depositSender", "type": "address" },
+            { "internalType": "bytes32", "name": "_assetId", "type": "bytes32" },
+            { "internalType": "bytes", "name": "_assetData", "type": "bytes" },
+            { "internalType": "bytes32", "name": "_l2TxHash", "type": "bytes32" },
+            { "internalType": "uint256", "name": "_l2BatchNumber", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2MessageIndex", "type": "uint256" },
+            { "internalType": "uint16", "name": "_l2TxNumberInBatch", "type": "uint16" },
+            { "internalType": "bytes32[]", "name": "_merkleProof", "type": "bytes32[]" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "bridgeRecoverFailedTransfer"
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "bytes32", "name": "_txDataHash", "type": "bytes32" },
+            { "internalType": "bytes32", "name": "_txHash", "type": "bytes32" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "bridgehubConfirmL2Transaction"
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "address", "name": "_originalCaller", "type": "address" },
+            { "internalType": "uint256", "name": "_value", "type": "uint256" },
+            { "internalType": "bytes", "name": "_data", "type": "bytes" }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "bridgehubDeposit",
+          "outputs": [
+            {
+              "internalType": "struct L2TransactionRequestTwoBridgesInner",
+              "name": "request",
+              "type": "tuple",
+              "components": [
+                { "internalType": "bytes32", "name": "magicValue", "type": "bytes32" },
+                { "internalType": "address", "name": "l2Contract", "type": "address" },
+                { "internalType": "bytes", "name": "l2Calldata", "type": "bytes" },
+                { "internalType": "bytes[]", "name": "factoryDeps", "type": "bytes[]" },
+                { "internalType": "bytes32", "name": "txDataHash", "type": "bytes32" }
+              ]
+            }
+          ]
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "bytes32", "name": "_assetId", "type": "bytes32" },
+            { "internalType": "address", "name": "_originalCaller", "type": "address" },
+            { "internalType": "uint256", "name": "_amount", "type": "uint256" }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "bridgehubDepositBaseToken"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "_originalCaller", "type": "address" },
+            { "internalType": "address", "name": "_l2Receiver", "type": "address" },
+            { "internalType": "address", "name": "_l1Token", "type": "address" },
+            { "internalType": "uint256", "name": "_amount", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2TxGasLimit", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2TxGasPerPubdataByte", "type": "uint256" },
+            { "internalType": "address", "name": "_refundRecipient", "type": "address" }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "depositLegacyErc20Bridge",
+          "outputs": [{ "internalType": "bytes32", "name": "txHash", "type": "bytes32" }]
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "bytes32", "name": "_assetId", "type": "bytes32" },
+            { "internalType": "bytes", "name": "_transferData", "type": "bytes" }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "finalizeDeposit"
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2BatchNumber", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2MessageIndex", "type": "uint256" },
+            { "internalType": "uint16", "name": "_l2TxNumberInBatch", "type": "uint16" },
+            { "internalType": "bytes", "name": "_message", "type": "bytes" },
+            { "internalType": "bytes32[]", "name": "_merkleProof", "type": "bytes32[]" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "finalizeWithdrawal"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "_sender", "type": "address" },
+            { "internalType": "bytes32", "name": "_assetId", "type": "bytes32" },
+            { "internalType": "bytes", "name": "_assetData", "type": "bytes" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "getDepositCalldata",
+          "outputs": [{ "internalType": "bytes", "name": "", "type": "bytes" }]
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "_chainId", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2BatchNumber", "type": "uint256" },
+            { "internalType": "uint256", "name": "_l2MessageIndex", "type": "uint256" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "isWithdrawalFinalized",
+          "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }]
+        },
+        {
+          "inputs": [{ "internalType": "uint256", "name": "_chainId", "type": "uint256" }],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "l2BridgeAddress",
+          "outputs": [{ "internalType": "address", "name": "", "type": "address" }]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "nativeTokenVault",
+          "outputs": [
+            { "internalType": "contract INativeTokenVault", "name": "", "type": "address" }
+          ]
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "_assetRegistrationData", "type": "bytes32" },
+            { "internalType": "address", "name": "_assetDeploymentTracker", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setAssetDeploymentTracker"
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "_assetRegistrationData", "type": "bytes32" },
+            { "internalType": "address", "name": "_assetHandlerAddress", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setAssetHandlerAddressThisChain"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract IL1ERC20Bridge",
+              "name": "_legacyBridge",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setL1Erc20Bridge"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "contract INativeTokenVault",
+              "name": "_nativeTokenVault",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setNativeTokenVault"
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "_assetId", "type": "bytes32" },
+            { "internalType": "uint256", "name": "_amount", "type": "uint256" },
+            { "internalType": "address", "name": "_originalCaller", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "transferFundsToNTV",
+          "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)": {
+            "details": "Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.",
+            "params": {
+              "_assetData": "The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.",
+              "_assetId": "The unique identifier of the deposited L1 token.",
+              "_chainId": "The ZK chain id to which the deposit was initiated.",
+              "_depositSender": "The address of the entity that initiated the deposit."
+            }
+          },
+          "bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes,bytes32,uint256,uint256,uint16,bytes32[])": {
+            "details": "Withdraw funds from the initiated deposit, that failed when finalizing on L2.Processes claims of failed deposit, whether they originated from the legacy bridge or the current system.",
+            "params": {
+              "_assetData": "The encoded transfer data, which includes both the deposit amount and the address of the L2 receiver. Might include extra information.",
+              "_assetId": "The unique identifier of the deposited L1 token.",
+              "_chainId": "The ZK chain id to which deposit was initiated.",
+              "_depositSender": "The address of the entity that initiated the deposit.",
+              "_l2BatchNumber": "The L2 batch number where the deposit finalization was processed.",
+              "_l2MessageIndex": "The position in the L2 logs Merkle tree of the l2Log that was sent with the message.",
+              "_l2TxHash": "The L2 transaction hash of the failed deposit finalization.",
+              "_l2TxNumberInBatch": "The L2 transaction number in a batch, in which the log was sent.",
+              "_merkleProof": "The Merkle proof of the processing L1 -> L2 transaction with deposit finalization."
+            }
+          },
+          "bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)": {
+            "params": {
+              "_chainId": "Destination chain ID.",
+              "_txDataHash": "The keccak256 hash of 0x01 || abi.encode(bytes32, bytes) to identify deposits.",
+              "_txHash": "The hash of the L1->L2 transaction to confirm the deposit."
+            }
+          },
+          "bridgehubDeposit(uint256,address,uint256,bytes)": {
+            "details": "Data has the following abi encoding for legacy deposits: address _l1Token, uint256 _amount, address _l2Receiver for new deposits: bytes32 _assetId, bytes _transferData",
+            "params": {
+              "_chainId": "Destination chain ID.",
+              "_data": "The calldata for the second bridge deposit.",
+              "_originalCaller": "The `msg.sender` address from the external call that initiated current one.",
+              "_value": "The `msg.value` to be deposited on the target chain."
+            },
+            "returns": {
+              "request": "The data used by the bridgehub to create L2 transaction request to specific ZK chain."
+            }
+          },
+          "bridgehubDepositBaseToken(uint256,bytes32,address,uint256)": {
+            "details": "If the corresponding L2 transaction fails, refunds are issued to a refund recipient on L2.",
+            "params": {
+              "_amount": "The total amount of tokens to be bridged.",
+              "_assetId": "The deposited asset ID.",
+              "_chainId": "The chain ID of the ZK chain to which deposit.",
+              "_originalCaller": "The `msg.sender` address from the external call that initiated current one."
+            }
+          },
+          "depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)": {
+            "details": "If the token is bridged for the first time, the L2 token contract will be deployed. Note however, that the newly-deployed token does not support any custom logic, i.e. rebase tokens' functionality is not supported.If the L2 deposit finalization transaction fails, the `_refundRecipient` will receive the `_l2Value`. Please note, the contract may change the refund recipient's address to eliminate sending funds to addresses out of control. - If `_refundRecipient` is a contract on L1, the refund will be sent to the aliased `_refundRecipient`. - If `_refundRecipient` is set to `address(0)` and the sender has NO deployed bytecode on L1, the refund will be sent to the `msg.sender` address. - If `_refundRecipient` is set to `address(0)` and the sender has deployed bytecode on L1, the refund will be sent to the aliased `msg.sender` address.The address aliasing of L1 contracts as refund recipient on L2 is necessary to guarantee that the funds are controllable through the Mailbox, since the Mailbox applies address aliasing to the from address for the L2 tx if the L1 msg.sender is a contract. Without address aliasing for L1 contracts as refund recipients they would not be able to make proper L2 tx requests through the Mailbox to use or withdraw the funds from L2, and the funds would be lost.",
+            "params": {
+              "_amount": "The total amount of tokens to be bridged.",
+              "_l1Token": "The L1 token address which is deposited.",
+              "_l2Receiver": "The account address that should receive funds on L2.",
+              "_l2TxGasLimit": "The L2 gas limit to be used in the corresponding L2 transaction.",
+              "_l2TxGasPerPubdataByte": "The gasPerPubdataByteLimit to be used in the corresponding L2 transaction.",
+              "_originalCaller": "The `msg.sender` address from the external call that initiated current one.",
+              "_refundRecipient": "The address on L2 that will receive the refund for the transaction."
+            },
+            "returns": { "txHash": "The L2 transaction hash of deposit finalization." }
+          },
+          "finalizeDeposit(uint256,bytes32,bytes)": {
+            "details": "We have both the legacy finalizeWithdrawal and the new finalizeDeposit functions, finalizeDeposit uses the new format. On the L2 we have finalizeDeposit with new and old formats both.",
+            "params": {
+              "_assetId": "The bridged asset ID.",
+              "_chainId": "The chain ID of the transaction to check.",
+              "_transferData": "The position in the L2 logs Merkle tree of the l2Log that was sent with the message."
+            }
+          },
+          "finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])": {
+            "params": {
+              "_chainId": "The chain ID of the transaction to check",
+              "_l2BatchNumber": "The L2 batch number where the withdrawal was processed",
+              "_l2MessageIndex": "The position in the L2 logs Merkle tree of the l2Log that was sent with the message",
+              "_l2TxNumberInBatch": "The L2 transaction number in the batch, in which the log was sent",
+              "_merkleProof": "The Merkle proof of the inclusion L2 -> L1 message about withdrawal initialization",
+              "_message": "The L2 withdraw data, stored in an L2 -> L1 message"
+            }
+          },
+          "getDepositCalldata(address,bytes32,bytes)": {
+            "params": {
+              "_assetData": "The encoded data, which is used by the asset handler to determine L2 recipient and amount. Might include extra information.",
+              "_assetId": "The deposited asset ID.",
+              "_sender": "The address of the deposit initiator."
+            },
+            "returns": { "_0": "Returns calldata used on ZK chain." }
+          },
+          "setAssetHandlerAddressThisChain(bytes32,address)": {
+            "details": "The caller of this function is encoded within the `assetId`, therefore, it should be invoked by the asset deployment tracker contract.No access control on the caller, as msg.sender is encoded in the assetId.Typically, for most tokens, ADT is the native token vault. However, custom tokens may have their own specific asset deployment trackers.`setAssetHandlerAddressOnCounterpart` should be called on L1 to set asset handlers on L2 chains for a specific asset ID.",
+            "params": {
+              "_assetHandlerAddress": "The address of the asset handler to be set for the provided asset.",
+              "_assetRegistrationData": "The asset data which may include the asset address and any additional required data or encodings."
+            }
+          },
+          "transferFundsToNTV(bytes32,uint256,address)": {
+            "details": "assetId is not the padded address, but the correct encoded id (NTV stores respective format for IDs)",
+            "params": {
+              "_amount": "The asset amount to be transferred to native token vault.",
+              "_originalCaller": "The `msg.sender` address from the external call that initiated current one."
+            }
+          }
+        },
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {
+          "bridgeRecoverFailedTransfer(uint256,address,bytes32,bytes)": {
+            "notice": "Withdraw funds from the initiated deposit, that failed when finalizing on L2."
+          },
+          "bridgehubConfirmL2Transaction(uint256,bytes32,bytes32)": {
+            "notice": "Routes the confirmation to nullifier for backward compatibility.Confirms the acceptance of a transaction by the Mailbox, as part of the L2 transaction process within Bridgehub. This function is utilized by `requestL2TransactionTwoBridges` to validate the execution of a transaction."
+          },
+          "bridgehubDeposit(uint256,address,uint256,bytes)": {
+            "notice": "Initiates a transfer transaction within Bridgehub, used by `requestL2TransactionTwoBridges`."
+          },
+          "bridgehubDepositBaseToken(uint256,bytes32,address,uint256)": {
+            "notice": "Allows bridgehub to acquire mintValue for L1->L2 and L2->L2 transactions."
+          },
+          "depositLegacyErc20Bridge(address,address,address,uint256,uint256,uint256,address)": {
+            "notice": "Initiates a deposit by locking funds on the contract and sending the request of processing an L2 transaction where tokens would be minted."
+          },
+          "finalizeDeposit(uint256,bytes32,bytes)": {
+            "notice": "Finalize the withdrawal and release funds."
+          },
+          "finalizeWithdrawal(uint256,uint256,uint256,uint16,bytes,bytes32[])": {
+            "notice": "Finalize the withdrawal and release funds"
+          },
+          "getDepositCalldata(address,bytes32,bytes)": {
+            "notice": "Generates a calldata for calling the deposit finalization on the L2 native token contract."
+          },
+          "setAssetHandlerAddressThisChain(bytes32,address)": {
+            "notice": "Sets the asset handler address for a specified asset ID on the chain of the asset deployment tracker."
+          },
+          "transferFundsToNTV(bytes32,uint256,address)": {
+            "notice": "Transfers funds to Native Token Vault, if the asset is registered with it. Does nothing for ETH or non-registered tokens."
+          }
+        },
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@ensdomains/=node_modules/@ensdomains/",
+        "@openzeppelin/contracts-master/=lib/openzeppelin-contracts-master/contracts/",
+        "@openzeppelin/contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/contracts/",
+        "@openzeppelin/contracts-v4/=lib/openzeppelin-contracts-v4/contracts/",
+        "@openzeppelin/contracts/=lib/openzeppelin-contracts-master/contracts/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "erc4626-tests/=lib/openzeppelin-contracts-master/lib/erc4626-tests/",
+        "eth-gas-reporter/=node_modules/eth-gas-reporter/",
+        "forge-std/=lib/forge-std/src/",
+        "foundry-test/=test/foundry/",
+        "halmos-cheatcodes/=lib/openzeppelin-contracts-master/lib/halmos-cheatcodes/src/",
+        "hardhat/=node_modules/hardhat/",
+        "l2-contracts/=../l2-contracts/contracts/",
+        "murky/=lib/murky/src/",
+        "openzeppelin-contracts-master/=lib/openzeppelin-contracts-master/",
+        "openzeppelin-contracts-upgradeable-v4/=lib/openzeppelin-contracts-upgradeable-v4/",
+        "openzeppelin-contracts-v4/=lib/openzeppelin-contracts-v4/",
+        "openzeppelin-contracts/=lib/murky/lib/openzeppelin-contracts/"
+      ],
+      "optimizer": { "enabled": true, "runs": 9999999 },
+      "metadata": { "bytecodeHash": "ipfs" },
+      "compilationTarget": { "contracts/bridge/asset-router/IL1AssetRouter.sol": "IL1AssetRouter" },
+      "evmVersion": "cancun",
+      "libraries": {}
+    },
+    "sources": {
+      "contracts/bridge/asset-router/IAssetRouterBase.sol": {
+        "keccak256": "0x45224b53e88e7a9af471644435326cfb9339b853a6f1158db349ab991e75b7b2",
+        "urls": [
+          "bzz-raw://4c27fd12a4b40916f1c72e7660f9a98c35bde0efd1e00e1de0a2cfb4586463d0",
+          "dweb:/ipfs/QmTBvWnZLLodvz6v76Sc8gc2YrddNwFGH6gNayQLbRGTVm"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/asset-router/IL1AssetRouter.sol": {
+        "keccak256": "0x8c6d915c51ec21a2b891688bb25e44dd5ae00c6e8d3d84a1ab0c040f5a522a02",
+        "urls": [
+          "bzz-raw://e4767ecc2d245ba2ed08d9de93622e5797aafe44719452143d3e294c5e08e777",
+          "dweb:/ipfs/QmV4fpsCEeCSbUMj4KDKbAzZswyh8MKCeMsbXqhB2SubUJ"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/asset-tracker/IAssetTrackerBase.sol": {
+        "keccak256": "0x7f6c4591e74bac5f7227dbd67a030565c0316b886fa69883e42b27a76d9828e5",
+        "urls": [
+          "bzz-raw://e161c36b7f6b72ea8db2a21dfee059969215cd3d6984f6dabc9daef4bc36bedf",
+          "dweb:/ipfs/QmTJqhZNg5djGzWmfbYPmegVsCzWPfhbfgYYSdwtAw58XC"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/asset-tracker/IL2AssetTracker.sol": {
+        "keccak256": "0x8da7d429a331b61fdceaf7ceb85c11fa480fe24b96159dae54eebb3b299b987f",
+        "urls": [
+          "bzz-raw://e7db8a9e91a84e50fcc85fd7db3a7e908569b9c401613382e447339e9222a032",
+          "dweb:/ipfs/QmZNxHKfaZjaZZyRuyGuWomXaAjQB767ppLa8ni4PGzvU4"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IAssetHandler.sol": {
+        "keccak256": "0xc79f3ac3119814c246c9fe32ff4e644796428a44a74e13a7fc690fa188a86a72",
+        "urls": [
+          "bzz-raw://467fe78ec0d8d3f458912d5ba0227e568d87666e8bcede35f9560f8b58bb1776",
+          "dweb:/ipfs/QmQFsWV9Z1XgEfhaCyDwuVucgvqWxUSPTp2bpsb8rZqoke"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IL1AssetDeploymentTracker.sol": {
+        "keccak256": "0xa3e861213159310b287ba8cce396b8ff4dffa7f8869fe012413d0481fce9c50a",
+        "urls": [
+          "bzz-raw://c33dcc891a298dcc310f97f189ed0a39813e8636422e620725b0611e3974a836",
+          "dweb:/ipfs/QmWrfjGV6rFQDGMmGFbF8y7iKQwJPU3wViS3DVRmo2aSC9"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IL1AssetHandler.sol": {
+        "keccak256": "0x9de4855ee1fe103e010c37cc1e8497c77bb4263b096635293289065e3dc35806",
+        "urls": [
+          "bzz-raw://513172cfe69ac0d5f53de3ff7c8d9ba3edbde3d50a7700333b9259a44c6f703b",
+          "dweb:/ipfs/QmeQzJizqh8JCZNkwQLPcoeS867yKMv6EJqvACndsJfWd4"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IL1CrossChainSender.sol": {
+        "keccak256": "0x69e37fdc57668a4243a73c8ba018d5dc4af9419bc984e8799b168cb67bb22950",
+        "urls": [
+          "bzz-raw://27dddad22863478e43fdf43c7a85a8bc222d51ce4270f69a60ac6611a7f07312",
+          "dweb:/ipfs/QmU2i1KhNGDssVfxH9eKQfxiEATsjNvVwUT2Qz4jVahXm9"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IL1ERC20Bridge.sol": {
+        "keccak256": "0xf3540c809d4dcaff17a8c45a4f88677f69bbc04e414513c6a166dbbf08043b80",
+        "urls": [
+          "bzz-raw://0e139ac2997f590773320fdeebc856e4f5eee5da8106df52e85507c0d8f2cb71",
+          "dweb:/ipfs/QmeXmie3PXC1BMmzjpXwWFZaTkkqMh3devuyzEuavZ1DbP"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IL1Nullifier.sol": {
+        "keccak256": "0x17d485335f80eec2a32487024aa9ffeb618162c5fbf360a4b62ccafedfe96e30",
+        "urls": [
+          "bzz-raw://bebe6c82a53be797209b7caff944e638806163ed37f2dd40038fdfaf927709b2",
+          "dweb:/ipfs/QmaEdK7rgxwSwADfpE6AYyiq8tFBuDYr1efuoQNYV2pNmo"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/interfaces/IL1SharedBridgeLegacy.sol": {
+        "keccak256": "0x3fc6b0f6948e0365198c3f15b03e8a33f5ce00a6f17227205fd235143eb38147",
+        "urls": [
+          "bzz-raw://1eaf26b87c46ba15f19fa9e9f620b99f9b90cc9e6cf0289bb8c8264c2873567c",
+          "dweb:/ipfs/QmSt9RoBgRZnw2BiJE5KGNYRcfaRF3VKca7Ac9fLs3ZLYD"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/ntv/IL1NativeTokenVault.sol": {
+        "keccak256": "0xfb5c60cfc8dd9461cc87d0dd56cac685dd5b0390afec1d6a9299a8c8dbd7d3db",
+        "urls": [
+          "bzz-raw://86641a4b17f60ccd5ed3928944c9aec159ee0db35e816ef011bf15911ff15878",
+          "dweb:/ipfs/QmZRzc1adBhyYkCoq2nYeH91R1UMQXMCJV1LtHuFZoy8cq"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/ntv/IL2NativeTokenVault.sol": {
+        "keccak256": "0xe3a4266c819c6f3ce1359cd16fd999e4a045b1b41c50e3c01ec01b0e9f9d5b89",
+        "urls": [
+          "bzz-raw://6a4543e8302395c286eb9f40aef2287bdd128746e4dca557a5be989e40b3f0ed",
+          "dweb:/ipfs/QmfNApggA61S8q3wtYetYBx7fZEQtw6uRHWgFc8TBsQk5d"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridge/ntv/INativeTokenVault.sol": {
+        "keccak256": "0x67ccf56babdbedd06cde1ddce8308523e220d4e4548c69c7dade3bbefd3fb406",
+        "urls": [
+          "bzz-raw://c75b92e1ac6f65c65f06ab34cd3e1ba1d60da0dd38ebcad1310d1d149a9a6867",
+          "dweb:/ipfs/QmSkQdNcUWHyxAhowRx6NcEQgbygvqTVDctd4dvPocAoom"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridgehub/IBridgehub.sol": {
+        "keccak256": "0x20b0564fba0c5a244ff847e3629826f21226e3ec011be22125dc359ebbaac21a",
+        "urls": [
+          "bzz-raw://6e69e3bb97885e171424b204f3ee7364db4b936568d13675d09a3bf2559828c5",
+          "dweb:/ipfs/Qmdo4oXfsjBVM5Hh52fDeXqnz1qebthrd3gDC4csF8QY68"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridgehub/ICTMDeploymentTracker.sol": {
+        "keccak256": "0xb8686200049daa7b71fb8ba3d8a08863a3a8dedac07f51bee2d77286d0010e1e",
+        "urls": [
+          "bzz-raw://b05d8ee606a16ac33ffaf40e1eeab86971f47517c7cd1efdc1c76edca45e314b",
+          "dweb:/ipfs/QmSnsR6iWEJ6V25qXD8xxbGyTf2ozdHL8C8aM3QNwo9zic"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridgehub/IChainAssetHandler.sol": {
+        "keccak256": "0xe0e62e66809b5e0906be2513e35878854ab50cd872faba1a906ade0193ffeec7",
+        "urls": [
+          "bzz-raw://797b14dd8f43971e1e884760efc87934ae938044595d2c9fe19ea19d39c7750a",
+          "dweb:/ipfs/QmdVSEfmSpaengu5FcKhzYLh2CmtHzpVUhLGNqWVkW8GGa"
+        ],
+        "license": "MIT"
+      },
+      "contracts/bridgehub/IMessageRoot.sol": {
+        "keccak256": "0xb63ffb2925570ec605a37e59bb9816f8b1d0323ff3257f2d93e8c9827802655a",
+        "urls": [
+          "bzz-raw://e8bdb72dd57b5339a42f2ac18507a64145db90f97611444cf78fe2d4ca42295a",
+          "dweb:/ipfs/QmQGzLfNUiBNGxfQp2Kxv1qPJJ1xSENGb8ZVfeAZhgipuP"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/Config.sol": {
+        "keccak256": "0xab2390db71b8d000c7c286aa718256113bef677ba8253d2e22d18495877bf412",
+        "urls": [
+          "bzz-raw://1e37eb3822c5d4c38d5c0a2ab460a07349aa85fc84cab8e7df3b9c16de3e83f1",
+          "dweb:/ipfs/QmeP4FqEYzSSCUHtcetAKGkSYuFoDaqu3CPEdbgbaxHGnR"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/L1ContractErrors.sol": {
+        "keccak256": "0x925ba6d3147ee1f1e8d09a2995da3480f8cd46a8a31bf244964acc1e809676f4",
+        "urls": [
+          "bzz-raw://a9590796fc185897ac48df4426998e1ea693f719985779a14eb733b8516b2175",
+          "dweb:/ipfs/QmX9BbXo7JAfjkmkgwGxY3vgHuzJDY7ma6DyR6W6KieUky"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/Messaging.sol": {
+        "keccak256": "0x24cf25a25c33d21d0f293e18f45b3cc51ae41c02f4b062ac9340eb1e89159630",
+        "urls": [
+          "bzz-raw://91bfbb8682504581896740226ec884a79bd3dcc37a6fadcc37f2922a73506ce5",
+          "dweb:/ipfs/QmcZj8Aez4Yewjez1aKJb5u6nSori91JsaibChjcktTfob"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/interfaces/IL2ContractDeployer.sol": {
+        "keccak256": "0xa03848d792f166433282dc620e9b087fb3929fde12d9c96ea2d245a92552d371",
+        "urls": [
+          "bzz-raw://8fae684b28877c4c0778bc5c1d0c44fa08890b520dcd24fc574ed68405852370",
+          "dweb:/ipfs/QmZjdWtEskToFiu3RwnyAMvkMrv3MMnR2MPv7bHfnPKN23"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/interfaces/IL2InteropRootStorage.sol": {
+        "keccak256": "0x3e2950976665d6e7ebffb4834b58117c8ec48ab95cdb77a1164f1bef6a648d79",
+        "urls": [
+          "bzz-raw://766f21866ecde1f967d2f952888b2ea183315d92dbf9a2b22f4db637cf07c785",
+          "dweb:/ipfs/QmcggwNfV8RqmCmzSrEkfdNXUofttWFYNhYgPzk7FNqvbe"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/interfaces/ISystemContext.sol": {
+        "keccak256": "0x5cf0e55becd6a0456a6e3634456f6c61c1de833319dcacfebdf8f1e3d8875258",
+        "urls": [
+          "bzz-raw://a540c39201540e27a2488e2f8ddb8fcd934e0ba1811a0a5c61eb5b75930d2df4",
+          "dweb:/ipfs/QmazbWo5bCcEDr1admp7wmVRm4C2Yvx2s7wbT1kXiJMFpj"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/l2-helpers/IBaseToken.sol": {
+        "keccak256": "0xe7257aa568ebc554817a0e79fdfbbd86fa9ea291a572ce2955b435b34c3155f1",
+        "urls": [
+          "bzz-raw://8136bee42e55b2c17f6f9b82d43748d82af3abf93293bcd2927cd95fba6e6143",
+          "dweb:/ipfs/QmeeFVQdYKgoivpxUMLNLNNVJKYmHXhvP49rtjnmDNHcbu"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/l2-helpers/IL2ToL1Messenger.sol": {
+        "keccak256": "0x2b087d83b96c92e5472c58c27148460445e7d99b2221f3abebfaec06585a31f1",
+        "urls": [
+          "bzz-raw://e55e320076393b63f1ff6bda9013c45a7ceff05d8954b41d71488d18c33c550f",
+          "dweb:/ipfs/Qmeiibb8zh87WkKBenvTbQoLRvNRE8RKvdPvkYmFueRbQw"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/l2-helpers/L2ContractAddresses.sol": {
+        "keccak256": "0xb8d312c52dbfdf02ef65c3614b57f49cdb34783f9107fcacdf9c483aed93196a",
+        "urls": [
+          "bzz-raw://819765a7ec6ea40cdd974c12aacd0f94dd354aca9956c37e49c6ed62cc9d95fa",
+          "dweb:/ipfs/QmdjudbvfYZcTRtGocd4ENHuAdyEujJD5FpGDYKMNPY7V1"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/libraries/Merkle.sol": {
+        "keccak256": "0xc53f505619f7e7dc9b276a63d1bc743a588633457cefbb3a9bc8b20b42ada35f",
+        "urls": [
+          "bzz-raw://b13d1dead050a82e4ad6c5013c9f176818933ba4b843110dbaf0bbe6c1259ee8",
+          "dweb:/ipfs/Qmac9pko9bhqY4NzM9MeAdxumenNFwKNE5qY4gV3z2zDpz"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/libraries/MessageHashing.sol": {
+        "keccak256": "0xe02ef5a079765ba06bdc562388741b2b72aabcdc743a37e0c141d2f6dabb9cfe",
+        "urls": [
+          "bzz-raw://83abf84b0d0c6018a63751b007aab8871b000bbf95291382a405c5ffa71d319e",
+          "dweb:/ipfs/QmTA1EZ9nMmEjri1oWnBx7ALimX2wKu3WERg9e6Tz8eHs2"
+        ],
+        "license": "MIT"
+      },
+      "contracts/common/libraries/UncheckedMath.sol": {
+        "keccak256": "0x0ff1407bcabd5a4349a0da1372afe1f2e449bbb5271a2d88d5b999e4dffe9728",
+        "urls": [
+          "bzz-raw://b9fde36c3cf8c7989ebe20c1a52676870e0d820dc43afd8f789b09eff620dd9b",
+          "dweb:/ipfs/QmbMNcimFvgE44idT1ZUSAEv74FkePodWQfCg4f8GhmHR8"
+        ],
+        "license": "MIT"
+      },
+      "contracts/interop/IInteropCenter.sol": {
+        "keccak256": "0x0e4d4f1d926ce45f8f4febb35cc7eb8bbe64de86faf62bca8968c55b8d92539d",
+        "urls": [
+          "bzz-raw://f0035024a8f063a58b04a238a1c841757e766a3f708f587020e256c6ef6ec81f",
+          "dweb:/ipfs/QmWo4kRT2VmVoZxtoAvgnrkWTj8Fo4rLfjTQ1UAgetX5qv"
+        ],
+        "license": "MIT"
+      },
+      "contracts/state-transition/L1StateTransitionErrors.sol": {
+        "keccak256": "0xfda1e60dd1c29248e94e80a62a364d15a9f048f290e8723c02b2325a2f3e8bcb",
+        "urls": [
+          "bzz-raw://a38bbdb624b45348d3ff92482afffd995a83c642671b819ff4fd1e2f0f1aa92c",
+          "dweb:/ipfs/QmVdxyYkFwAePTMsn4jvL19iCvSpWpqh35CS14KhzFiF8n"
+        ],
+        "license": "MIT"
+      },
+      "contracts/state-transition/chain-interfaces/IExecutor.sol": {
+        "keccak256": "0x4fde7c5ce7ea8764c62c48451f5b35bfffe92c02556ca30e59c2c8bd6b65b75f",
+        "urls": [
+          "bzz-raw://96cfa3f8b3328e23848d6a43643c25b715613a170248126f4a95ca263b099746",
+          "dweb:/ipfs/QmZaMZZwXJJLgujyHSxoeWQEcNgMvQ7Li9tcL5S5ZdU1mh"
+        ],
+        "license": "MIT"
+      },
+      "contracts/state-transition/chain-interfaces/IMessageVerification.sol": {
+        "keccak256": "0xe79021eb8d0bdd7da63d962fe7686109e04c244a60e2050b0b87b3d896f374d1",
+        "urls": [
+          "bzz-raw://8299f2fde94229e9cd8e0417e53378612b56544344186134fde0175fed215ef2",
+          "dweb:/ipfs/Qmck9SmwajAF46rWiaVkrgyWe2MdpxckB8RMwHebEwPmev"
+        ],
+        "license": "MIT"
+      },
+      "contracts/state-transition/chain-interfaces/IZKChainBase.sol": {
+        "keccak256": "0xee753576cca182c55b1bddb792eec0d60d83bdd3d7978049054fe9ad68423ab0",
+        "urls": [
+          "bzz-raw://01d17078b900f8c255cff82cd5691b1b520d54e15443396df69ce4a066eed9cb",
+          "dweb:/ipfs/QmaZnEav6Frr2wxrWiySwCJbXZrJXmu7kg42E86mUQf3fy"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "id": 10
+}

@@ -8,7 +8,5 @@
   "out": "docs",
   "excludePrivate": true,
   "excludeExternals": false,
-  "plugin": [
-    "typedoc-plugin-markdown"
-  ]
+  "plugin": ["typedoc-plugin-markdown"]
 }

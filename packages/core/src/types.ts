@@ -9,7 +9,7 @@ export const Chains = {
 } as const;
 
 export type ChainKey = keyof typeof Chains | (string & {}); // allow user-defined keys without overriding literals
-export type ChainRef = ChainKey | number;            // key/alias or numeric chainId
+export type ChainRef = ChainKey | number; // key/alias or numeric chainId
 
 export interface ChainInfo {
   key: ChainKey;
@@ -22,6 +22,7 @@ export interface ChainInfo {
     handler: `0x${string}`;
     bridgehub?: `0x${string}`;
     assetRouter?: `0x${string}`;
+    nativeTokenVault?: `0x${string}`;
   };
   tokens?: Array<{ symbol: string; address: `0x${string}`; decimals: number; alias?: string[] }>;
   finalization?: { pollIntervalMs?: number; timeoutMs?: number };
@@ -41,8 +42,8 @@ export interface ChainRegistryInit {
 export type ERC7786Attribute = { selector: `0x${string}`; data: `0x${string}` };
 
 export interface MessageOptions {
-  src?: ChainRef;   // <— ChainRef (key or numeric)
-  dest?: ChainRef;  // <— ChainRef (key or numeric)
+  src?: ChainRef; // <— ChainRef (key or numeric)
+  dest?: ChainRef; // <— ChainRef (key or numeric)
   attributes?: ERC7786Attribute[];
   gas?: Partial<{
     gasLimit: bigint;
@@ -53,12 +54,9 @@ export interface MessageOptions {
   nonce?: bigint;
   note?: string;
   clientTag?: string;
-  deadline?: number;      // unix secs
-  signal?: AbortSignal;   // cancellation
+  deadline?: number; // unix secs
+  signal?: AbortSignal; // cancellation
 }
-
-/** @deprecated use MessageOptions */
-export type CommonInput = MessageOptions;
 
 export interface RemoteCallInput extends MessageOptions {
   to: `0x${string}`;
@@ -78,7 +76,9 @@ export interface ERC20TransferInput extends MessageOptions {
   permit?:
     | { data: `0x${string}` }
     | { deadline: number; v: number; r: `0x${string}`; s: `0x${string}` };
-  approveIfNeeded?: boolean; // default true
+  approveIfNeeded?: boolean;
+  indirect?: boolean;
+  bridgeMsgValue?: bigint;
 }
 
 // ---------------- Bundles ----------------
@@ -90,19 +90,27 @@ export const ItemKind = {
   Permit: 'permit',
 } as const;
 
-export type ItemKind = typeof ItemKind[keyof typeof ItemKind];
+export type ItemKind = (typeof ItemKind)[keyof typeof ItemKind];
 
 export type BundleItem =
   | { kind: typeof ItemKind.RemoteCall; to: `0x${string}`; data: `0x${string}`; value?: bigint }
   | { kind: typeof ItemKind.NativeTransfer; to: `0x${string}`; amount: bigint }
-  | { kind: typeof ItemKind.ERC20Transfer; token: `0x${string}`; to: `0x${string}`; amount: bigint; approveIfNeeded?: boolean }
+  | {
+      kind: typeof ItemKind.ERC20Transfer;
+      token: `0x${string}`;
+      to: `0x${string}`;
+      amount: bigint;
+      approveIfNeeded?: boolean;
+      _indirect?: true;
+      _bridgeMsgValue?: bigint;
+    }
   | { kind: typeof ItemKind.Permit; token: `0x${string}`; permitData: `0x${string}` };
 
 export type BundleAtomicity = 'stopOnRevert' | 'continueOnError';
 
 export interface BundleInput extends MessageOptions {
   items: BundleItem[];
-  atomicity?: BundleAtomicity;   // default: stopOnRevert
+  atomicity?: BundleAtomicity; // default: stopOnRevert
   maxItems?: number;
 }
 
@@ -156,19 +164,31 @@ export interface Finalizer {
   getStatus(sendId: `0x${string}`): Promise<MessageStatus>;
   finalize(
     sendId: `0x${string}`,
-    opts?: { timeoutMs?: number; signal?: AbortSignal }
+    opts?: { timeoutMs?: number; signal?: AbortSignal },
   ): Promise<MessageReceipt>;
 }
 
 // ---------------- Error Codes (centralized here) ----------------
 
 export type InteropErrorCode =
-  | 'CONFIG_MISSING' | 'CHAIN_UNSUPPORTED' | 'INVALID_CHAIN_KEY'
-  | 'PROVIDER_UNAVAILABLE' | 'ENCODE_FAILED' | 'ESTIMATION_FAILED'
-  | 'APPROVAL_REQUIRED' | 'PERMIT_INVALID' | 'PERMIT_EXPIRED'
-  | 'SEND_FAILED' | 'TRACKING_FAILED' | 'FINALIZE_FAILED'
-  | 'TIMEOUT' | 'RECEIPT_NOT_FOUND' | 'AMOUNT_TOO_LOW'
-  | 'TOKEN_NOT_SUPPORTED' | 'BUNDLE_TOO_LARGE' | 'UNSUPPORTED_OPERATION'
+  | 'CONFIG_MISSING'
+  | 'CHAIN_UNSUPPORTED'
+  | 'INVALID_CHAIN_KEY'
+  | 'PROVIDER_UNAVAILABLE'
+  | 'ENCODE_FAILED'
+  | 'ESTIMATION_FAILED'
+  | 'APPROVAL_REQUIRED'
+  | 'PERMIT_INVALID'
+  | 'PERMIT_EXPIRED'
+  | 'SEND_FAILED'
+  | 'TRACKING_FAILED'
+  | 'FINALIZE_FAILED'
+  | 'TIMEOUT'
+  | 'RECEIPT_NOT_FOUND'
+  | 'AMOUNT_TOO_LOW'
+  | 'TOKEN_NOT_SUPPORTED'
+  | 'BUNDLE_TOO_LARGE'
+  | 'UNSUPPORTED_OPERATION'
   | 'FINALIZER_UNAVAILABLE'
   // on-chain custom errors mapped to SDK codes
   | 'ATTR_ALREADY_SET'
@@ -190,7 +210,7 @@ export type InteropErrorCode =
   | 'EVM_ERROR'
   | 'EVM_PANIC';
 
-  export type JsonAbiParam = Readonly<{
+export type JsonAbiParam = Readonly<{
   name?: string;
   type: string;
   internalType?: string;
@@ -218,10 +238,10 @@ export type JsonAbiItem =
       stateMutability?: 'nonpayable' | 'payable';
     }>
   | Readonly<{
-    type: 'error';
-    name: string;
-    inputs?: readonly JsonAbiParam[];
-  }>
+      type: 'error';
+      name: string;
+      inputs?: readonly JsonAbiParam[];
+    }>
   | Readonly<{ type: 'fallback' | 'receive' }>;
 
 export type JsonAbi = readonly JsonAbiItem[];

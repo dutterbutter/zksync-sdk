@@ -12,7 +12,7 @@ describe('encodeEvmV1ChainOnly', () => {
     const hex = encodeEvmV1ChainOnly(1);
     const b = from0x(hex);
     // [00 01] version, [00 00] chainType, [01] chainRefLen, [01] chainRef, [00] addrLen
-    expect(Array.from(b)).toEqual([0x00,0x01, 0x00,0x00, 0x01, 0x01, 0x00]);
+    expect(Array.from(b)).toEqual([0x00, 0x01, 0x00, 0x00, 0x01, 0x01, 0x00]);
   });
 });
 
@@ -23,7 +23,7 @@ describe('encodeEvmV1AddressOnly', () => {
     const b = from0x(hex);
 
     // prefix bytes
-    expect(b.slice(0, 5)).toEqual(Uint8Array.from([0x00,0x01, 0x00,0x00, 0x00])); // version, type, chainRefLen=0
+    expect(b.slice(0, 5)).toEqual(Uint8Array.from([0x00, 0x01, 0x00, 0x00, 0x00])); // version, type, chainRefLen=0
     expect(b[5]).toBe(0x14); // addrLen = 20
 
     // address bytes
