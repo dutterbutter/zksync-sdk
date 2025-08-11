@@ -2,7 +2,7 @@ import type { RemoteCallInput, SentMessage, ChainRegistry, Hex } from '@zksync-s
 
 import {
   ATTR,
-  encodeEvmV1AddressOnly,
+  encodeEvmV1,
   mergeAttributes,
   parseSendIdFromLogs,
   defaultRegistry,
@@ -14,11 +14,10 @@ import { resolveChain } from '../internal/chain';
 import { fromEthersError as _fromEthersError } from '../internal/errors';
 import type { InteropError } from '@zksync-sdk/core';
 
-// 👇 give the imported function an explicit, safe type for the linter
 const fromEthersError: (e: unknown, ctx?: string) => InteropError = _fromEthersError;
 
 /**
- * Low-friction helper that wraps a single `sendMessage` on the InteropCenter.
+ * Cconvenient method that wraps a single `sendMessage` on the InteropCenter.
  *
  * ```ts
  * const receipt = await remoteCall(signer, {
@@ -42,14 +41,13 @@ export async function remoteCall(
 
     const reg = input.registry ?? defaultRegistry;
     const src = resolveChain(reg, input.src!);
+    const dest = resolveChain(reg, input.dest!);
 
     /* ---------------- encode ---------------- */
     const extraAttrs = input.value && input.value > 0n ? [ATTR.interopCallValue(input.value)] : [];
-
     const attributes = mergeAttributes(input.attributes, extraAttrs);
-
     const data = Center.encodeFunctionData('sendMessage', [
-      encodeEvmV1AddressOnly(input.to),
+      encodeEvmV1(BigInt(dest.chainId), input.to),
       input.data,
       attributes,
     ]);
@@ -63,7 +61,7 @@ export async function remoteCall(
 
     const rc = await tx.wait();
     if (!rc) {
-      throw new Error('SEND_FAILED: Transaction was dropped or not mined');
+      throw new Error('SEND_FAILED: Transaction was dropped or not included');
     }
 
     /* ---------------- post-process ---------------- */

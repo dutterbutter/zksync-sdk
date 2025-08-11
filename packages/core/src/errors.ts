@@ -4,6 +4,8 @@ import type { InteropErrorCode } from './types';
 import type { Hex } from './internal/hex';
 import { readAsBigHex, hexToBytes } from './internal/hex';
 
+// TODO: consider including all defined error paths
+
 export type InteropErrorDetails = { cause?: unknown } & Record<string, unknown>;
 
 export class InteropError extends Error {
@@ -59,8 +61,8 @@ function decodeArgs(types: string[], data: Hex): Arg[] {
 
   const readU256 = (headOffset: number): bigint => {
     const hex = readAsBigHex(body, headOffset, 32);
-    if (!hex) return 0n; // OOB → 0
-    return BigInt(hex); // hex is already 0x-prefixed
+    if (!hex) return 0n;
+    return BigInt(hex);
   };
 
   const readAddress = (headOffset: number): Hex => {

@@ -5,6 +5,8 @@ import { beTrim } from '../internal';
 const from0x = (hex: string) => hexToBytes(hex as `0x${string}`);
 
 export function encodeEvmV1(chainRef?: bigint, addr?: `0x${string}`): `0x${string}` {
+  // TODO: indirect needs "const version   = new Uint8Array([0x01, 0x00]);" ??
+  // native / direct transfers need: const version = new Uint8Array([0x00, 0x01]);
   const version = new Uint8Array([0x00, 0x01]);
   const chainType = new Uint8Array([0x00, 0x00]);
 

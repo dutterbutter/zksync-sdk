@@ -2,6 +2,7 @@
 import { builtinChains } from '.';
 import type { ChainInfo, ChainRef, ChainRegistryInit } from '../types';
 
+// TODO: refactor
 export class ChainRegistry {
   private readonly byKey = new Map<string, ChainInfo>();
   private readonly byId = new Map<number, ChainInfo>();
@@ -14,10 +15,9 @@ export class ChainRegistry {
     for (const o of init?.overrides ?? []) this.add(o, true);
   }
 
-  /** add/override programmatically */
   add(info: ChainInfo, override = true): void {
     const k = info.key.toLowerCase();
-    if (!override && this.byKey.has(k)) return; // skip duplicates unless override
+    if (!override && this.byKey.has(k)) return;
 
     this.byKey.set(k, info);
     this.byId.set(info.chainId, info);
@@ -45,5 +45,4 @@ export class ChainRegistry {
   }
 }
 
-/** Singleton used by all helpers unless caller passes an explicit registry */
 export const defaultRegistry = new ChainRegistry();

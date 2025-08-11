@@ -1,15 +1,14 @@
+// TODO: refactor
+
 // ---------------- Chains ----------------
 
 export const Chains = {
   era: 'era',
   abstract: 'abstract',
-  sophon: 'sophon',
-  lens: 'lens',
-  gravity: 'gravity',
 } as const;
 
-export type ChainKey = keyof typeof Chains | (string & {}); // allow user-defined keys without overriding literals
-export type ChainRef = ChainKey | number; // key/alias or numeric chainId
+export type ChainKey = keyof typeof Chains | (string & {});
+export type ChainRef = ChainKey | number;
 
 export interface ChainInfo {
   key: ChainKey;
@@ -28,8 +27,7 @@ export interface ChainInfo {
   finalization?: { pollIntervalMs?: number; timeoutMs?: number };
   gas?: { minGasLimit?: bigint; gasBufferPct?: number };
   aliases?: string[];
-  features?: Record<string, boolean>;
-  version?: string; // e.g. "2025-08-01"
+  version?: string;
 }
 
 export interface ChainRegistryInit {
@@ -40,7 +38,7 @@ export interface ChainRegistryInit {
 // ---------------- Attributes / Inputs ----------------
 
 export type ERC7786Attribute = { selector: `0x${string}`; data: `0x${string}` };
-
+// TODO: rethink
 export interface MessageOptions {
   src?: ChainRef; // <— ChainRef (key or numeric)
   dest?: ChainRef; // <— ChainRef (key or numeric)
@@ -54,7 +52,7 @@ export interface MessageOptions {
   nonce?: bigint;
   note?: string;
   clientTag?: string;
-  deadline?: number; // unix secs
+  deadline?: number;
   signal?: AbortSignal; // cancellation
 }
 
@@ -73,9 +71,6 @@ export interface ERC20TransferInput extends MessageOptions {
   token: `0x${string}`;
   to: `0x${string}`;
   amount: bigint;
-  permit?:
-    | { data: `0x${string}` }
-    | { deadline: number; v: number; r: `0x${string}`; s: `0x${string}` };
   approveIfNeeded?: boolean;
   indirect?: boolean;
   bridgeMsgValue?: bigint;
@@ -87,7 +82,6 @@ export const ItemKind = {
   RemoteCall: 'remoteCall',
   NativeTransfer: 'nativeTransfer',
   ERC20Transfer: 'erc20Transfer',
-  Permit: 'permit',
 } as const;
 
 export type ItemKind = (typeof ItemKind)[keyof typeof ItemKind];
@@ -103,25 +97,17 @@ export type BundleItem =
       approveIfNeeded?: boolean;
       _indirect?: true;
       _bridgeMsgValue?: bigint;
-    }
-  | { kind: typeof ItemKind.Permit; token: `0x${string}`; permitData: `0x${string}` };
+    };
 
 export type BundleAtomicity = 'stopOnRevert' | 'continueOnError';
 
 export interface BundleInput extends MessageOptions {
   items: BundleItem[];
-  atomicity?: BundleAtomicity; // default: stopOnRevert
+  atomicity?: BundleAtomicity;
   maxItems?: number;
 }
 
 // ---------------- Estimation / Receipts ----------------
-
-export interface Estimate {
-  gasLimit: bigint;
-  fees?: { maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint; totalFee?: bigint };
-  notes?: string[];
-}
-
 export type MessagePhase = 'sent' | 'proven' | 'finalizable' | 'finalized' | 'failed';
 
 export interface MessageStatus {
@@ -160,13 +146,7 @@ export interface BuiltTx {
 
 // ---------------- Finalization ----------------
 
-export interface Finalizer {
-  getStatus(sendId: `0x${string}`): Promise<MessageStatus>;
-  finalize(
-    sendId: `0x${string}`,
-    opts?: { timeoutMs?: number; signal?: AbortSignal },
-  ): Promise<MessageReceipt>;
-}
+// TODO
 
 // ---------------- Error Codes (centralized here) ----------------
 
@@ -210,12 +190,13 @@ export type InteropErrorCode =
   | 'EVM_ERROR'
   | 'EVM_PANIC';
 
+// TODO: remove
 export type JsonAbiParam = Readonly<{
   name?: string;
   type: string;
   internalType?: string;
   components?: readonly JsonAbiParam[];
-  indexed?: boolean; // only for events
+  indexed?: boolean;
 }>;
 
 export type JsonAbiItem =

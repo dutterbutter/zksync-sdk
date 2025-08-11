@@ -14,7 +14,8 @@ export const hexToBytes = (h: string) => nobleHexToBytes(strip0x(h));
 export const bytesToHex = (u8: Uint8Array): Hex => `0x${nobleBytesToHex(u8)}`;
 export const concatBytes = (...parts: Uint8Array[]) => nobleConcatBytes(...parts);
 
+// already 0x-prefixed
 export function readAsBigHex(u8: Uint8Array, start: number, len: number): Hex | undefined {
   if (start < 0 || len < 0 || start + len > u8.length) return undefined;
-  return bytesToHex(u8.subarray(start, start + len)); // already 0x-prefixed
+  return bytesToHex(u8.subarray(start, start + len));
 }

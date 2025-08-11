@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-bun run -C packages/core clean || true
-bun run -C packages/ethers clean || true

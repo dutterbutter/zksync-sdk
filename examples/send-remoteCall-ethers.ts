@@ -2,22 +2,34 @@ import { Wallet, JsonRpcProvider, Interface } from 'ethers';
 import { remoteCall } from '@zksync-sdk/ethers/actions';
 import { Chains } from '@zksync-sdk/core';
 
-// ── signer ──────────────────────────────────────────────────────
-const signer = new Wallet('Ox', new JsonRpcProvider('https://mainnet.era.zksync.io'));
+async function main() {
+  // ── signer ──────────────────────────────────────────────────────
+  const signer = new Wallet(
+    '0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110',
+    new JsonRpcProvider('http://localhost:3050'),
+  );
 
-// target + calldata
-const TARGET = '0x1111111111111111111111111111111111111111' as const;
-const ABI = ['function ping(uint256 n)'];
-const calldata = new Interface(ABI).encodeFunctionData('ping', [42n]) as `0x${string}`;
+  // target + calldata
+  const TARGET = '0xe441CF0795aF14DdB9f7984Da85CD36DB1B8790d' as const;
+  const ABI = ['function ping(uint256 n)'];
 
-// ── single-call cross-chain message ───────────────────────────────────────────
-const receipt = await remoteCall(signer, {
-  src: Chains.era,
-  dest: Chains.abs,
-  to: TARGET,
-  data: calldata,
-  value: 0n,
+  const iface = new Interface(ABI);
+  const calldata = iface.encodeFunctionData('ping', [42n]) as `0x${string}`;
+
+  // ── single-call cross-chain message ───────────────────────────────────────────
+  const receipt = await remoteCall(signer, {
+    src: Chains.local_era,
+    dest: Chains.local_gateway,
+    to: TARGET,
+    data: calldata,
+    value: 0n,
+  });
+
+  console.log('sendId:', receipt.sendId);
+  console.log('srcTx :', receipt.srcTxHash);
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
 });
-
-console.log('sendId:', receipt.sendId);
-console.log('srcTx :', receipt.srcTxHash);

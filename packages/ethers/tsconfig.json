@@ -21,7 +21,6 @@
     "noEmit": false,
 
     "verbatimModuleSyntax": true,
-    // Disable TS extension imports inherited from the base config
     "allowImportingTsExtensions": false,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
 

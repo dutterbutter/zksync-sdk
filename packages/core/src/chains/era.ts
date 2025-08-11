@@ -8,8 +8,10 @@ export const era: ChainInfo = {
   rpcUrls: ['https://mainnet.era.zksync.io'],
   explorer: { baseUrl: 'https://explorer.zksync.io' },
   addresses: {
-    interopCenter: '0x1111111111111111111111111111111111111111',
-    handler: '0x2222222222222222222222222222222222222222',
+    interopCenter: '0x000000000000000000000000000000000001000b',
+    handler: '0x000000000000000000000000000000000001000c',
+    assetRouter: '0x0000000000000000000000000000000000001003',
+    nativeTokenVault: '0x0000000000000000000000000000000000001004',
   },
   gas: { gasBufferPct: 30, minGasLimit: 120_000n },
 };
@@ -22,8 +24,10 @@ export const era_testnet: ChainInfo = {
   rpcUrls: ['https://sepolia.era.zksync.io'],
   explorer: { baseUrl: 'https://explorer.zksync.io' },
   addresses: {
-    interopCenter: '0x1111111111111111111111111111111111111111',
-    handler: '0x2222222222222222222222222222222222222222',
+    interopCenter: '0x000000000000000000000000000000000001000b',
+    handler: '0x000000000000000000000000000000000001000c',
+    assetRouter: '0x0000000000000000000000000000000000010003',
+    nativeTokenVault: '0x0000000000000000000000000000000000010004',
   },
   gas: { gasBufferPct: 30, minGasLimit: 120_000n },
 };

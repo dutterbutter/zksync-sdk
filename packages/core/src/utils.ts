@@ -6,8 +6,7 @@ import { encodeBridgeBurnData, erc20TransferCalldata } from './internal';
 import type { Hex } from './internal/hex';
 
 /**
- * Convert a BundleItem to the InteropCallStarter wire shape.
- * Pure transformation; no provider dependencies.
+ * Convert a BundleItem to InteropCallStarter.
  */
 export function toCallStarter(
   item: BundleItem,
@@ -35,18 +34,19 @@ export function toCallStarter(
 
   if (item.kind === 'erc20Transfer' && item._indirect) {
     if (!opts?.assetRouter) {
-      // keep generic: the ethers layer wraps into InteropError
       throw new Error('CONFIG_MISSING: assetRouter address is required for indirect ERC20');
     }
-    const attrs = [ATTR.indirectCall(item._bridgeMsgValue ?? 0n)];
-    const data = encodeBridgeBurnData(item.amount, item.to, item.token); // see helper below
+
+    const bridgeMsgValue = item._bridgeMsgValue ?? 0n;
+    const attrs = [ATTR.indirectCall(bridgeMsgValue)];
+    const data = encodeBridgeBurnData(item.amount, item.to, item.token);
     return {
       starter: {
-        to: encodeEvmV1AddressOnly(opts.assetRouter), // ROUTER, not token
+        to: encodeEvmV1AddressOnly(opts.assetRouter),
         data,
         callAttributes: attrs,
       },
-      value: item._bridgeMsgValue ?? 0n, // contributes to msg.value
+      value: bridgeMsgValue,
     };
   }
 
@@ -58,18 +58,6 @@ export function toCallStarter(
     };
   }
 
-  if (item.kind === 'permit') {
-    return {
-      starter: {
-        to: encodeEvmV1AddressOnly(item.token),
-        data: item.permitData,
-        callAttributes: [],
-      },
-      value: 0n,
-    };
-  }
-
-  // keep throw generic; adapters wrap with InteropError
   throw new Error('UNSUPPORTED_OPERATION');
 }
 

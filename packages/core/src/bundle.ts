@@ -30,8 +30,4 @@ export const bundle = {
   /** Plain remote call */
   remoteCall: (p: { to: `0x${string}`; data: `0x${string}`; value?: bigint }) =>
     ({ kind: ItemKind.RemoteCall, ...p }) as const satisfies BundleItem,
-
-  /** Pre-signed permit */
-  permit: (p: { token: `0x${string}`; permitData: `0x${string}` }) =>
-    ({ kind: ItemKind.Permit, ...p }) as const satisfies BundleItem,
 } as const;

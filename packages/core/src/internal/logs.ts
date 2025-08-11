@@ -3,6 +3,8 @@ import { bytesToHex } from './hex';
 import type { Hex } from './hex';
 import { keccak_256 } from '@noble/hashes/sha3';
 
+// TODO: refactor
+
 export interface LogLike {
   topics?: readonly unknown[];
   data?: unknown;

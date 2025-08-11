@@ -63,16 +63,15 @@ export async function sendERC20(
   if (input.indirect) {
     if (!ntv) throw new Error('CONFIG_MISSING: nativeTokenVault address not set for source chain');
 
-    // 1) Make sure NTV knows this token (one-time per token/chain)
+    // ensure token is registered
     await ensureRegisteredInNTV(signer, ntv, input.token);
 
-    // 2) Make sure allowance is set (permit/approve)
+    // ensure allowance is set
     if (input.approveIfNeeded ?? true) {
       await ensureAllowance(signer, input.token, ntv, input.amount);
     }
   }
 
-  // build bundle item (unchanged)
   const item = bundle.erc20({
     token: input.token,
     to: input.to,

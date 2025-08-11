@@ -6,13 +6,10 @@ import { Chains } from '@zksync-sdk/core';
 /* -------------------------------------------------------------------------- */
 /*  Minimal demo set-up                                                        */
 /* -------------------------------------------------------------------------- */
-const signer = new Wallet(
-  process.env.PRIVATE_KEY!,
-  new JsonRpcProvider('https://mainnet.era.zksync.io'),
-);
+const signer = new Wallet(process.env.PRIVATE_KEY!, new JsonRpcProvider('http://localhost:3050'));
 
 // Sample addresses – replace with real ones in your environment
-const DUTTER_BUTTER = '0x7182fA7dF76406ffFc0289f36239aC1bE134f305';
+const DUTTER_BUTTER = '0x';
 const DUT_TOKEN = '0x';
 
 /* -------------------------------------------------------------------------- */
@@ -35,9 +32,8 @@ await sendERC20(signer, {
   dest: Chains.abs,
   token: DUT_TOKEN,
   to: DUTTER_BUTTER,
-  amount: 50_000_000n, // 50 USDC (6 decimals)
+  amount: 50_000_000n,
   approveIfNeeded: true,
-  // indirect defaults to false → direct transfer
 });
 
 /* -------------------------------------------------------------------------- */
@@ -50,8 +46,8 @@ await sendERC20(signer, {
   dest: Chains.abs,
   token: DUT_TOKEN,
   to: DUTTER_BUTTER,
-  amount: 100_000_000n, // 100 USDC
-  indirect: true, // mark as indirect
-  bridgeMsgValue: parseEther('0.0002'), // fee for the router
+  amount: 100_000_000n,
+  indirect: true,
+  bridgeMsgValue: 1n,
   approveIfNeeded: true,
 });

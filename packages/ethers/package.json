@@ -1,7 +1,7 @@
 {
   "name": "@zksync-sdk/ethers",
   "version": "0.0.1-beta",
-  "description": "Ethers v6 helpers for ZKsync Interop (actions + utilities).",
+  "description": "Ethers v6 helpers for ZKsync Interop.",
   "type": "module",
   "sideEffects": false,
   "main": "dist/index.js",

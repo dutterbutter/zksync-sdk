@@ -4,6 +4,7 @@ import { Contract } from 'ethers';
 import { ERC20Abi } from '@zksync-sdk/core/abis/ERC20';
 import type { Hex } from '@zksync-sdk/core';
 
+// TODO: import ERC20 interface
 interface ERC20Like {
   allowance(owner: string, spender: string): Promise<bigint>;
   approve(spender: string, amount: bigint): Promise<{ wait(): Promise<unknown> }>;

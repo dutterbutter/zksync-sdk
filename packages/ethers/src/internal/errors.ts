@@ -20,7 +20,6 @@ function hasProp<T extends object, P extends keyof T>(
 
 /** Extract revert data from the many shapes ethers can throw. */
 export function extractRevertDataEthers(err: unknown): Hex | undefined {
-  // eslint rules: first protect against primitive values
   if (typeof err !== 'object' || err === null) return undefined;
 
   /* -------------------------------------------------------------------- */

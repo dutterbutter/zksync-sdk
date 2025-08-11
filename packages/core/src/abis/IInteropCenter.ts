@@ -1,6 +1,25 @@
-import type { JsonAbi } from '../types';
-
-export const IInteropCenterAbi: JsonAbi = [
+export const IInteropCenterAbi = [
+  {
+    type: 'constructor',
+    inputs: [
+      {
+        name: '_bridgehub',
+        type: 'address',
+        internalType: 'contract IBridgehub',
+      },
+      {
+        name: '_l1ChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: '_owner',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+  },
   {
     type: 'function',
     name: 'BRIDGE_HUB',
@@ -13,6 +32,26 @@ export const IInteropCenterAbi: JsonAbi = [
       },
     ],
     stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'L1_CHAIN_ID',
+    inputs: [],
+    outputs: [
+      {
+        name: '',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'acceptOwnership',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
   },
   {
     type: 'function',
@@ -97,6 +136,149 @@ export const IInteropCenterAbi: JsonAbi = [
   },
   {
     type: 'function',
+    name: 'initialize',
+    inputs: [
+      {
+        name: '_owner',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'interopBundleNonce',
+    inputs: [
+      {
+        name: 'sender',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    outputs: [
+      {
+        name: 'numberOfBundlesSent',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'owner',
+    inputs: [],
+    outputs: [
+      {
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'parseAttributes',
+    inputs: [
+      {
+        name: '_attributes',
+        type: 'bytes[]',
+        internalType: 'bytes[]',
+      },
+      {
+        name: '_restriction',
+        type: 'uint8',
+        internalType: 'enum IInteropCenter.AttributeParsingRestrictions',
+      },
+    ],
+    outputs: [
+      {
+        name: 'callAttributes',
+        type: 'tuple',
+        internalType: 'struct CallAttributes',
+        components: [
+          {
+            name: 'interopCallValue',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+          {
+            name: 'indirectCall',
+            type: 'bool',
+            internalType: 'bool',
+          },
+          {
+            name: 'indirectCallMessageValue',
+            type: 'uint256',
+            internalType: 'uint256',
+          },
+        ],
+      },
+      {
+        name: 'bundleAttributes',
+        type: 'tuple',
+        internalType: 'struct BundleAttributes',
+        components: [
+          {
+            name: 'executionAddress',
+            type: 'bytes',
+            internalType: 'bytes',
+          },
+          {
+            name: 'unbundlerAddress',
+            type: 'bytes',
+            internalType: 'bytes',
+          },
+        ],
+      },
+    ],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'pause',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'paused',
+    inputs: [],
+    outputs: [
+      {
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'pendingOwner',
+    inputs: [],
+    outputs: [
+      {
+        name: '',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    name: 'renounceOwnership',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
     name: 'sendBundle',
     inputs: [
       {
@@ -134,7 +316,36 @@ export const IInteropCenterAbi: JsonAbi = [
     ],
     outputs: [
       {
-        name: '',
+        name: 'bundleHash',
+        type: 'bytes32',
+        internalType: 'bytes32',
+      },
+    ],
+    stateMutability: 'payable',
+  },
+  {
+    type: 'function',
+    name: 'sendMessage',
+    inputs: [
+      {
+        name: 'recipient',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
+      {
+        name: 'payload',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
+      {
+        name: 'attributes',
+        type: 'bytes[]',
+        internalType: 'bytes[]',
+      },
+    ],
+    outputs: [
+      {
+        name: 'sendId',
         type: 'bytes32',
         internalType: 'bytes32',
       },
@@ -146,18 +357,70 @@ export const IInteropCenterAbi: JsonAbi = [
     name: 'setAddresses',
     inputs: [
       {
-        name: 'assetRouter',
+        name: '_assetRouter',
         type: 'address',
         internalType: 'address',
       },
       {
-        name: 'assetTracker',
+        name: '_assetTracker',
         type: 'address',
         internalType: 'address',
       },
     ],
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'supportsAttribute',
+    inputs: [
+      {
+        name: '_attributeSelector',
+        type: 'bytes4',
+        internalType: 'bytes4',
+      },
+    ],
+    outputs: [
+      {
+        name: '',
+        type: 'bool',
+        internalType: 'bool',
+      },
+    ],
+    stateMutability: 'pure',
+  },
+  {
+    type: 'function',
+    name: 'transferOwnership',
+    inputs: [
+      {
+        name: 'newOwner',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    name: 'unpause',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'event',
+    name: 'Initialized',
+    inputs: [
+      {
+        name: 'version',
+        type: 'uint8',
+        indexed: false,
+        internalType: 'uint8',
+      },
+    ],
+    anonymous: false,
   },
   {
     type: 'event',
@@ -257,6 +520,49 @@ export const IInteropCenterAbi: JsonAbi = [
   },
   {
     type: 'event',
+    name: 'MessageSent',
+    inputs: [
+      {
+        name: 'sendId',
+        type: 'bytes32',
+        indexed: true,
+        internalType: 'bytes32',
+      },
+      {
+        name: 'sender',
+        type: 'bytes',
+        indexed: false,
+        internalType: 'bytes',
+      },
+      {
+        name: 'recipient',
+        type: 'bytes',
+        indexed: false,
+        internalType: 'bytes',
+      },
+      {
+        name: 'payload',
+        type: 'bytes',
+        indexed: false,
+        internalType: 'bytes',
+      },
+      {
+        name: 'value',
+        type: 'uint256',
+        indexed: false,
+        internalType: 'uint256',
+      },
+      {
+        name: 'attributes',
+        type: 'bytes[]',
+        indexed: false,
+        internalType: 'bytes[]',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
     name: 'NewAssetRouter',
     inputs: [
       {
@@ -292,6 +598,226 @@ export const IInteropCenterAbi: JsonAbi = [
       },
     ],
     anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'OwnershipTransferStarted',
+    inputs: [
+      {
+        name: 'previousOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'newOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'OwnershipTransferred',
+    inputs: [
+      {
+        name: 'previousOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+      {
+        name: 'newOwner',
+        type: 'address',
+        indexed: true,
+        internalType: 'address',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'Paused',
+    inputs: [
+      {
+        name: 'account',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'Unpaused',
+    inputs: [
+      {
+        name: 'account',
+        type: 'address',
+        indexed: false,
+        internalType: 'address',
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'error',
+    name: 'AttributeAlreadySet',
+    inputs: [
+      {
+        name: 'selector',
+        type: 'bytes4',
+        internalType: 'bytes4',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'AttributeViolatesRestriction',
+    inputs: [
+      {
+        name: 'selector',
+        type: 'bytes4',
+        internalType: 'bytes4',
+      },
+      {
+        name: 'restriction',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'IndirectCallValueMismatch',
+    inputs: [
+      {
+        name: 'expected',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'actual',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'InteroperableAddressChainReferenceNotEmpty',
+    inputs: [
+      {
+        name: 'interoperableAddress',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'InteroperableAddressNotEmpty',
+    inputs: [
+      {
+        name: 'interoperableAddress',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'InteroperableAddressParsingError',
+    inputs: [
+      {
+        name: '',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'MsgValueMismatch',
+    inputs: [
+      {
+        name: 'expectedMsgValue',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'providedMsgValue',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'NotInGatewayMode',
+    inputs: [],
+  },
+  {
+    type: 'error',
+    name: 'NotL1',
+    inputs: [
+      {
+        name: 'l1ChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'blockChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'NotL2ToL2',
+    inputs: [
+      {
+        name: 'sourceChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+      {
+        name: 'destinationChainId',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'SlotOccupied',
+    inputs: [],
+  },
+  {
+    type: 'error',
+    name: 'Unauthorized',
+    inputs: [
+      {
+        name: 'caller',
+        type: 'address',
+        internalType: 'address',
+      },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'UnsupportedAttribute',
+    inputs: [
+      {
+        name: 'selector',
+        type: 'bytes4',
+        internalType: 'bytes4',
+      },
+    ],
   },
 ] as const;
 export type IInteropCenterAbi = typeof IInteropCenterAbi;

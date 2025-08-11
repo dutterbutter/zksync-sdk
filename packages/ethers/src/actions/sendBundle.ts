@@ -1,5 +1,5 @@
 // packages/ethers/src/actions/sendBundle.ts
-import type { BundleInput, ChainRegistry, SentMessage, Estimate, Hex } from '@zksync-sdk/core';
+import type { BundleInput, ChainRegistry, SentMessage, Hex } from '@zksync-sdk/core';
 
 import {
   encodeEvmV1ChainOnly,
@@ -11,7 +11,7 @@ import {
   computeBundleMessageValue,
 } from '@zksync-sdk/core';
 
-import type { Signer, TransactionReceipt, TransactionRequest, Provider } from 'ethers';
+import type { Signer, TransactionReceipt, TransactionRequest } from 'ethers';
 import { keccak256, AbiCoder } from 'ethers';
 
 import { Center } from '../internal/abi';
@@ -19,7 +19,7 @@ import { resolveChain } from '../internal/chain';
 import { fromEthersError } from '../internal/errors';
 
 /**
- * Send an Interop bundle with an Ethers v6 Signer.
+ * Convenient method for sending an Interop bundle.
  *
  * @param signer   – Ethers signer (must have a provider attached)
  * @param input    – Bundle + optional registry / gas overrides
@@ -32,7 +32,6 @@ export async function sendBundle(
   },
 ): Promise<SentMessage> {
   /* ───────────────────── pre-flight checks ────────────────────── */
-
   const provider = signer.provider;
   if (!provider) {
     throw new InteropError('PROVIDER_UNAVAILABLE', 'sendBundle: signer has no provider attached', {
@@ -69,7 +68,6 @@ export async function sendBundle(
   });
 
   /* ───────────────────── encode call data ────────────────────── */
-
   const starters = input.items
     .map((it) => toCallStarter(it, { assetRouter: src.addresses.assetRouter }))
     .map(({ starter }) => starter);
@@ -92,7 +90,7 @@ export async function sendBundle(
     nonce: input.nonce !== undefined ? Number(input.nonce) : undefined,
   };
 
-  /* ───────────────────── send + wait ─────────────────────────── */
+  /* ───────────────────── send ─────────────────────────── */
 
   let receipt: TransactionReceipt;
   try {
@@ -138,11 +136,10 @@ export async function sendBundle(
 }
 
 // TODO: estimation
-export function estimateBundle(
-  _provider: Provider,
-  input: BundleInput & { registry: ChainRegistry },
-): Promise<Estimate> {
-  const base = 400_000n;
-  const perItem = 80_000n * BigInt(input.items.length);
-  return Promise.resolve({ gasLimit: ((base + perItem) * 13n) / 10n, notes: ['heuristic'] });
-}
+// export function estimateBundle(
+//   _provider: Provider,
+//   input: BundleInput & { registry: ChainRegistry },
+// ): Promise<Estimate> {
+
+//   // TODO
+// }

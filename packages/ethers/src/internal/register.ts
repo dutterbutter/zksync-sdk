@@ -4,12 +4,12 @@ import type { Signer, ContractTransactionResponse } from 'ethers';
 import { IL2NativeTokenVaultAbi as IL2NTV } from '@zksync-sdk/core/abis/IL2NativeTokenVault';
 import type { Hex } from '@zksync-sdk/core';
 
+// TODO: import interface here instead
 interface IL2NTVContract {
   assetId(token: Hex): Promise<string>;
   ensureTokenIsRegistered(token: Hex): Promise<ContractTransactionResponse>;
 }
 
-/** Idempotent: registers the token in NTV if missing. */
 export async function ensureRegisteredInNTV(
   signer: Signer,
   ntvAddr: Hex,
