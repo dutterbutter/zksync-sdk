@@ -7,7 +7,7 @@ async function main() {
   console.log('Running bundle example');
   /* ---------- signer on SOURCE chain (271 / 3050) ---------- */
   const signer = new Wallet(
-    '0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110',
+    '0x',
     new JsonRpcProvider('http://localhost:3050'), // local_era (271)
   );
 
