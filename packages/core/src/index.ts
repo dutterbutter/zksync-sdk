@@ -1,3 +1,7 @@
+/** @packageDocumentation
+ * Public API for @zksync-sdk/core
+ */
+
 // ---- Public types/constants ----
 export * from './types';
 

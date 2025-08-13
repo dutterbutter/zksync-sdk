@@ -1,0 +1,21 @@
+[**zksync-sdk-monorepo**](../../../README.md)
+
+***
+
+[zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / parseRevertData
+
+# Function: parseRevertData()
+
+> **parseRevertData**(`data`): `KnownDecoded`
+
+Defined in: [packages/core/src/errors.ts:122](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L122)
+
+## Parameters
+
+### data
+
+`` `0x${string}` ``
+
+## Returns
+
+`KnownDecoded`

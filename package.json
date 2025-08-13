@@ -11,19 +11,22 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier . --write",
     "test": "bun test",
-    "docs": "typedoc",
+    "docs:gen": "node ./node_modules/typedoc/bin/typedoc",
+    "docs:serve": "mdbook serve docs -p 3000",
+    "docs:build": "mdbook build docs",
+    "docs:rebuild": "npm run docs:gen && npm run docs:build",
     "prepublishOnly": "bun run build && bun run typecheck"
   },
   "devDependencies": {
-    "ethers": "^6.15.0",
     "@eslint/js": "^9.7.0",
     "@types/bun": "latest",
     "bun-types": "^1.2.19",
     "eslint": "^9.7.0",
+    "ethers": "^6.15.0",
     "prettier": "^3.3.3",
     "tsup": "^8.0.1",
-    "typedoc": "^0.26.0",
-    "typedoc-plugin-markdown": "^4.2.3",
+    "typedoc": "0.28.9",
+    "typedoc-plugin-markdown": "4.8.1",
     "typescript": "^5.5.0",
     "typescript-eslint": "^8.0.1"
   }

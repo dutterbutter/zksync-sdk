@@ -1,0 +1,1459 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>zkSync SDK</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="./mdbook-admonish.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">zkSync SDK</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="zksync-sdk"><a class="header" href="#zksync-sdk">zkSync SDK</a></h1>
+<p>Welcome! Use the sidebar for API reference.</p>
+<ul>
+<li><strong>Core</strong>: encoding, attributes, bundle builders.</li>
+<li><strong>Ethers</strong>: high-level send helpers.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><strong>zksync-sdk-monorepo</strong></p>
+<hr />
+<h1 id="zksync-sdk-monorepo"><a class="header" href="#zksync-sdk-monorepo">zksync-sdk-monorepo</a></h1>
+<h2 id="modules"><a class="header" href="#modules">Modules</a></h2>
+<ul>
+<li><a href="api/core/src/README.html">core/src</a></li>
+<li><a href="api/ethers/src/README.html">ethers/src</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/ethers/src/../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/ethers/src/../../README.html">zksync-sdk-monorepo</a> / ethers/src</p>
+<h1 id="etherssrc"><a class="header" href="#etherssrc">ethers/src</a></h1>
+<p>Public API for @zksync-sdk/ethers</p>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><a href="api/ethers/src/functions/remoteCall.html">remoteCall</a></li>
+<li><a href="api/ethers/src/functions/sendBundle.html">sendBundle</a></li>
+<li><a href="api/ethers/src/functions/sendERC20.html">sendERC20</a></li>
+<li><a href="api/ethers/src/functions/sendNative.html">sendNative</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/ethers/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/ethers/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/ethers/src/functions/../README.html">ethers/src</a> / sendBundle</p>
+<h1 id="function-sendbundle"><a class="header" href="#function-sendbundle">Function: sendBundle()</a></h1>
+<blockquote>
+<p><strong>sendBundle</strong>(<code>signer</code>, <code>input</code>): <code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/ethers/src/actions/sendBundle.ts#L45">packages/ethers/src/actions/sendBundle.ts:45</a></p>
+<p>Send a multi-item interop bundle via InteropCenter.</p>
+<h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
+<h3 id="signer"><a class="header" href="#signer">signer</a></h3>
+<p><code>Signer</code></p>
+<p>Signer bound to the source chain provider.</p>
+<h3 id="input"><a class="header" href="#input">input</a></h3>
+<p><code>BundleInput</code> &amp; <code>object</code></p>
+<p>Bundle payload and optional registry/gas overrides.</p>
+<h2 id="returns"><a class="header" href="#returns">Returns</a></h2>
+<p><code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+<p>SentMessage containing <code>sendId</code> and <code>srcTxHash</code>.</p>
+<h2 id="throws"><a class="header" href="#throws">Throws</a></h2>
+<p>If signer has no provider, misconfiguration, or send fails.</p>
+<h2 id="remarks"><a class="header" href="#remarks">Remarks</a></h2>
+<ul>
+<li>Destination is encoded as ERC-7930 “chain-only” address; per-item <code>to</code> uses “address-only”.</li>
+<li><code>msg.value</code> must follow base-token rules:
+SAME base token → sum of item values; DIFFERENT → 0 (InteropCenter deposits via AssetRouter).
+This implementation currently uses the sum; add a base-token check if heterogeneous pairs are common.</li>
+<li><code>sendId</code> is read from ERC-7786 <code>MessageSent</code> logs; for single-item bundles we fall back to
+<code>keccak256(abi.encode(bundleHash, 0))</code> when logs are unavailable.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/ethers/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/ethers/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/ethers/src/functions/../README.html">ethers/src</a> / sendERC20</p>
+<h1 id="function-senderc20"><a class="header" href="#function-senderc20">Function: sendERC20()</a></h1>
+<blockquote>
+<p><strong>sendERC20</strong>(<code>signer</code>, <code>input</code>): <code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/ethers/src/actions/transfers.ts#L100">packages/ethers/src/actions/transfers.ts:100</a></p>
+<p>Send ERC-20 from <code>src</code> to <code>dest</code> as a single-item interop bundle.</p>
+<h2 id="parameters-1"><a class="header" href="#parameters-1">Parameters</a></h2>
+<h3 id="signer-1"><a class="header" href="#signer-1">signer</a></h3>
+<p><code>Signer</code></p>
+<p>Signer bound to the source chain provider.</p>
+<h3 id="input-1"><a class="header" href="#input-1">input</a></h3>
+<p><code>ERC20TransferInput</code> &amp; <code>object</code></p>
+<h2 id="returns-1"><a class="header" href="#returns-1">Returns</a></h2>
+<p><code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+<p>SentMessage containing <code>sendId</code> and <code>srcTxHash</code>.</p>
+<h2 id="throws-1"><a class="header" href="#throws-1">Throws</a></h2>
+<p>If signer has no provider, or NTV address is missing for indirect path.</p>
+<h2 id="remarks-1"><a class="header" href="#remarks-1">Remarks</a></h2>
+<ul>
+<li><strong>Indirect</strong>: ensures token registration in NTV and sufficient allowance before sending.</li>
+<li>Do <strong>not</strong> set interop call value for indirect; contracts derive/validate it internally.</li>
+<li>Base-token <code>msg.value</code> rules are enforced by <code>sendBundle</code> (see its notes).</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/ethers/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/ethers/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/ethers/src/functions/../README.html">ethers/src</a> / sendNative</p>
+<h1 id="function-sendnative"><a class="header" href="#function-sendnative">Function: sendNative()</a></h1>
+<blockquote>
+<p><strong>sendNative</strong>(<code>signer</code>, <code>input</code>): <code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/ethers/src/actions/transfers.ts#L60">packages/ethers/src/actions/transfers.ts:60</a></p>
+<p>Send native ETH from <code>src</code> to <code>dest</code> as a single-item interop bundle.</p>
+<h2 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h2>
+<h3 id="signer-2"><a class="header" href="#signer-2">signer</a></h3>
+<p><code>Signer</code></p>
+<p>Signer bound to the source chain provider.</p>
+<h3 id="input-2"><a class="header" href="#input-2">input</a></h3>
+<p><code>NativeTransferInput</code> &amp; <code>object</code></p>
+<h2 id="returns-2"><a class="header" href="#returns-2">Returns</a></h2>
+<p><code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+<p>SentMessage containing <code>sendId</code> and <code>srcTxHash</code>.</p>
+<h2 id="throws-2"><a class="header" href="#throws-2">Throws</a></h2>
+<p>If no provider is attached to the signer.</p>
+<h2 id="remarks-2"><a class="header" href="#remarks-2">Remarks</a></h2>
+<ul>
+<li>Contracts require <code>msg.value == amount</code> when source/dest share the same base token,
+and <code>msg.value == 0</code> when they differ. This helper defers value handling to <code>sendBundle</code>.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/ethers/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/ethers/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/ethers/src/functions/../README.html">ethers/src</a> / remoteCall</p>
+<h1 id="function-remotecall"><a class="header" href="#function-remotecall">Function: remoteCall()</a></h1>
+<blockquote>
+<p><strong>remoteCall</strong>(<code>signer</code>, <code>input</code>): <code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/ethers/src/actions/remoteCall.ts#L39">packages/ethers/src/actions/remoteCall.ts:39</a></p>
+<p>Perform a single cross-chain call using <code>InteropCenter.sendMessage</code> (no bundling).</p>
+<h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
+<h3 id="signer-3"><a class="header" href="#signer-3">signer</a></h3>
+<p><code>Signer</code></p>
+<p>Signer bound to the source chain provider.</p>
+<h3 id="input-3"><a class="header" href="#input-3">input</a></h3>
+<p><code>RemoteCallInput</code> &amp; <code>object</code></p>
+<h2 id="returns-3"><a class="header" href="#returns-3">Returns</a></h2>
+<p><code>Promise</code>&lt;<code>SentMessage</code>&gt;</p>
+<p>SentMessage containing <code>sendId</code> and <code>srcTxHash</code>.</p>
+<h2 id="throws-3"><a class="header" href="#throws-3">Throws</a></h2>
+<p>If signer has no provider or send fails.</p>
+<h2 id="remarks-3"><a class="header" href="#remarks-3">Remarks</a></h2>
+<ul>
+<li>Recipient is encoded as ERC-7930 EVM (chain + address).</li>
+<li>Base-token rules apply to <code>msg.value</code>: SAME base → <code>value</code>; DIFFERENT → <code>0</code>.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/../../README.html">zksync-sdk-monorepo</a> / core/src</p>
+<h1 id="coresrc"><a class="header" href="#coresrc">core/src</a></h1>
+<p>Public API for @zksync-sdk/core</p>
+<h2 id="classes"><a class="header" href="#classes">Classes</a></h2>
+<ul>
+<li><a href="api/core/src/classes/ChainRegistry.html">ChainRegistry</a></li>
+<li><a href="api/core/src/classes/InteropError.html">InteropError</a></li>
+</ul>
+<h2 id="interfaces"><a class="header" href="#interfaces">Interfaces</a></h2>
+<ul>
+<li><a href="api/core/src/interfaces/BuiltTx.html">BuiltTx</a></li>
+<li><a href="api/core/src/interfaces/BundleInput.html">BundleInput</a></li>
+<li><a href="api/core/src/interfaces/BundleReceipt.html">BundleReceipt</a></li>
+<li><a href="api/core/src/interfaces/ChainInfo.html">ChainInfo</a></li>
+<li><a href="api/core/src/interfaces/ChainRegistryInit.html">ChainRegistryInit</a></li>
+<li><a href="api/core/src/interfaces/ERC20TransferInput.html">ERC20TransferInput</a></li>
+<li><a href="api/core/src/interfaces/MessageOptions.html">MessageOptions</a></li>
+<li><a href="api/core/src/interfaces/MessageReceipt.html">MessageReceipt</a></li>
+<li><a href="api/core/src/interfaces/MessageStatus.html">MessageStatus</a></li>
+<li><a href="api/core/src/interfaces/NativeTransferInput.html">NativeTransferInput</a></li>
+<li><a href="api/core/src/interfaces/RemoteCallInput.html">RemoteCallInput</a></li>
+<li><a href="api/core/src/interfaces/SentMessage.html">SentMessage</a></li>
+</ul>
+<h2 id="type-aliases"><a class="header" href="#type-aliases">Type Aliases</a></h2>
+<ul>
+<li><a href="api/core/src/type-aliases/BundleAtomicity.html">BundleAtomicity</a></li>
+<li><a href="api/core/src/type-aliases/BundleItem.html">BundleItem</a></li>
+<li><a href="api/core/src/type-aliases/ChainKey.html">ChainKey</a></li>
+<li><a href="api/core/src/type-aliases/ChainRef.html">ChainRef</a></li>
+<li><a href="api/core/src/type-aliases/ERC7786Attribute.html">ERC7786Attribute</a></li>
+<li><a href="api/core/src/type-aliases/Hex.html">Hex</a></li>
+<li><a href="api/core/src/type-aliases/IERC7786GatewaySourceAbi.html">IERC7786GatewaySourceAbi</a></li>
+<li><a href="api/core/src/type-aliases/IInteropCenterAbi.html">IInteropCenterAbi</a></li>
+<li><a href="api/core/src/type-aliases/IInteropHandlerAbi.html">IInteropHandlerAbi</a></li>
+<li><a href="api/core/src/type-aliases/InteropErrorCode.html">InteropErrorCode</a></li>
+<li><a href="api/core/src/type-aliases/InteropErrorDetails.html">InteropErrorDetails</a></li>
+<li><a href="api/core/src/type-aliases/ItemKind.html">ItemKind</a></li>
+<li><a href="api/core/src/type-aliases/JsonAbi.html">JsonAbi</a></li>
+<li><a href="api/core/src/type-aliases/JsonAbiItem.html">JsonAbiItem</a></li>
+<li><a href="api/core/src/type-aliases/JsonAbiParam.html">JsonAbiParam</a></li>
+<li><a href="api/core/src/type-aliases/MessagePhase.html">MessagePhase</a></li>
+</ul>
+<h2 id="variables"><a class="header" href="#variables">Variables</a></h2>
+<ul>
+<li><a href="api/core/src/variables/ATTR.html">ATTR</a></li>
+<li><a href="api/core/src/variables/builtinChains.html">builtinChains</a></li>
+<li><a href="api/core/src/variables/bundle.html">bundle</a></li>
+<li><a href="api/core/src/variables/Chains.html">Chains</a></li>
+<li><a href="api/core/src/variables/defaultRegistry.html">defaultRegistry</a></li>
+<li><a href="api/core/src/variables/IERC7786GatewaySourceAbi.html">IERC7786GatewaySourceAbi</a></li>
+<li><a href="api/core/src/variables/IInteropCenterAbi.html">IInteropCenterAbi</a></li>
+<li><a href="api/core/src/variables/IInteropHandlerAbi.html">IInteropHandlerAbi</a></li>
+<li><a href="api/core/src/variables/ItemKind.html">ItemKind</a></li>
+</ul>
+<h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
+<ul>
+<li><a href="api/core/src/functions/computeBundleMessageValue.html">computeBundleMessageValue</a></li>
+<li><a href="api/core/src/functions/encodeEvmV1.html">encodeEvmV1</a></li>
+<li><a href="api/core/src/functions/encodeEvmV1AddressOnly.html">encodeEvmV1AddressOnly</a></li>
+<li><a href="api/core/src/functions/encodeEvmV1ChainOnly.html">encodeEvmV1ChainOnly</a></li>
+<li><a href="api/core/src/functions/interopErrorFromRevertData.html">interopErrorFromRevertData</a></li>
+<li><a href="api/core/src/functions/mergeAttributes.html">mergeAttributes</a></li>
+<li><a href="api/core/src/functions/parseBundleHashFromLogs.html">parseBundleHashFromLogs</a></li>
+<li><a href="api/core/src/functions/parseRevertData.html">parseRevertData</a></li>
+<li><a href="api/core/src/functions/parseSendIdFromLogs.html">parseSendIdFromLogs</a></li>
+<li><a href="api/core/src/functions/toCallStarter.html">toCallStarter</a></li>
+</ul>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<h3 id="erc7786gatewaysourceabi"><a class="header" href="#erc7786gatewaysourceabi">ERC7786GatewaySourceAbi</a></h3>
+<p>Renames and re-exports <a href="api/core/src/variables/IERC7786GatewaySourceAbi.html">IERC7786GatewaySourceAbi</a></p>
+<hr />
+<h3 id="erc7786gatewaysourceabitype"><a class="header" href="#erc7786gatewaysourceabitype">ERC7786GatewaySourceAbiType</a></h3>
+<p>Renames and re-exports <a href="api/core/src/variables/IERC7786GatewaySourceAbi.html">IERC7786GatewaySourceAbi</a></p>
+<hr />
+<h3 id="interopcenterabi"><a class="header" href="#interopcenterabi">InteropCenterAbi</a></h3>
+<p>Renames and re-exports <a href="api/core/src/variables/IInteropCenterAbi.html">IInteropCenterAbi</a></p>
+<hr />
+<h3 id="interopcenterabitype"><a class="header" href="#interopcenterabitype">InteropCenterAbiType</a></h3>
+<p>Renames and re-exports <a href="api/core/src/variables/IInteropCenterAbi.html">IInteropCenterAbi</a></p>
+<hr />
+<h3 id="interophandlerabi"><a class="header" href="#interophandlerabi">InteropHandlerAbi</a></h3>
+<p>Renames and re-exports <a href="api/core/src/variables/IInteropHandlerAbi.html">IInteropHandlerAbi</a></p>
+<hr />
+<h3 id="interophandlerabitype"><a class="header" href="#interophandlerabitype">InteropHandlerAbiType</a></h3>
+<p>Renames and re-exports <a href="api/core/src/variables/IInteropHandlerAbi.html">IInteropHandlerAbi</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/variables/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/variables/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/variables/../README.html">core/src</a> / ATTR</p>
+<h1 id="variable-attr"><a class="header" href="#variable-attr">Variable: ATTR</a></h1>
+<blockquote>
+<p><code>const</code> <strong>ATTR</strong>: <code>object</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/encoding/attributes.ts#L20">packages/core/src/encoding/attributes.ts:20</a></p>
+<p>ERC-7786 attribute encoders used by InteropCenter/Handler.</p>
+<h2 id="type-declaration"><a class="header" href="#type-declaration">Type declaration</a></h2>
+<h3 id="executionaddress"><a class="header" href="#executionaddress">executionAddress()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>executionAddress</strong>: (<code>erc7930</code>) =&gt; <code>`0x${string}`</code></p>
+</blockquote>
+<p>Restrict who can execute the bundle on the destination.</p>
+<h4 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h4>
+<h5 id="erc7930"><a class="header" href="#erc7930">erc7930</a></h5>
+<p><code>`0x${string}`</code></p>
+<p>ERC-7930 interoperable address (typically <strong>address-only</strong>).</p>
+<h4 id="returns-4"><a class="header" href="#returns-4">Returns</a></h4>
+<p><code>`0x${string}`</code></p>
+<p>ABI-encoded ERC-7786 attribute.</p>
+<h4 id="remarks-4"><a class="header" href="#remarks-4">Remarks</a></h4>
+<p>Include in the <strong>bundle attributes</strong> array. Omit for permissionless execution.</p>
+<h3 id="indirectcall"><a class="header" href="#indirectcall">indirectCall()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>indirectCall</strong>: (<code>bridgeMsgValue</code>) =&gt; <code>`0x${string}`</code></p>
+</blockquote>
+<p>Mark a call as <strong>indirect</strong> (bridging path) and include message value for the bridge hop.</p>
+<h4 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h4>
+<h5 id="bridgemsgvalue"><a class="header" href="#bridgemsgvalue">bridgeMsgValue</a></h5>
+<p><code>bigint</code></p>
+<p>ETH sent with the IL2CrossChainSender message (wei).</p>
+<h4 id="returns-5"><a class="header" href="#returns-5">Returns</a></h4>
+<p><code>`0x${string}`</code></p>
+<p>ABI-encoded ERC-7786 attribute.</p>
+<h4 id="remarks-5"><a class="header" href="#remarks-5">Remarks</a></h4>
+<ul>
+<li>Use only for the <strong>AssetRouter/NTV</strong> call starter in an indirect ERC-20 transfer.</li>
+<li>Do <strong>not</strong> combine with <code>interopCallValue</code> for the same call; the contracts derive/check it.</li>
+</ul>
+<h3 id="interopcallvalue"><a class="header" href="#interopcallvalue">interopCallValue()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>interopCallValue</strong>: (<code>value</code>) =&gt; <code>`0x${string}`</code></p>
+</blockquote>
+<p>Set the value (base token) forwarded to the destination call.</p>
+<h4 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h4>
+<h5 id="value"><a class="header" href="#value">value</a></h5>
+<p><code>bigint</code></p>
+<p>Amount in wei.</p>
+<h4 id="returns-6"><a class="header" href="#returns-6">Returns</a></h4>
+<p><code>`0x${string}`</code></p>
+<p>ABI-encoded ERC-7786 attribute.</p>
+<h4 id="remarks-6"><a class="header" href="#remarks-6">Remarks</a></h4>
+<p>Include in the <strong>call attributes</strong> array for the target item.</p>
+<h3 id="unbundleraddress"><a class="header" href="#unbundleraddress">unbundlerAddress()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>unbundlerAddress</strong>: (<code>erc7930</code>) =&gt; <code>`0x${string}`</code></p>
+</blockquote>
+<p>Restrict who can unbundle/cancel individual calls on the destination.</p>
+<h4 id="parameters-7"><a class="header" href="#parameters-7">Parameters</a></h4>
+<h5 id="erc7930-1"><a class="header" href="#erc7930-1">erc7930</a></h5>
+<p><code>`0x${string}`</code></p>
+<p>ERC-7930 interoperable address (typically <strong>address-only</strong>).</p>
+<h4 id="returns-7"><a class="header" href="#returns-7">Returns</a></h4>
+<p><code>`0x${string}`</code></p>
+<p>ABI-encoded ERC-7786 attribute.</p>
+<h4 id="remarks-7"><a class="header" href="#remarks-7">Remarks</a></h4>
+<p>Include in the <strong>bundle attributes</strong> array. Omit to default to the original sender.</p>
+<h2 id="remarks-8"><a class="header" href="#remarks-8">Remarks</a></h2>
+<ul>
+<li><strong>Call-level</strong>: <a href="api/core/src/variables/ATTR.html#interopcallvalue">ATTR.interopCallValue</a>, <a href="api/core/src/variables/ATTR.html#indirectcall">ATTR.indirectCall</a>.</li>
+<li><strong>Bundle-level</strong>: <a href="api/core/src/variables/ATTR.html#executionaddress">ATTR.executionAddress</a>, <a href="api/core/src/variables/ATTR.html#unbundleraddress">ATTR.unbundlerAddress</a>.</li>
+<li>For 7930 parameters, prefer the helpers in <code>encoding/7930</code> to produce <strong>chain-only</strong>
+or <strong>address-only</strong> encodings as required by the contracts.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/variables/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/variables/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/variables/../README.html">core/src</a> / bundle</p>
+<h1 id="variable-bundle"><a class="header" href="#variable-bundle">Variable: bundle</a></h1>
+<blockquote>
+<p><code>const</code> <strong>bundle</strong>: <code>object</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/bundle.ts#L12">packages/core/src/bundle.ts:12</a></p>
+<p>Factory helpers to construct bundle items.</p>
+<h2 id="type-declaration-1"><a class="header" href="#type-declaration-1">Type declaration</a></h2>
+<h3 id="erc20"><a class="header" href="#erc20">erc20()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>erc20</strong>: (<code>p</code>) =&gt; <code>object</code></p>
+</blockquote>
+<p>ERC-20 transfer; either direct (remote <code>transfer</code>) or indirect (bridge).</p>
+<h4 id="parameters-8"><a class="header" href="#parameters-8">Parameters</a></h4>
+<h5 id="p"><a class="header" href="#p">p</a></h5>
+<h6 id="amount"><a class="header" href="#amount">amount</a></h6>
+<p><code>bigint</code></p>
+<p>Token amount (base units).</p>
+<h6 id="approveifneeded"><a class="header" href="#approveifneeded">approveIfNeeded?</a></h6>
+<p><code>boolean</code></p>
+<p>Hint used by higher-level helpers to approve NTV.</p>
+<h6 id="bridgemsgvalue-1"><a class="header" href="#bridgemsgvalue-1">bridgeMsgValue?</a></h6>
+<p><code>bigint</code></p>
+<p>ETH to send with the indirect bridge message (wei).</p>
+<h6 id="indirect"><a class="header" href="#indirect">indirect?</a></h6>
+<p><code>boolean</code></p>
+<p>If true, use bridging path via AssetRouter/NTV.</p>
+<h6 id="to"><a class="header" href="#to">to</a></h6>
+<p><code>`0x${string}`</code></p>
+<p>Recipient address on the destination chain.</p>
+<h6 id="token"><a class="header" href="#token">token</a></h6>
+<p><code>`0x${string}`</code></p>
+<p>ERC-20 token address on the source chain.</p>
+<h4 id="returns-8"><a class="header" href="#returns-8">Returns</a></h4>
+<p><code>object</code></p>
+<p><a href="api/core/src/variables/../type-aliases/BundleItem.html">BundleItem</a> of kind <code>ERC20Transfer</code>.</p>
+<h5 id="_bridgemsgvalue"><a class="header" href="#_bridgemsgvalue">_bridgeMsgValue?</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>_bridgeMsgValue</strong>: <code>bigint</code></p>
+</blockquote>
+<h5 id="_indirect"><a class="header" href="#_indirect">_indirect?</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>_indirect</strong>: <code>true</code> = <code>true</code></p>
+</blockquote>
+<h5 id="amount-1"><a class="header" href="#amount-1">amount</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>amount</strong>: <code>bigint</code> = <code>p.amount</code></p>
+</blockquote>
+<h5 id="approveifneeded-1"><a class="header" href="#approveifneeded-1">approveIfNeeded</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>approveIfNeeded</strong>: <code>undefined</code> | <code>boolean</code> = <code>p.approveIfNeeded</code></p>
+</blockquote>
+<h5 id="kind"><a class="header" href="#kind">kind</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>kind</strong>: <code>"erc20Transfer"</code> = <code>ItemKind.ERC20Transfer</code></p>
+</blockquote>
+<h5 id="to-1"><a class="header" href="#to-1">to</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>to</strong>: <code>`0x${string}`</code> = <code>p.to</code></p>
+</blockquote>
+<h5 id="token-1"><a class="header" href="#token-1">token</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>token</strong>: <code>`0x${string}`</code> = <code>p.token</code></p>
+</blockquote>
+<h4 id="remarks-9"><a class="header" href="#remarks-9">Remarks</a></h4>
+<ul>
+<li><strong>Direct</strong>: encodes a remote call to <code>token.transfer(to, amount)</code> on dest.</li>
+<li><strong>Indirect</strong>: burns/deposits on src, mints/withdraws on dest. <code>bridgeMsgValue</code>
+funds the IL2CrossChainSender hop; <code>approveIfNeeded</code> is consumed by helpers.</li>
+</ul>
+<h3 id="native"><a class="header" href="#native">native()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>native</strong>: (<code>p</code>) =&gt; <code>object</code></p>
+</blockquote>
+<p>Native token transfer to a destination address.</p>
+<h4 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h4>
+<h5 id="p-1"><a class="header" href="#p-1">p</a></h5>
+<h6 id="amount-2"><a class="header" href="#amount-2">amount</a></h6>
+<p><code>bigint</code></p>
+<p>Amount in wei.</p>
+<h6 id="to-2"><a class="header" href="#to-2">to</a></h6>
+<p><code>`0x${string}`</code></p>
+<p>Recipient address on the destination chain.</p>
+<h4 id="returns-9"><a class="header" href="#returns-9">Returns</a></h4>
+<p><code>object</code></p>
+<p><a href="api/core/src/variables/../type-aliases/BundleItem.html">BundleItem</a> of kind <code>NativeTransfer</code>.</p>
+<h5 id="amount-3"><a class="header" href="#amount-3">amount</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>amount</strong>: <code>bigint</code></p>
+</blockquote>
+<h5 id="kind-1"><a class="header" href="#kind-1">kind</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>kind</strong>: <code>"nativeTransfer"</code> = <code>ItemKind.NativeTransfer</code></p>
+</blockquote>
+<h5 id="to-3"><a class="header" href="#to-3">to</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>to</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<h4 id="example"><a class="header" href="#example">Example</a></h4>
+<pre><code class="language-ts">bundle.native({ to: '0xabc…', amount: 1_000_000_000n });
+</code></pre>
+<h3 id="remotecall"><a class="header" href="#remotecall">remoteCall()</a></h3>
+<blockquote>
+<p><code>readonly</code> <strong>remoteCall</strong>: (<code>p</code>) =&gt; <code>object</code></p>
+</blockquote>
+<p>Plain remote call to a destination contract.</p>
+<h4 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h4>
+<h5 id="p-2"><a class="header" href="#p-2">p</a></h5>
+<h6 id="data"><a class="header" href="#data">data</a></h6>
+<p><code>`0x${string}`</code></p>
+<p>ABI-encoded calldata.</p>
+<h6 id="to-4"><a class="header" href="#to-4">to</a></h6>
+<p><code>`0x${string}`</code></p>
+<p>Target contract address on the destination chain.</p>
+<h6 id="value-1"><a class="header" href="#value-1">value?</a></h6>
+<p><code>bigint</code></p>
+<p>Optional value in wei (forwarded as interop call value).</p>
+<h4 id="returns-10"><a class="header" href="#returns-10">Returns</a></h4>
+<p><code>object</code></p>
+<p><a href="api/core/src/variables/../type-aliases/BundleItem.html">BundleItem</a> of kind <code>RemoteCall</code>.</p>
+<h5 id="data-1"><a class="header" href="#data-1">data</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>data</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<h5 id="kind-2"><a class="header" href="#kind-2">kind</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>kind</strong>: <code>"remoteCall"</code> = <code>ItemKind.RemoteCall</code></p>
+</blockquote>
+<h5 id="to-5"><a class="header" href="#to-5">to</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>to</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<h5 id="value-2"><a class="header" href="#value-2">value?</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>value</strong>: <code>bigint</code></p>
+</blockquote>
+<h4 id="example-1"><a class="header" href="#example-1">Example</a></h4>
+<pre><code class="language-ts">bundle.remoteCall({ to, data: iface.encodeFunctionData('foo', [42n]) });
+</code></pre>
+<h2 id="remarks-10"><a class="header" href="#remarks-10">Remarks</a></h2>
+<p>These constructors are shape-only: they do not encode attributes or
+perform chain logic. The transport layer (e.g., <code>toCallStarter</code>) maps
+them to InteropCallStarters and attaches the right attributes.</p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/variables/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/variables/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/variables/../README.html">core/src</a> / defaultRegistry</p>
+<h1 id="variable-defaultregistry"><a class="header" href="#variable-defaultregistry">Variable: defaultRegistry</a></h1>
+<blockquote>
+<p><code>const</code> <strong>defaultRegistry</strong>: <a href="api/core/src/variables/../classes/ChainRegistry.html"><code>ChainRegistry</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/chains/registry.ts#L48">packages/core/src/chains/registry.ts:48</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / encodeEvmV1</p>
+<h1 id="function-encodeevmv1"><a class="header" href="#function-encodeevmv1">Function: encodeEvmV1()</a></h1>
+<blockquote>
+<p><strong>encodeEvmV1</strong>(<code>chainRef?</code>, <code>addr?</code>): <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/encoding/7930.ts#L35">packages/core/src/encoding/7930.ts:35</a></p>
+<p>Encode an ERC-7930 EVM v1 interoperable address.</p>
+<p>Layout: <code>[version(2) | chainType(2) | chainRefLen(1) | chainRef | addrLen(1) | addr]</code></p>
+<ul>
+<li><code>version</code>      – currently <code>0x0001</code> (big-endian) to indicate EVM v1.</li>
+<li><code>chainType</code>    – reserved for future use; fixed <code>0x0000</code> for EVM.</li>
+<li><code>chainRef</code>     – big-endian, length ≤ 255 bytes (typically an EIP-155 chain id).</li>
+<li><code>addr</code>         – raw 20-byte EVM address; length ≤ 255 bytes (20 in practice).</li>
+</ul>
+<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
+<h3 id="chainref"><a class="header" href="#chainref">chainRef?</a></h3>
+<p><code>bigint</code></p>
+<p>Optional chain reference (EIP-155 chain id). Omit for <strong>address-only</strong>.</p>
+<h3 id="addr"><a class="header" href="#addr">addr?</a></h3>
+<p><code>`0x${string}`</code></p>
+<p>Optional EVM address (<code>0x…</code>). Omit for <strong>chain-only</strong>.</p>
+<h2 id="returns-11"><a class="header" href="#returns-11">Returns</a></h2>
+<p><code>`0x${string}`</code></p>
+<p>Hex‐encoded interoperable address (<code>0x…</code>).</p>
+<h2 id="throws-4"><a class="header" href="#throws-4">Throws</a></h2>
+<p>If <code>chainRef</code> or <code>addr</code> exceed 255 bytes when serialized.</p>
+<h2 id="remarks-11"><a class="header" href="#remarks-11">Remarks</a></h2>
+<ul>
+<li><strong>Chain-only</strong> (destination in <code>sendBundle</code>): pass <code>chainRef</code>, leave <code>addr</code> undefined.</li>
+<li><strong>Address-only</strong> (per-call <code>to</code> in bundle items): pass <code>addr</code>, leave <code>chainRef</code> undefined.</li>
+<li>Empty/omitted halves are <strong>required</strong> by the contracts for the intended context.</li>
+</ul>
+<h2 id="example-2"><a class="header" href="#example-2">Example</a></h2>
+<pre><code class="language-ts">// Chain-only for destination (EIP-155)
+const dst = encodeEvmV1( BigInt(324), undefined );
+
+// Address-only for a call starter
+const to  = encodeEvmV1( undefined, '0xabc…def' );
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / encodeEvmV1AddressOnly</p>
+<h1 id="function-encodeevmv1addressonly"><a class="header" href="#function-encodeevmv1addressonly">Function: encodeEvmV1AddressOnly()</a></h1>
+<blockquote>
+<p><strong>encodeEvmV1AddressOnly</strong>(<code>address</code>): <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/encoding/7930.ts#L70">packages/core/src/encoding/7930.ts:70</a></p>
+<p>Encode an <strong>address-only</strong> ERC-7930 address (per-call <code>to</code> for bundles).</p>
+<h2 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h2>
+<h3 id="address"><a class="header" href="#address">address</a></h3>
+<p><code>`0x${string}`</code></p>
+<p>EVM address (<code>0x…</code>).</p>
+<h2 id="returns-12"><a class="header" href="#returns-12">Returns</a></h2>
+<p><code>`0x${string}`</code></p>
+<p>Address-only interoperable address.</p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / encodeEvmV1ChainOnly</p>
+<h1 id="function-encodeevmv1chainonly"><a class="header" href="#function-encodeevmv1chainonly">Function: encodeEvmV1ChainOnly()</a></h1>
+<blockquote>
+<p><strong>encodeEvmV1ChainOnly</strong>(<code>chainId</code>): <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/encoding/7930.ts#L59">packages/core/src/encoding/7930.ts:59</a></p>
+<p>Encode a <strong>chain-only</strong> ERC-7930 address (destination for <code>sendBundle</code>).</p>
+<h2 id="parameters-13"><a class="header" href="#parameters-13">Parameters</a></h2>
+<h3 id="chainid"><a class="header" href="#chainid">chainId</a></h3>
+<p>EIP-155 chain id.</p>
+<p><code>number</code> | <code>bigint</code></p>
+<h2 id="returns-13"><a class="header" href="#returns-13">Returns</a></h2>
+<p><code>`0x${string}`</code></p>
+<p>Chain-only interoperable address.</p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / toCallStarter</p>
+<h1 id="function-tocallstarter"><a class="header" href="#function-tocallstarter">Function: toCallStarter()</a></h1>
+<blockquote>
+<p><strong>toCallStarter</strong>(<code>item</code>, <code>opts?</code>): <code>object</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/utils.ts#L25">packages/core/src/utils.ts:25</a></p>
+<p>Convert a <a href="api/core/src/functions/../type-aliases/BundleItem.html">BundleItem</a> into an Interop call starter.</p>
+<p>Produces <code>{ to, data, callAttributes }</code> for the contracts, plus an optional <code>value</code>
+that contributes to the outer <code>msg.value</code> of <code>sendBundle</code>.</p>
+<h2 id="parameters-14"><a class="header" href="#parameters-14">Parameters</a></h2>
+<h3 id="item"><a class="header" href="#item">item</a></h3>
+<p><a href="api/core/src/functions/../type-aliases/BundleItem.html"><code>BundleItem</code></a></p>
+<p>Bundle item (native, erc20, or remote call).</p>
+<h3 id="opts"><a class="header" href="#opts">opts?</a></h3>
+<p>Optional options.</p>
+<h4 id="assetrouter"><a class="header" href="#assetrouter">assetRouter?</a></h4>
+<p><code>`0x${string}`</code></p>
+<p>Required for <strong>indirect</strong> ERC-20; address of the AssetRouter.</p>
+<h2 id="returns-14"><a class="header" href="#returns-14">Returns</a></h2>
+<p><code>object</code></p>
+<p>Object containing the encoded starter and an optional <code>value</code> to be summed into <code>msg.value</code>.</p>
+<h3 id="starter"><a class="header" href="#starter">starter</a></h3>
+<blockquote>
+<p><strong>starter</strong>: <code>object</code></p>
+</blockquote>
+<h4 id="startercallattributes"><a class="header" href="#startercallattributes">starter.callAttributes</a></h4>
+<blockquote>
+<p><strong>callAttributes</strong>: <code>`0x${string}`</code>[]</p>
+</blockquote>
+<h4 id="starterdata"><a class="header" href="#starterdata">starter.data</a></h4>
+<blockquote>
+<p><strong>data</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<h4 id="starterto"><a class="header" href="#starterto">starter.to</a></h4>
+<blockquote>
+<p><strong>to</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<h3 id="value-3"><a class="header" href="#value-3">value?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>value</strong>: <code>bigint</code></p>
+</blockquote>
+<h2 id="throws-5"><a class="header" href="#throws-5">Throws</a></h2>
+<p>If an indirect ERC-20 is requested without <code>opts.assetRouter</code>, or the kind is unsupported.</p>
+<h2 id="remarks-12"><a class="header" href="#remarks-12">Remarks</a></h2>
+<ul>
+<li>Per-item <code>to</code> is encoded as <strong>ERC-7930 address-only</strong> (contracts require empty chainRef in bundles).</li>
+<li>Do <strong>not</strong> combine <code>ATTR.indirectCall</code> with <code>ATTR.interopCallValue</code> on the same call; the contracts
+derive/check the call value for the actual bridged call internally.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/interfaces/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/interfaces/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/interfaces/../README.html">core/src</a> / BundleInput</p>
+<h1 id="interface-bundleinput"><a class="header" href="#interface-bundleinput">Interface: BundleInput</a></h1>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L104">packages/core/src/types.ts:104</a></p>
+<h2 id="extends"><a class="header" href="#extends">Extends</a></h2>
+<ul>
+<li><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a></li>
+</ul>
+<h2 id="properties"><a class="header" href="#properties">Properties</a></h2>
+<h3 id="atomicity"><a class="header" href="#atomicity">atomicity?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>atomicity</strong>: <a href="api/core/src/interfaces/../type-aliases/BundleAtomicity.html"><code>BundleAtomicity</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L106">packages/core/src/types.ts:106</a></p>
+<hr />
+<h3 id="attributes"><a class="header" href="#attributes">attributes?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>attributes</strong>: <a href="api/core/src/interfaces/../type-aliases/ERC7786Attribute.html"><code>ERC7786Attribute</code></a>[]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L45">packages/core/src/types.ts:45</a></p>
+<h4 id="inherited-from"><a class="header" href="#inherited-from">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#attributes"><code>attributes</code></a></p>
+<hr />
+<h3 id="clienttag"><a class="header" href="#clienttag">clientTag?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>clientTag</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L54">packages/core/src/types.ts:54</a></p>
+<h4 id="inherited-from-1"><a class="header" href="#inherited-from-1">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#clienttag"><code>clientTag</code></a></p>
+<hr />
+<h3 id="deadline"><a class="header" href="#deadline">deadline?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>deadline</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L55">packages/core/src/types.ts:55</a></p>
+<h4 id="inherited-from-2"><a class="header" href="#inherited-from-2">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#deadline"><code>deadline</code></a></p>
+<hr />
+<h3 id="dest"><a class="header" href="#dest">dest?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>dest</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L44">packages/core/src/types.ts:44</a></p>
+<h4 id="inherited-from-3"><a class="header" href="#inherited-from-3">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#dest"><code>dest</code></a></p>
+<hr />
+<h3 id="gas"><a class="header" href="#gas">gas?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>gas</strong>: <code>Partial</code>&lt;{ <code>gasBufferPct</code>: <code>number</code>; <code>gasLimit</code>: <code>bigint</code>; <code>maxFeePerGas</code>: <code>bigint</code>; <code>maxPriorityFeePerGas</code>: <code>bigint</code>; }&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L46">packages/core/src/types.ts:46</a></p>
+<h4 id="inherited-from-4"><a class="header" href="#inherited-from-4">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#gas"><code>gas</code></a></p>
+<hr />
+<h3 id="items"><a class="header" href="#items">items</a></h3>
+<blockquote>
+<p><strong>items</strong>: <a href="api/core/src/interfaces/../type-aliases/BundleItem.html"><code>BundleItem</code></a>[]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L105">packages/core/src/types.ts:105</a></p>
+<hr />
+<h3 id="maxitems"><a class="header" href="#maxitems">maxItems?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>maxItems</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L107">packages/core/src/types.ts:107</a></p>
+<hr />
+<h3 id="nonce"><a class="header" href="#nonce">nonce?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>nonce</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L52">packages/core/src/types.ts:52</a></p>
+<h4 id="inherited-from-5"><a class="header" href="#inherited-from-5">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#nonce"><code>nonce</code></a></p>
+<hr />
+<h3 id="note"><a class="header" href="#note">note?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>note</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L53">packages/core/src/types.ts:53</a></p>
+<h4 id="inherited-from-6"><a class="header" href="#inherited-from-6">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#note"><code>note</code></a></p>
+<hr />
+<h3 id="signal"><a class="header" href="#signal">signal?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>signal</strong>: <code>AbortSignal</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L56">packages/core/src/types.ts:56</a></p>
+<h4 id="inherited-from-7"><a class="header" href="#inherited-from-7">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#signal"><code>signal</code></a></p>
+<hr />
+<h3 id="src"><a class="header" href="#src">src?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>src</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L43">packages/core/src/types.ts:43</a></p>
+<h4 id="inherited-from-8"><a class="header" href="#inherited-from-8">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#src"><code>src</code></a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/type-aliases/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/type-aliases/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/type-aliases/../README.html">core/src</a> / BundleItem</p>
+<h1 id="type-alias-bundleitem"><a class="header" href="#type-alias-bundleitem">Type Alias: BundleItem</a></h1>
+<blockquote>
+<p><strong>BundleItem</strong> = { <code>data</code>: <code>`0x${string}`</code>; <code>kind</code>: <em>typeof</em> <a href="api/core/src/type-aliases/../variables/ItemKind.html#remotecall"><code>RemoteCall</code></a>; <code>to</code>: <code>`0x${string}`</code>; <code>value?</code>: <code>bigint</code>; } | { <code>amount</code>: <code>bigint</code>; <code>kind</code>: <em>typeof</em> <a href="api/core/src/type-aliases/../variables/ItemKind.html#nativetransfer"><code>NativeTransfer</code></a>; <code>to</code>: <code>`0x${string}`</code>; } | { <code>_bridgeMsgValue?</code>: <code>bigint</code>; <code>_indirect?</code>: <code>true</code>; <code>amount</code>: <code>bigint</code>; <code>approveIfNeeded?</code>: <code>boolean</code>; <code>kind</code>: <em>typeof</em> <a href="api/core/src/type-aliases/../variables/ItemKind.html#erc20transfer"><code>ERC20Transfer</code></a>; <code>to</code>: <code>`0x${string}`</code>; <code>token</code>: <code>`0x${string}`</code>; }</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L89">packages/core/src/types.ts:89</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/interfaces/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/interfaces/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/interfaces/../README.html">core/src</a> / NativeTransferInput</p>
+<h1 id="interface-nativetransferinput"><a class="header" href="#interface-nativetransferinput">Interface: NativeTransferInput</a></h1>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L65">packages/core/src/types.ts:65</a></p>
+<h2 id="extends-1"><a class="header" href="#extends-1">Extends</a></h2>
+<ul>
+<li><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a></li>
+</ul>
+<h2 id="properties-1"><a class="header" href="#properties-1">Properties</a></h2>
+<h3 id="amount-4"><a class="header" href="#amount-4">amount</a></h3>
+<blockquote>
+<p><strong>amount</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L67">packages/core/src/types.ts:67</a></p>
+<hr />
+<h3 id="attributes-1"><a class="header" href="#attributes-1">attributes?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>attributes</strong>: <a href="api/core/src/interfaces/../type-aliases/ERC7786Attribute.html"><code>ERC7786Attribute</code></a>[]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L45">packages/core/src/types.ts:45</a></p>
+<h4 id="inherited-from-9"><a class="header" href="#inherited-from-9">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#attributes"><code>attributes</code></a></p>
+<hr />
+<h3 id="clienttag-1"><a class="header" href="#clienttag-1">clientTag?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>clientTag</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L54">packages/core/src/types.ts:54</a></p>
+<h4 id="inherited-from-10"><a class="header" href="#inherited-from-10">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#clienttag"><code>clientTag</code></a></p>
+<hr />
+<h3 id="deadline-1"><a class="header" href="#deadline-1">deadline?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>deadline</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L55">packages/core/src/types.ts:55</a></p>
+<h4 id="inherited-from-11"><a class="header" href="#inherited-from-11">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#deadline"><code>deadline</code></a></p>
+<hr />
+<h3 id="dest-1"><a class="header" href="#dest-1">dest?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>dest</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L44">packages/core/src/types.ts:44</a></p>
+<h4 id="inherited-from-12"><a class="header" href="#inherited-from-12">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#dest"><code>dest</code></a></p>
+<hr />
+<h3 id="gas-1"><a class="header" href="#gas-1">gas?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>gas</strong>: <code>Partial</code>&lt;{ <code>gasBufferPct</code>: <code>number</code>; <code>gasLimit</code>: <code>bigint</code>; <code>maxFeePerGas</code>: <code>bigint</code>; <code>maxPriorityFeePerGas</code>: <code>bigint</code>; }&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L46">packages/core/src/types.ts:46</a></p>
+<h4 id="inherited-from-13"><a class="header" href="#inherited-from-13">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#gas"><code>gas</code></a></p>
+<hr />
+<h3 id="nonce-1"><a class="header" href="#nonce-1">nonce?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>nonce</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L52">packages/core/src/types.ts:52</a></p>
+<h4 id="inherited-from-14"><a class="header" href="#inherited-from-14">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#nonce"><code>nonce</code></a></p>
+<hr />
+<h3 id="note-1"><a class="header" href="#note-1">note?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>note</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L53">packages/core/src/types.ts:53</a></p>
+<h4 id="inherited-from-15"><a class="header" href="#inherited-from-15">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#note"><code>note</code></a></p>
+<hr />
+<h3 id="signal-1"><a class="header" href="#signal-1">signal?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>signal</strong>: <code>AbortSignal</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L56">packages/core/src/types.ts:56</a></p>
+<h4 id="inherited-from-16"><a class="header" href="#inherited-from-16">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#signal"><code>signal</code></a></p>
+<hr />
+<h3 id="src-1"><a class="header" href="#src-1">src?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>src</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L43">packages/core/src/types.ts:43</a></p>
+<h4 id="inherited-from-17"><a class="header" href="#inherited-from-17">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#src"><code>src</code></a></p>
+<hr />
+<h3 id="to-6"><a class="header" href="#to-6">to</a></h3>
+<blockquote>
+<p><strong>to</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L66">packages/core/src/types.ts:66</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/interfaces/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/interfaces/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/interfaces/../README.html">core/src</a> / ERC20TransferInput</p>
+<h1 id="interface-erc20transferinput"><a class="header" href="#interface-erc20transferinput">Interface: ERC20TransferInput</a></h1>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L70">packages/core/src/types.ts:70</a></p>
+<h2 id="extends-2"><a class="header" href="#extends-2">Extends</a></h2>
+<ul>
+<li><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a></li>
+</ul>
+<h2 id="properties-2"><a class="header" href="#properties-2">Properties</a></h2>
+<h3 id="amount-5"><a class="header" href="#amount-5">amount</a></h3>
+<blockquote>
+<p><strong>amount</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L73">packages/core/src/types.ts:73</a></p>
+<hr />
+<h3 id="approveifneeded-2"><a class="header" href="#approveifneeded-2">approveIfNeeded?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>approveIfNeeded</strong>: <code>boolean</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L74">packages/core/src/types.ts:74</a></p>
+<hr />
+<h3 id="attributes-2"><a class="header" href="#attributes-2">attributes?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>attributes</strong>: <a href="api/core/src/interfaces/../type-aliases/ERC7786Attribute.html"><code>ERC7786Attribute</code></a>[]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L45">packages/core/src/types.ts:45</a></p>
+<h4 id="inherited-from-18"><a class="header" href="#inherited-from-18">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#attributes"><code>attributes</code></a></p>
+<hr />
+<h3 id="bridgemsgvalue-2"><a class="header" href="#bridgemsgvalue-2">bridgeMsgValue?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>bridgeMsgValue</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L76">packages/core/src/types.ts:76</a></p>
+<hr />
+<h3 id="clienttag-2"><a class="header" href="#clienttag-2">clientTag?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>clientTag</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L54">packages/core/src/types.ts:54</a></p>
+<h4 id="inherited-from-19"><a class="header" href="#inherited-from-19">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#clienttag"><code>clientTag</code></a></p>
+<hr />
+<h3 id="deadline-2"><a class="header" href="#deadline-2">deadline?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>deadline</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L55">packages/core/src/types.ts:55</a></p>
+<h4 id="inherited-from-20"><a class="header" href="#inherited-from-20">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#deadline"><code>deadline</code></a></p>
+<hr />
+<h3 id="dest-2"><a class="header" href="#dest-2">dest?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>dest</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L44">packages/core/src/types.ts:44</a></p>
+<h4 id="inherited-from-21"><a class="header" href="#inherited-from-21">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#dest"><code>dest</code></a></p>
+<hr />
+<h3 id="gas-2"><a class="header" href="#gas-2">gas?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>gas</strong>: <code>Partial</code>&lt;{ <code>gasBufferPct</code>: <code>number</code>; <code>gasLimit</code>: <code>bigint</code>; <code>maxFeePerGas</code>: <code>bigint</code>; <code>maxPriorityFeePerGas</code>: <code>bigint</code>; }&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L46">packages/core/src/types.ts:46</a></p>
+<h4 id="inherited-from-22"><a class="header" href="#inherited-from-22">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#gas"><code>gas</code></a></p>
+<hr />
+<h3 id="indirect-1"><a class="header" href="#indirect-1">indirect?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>indirect</strong>: <code>boolean</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L75">packages/core/src/types.ts:75</a></p>
+<hr />
+<h3 id="nonce-2"><a class="header" href="#nonce-2">nonce?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>nonce</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L52">packages/core/src/types.ts:52</a></p>
+<h4 id="inherited-from-23"><a class="header" href="#inherited-from-23">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#nonce"><code>nonce</code></a></p>
+<hr />
+<h3 id="note-2"><a class="header" href="#note-2">note?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>note</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L53">packages/core/src/types.ts:53</a></p>
+<h4 id="inherited-from-24"><a class="header" href="#inherited-from-24">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#note"><code>note</code></a></p>
+<hr />
+<h3 id="signal-2"><a class="header" href="#signal-2">signal?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>signal</strong>: <code>AbortSignal</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L56">packages/core/src/types.ts:56</a></p>
+<h4 id="inherited-from-25"><a class="header" href="#inherited-from-25">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#signal"><code>signal</code></a></p>
+<hr />
+<h3 id="src-2"><a class="header" href="#src-2">src?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>src</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L43">packages/core/src/types.ts:43</a></p>
+<h4 id="inherited-from-26"><a class="header" href="#inherited-from-26">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#src"><code>src</code></a></p>
+<hr />
+<h3 id="to-7"><a class="header" href="#to-7">to</a></h3>
+<blockquote>
+<p><strong>to</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L72">packages/core/src/types.ts:72</a></p>
+<hr />
+<h3 id="token-2"><a class="header" href="#token-2">token</a></h3>
+<blockquote>
+<p><strong>token</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L71">packages/core/src/types.ts:71</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/interfaces/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/interfaces/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/interfaces/../README.html">core/src</a> / RemoteCallInput</p>
+<h1 id="interface-remotecallinput"><a class="header" href="#interface-remotecallinput">Interface: RemoteCallInput</a></h1>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L59">packages/core/src/types.ts:59</a></p>
+<h2 id="extends-3"><a class="header" href="#extends-3">Extends</a></h2>
+<ul>
+<li><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a></li>
+</ul>
+<h2 id="properties-3"><a class="header" href="#properties-3">Properties</a></h2>
+<h3 id="attributes-3"><a class="header" href="#attributes-3">attributes?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>attributes</strong>: <a href="api/core/src/interfaces/../type-aliases/ERC7786Attribute.html"><code>ERC7786Attribute</code></a>[]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L45">packages/core/src/types.ts:45</a></p>
+<h4 id="inherited-from-27"><a class="header" href="#inherited-from-27">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#attributes"><code>attributes</code></a></p>
+<hr />
+<h3 id="clienttag-3"><a class="header" href="#clienttag-3">clientTag?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>clientTag</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L54">packages/core/src/types.ts:54</a></p>
+<h4 id="inherited-from-28"><a class="header" href="#inherited-from-28">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#clienttag"><code>clientTag</code></a></p>
+<hr />
+<h3 id="data-2"><a class="header" href="#data-2">data</a></h3>
+<blockquote>
+<p><strong>data</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L61">packages/core/src/types.ts:61</a></p>
+<hr />
+<h3 id="deadline-3"><a class="header" href="#deadline-3">deadline?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>deadline</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L55">packages/core/src/types.ts:55</a></p>
+<h4 id="inherited-from-29"><a class="header" href="#inherited-from-29">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#deadline"><code>deadline</code></a></p>
+<hr />
+<h3 id="dest-3"><a class="header" href="#dest-3">dest?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>dest</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L44">packages/core/src/types.ts:44</a></p>
+<h4 id="inherited-from-30"><a class="header" href="#inherited-from-30">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#dest"><code>dest</code></a></p>
+<hr />
+<h3 id="gas-3"><a class="header" href="#gas-3">gas?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>gas</strong>: <code>Partial</code>&lt;{ <code>gasBufferPct</code>: <code>number</code>; <code>gasLimit</code>: <code>bigint</code>; <code>maxFeePerGas</code>: <code>bigint</code>; <code>maxPriorityFeePerGas</code>: <code>bigint</code>; }&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L46">packages/core/src/types.ts:46</a></p>
+<h4 id="inherited-from-31"><a class="header" href="#inherited-from-31">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#gas"><code>gas</code></a></p>
+<hr />
+<h3 id="nonce-3"><a class="header" href="#nonce-3">nonce?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>nonce</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L52">packages/core/src/types.ts:52</a></p>
+<h4 id="inherited-from-32"><a class="header" href="#inherited-from-32">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#nonce"><code>nonce</code></a></p>
+<hr />
+<h3 id="note-3"><a class="header" href="#note-3">note?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>note</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L53">packages/core/src/types.ts:53</a></p>
+<h4 id="inherited-from-33"><a class="header" href="#inherited-from-33">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#note"><code>note</code></a></p>
+<hr />
+<h3 id="signal-3"><a class="header" href="#signal-3">signal?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>signal</strong>: <code>AbortSignal</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L56">packages/core/src/types.ts:56</a></p>
+<h4 id="inherited-from-34"><a class="header" href="#inherited-from-34">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#signal"><code>signal</code></a></p>
+<hr />
+<h3 id="src-3"><a class="header" href="#src-3">src?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>src</strong>: <a href="api/core/src/interfaces/../type-aliases/ChainRef.html"><code>ChainRef</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L43">packages/core/src/types.ts:43</a></p>
+<h4 id="inherited-from-35"><a class="header" href="#inherited-from-35">Inherited from</a></h4>
+<p><a href="api/core/src/interfaces/MessageOptions.html"><code>MessageOptions</code></a>.<a href="api/core/src/interfaces/MessageOptions.html#src"><code>src</code></a></p>
+<hr />
+<h3 id="to-8"><a class="header" href="#to-8">to</a></h3>
+<blockquote>
+<p><strong>to</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L60">packages/core/src/types.ts:60</a></p>
+<hr />
+<h3 id="value-4"><a class="header" href="#value-4">value?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>value</strong>: <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L62">packages/core/src/types.ts:62</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/interfaces/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/interfaces/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/interfaces/../README.html">core/src</a> / SentMessage</p>
+<h1 id="interface-sentmessage"><a class="header" href="#interface-sentmessage">Interface: SentMessage</a></h1>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L136">packages/core/src/types.ts:136</a></p>
+<h2 id="properties-4"><a class="header" href="#properties-4">Properties</a></h2>
+<h3 id="sendid"><a class="header" href="#sendid">sendId</a></h3>
+<blockquote>
+<p><strong>sendId</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L137">packages/core/src/types.ts:137</a></p>
+<hr />
+<h3 id="srctxhash"><a class="header" href="#srctxhash">srcTxHash</a></h3>
+<blockquote>
+<p><strong>srcTxHash</strong>: <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L138">packages/core/src/types.ts:138</a></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/classes/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/classes/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/classes/../README.html">core/src</a> / InteropError</p>
+<h1 id="class-interoperror"><a class="header" href="#class-interoperror">Class: InteropError</a></h1>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L11">packages/core/src/errors.ts:11</a></p>
+<h2 id="extends-4"><a class="header" href="#extends-4">Extends</a></h2>
+<ul>
+<li><code>Error</code></li>
+</ul>
+<h2 id="constructors"><a class="header" href="#constructors">Constructors</a></h2>
+<h3 id="constructor"><a class="header" href="#constructor">Constructor</a></h3>
+<blockquote>
+<p><strong>new InteropError</strong>(<code>code</code>, <code>message</code>, <code>details?</code>): <code>InteropError</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L16">packages/core/src/errors.ts:16</a></p>
+<h4 id="parameters-15"><a class="header" href="#parameters-15">Parameters</a></h4>
+<h5 id="code"><a class="header" href="#code">code</a></h5>
+<p><a href="api/core/src/classes/../type-aliases/InteropErrorCode.html"><code>InteropErrorCode</code></a></p>
+<h5 id="message"><a class="header" href="#message">message</a></h5>
+<p><code>string</code></p>
+<h5 id="details"><a class="header" href="#details">details?</a></h5>
+<p><a href="api/core/src/classes/../type-aliases/InteropErrorDetails.html"><code>InteropErrorDetails</code></a></p>
+<h4 id="returns-15"><a class="header" href="#returns-15">Returns</a></h4>
+<p><code>InteropError</code></p>
+<h4 id="overrides"><a class="header" href="#overrides">Overrides</a></h4>
+<p><code>Error.constructor</code></p>
+<h2 id="properties-5"><a class="header" href="#properties-5">Properties</a></h2>
+<h3 id="cause"><a class="header" href="#cause">cause?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>cause</strong>: <code>unknown</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L14">packages/core/src/errors.ts:14</a></p>
+<p>The cause of the error.</p>
+<h4 id="overrides-1"><a class="header" href="#overrides-1">Overrides</a></h4>
+<p><code>Error.cause</code></p>
+<hr />
+<h3 id="code-1"><a class="header" href="#code-1">code</a></h3>
+<blockquote>
+<p><strong>code</strong>: <a href="api/core/src/classes/../type-aliases/InteropErrorCode.html"><code>InteropErrorCode</code></a></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L12">packages/core/src/errors.ts:12</a></p>
+<hr />
+<h3 id="details-1"><a class="header" href="#details-1">details?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>details</strong>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L13">packages/core/src/errors.ts:13</a></p>
+<hr />
+<h3 id="message-1"><a class="header" href="#message-1">message</a></h3>
+<blockquote>
+<p><strong>message</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: node_modules/typescript/lib/lib.es5.d.ts:1077</p>
+<h4 id="inherited-from-36"><a class="header" href="#inherited-from-36">Inherited from</a></h4>
+<p><code>Error.message</code></p>
+<hr />
+<h3 id="name"><a class="header" href="#name">name</a></h3>
+<blockquote>
+<p><strong>name</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: node_modules/typescript/lib/lib.es5.d.ts:1076</p>
+<h4 id="inherited-from-37"><a class="header" href="#inherited-from-37">Inherited from</a></h4>
+<p><code>Error.name</code></p>
+<hr />
+<h3 id="stack"><a class="header" href="#stack">stack?</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>stack</strong>: <code>string</code></p>
+</blockquote>
+<p>Defined in: node_modules/typescript/lib/lib.es5.d.ts:1078</p>
+<h4 id="inherited-from-38"><a class="header" href="#inherited-from-38">Inherited from</a></h4>
+<p><code>Error.stack</code></p>
+<hr />
+<h3 id="preparestacktrace"><a class="header" href="#preparestacktrace">prepareStackTrace()?</a></h3>
+<blockquote>
+<p><code>static</code> <code>optional</code> <strong>prepareStackTrace</strong>: (<code>err</code>, <code>stackTraces</code>) =&gt; <code>any</code></p>
+</blockquote>
+<p>Defined in: node_modules/@types/node/globals.d.ts:143</p>
+<p>Optional override for formatting stack traces</p>
+<h4 id="parameters-16"><a class="header" href="#parameters-16">Parameters</a></h4>
+<h5 id="err"><a class="header" href="#err">err</a></h5>
+<p><code>Error</code></p>
+<h5 id="stacktraces"><a class="header" href="#stacktraces">stackTraces</a></h5>
+<p><code>CallSite</code>[]</p>
+<h4 id="returns-16"><a class="header" href="#returns-16">Returns</a></h4>
+<p><code>any</code></p>
+<h4 id="see"><a class="header" href="#see">See</a></h4>
+<p>https://v8.dev/docs/stack-trace-api#customizing-stack-traces</p>
+<h4 id="inherited-from-39"><a class="header" href="#inherited-from-39">Inherited from</a></h4>
+<p><code>Error.prepareStackTrace</code></p>
+<hr />
+<h3 id="stacktracelimit"><a class="header" href="#stacktracelimit">stackTraceLimit</a></h3>
+<blockquote>
+<p><code>static</code> <strong>stackTraceLimit</strong>: <code>number</code></p>
+</blockquote>
+<p>Defined in: node_modules/bun-types/globals.d.ts:990</p>
+<p>The maximum number of stack frames to capture.</p>
+<h4 id="inherited-from-40"><a class="header" href="#inherited-from-40">Inherited from</a></h4>
+<p><code>Error.stackTraceLimit</code></p>
+<h2 id="methods"><a class="header" href="#methods">Methods</a></h2>
+<h3 id="capturestacktrace"><a class="header" href="#capturestacktrace">captureStackTrace()</a></h3>
+<h4 id="call-signature"><a class="header" href="#call-signature">Call Signature</a></h4>
+<blockquote>
+<p><code>static</code> <strong>captureStackTrace</strong>(<code>targetObject</code>, <code>constructorOpt?</code>): <code>void</code></p>
+</blockquote>
+<p>Defined in: node_modules/bun-types/globals.d.ts:985</p>
+<p>Create .stack property on a target object</p>
+<h5 id="parameters-17"><a class="header" href="#parameters-17">Parameters</a></h5>
+<h6 id="targetobject"><a class="header" href="#targetobject">targetObject</a></h6>
+<p><code>object</code></p>
+<h6 id="constructoropt"><a class="header" href="#constructoropt">constructorOpt?</a></h6>
+<p><code>Function</code></p>
+<h5 id="returns-17"><a class="header" href="#returns-17">Returns</a></h5>
+<p><code>void</code></p>
+<h5 id="inherited-from-41"><a class="header" href="#inherited-from-41">Inherited from</a></h5>
+<p><code>Error.captureStackTrace</code></p>
+<h4 id="call-signature-1"><a class="header" href="#call-signature-1">Call Signature</a></h4>
+<blockquote>
+<p><code>static</code> <strong>captureStackTrace</strong>(<code>targetObject</code>, <code>constructorOpt?</code>): <code>void</code></p>
+</blockquote>
+<p>Defined in: node_modules/@types/node/globals.d.ts:136</p>
+<p>Create .stack property on a target object</p>
+<h5 id="parameters-18"><a class="header" href="#parameters-18">Parameters</a></h5>
+<h6 id="targetobject-1"><a class="header" href="#targetobject-1">targetObject</a></h6>
+<p><code>object</code></p>
+<h6 id="constructoropt-1"><a class="header" href="#constructoropt-1">constructorOpt?</a></h6>
+<p><code>Function</code></p>
+<h5 id="returns-18"><a class="header" href="#returns-18">Returns</a></h5>
+<p><code>void</code></p>
+<h5 id="inherited-from-42"><a class="header" href="#inherited-from-42">Inherited from</a></h5>
+<p><code>Error.captureStackTrace</code></p>
+<hr />
+<h3 id="iserror"><a class="header" href="#iserror">isError()</a></h3>
+<h4 id="call-signature-2"><a class="header" href="#call-signature-2">Call Signature</a></h4>
+<blockquote>
+<p><code>static</code> <strong>isError</strong>(<code>error</code>): <code>error is Error</code></p>
+</blockquote>
+<p>Defined in: node_modules/typescript/lib/lib.esnext.error.d.ts:23</p>
+<p>Indicates whether the argument provided is a built-in Error instance or not.</p>
+<h5 id="parameters-19"><a class="header" href="#parameters-19">Parameters</a></h5>
+<h6 id="error"><a class="header" href="#error">error</a></h6>
+<p><code>unknown</code></p>
+<h5 id="returns-19"><a class="header" href="#returns-19">Returns</a></h5>
+<p><code>error is Error</code></p>
+<h5 id="inherited-from-43"><a class="header" href="#inherited-from-43">Inherited from</a></h5>
+<p><code>Error.isError</code></p>
+<h4 id="call-signature-3"><a class="header" href="#call-signature-3">Call Signature</a></h4>
+<blockquote>
+<p><code>static</code> <strong>isError</strong>(<code>value</code>): <code>value is Error</code></p>
+</blockquote>
+<p>Defined in: node_modules/bun-types/globals.d.ts:980</p>
+<p>Check if a value is an instance of Error</p>
+<h5 id="parameters-20"><a class="header" href="#parameters-20">Parameters</a></h5>
+<h6 id="value-5"><a class="header" href="#value-5">value</a></h6>
+<p><code>unknown</code></p>
+<p>The value to check</p>
+<h5 id="returns-20"><a class="header" href="#returns-20">Returns</a></h5>
+<p><code>value is Error</code></p>
+<p>True if the value is an instance of Error, false otherwise</p>
+<h5 id="inherited-from-44"><a class="header" href="#inherited-from-44">Inherited from</a></h5>
+<p><code>Error.isError</code></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / parseSendIdFromLogs</p>
+<h1 id="function-parsesendidfromlogs"><a class="header" href="#function-parsesendidfromlogs">Function: parseSendIdFromLogs()</a></h1>
+<blockquote>
+<p><strong>parseSendIdFromLogs</strong>(<code>input</code>): <code>undefined</code> | <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/internal/logs.ts#L71">packages/core/src/internal/logs.ts:71</a></p>
+<h2 id="parameters-21"><a class="header" href="#parameters-21">Parameters</a></h2>
+<h3 id="input-4"><a class="header" href="#input-4">input</a></h3>
+<p><code>undefined</code> | <code>null</code> | readonly <code>LogLike</code>[] | { <code>logs?</code>: readonly <code>LogLike</code>[]; }</p>
+<h2 id="returns-21"><a class="header" href="#returns-21">Returns</a></h2>
+<p><code>undefined</code> | <code>`0x${string}`</code></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / parseBundleHashFromLogs</p>
+<h1 id="function-parsebundlehashfromlogs"><a class="header" href="#function-parsebundlehashfromlogs">Function: parseBundleHashFromLogs()</a></h1>
+<blockquote>
+<p><strong>parseBundleHashFromLogs</strong>(<code>input</code>): <code>undefined</code> | <code>`0x${string}`</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/internal/logs.ts#L97">packages/core/src/internal/logs.ts:97</a></p>
+<p>Extract bundleHash from InteropBundleSent(bundleHash indexed?, …)</p>
+<h2 id="parameters-22"><a class="header" href="#parameters-22">Parameters</a></h2>
+<h3 id="input-5"><a class="header" href="#input-5">input</a></h3>
+<p><code>undefined</code> | <code>null</code> | readonly <code>LogLike</code>[] | { <code>logs?</code>: readonly <code>LogLike</code>[]; }</p>
+<h2 id="returns-22"><a class="header" href="#returns-22">Returns</a></h2>
+<p><code>undefined</code> | <code>`0x${string}`</code></p>
+<div style="break-before: page; page-break-before: always;"></div><p><a href="api/core/src/functions/../../../README.html"><strong>zksync-sdk-monorepo</strong></a></p>
+<hr />
+<p><a href="api/core/src/functions/../../../README.html">zksync-sdk-monorepo</a> / <a href="api/core/src/functions/../README.html">core/src</a> / computeBundleMessageValue</p>
+<h1 id="function-computebundlemessagevalue"><a class="header" href="#function-computebundlemessagevalue">Function: computeBundleMessageValue()</a></h1>
+<blockquote>
+<p><strong>computeBundleMessageValue</strong>(<code>items</code>): <code>bigint</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/utils.ts#L109">packages/core/src/utils.ts:109</a></p>
+<p>Compute the <code>msg.value</code> to send with a bundle on chains where the base token matches.</p>
+<p>Sums the value-bearing contributions:</p>
+<ul>
+<li><code>NativeTransfer.amount</code></li>
+<li><code>RemoteCall.value</code> (if present)</li>
+<li><code>ERC20Transfer._bridgeMsgValue</code> (only for <strong>indirect</strong> transfers)</li>
+</ul>
+<p>Direct ERC-20 transfers contribute <strong>0</strong>.</p>
+<h2 id="parameters-23"><a class="header" href="#parameters-23">Parameters</a></h2>
+<h3 id="items-1"><a class="header" href="#items-1">items</a></h3>
+<p><a href="api/core/src/functions/../type-aliases/BundleItem.html"><code>BundleItem</code></a>[]</p>
+<p>Bundle items to inspect.</p>
+<h2 id="returns-23"><a class="header" href="#returns-23">Returns</a></h2>
+<p><code>bigint</code></p>
+<p>Total value as <code>bigint</code>.</p>
+<h2 id="remarks-13"><a class="header" href="#remarks-13">Remarks</a></h2>
+<p>When source/destination base tokens differ, <strong>contracts require</strong> <code>msg.value = 0</code>,
+regardless of this total. The caller should zero the value in that case.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
