@@ -17,17 +17,24 @@ import type { InteropError } from '@zksync-sdk/core';
 const fromEthersError: (e: unknown, ctx?: string) => InteropError = _fromEthersError;
 
 /**
- * Cconvenient method that wraps a single `sendMessage` on the InteropCenter.
+ * Perform a single cross-chain call using `InteropCenter.sendMessage` (no bundling).
  *
- * ```ts
- * const receipt = await remoteCall(signer, {
- *   src : Chains.era,
- *   dest: Chains.abs,
- *   to  : TARGET,
- *   data: ENCODED_FUNC_CALL,
- *   value: 0n               // optional – adds ATTR.interopCallValue when >0
- * });
- * ```
+ * @param signer                Signer bound to the source chain provider.
+ * @param input
+ * @param input.src             Source chain identifier (registry key or chainId).
+ * @param input.dest            Destination chain identifier.
+ * @param input.to              Target contract address on destination chain.
+ * @param input.data            ABI-encoded calldata for the target.
+ * @param input.value           Optional interop call value (adds ATTR.interopCallValue when > 0).
+ * @param input.attributes      Optional ERC-7786 attributes to merge with `value`.
+ * @param input.registry        Optional registry override (defaults to {@link defaultRegistry}).
+ * @param input.allowMissingSendId  If true, do not error when sendId is not found in logs.
+ * @returns                     {@link SentMessage} containing `sendId` and `srcTxHash`.
+ * @throws                      If signer has no provider or send fails.
+ *
+ * @remarks
+ * - Recipient is encoded as ERC-7930 EVM (chain + address).
+ * - Base-token rules apply to `msg.value`: SAME base → `value`; DIFFERENT → `0`.
  */
 export async function remoteCall(
   signer: Signer,

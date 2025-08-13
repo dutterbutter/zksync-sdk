@@ -6,7 +6,21 @@ import { encodeBridgeBurnData, erc20TransferCalldata } from './internal';
 import type { Hex } from './internal/hex';
 
 /**
- * Convert a BundleItem to InteropCallStarter.
+ * Convert a {@link BundleItem} into an Interop call starter.
+ *
+ * Produces `{ to, data, callAttributes }` for the contracts, plus an optional `value`
+ * that contributes to the outer `msg.value` of `sendBundle`.
+ *
+ * @param item Bundle item (native, erc20, or remote call).
+ * @param opts Optional options.
+ * @param opts.assetRouter Required for **indirect** ERC-20; address of the AssetRouter.
+ * @returns Object containing the encoded starter and an optional `value` to be summed into `msg.value`.
+ * @throws If an indirect ERC-20 is requested without `opts.assetRouter`, or the kind is unsupported.
+ *
+ * @remarks
+ * - Per-item `to` is encoded as **ERC-7930 address-only** (contracts require empty chainRef in bundles).
+ * - Do **not** combine `ATTR.indirectCall` with `ATTR.interopCallValue` on the same call; the contracts
+ *   derive/check the call value for the actual bridged call internally.
  */
 export function toCallStarter(
   item: BundleItem,
@@ -61,12 +75,37 @@ export function toCallStarter(
   throw new Error('UNSUPPORTED_OPERATION');
 }
 
-/** Merge user-provided structured attributes with extra encoded attributes. */
+/**
+ * Merge user-provided structured attributes with extra pre-encoded attributes.
+ *
+ * @param base  Optional structured attributes (objects with `.data` hex).
+ * @param extra Additional already-encoded attribute bytes.
+ * @returns     Flat array of encoded attribute hex strings; order is `base` then `extra`.
+ *
+ * @remarks
+ * This does not de-dupe or validate semantics; the contract enforces attribute rules.
+ */
 export function mergeAttributes(base: ERC7786Attribute[] | undefined, extra: Hex[]): Hex[] {
   return [...(base ?? []).map((a) => a.data), ...extra];
 }
 
-/** Sum of value-bearing items (remoteCall.value + nativeTransfer.amount). */
+/**
+ * Compute the `msg.value` to send with a bundle on chains where the base token matches.
+ *
+ * Sums the value-bearing contributions:
+ * - `NativeTransfer.amount`
+ * - `RemoteCall.value` (if present)
+ * - `ERC20Transfer._bridgeMsgValue` (only for **indirect** transfers)
+ *
+ * Direct ERC-20 transfers contribute **0**.
+ *
+ * @param items Bundle items to inspect.
+ * @returns     Total value as `bigint`.
+ *
+ * @remarks
+ * When source/destination base tokens differ, **contracts require** `msg.value = 0`,
+ * regardless of this total. The caller should zero the value in that case.
+ */
 export function computeBundleMessageValue(items: BundleItem[]): bigint {
   let total = 0n;
   for (const it of items) {

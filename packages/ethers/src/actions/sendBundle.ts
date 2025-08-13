@@ -19,10 +19,28 @@ import { resolveChain } from '../internal/chain';
 import { fromEthersError } from '../internal/errors';
 
 /**
- * Convenient method for sending an Interop bundle.
+ * Send a multi-item interop bundle via InteropCenter.
  *
- * @param signer   – Ethers signer (must have a provider attached)
- * @param input    – Bundle + optional registry / gas overrides
+ * @param signer                 Signer bound to the source chain provider.
+ * @param input                  Bundle payload and optional registry/gas overrides.
+ * @param input.src              Source chain identifier (registry key or chainId).
+ * @param input.dest             Destination chain identifier.
+ * @param input.items            Array of bundle items (remote calls, native/erc20 transfers).
+ * @param input.attributes       Optional ERC-7786 bundle attributes (e.g., execution/unbundler).
+ * @param input.gas              Optional gas overrides (EIP-1559 fields, gasLimit).
+ * @param input.nonce            Optional tx nonce override.
+ * @param input.registry         Optional registry override (defaults to {@link defaultRegistry}).
+ * @param input.allowMissingSendId  If true, do not error when sendId is not found in logs.
+ * @returns                      {@link SentMessage} containing `sendId` and `srcTxHash`.
+ * @throws                        If signer has no provider, misconfiguration, or send fails.
+ *
+ * @remarks
+ * - Destination is encoded as ERC-7930 “chain-only” address; per-item `to` uses “address-only”.
+ * - `msg.value` must follow base-token rules:
+ *   SAME base token → sum of item values; DIFFERENT → 0 (InteropCenter deposits via AssetRouter).
+ *   This implementation currently uses the sum; add a base-token check if heterogeneous pairs are common.
+ * - `sendId` is read from ERC-7786 `MessageSent` logs; for single-item bundles we fall back to
+ *   `keccak256(abi.encode(bundleHash, 0))` when logs are unavailable.
  */
 export async function sendBundle(
   signer: Signer,
