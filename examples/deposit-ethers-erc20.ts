@@ -3,6 +3,7 @@ import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethe
 import { createEthersClient } from '../src/adapters/ethers/client';
 import { createEthersSdk } from '../src/adapters/ethers/kit';
 import { Address } from '../src/types/primitives';
+import { sleep } from 'bun';
 
 // const L1_RPC = "https://sepolia.infura.io/v3/07e4434e9ba24cd68305123037336417";                     // e.g. https://sepolia.infura.io/v3/XXX
 // const L2_RPC = "https://zksync-os-stage-api.zksync-nodes.com";                     // your L2 RPC
@@ -59,6 +60,8 @@ async function main() {
   console.log('calling mint');
   await mintErc20({ signer, token: TOKEN, to: me, amount });
   console.log('Minted:', amount.toString());
+
+  await sleep(600);
 
   const depositAmount = parseUnits('25', decimals);
   const quote = await sdk.deposits.quote({ token: TOKEN, to: me, amount: depositAmount });

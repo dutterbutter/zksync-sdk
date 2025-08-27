@@ -1,5 +1,5 @@
 // src/types/deposit.ts
-import { TransactionRequest } from 'ethers';
+import type { TransactionRequest } from 'ethers';
 import type { Address, Hex, UInt } from './primitives';
 
 /** Input for all deposit flows. Route selection is adapter-side. */
@@ -23,7 +23,7 @@ export interface DepositParams {
 
 // TODO: determine if this is a good approach for route identification
 /** Normalized route label (purely informational; adapters compute this). */
-type DepositRoute =
+export type DepositRoute =
   | 'eth' // deposit ETH when base token is ETH
   | 'erc20-base' // deposit base token on a non-ETH-based chain
   | 'erc20-nonbase'; // deposit non-base ERC20
@@ -44,7 +44,7 @@ export interface DepositQuote {
 
   /** L1 base cost in wei (if relevant to the route), else 0n. */
   baseCost: UInt;
-  // mintValue: UInt;
+  mintValue: UInt;
 
   /** Gas guidance actually used by the quote. */
   suggestedL2GasLimit: UInt;
@@ -64,8 +64,8 @@ export interface DepositHandle {
   /** Optionally surface the canonical L2 tx hash (if/when known). */
   l2TxHash?: Hex;
   // Todo: thnk
-  // stepHashes: Record<string, Hex>;        // key -> tx hash
-  // plan: DepositPlan;    
+  stepHashes: Record<string, Hex>; // key -> tx hash
+  plan: DepositPlan;
 }
 
 /** Inputs that wait() should accept. */
@@ -74,15 +74,15 @@ export type DepositWaitable = Hex | { l1TxHash: Hex } | DepositHandle;
 export type PlanStepKind = 'approve' | 'bridgehub:direct' | 'bridgehub:two-bridges';
 
 export interface PlanStep {
-  key: string;                            // e.g., "approve:token:router"
+  key: string; // e.g., "approve:token:router"
   kind: PlanStepKind;
-  description: string;                    // human-friendly
-  canSkip: boolean;                       // computed during prepare (e.g., allowance sufficient)
-  tx: TransactionRequest;                 // fully formed unsigned tx
+  description: string; // human-friendly
+  canSkip: boolean; // computed during prepare (e.g., allowance sufficient)
+  tx: TransactionRequest; // fully formed unsigned tx
 }
 
 export interface DepositPlan {
   route: DepositRoute;
   summary: DepositQuote;
-  steps: PlanStep[];                      // order matters
+  steps: PlanStep[]; // order matters
 }
