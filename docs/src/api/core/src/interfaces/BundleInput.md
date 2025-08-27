@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / BundleInput
 
@@ -20,7 +20,7 @@ Defined in: [packages/core/src/types.ts:104](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:106](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L106)
 
-***
+---
 
 ### attributes?
 
@@ -32,7 +32,7 @@ Defined in: [packages/core/src/types.ts:45](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`attributes`](MessageOptions.md#attributes)
 
-***
+---
 
 ### clientTag?
 
@@ -44,7 +44,7 @@ Defined in: [packages/core/src/types.ts:54](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`clientTag`](MessageOptions.md#clienttag)
 
-***
+---
 
 ### deadline?
 
@@ -56,7 +56,7 @@ Defined in: [packages/core/src/types.ts:55](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`deadline`](MessageOptions.md#deadline)
 
-***
+---
 
 ### dest?
 
@@ -68,7 +68,7 @@ Defined in: [packages/core/src/types.ts:44](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`dest`](MessageOptions.md#dest)
 
-***
+---
 
 ### gas?
 
@@ -80,7 +80,7 @@ Defined in: [packages/core/src/types.ts:46](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`gas`](MessageOptions.md#gas)
 
-***
+---
 
 ### items
 
@@ -88,7 +88,7 @@ Defined in: [packages/core/src/types.ts:46](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:105](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L105)
 
-***
+---
 
 ### maxItems?
 
@@ -96,7 +96,7 @@ Defined in: [packages/core/src/types.ts:105](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:107](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L107)
 
-***
+---
 
 ### nonce?
 
@@ -108,7 +108,7 @@ Defined in: [packages/core/src/types.ts:52](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`nonce`](MessageOptions.md#nonce)
 
-***
+---
 
 ### note?
 
@@ -120,7 +120,7 @@ Defined in: [packages/core/src/types.ts:53](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`note`](MessageOptions.md#note)
 
-***
+---
 
 ### signal?
 
@@ -132,7 +132,7 @@ Defined in: [packages/core/src/types.ts:56](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`signal`](MessageOptions.md#signal)
 
-***
+---
 
 ### src?
 

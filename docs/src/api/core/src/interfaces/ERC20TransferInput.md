@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / ERC20TransferInput
 
@@ -20,7 +20,7 @@ Defined in: [packages/core/src/types.ts:70](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:73](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L73)
 
-***
+---
 
 ### approveIfNeeded?
 
@@ -28,7 +28,7 @@ Defined in: [packages/core/src/types.ts:73](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:74](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L74)
 
-***
+---
 
 ### attributes?
 
@@ -40,7 +40,7 @@ Defined in: [packages/core/src/types.ts:45](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`attributes`](MessageOptions.md#attributes)
 
-***
+---
 
 ### bridgeMsgValue?
 
@@ -48,7 +48,7 @@ Defined in: [packages/core/src/types.ts:45](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:76](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L76)
 
-***
+---
 
 ### clientTag?
 
@@ -60,7 +60,7 @@ Defined in: [packages/core/src/types.ts:54](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`clientTag`](MessageOptions.md#clienttag)
 
-***
+---
 
 ### deadline?
 
@@ -72,7 +72,7 @@ Defined in: [packages/core/src/types.ts:55](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`deadline`](MessageOptions.md#deadline)
 
-***
+---
 
 ### dest?
 
@@ -84,7 +84,7 @@ Defined in: [packages/core/src/types.ts:44](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`dest`](MessageOptions.md#dest)
 
-***
+---
 
 ### gas?
 
@@ -96,7 +96,7 @@ Defined in: [packages/core/src/types.ts:46](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`gas`](MessageOptions.md#gas)
 
-***
+---
 
 ### indirect?
 
@@ -104,7 +104,7 @@ Defined in: [packages/core/src/types.ts:46](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:75](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L75)
 
-***
+---
 
 ### nonce?
 
@@ -116,7 +116,7 @@ Defined in: [packages/core/src/types.ts:52](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`nonce`](MessageOptions.md#nonce)
 
-***
+---
 
 ### note?
 
@@ -128,7 +128,7 @@ Defined in: [packages/core/src/types.ts:53](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`note`](MessageOptions.md#note)
 
-***
+---
 
 ### signal?
 
@@ -140,7 +140,7 @@ Defined in: [packages/core/src/types.ts:56](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`signal`](MessageOptions.md#signal)
 
-***
+---
 
 ### src?
 
@@ -152,7 +152,7 @@ Defined in: [packages/core/src/types.ts:43](https://github.com/dutterbutter/zksy
 
 [`MessageOptions`](MessageOptions.md).[`src`](MessageOptions.md#src)
 
-***
+---
 
 ### to
 
@@ -160,7 +160,7 @@ Defined in: [packages/core/src/types.ts:43](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:72](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L72)
 
-***
+---
 
 ### token
 

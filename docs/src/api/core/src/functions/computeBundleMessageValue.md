@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / computeBundleMessageValue
 
@@ -13,6 +13,7 @@ Defined in: [packages/core/src/utils.ts:109](https://github.com/dutterbutter/zks
 Compute the `msg.value` to send with a bundle on chains where the base token matches.
 
 Sums the value-bearing contributions:
+
 - `NativeTransfer.amount`
 - `RemoteCall.value` (if present)
 - `ERC20Transfer._bridgeMsgValue` (only for **indirect** transfers)

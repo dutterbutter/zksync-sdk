@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / MessageReceipt
 
@@ -28,7 +28,7 @@ Defined in: [packages/core/src/types.ts:117](https://github.com/dutterbutter/zks
 
 [`MessageStatus`](MessageStatus.md).[`destTxHash`](MessageStatus.md#desttxhash)
 
-***
+---
 
 ### lastUpdateTs
 
@@ -40,7 +40,7 @@ Defined in: [packages/core/src/types.ts:118](https://github.com/dutterbutter/zks
 
 [`MessageStatus`](MessageStatus.md).[`lastUpdateTs`](MessageStatus.md#lastupdatets)
 
-***
+---
 
 ### phase
 
@@ -52,7 +52,7 @@ Defined in: [packages/core/src/types.ts:115](https://github.com/dutterbutter/zks
 
 [`MessageStatus`](MessageStatus.md).[`phase`](MessageStatus.md#phase)
 
-***
+---
 
 ### raw?
 
@@ -68,7 +68,7 @@ Defined in: [packages/core/src/types.ts:129](https://github.com/dutterbutter/zks
 
 > `optional` **srcLogs**: `unknown`[]
 
-***
+---
 
 ### sendId
 
@@ -80,7 +80,7 @@ Defined in: [packages/core/src/types.ts:114](https://github.com/dutterbutter/zks
 
 [`MessageStatus`](MessageStatus.md).[`sendId`](MessageStatus.md#sendid)
 
-***
+---
 
 ### srcTxHash?
 
@@ -92,7 +92,7 @@ Defined in: [packages/core/src/types.ts:116](https://github.com/dutterbutter/zks
 
 [`MessageStatus`](MessageStatus.md).[`srcTxHash`](MessageStatus.md#srctxhash)
 
-***
+---
 
 ### timeline
 

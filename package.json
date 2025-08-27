@@ -1,30 +1,103 @@
 {
-  "name": "zksync-sdk-monorepo",
-  "private": true,
+  "name": "@zksync/sdk",
+  "version": "0.0.1",
+  "description": "Lightweight SDK for ZKsync OS.",
   "packageManager": "bun@^1.1.0",
-  "workspaces": [
-    "packages/*"
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.cjs"
+    },
+    "./chains": {
+      "types": "./dist/chains/index.d.ts",
+      "import": "./dist/chains/index.js",
+      "require": "./dist/chains/index.cjs"
+    },
+    "./types/*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/types/*.js",
+      "require": "./dist/types/*.cjs"
+    },
+    "./chains/*": {
+      "types": "./dist/chains/*.d.ts",
+      "import": "./dist/chains/*.js",
+      "require": "./dist/chains/*.cjs"
+    },
+    "./ethers/*": {
+      "types": "./dist/adapters/ethers/*.d.ts",
+      "import": "./dist/adapters/ethers/*.js",
+      "require": "./dist/adapters/ethers/*.cjs"
+    },
+    "./ethers/client": {
+      "types": "./dist/adapters/ethers/client.d.ts",
+      "import": "./dist/adapters/ethers/client.js",
+      "require": "./dist/adapters/ethers/client.cjs"
+    },
+    "./ethers/sdk": {
+      "types": "./dist/adapters/ethers/sdk.d.ts",
+      "import": "./dist/adapters/ethers/sdk.js",
+      "require": "./dist/adapters/ethers/sdk.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "types/*": [
+        "dist/types/*"
+      ],
+      "chains/*": [
+        "dist/chains/*"
+      ],
+      "ethers/*": [
+        "dist/adapters/ethers/*"
+      ],
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
   "scripts": {
-    "bootstrap": "bun install",
-    "typecheck": "tsc -b tsconfig.build.json",
+    "clean": "rimraf dist",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build:js": "tsup --config tsup.config.ts",
+    "build": "bun run clean && bun run build:types && bun run build:js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "bun run clean && bun run build",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier . --write",
     "test": "bun test",
     "docs:gen": "node ./node_modules/typedoc/bin/typedoc",
     "docs:serve": "mdbook serve docs -p 3000",
-    "docs:build": "mdbook build docs",
-    "docs:rebuild": "npm run docs:gen && npm run docs:build",
-    "prepublishOnly": "bun run build && bun run typecheck"
+    "docs:build": "mdbook build docs"
+  },
+  "peerDependencies": {
+    "ethers": "^6.15.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.7.0",
+    "@noble/hashes": "^1.8.0",
     "@types/bun": "latest",
     "bun-types": "^1.2.19",
     "eslint": "^9.7.0",
-    "ethers": "^6.15.0",
     "prettier": "^3.3.3",
-    "tsup": "^8.0.1",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.0.2",
     "typedoc": "0.28.9",
     "typedoc-plugin-markdown": "4.8.1",
     "typescript": "^5.5.0",

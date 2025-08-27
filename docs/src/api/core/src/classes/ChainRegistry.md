@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / ChainRegistry
 
@@ -48,7 +48,7 @@ Defined in: [packages/core/src/chains/registry.ts:18](https://github.com/dutterb
 
 `void`
 
-***
+---
 
 ### resolve()
 
@@ -68,7 +68,7 @@ resolve only by key / alias string
 
 [`ChainInfo`](../interfaces/ChainInfo.md)
 
-***
+---
 
 ### resolveRef()
 

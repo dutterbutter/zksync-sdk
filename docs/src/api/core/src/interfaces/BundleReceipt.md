@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / BundleReceipt
 
@@ -24,7 +24,7 @@ Defined in: [packages/core/src/types.ts:117](https://github.com/dutterbutter/zks
 
 [`MessageReceipt`](MessageReceipt.md).[`destTxHash`](MessageReceipt.md#desttxhash)
 
-***
+---
 
 ### lastUpdateTs
 
@@ -36,7 +36,7 @@ Defined in: [packages/core/src/types.ts:118](https://github.com/dutterbutter/zks
 
 [`MessageReceipt`](MessageReceipt.md).[`lastUpdateTs`](MessageReceipt.md#lastupdatets)
 
-***
+---
 
 ### perItem?
 
@@ -60,7 +60,7 @@ Defined in: [packages/core/src/types.ts:133](https://github.com/dutterbutter/zks
 
 > **success**: `boolean`
 
-***
+---
 
 ### phase
 
@@ -72,7 +72,7 @@ Defined in: [packages/core/src/types.ts:115](https://github.com/dutterbutter/zks
 
 [`MessageReceipt`](MessageReceipt.md).[`phase`](MessageReceipt.md#phase)
 
-***
+---
 
 ### raw?
 
@@ -92,7 +92,7 @@ Defined in: [packages/core/src/types.ts:129](https://github.com/dutterbutter/zks
 
 [`MessageReceipt`](MessageReceipt.md).[`raw`](MessageReceipt.md#raw)
 
-***
+---
 
 ### sendId
 
@@ -104,7 +104,7 @@ Defined in: [packages/core/src/types.ts:114](https://github.com/dutterbutter/zks
 
 [`MessageReceipt`](MessageReceipt.md).[`sendId`](MessageReceipt.md#sendid)
 
-***
+---
 
 ### srcTxHash?
 
@@ -116,7 +116,7 @@ Defined in: [packages/core/src/types.ts:116](https://github.com/dutterbutter/zks
 
 [`MessageReceipt`](MessageReceipt.md).[`srcTxHash`](MessageReceipt.md#srctxhash)
 
-***
+---
 
 ### timeline
 

@@ -1,8 +1,5 @@
 {
-  "entryPoints": [
-    "packages/core/src/index.ts",
-    "packages/ethers/src/index.ts"
-  ],
+  "entryPoints": ["packages/core/src/index.ts", "packages/ethers/src/index.ts"],
   "entryPointStrategy": "resolve",
   "tsconfig": "tsconfig.build.json",
   "out": "docs/src/api",

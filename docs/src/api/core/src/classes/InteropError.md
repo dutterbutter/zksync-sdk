@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / InteropError
 
@@ -56,7 +56,7 @@ The cause of the error.
 
 `Error.cause`
 
-***
+---
 
 ### code
 
@@ -64,7 +64,7 @@ The cause of the error.
 
 Defined in: [packages/core/src/errors.ts:12](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L12)
 
-***
+---
 
 ### details?
 
@@ -72,49 +72,49 @@ Defined in: [packages/core/src/errors.ts:12](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/errors.ts:13](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/errors.ts#L13)
 
-***
+---
 
 ### message
 
 > **message**: `string`
 
-Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1077
+Defined in: node_modules/typescript/lib/lib.es5.d.ts:1077
 
 #### Inherited from
 
 `Error.message`
 
-***
+---
 
 ### name
 
 > **name**: `string`
 
-Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1076
+Defined in: node_modules/typescript/lib/lib.es5.d.ts:1076
 
 #### Inherited from
 
 `Error.name`
 
-***
+---
 
 ### stack?
 
 > `optional` **stack**: `string`
 
-Defined in: node\_modules/typescript/lib/lib.es5.d.ts:1078
+Defined in: node_modules/typescript/lib/lib.es5.d.ts:1078
 
 #### Inherited from
 
 `Error.stack`
 
-***
+---
 
 ### prepareStackTrace()?
 
 > `static` `optional` **prepareStackTrace**: (`err`, `stackTraces`) => `any`
 
-Defined in: node\_modules/@types/node/globals.d.ts:143
+Defined in: node_modules/@types/node/globals.d.ts:143
 
 Optional override for formatting stack traces
 
@@ -140,13 +140,13 @@ https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
 `Error.prepareStackTrace`
 
-***
+---
 
 ### stackTraceLimit
 
 > `static` **stackTraceLimit**: `number`
 
-Defined in: node\_modules/bun-types/globals.d.ts:990
+Defined in: node_modules/bun-types/globals.d.ts:990
 
 The maximum number of stack frames to capture.
 
@@ -162,7 +162,7 @@ The maximum number of stack frames to capture.
 
 > `static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
 
-Defined in: node\_modules/bun-types/globals.d.ts:985
+Defined in: node_modules/bun-types/globals.d.ts:985
 
 Create .stack property on a target object
 
@@ -188,7 +188,7 @@ Create .stack property on a target object
 
 > `static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
 
-Defined in: node\_modules/@types/node/globals.d.ts:136
+Defined in: node_modules/@types/node/globals.d.ts:136
 
 Create .stack property on a target object
 
@@ -210,7 +210,7 @@ Create .stack property on a target object
 
 `Error.captureStackTrace`
 
-***
+---
 
 ### isError()
 
@@ -218,7 +218,7 @@ Create .stack property on a target object
 
 > `static` **isError**(`error`): `error is Error`
 
-Defined in: node\_modules/typescript/lib/lib.esnext.error.d.ts:23
+Defined in: node_modules/typescript/lib/lib.esnext.error.d.ts:23
 
 Indicates whether the argument provided is a built-in Error instance or not.
 
@@ -240,7 +240,7 @@ Indicates whether the argument provided is a built-in Error instance or not.
 
 > `static` **isError**(`value`): `value is Error`
 
-Defined in: node\_modules/bun-types/globals.d.ts:980
+Defined in: node_modules/bun-types/globals.d.ts:980
 
 Check if a value is an instance of Error
 

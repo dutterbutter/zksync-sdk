@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / MessageOptions
 
@@ -23,7 +23,7 @@ Defined in: [packages/core/src/types.ts:42](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:45](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L45)
 
-***
+---
 
 ### clientTag?
 
@@ -31,7 +31,7 @@ Defined in: [packages/core/src/types.ts:45](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:54](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L54)
 
-***
+---
 
 ### deadline?
 
@@ -39,7 +39,7 @@ Defined in: [packages/core/src/types.ts:54](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:55](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L55)
 
-***
+---
 
 ### dest?
 
@@ -47,7 +47,7 @@ Defined in: [packages/core/src/types.ts:55](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:44](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L44)
 
-***
+---
 
 ### gas?
 
@@ -55,7 +55,7 @@ Defined in: [packages/core/src/types.ts:44](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:46](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L46)
 
-***
+---
 
 ### nonce?
 
@@ -63,7 +63,7 @@ Defined in: [packages/core/src/types.ts:46](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:52](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L52)
 
-***
+---
 
 ### note?
 
@@ -71,7 +71,7 @@ Defined in: [packages/core/src/types.ts:52](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:53](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L53)
 
-***
+---
 
 ### signal?
 
@@ -79,7 +79,7 @@ Defined in: [packages/core/src/types.ts:53](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:56](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L56)
 
-***
+---
 
 ### src?
 

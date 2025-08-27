@@ -1,6 +1,6 @@
 **zksync-sdk-monorepo**
 
-***
+---
 
 # zksync-sdk-monorepo
 

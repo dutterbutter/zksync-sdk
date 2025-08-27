@@ -5,7 +5,14 @@ import tseslint from 'typescript-eslint';
 export default [
   // 0) Global ignores
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'examples/**', 'scripts/**', 'eslint.config.mjs', 'docs/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      'examples/**',
+      'scripts/**',
+      'eslint.config.mjs',
+      'docs/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked.map((cfg) => ({

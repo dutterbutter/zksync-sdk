@@ -1,11 +1,10 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "packages/core"
-    },
-    {
-      "path": "packages/ethers"
-    }
-  ]
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "**/__tests__/**", "test/**"]
 }

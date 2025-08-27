@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../README.md) / core/src
 
@@ -78,31 +78,31 @@ Public API for @zksync-sdk/core
 
 Renames and re-exports [IERC7786GatewaySourceAbi](variables/IERC7786GatewaySourceAbi.md)
 
-***
+---
 
 ### ERC7786GatewaySourceAbiType
 
 Renames and re-exports [IERC7786GatewaySourceAbi](variables/IERC7786GatewaySourceAbi.md)
 
-***
+---
 
 ### InteropCenterAbi
 
 Renames and re-exports [IInteropCenterAbi](variables/IInteropCenterAbi.md)
 
-***
+---
 
 ### InteropCenterAbiType
 
 Renames and re-exports [IInteropCenterAbi](variables/IInteropCenterAbi.md)
 
-***
+---
 
 ### InteropHandlerAbi
 
 Renames and re-exports [IInteropHandlerAbi](variables/IInteropHandlerAbi.md)
 
-***
+---
 
 ### InteropHandlerAbiType
 

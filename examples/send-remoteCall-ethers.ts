@@ -4,10 +4,7 @@ import { Chains } from '@zksync-sdk/core';
 
 async function main() {
   // ── signer ──────────────────────────────────────────────────────
-  const signer = new Wallet(
-    '0x',
-    new JsonRpcProvider('http://localhost:3050'),
-  );
+  const signer = new Wallet('0x', new JsonRpcProvider('http://localhost:3050'));
 
   // target + calldata
   const TARGET = '0xe441CF0795aF14DdB9f7984Da85CD36DB1B8790d' as const;

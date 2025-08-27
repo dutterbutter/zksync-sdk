@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / encodeEvmV1
 
@@ -14,10 +14,10 @@ Encode an ERC-7930 EVM v1 interoperable address.
 
 Layout: `[version(2) | chainType(2) | chainRefLen(1) | chainRef | addrLen(1) | addr]`
 
-- `version`      – currently `0x0001` (big-endian) to indicate EVM v1.
-- `chainType`    – reserved for future use; fixed `0x0000` for EVM.
-- `chainRef`     – big-endian, length ≤ 255 bytes (typically an EIP-155 chain id).
-- `addr`         – raw 20-byte EVM address; length ≤ 255 bytes (20 in practice).
+- `version` – currently `0x0001` (big-endian) to indicate EVM v1.
+- `chainType` – reserved for future use; fixed `0x0000` for EVM.
+- `chainRef` – big-endian, length ≤ 255 bytes (typically an EIP-155 chain id).
+- `addr` – raw 20-byte EVM address; length ≤ 255 bytes (20 in practice).
 
 ## Parameters
 
@@ -53,8 +53,8 @@ If `chainRef` or `addr` exceed 255 bytes when serialized.
 
 ```ts
 // Chain-only for destination (EIP-155)
-const dst = encodeEvmV1( BigInt(324), undefined );
+const dst = encodeEvmV1(BigInt(324), undefined);
 
 // Address-only for a call starter
-const to  = encodeEvmV1( undefined, '0xabc…def' );
+const to = encodeEvmV1(undefined, '0xabc…def');
 ```

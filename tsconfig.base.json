@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {
-      "@zksync-sdk/core": ["packages/core/src", "packages/core/dist/index.d.ts"],
-      "@zksync-sdk/ethers": ["packages/ethers/src", "packages/ethers/dist/index.d.ts"]
-    },
     "target": "ESNext",
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
@@ -22,6 +18,5 @@
     "noEmit": true
   },
   "files": [],
-  "references": [{ "path": "packages/core/src/**/*" }, { "path": "packages/ethers/src/**/*" }],
   "exclude": ["node_modules", "build", "examples/*"]
 }

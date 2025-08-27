@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / ChainInfo
 
@@ -36,7 +36,7 @@ Defined in: [packages/core/src/types.ts:19](https://github.com/dutterbutter/zksy
 
 > `optional` **nativeTokenVault**: `` `0x${string}` ``
 
-***
+---
 
 ### aliases?
 
@@ -44,7 +44,7 @@ Defined in: [packages/core/src/types.ts:19](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:29](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L29)
 
-***
+---
 
 ### chainId
 
@@ -52,7 +52,7 @@ Defined in: [packages/core/src/types.ts:29](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:16](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L16)
 
-***
+---
 
 ### explorer?
 
@@ -64,7 +64,7 @@ Defined in: [packages/core/src/types.ts:18](https://github.com/dutterbutter/zksy
 
 > **baseUrl**: `string`
 
-***
+---
 
 ### finalization?
 
@@ -80,7 +80,7 @@ Defined in: [packages/core/src/types.ts:27](https://github.com/dutterbutter/zksy
 
 > `optional` **timeoutMs**: `number`
 
-***
+---
 
 ### gas?
 
@@ -96,7 +96,7 @@ Defined in: [packages/core/src/types.ts:28](https://github.com/dutterbutter/zksy
 
 > `optional` **minGasLimit**: `bigint`
 
-***
+---
 
 ### key
 
@@ -104,7 +104,7 @@ Defined in: [packages/core/src/types.ts:28](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:14](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L14)
 
-***
+---
 
 ### name
 
@@ -112,7 +112,7 @@ Defined in: [packages/core/src/types.ts:14](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:15](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L15)
 
-***
+---
 
 ### rpcUrls
 
@@ -120,7 +120,7 @@ Defined in: [packages/core/src/types.ts:15](https://github.com/dutterbutter/zksy
 
 Defined in: [packages/core/src/types.ts:17](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L17)
 
-***
+---
 
 ### tokens?
 
@@ -144,7 +144,7 @@ Defined in: [packages/core/src/types.ts:26](https://github.com/dutterbutter/zksy
 
 > **symbol**: `string`
 
-***
+---
 
 ### version?
 

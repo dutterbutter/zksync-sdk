@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / MessageStatus
 
@@ -20,7 +20,7 @@ Defined in: [packages/core/src/types.ts:113](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:117](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L117)
 
-***
+---
 
 ### lastUpdateTs
 
@@ -28,7 +28,7 @@ Defined in: [packages/core/src/types.ts:117](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:118](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L118)
 
-***
+---
 
 ### phase
 
@@ -36,7 +36,7 @@ Defined in: [packages/core/src/types.ts:118](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:115](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L115)
 
-***
+---
 
 ### sendId
 
@@ -44,7 +44,7 @@ Defined in: [packages/core/src/types.ts:115](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:114](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L114)
 
-***
+---
 
 ### srcTxHash?
 

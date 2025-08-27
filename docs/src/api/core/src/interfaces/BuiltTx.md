@@ -1,6 +1,6 @@
 [**zksync-sdk-monorepo**](../../../README.md)
 
-***
+---
 
 [zksync-sdk-monorepo](../../../README.md) / [core/src](../README.md) / BuiltTx
 
@@ -16,7 +16,7 @@ Defined in: [packages/core/src/types.ts:141](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:143](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L143)
 
-***
+---
 
 ### to
 
@@ -24,7 +24,7 @@ Defined in: [packages/core/src/types.ts:143](https://github.com/dutterbutter/zks
 
 Defined in: [packages/core/src/types.ts:142](https://github.com/dutterbutter/zksync-sdk/blob/128d557933eb10f01edd78c0b3392137ca480daf/packages/core/src/types.ts#L142)
 
-***
+---
 
 ### value?
 
