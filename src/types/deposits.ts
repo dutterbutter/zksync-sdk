@@ -29,7 +29,7 @@ export type DepositRoute =
   | 'erc20-nonbase'; // deposit non-base ERC20
 
 /** Minimal approval requirement record. */
-interface ApprovalNeed {
+export interface ApprovalNeed {
   token: Address;
   spender: Address;
   amount: UInt;

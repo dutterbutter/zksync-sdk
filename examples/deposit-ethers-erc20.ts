@@ -6,12 +6,13 @@ import { Address } from '../src/types/primitives';
 import { sleep } from 'bun';
 
 // const L1_RPC = "https://sepolia.infura.io/v3/07e4434e9ba24cd68305123037336417";                     // e.g. https://sepolia.infura.io/v3/XXX
-// const L2_RPC = "https://zksync-os-stage-api.zksync-nodes.com";                     // your L2 RPC
-// const PRIVATE_KEY = "0x3a86a76b2aee7d0742f2da930b3289cfcff31f57ffc923c672715ead32dc01a0";
+const L1_RPC = "https://rpc.ankr.com/eth_sepolia/070715f5f3878124fc8e3b05fa7e5f8ec165ffc887f2ffd3a51c9e906681492c";
+const L2_RPC = "https://zksync-os-stage-api.zksync-nodes.com";                     // your L2 RPC
+const PRIVATE_KEY = "0x3a86a76b2aee7d0742f2da930b3289cfcff31f57ffc923c672715ead32dc01a0";
 
-const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+// const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+// const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+// const PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 
 const MINTABLE_ERC20_ABI = [
   'function decimals() view returns (uint8)',
@@ -51,17 +52,17 @@ async function main() {
   const client = await createEthersClient({ l1, l2, signer });
   const sdk = createEthersSdk(client);
 
-  const TOKEN = '0x8464135c8F25Da09e49BC8782676a84730C318bC' as Address;
+  const TOKEN = '0x5fc54c1a570e33c6998f1472521A9BBE267273A3' as Address;
 
   // 3) Deposit params: send 10 units of ERC20 (respecting decimals) to my own L2 address
   const me = (await signer.getAddress()) as Address;
   const decimals = await erc20(l1, TOKEN).decimals();
   const amount = parseUnits('1000', decimals);
   console.log('calling mint');
-  await mintErc20({ signer, token: TOKEN, to: me, amount });
-  console.log('Minted:', amount.toString());
-
-  await sleep(600);
+  // await mintErc20({ signer, token: TOKEN, to: me, amount });
+  // console.log('Minted:', amount.toString());
+  console.log("balance of erc20 token: ");
+  
 
   const depositAmount = parseUnits('25', decimals);
   const quote = await sdk.deposits.quote({ token: TOKEN, to: me, amount: depositAmount });
@@ -72,6 +73,16 @@ async function main() {
 
   const receipt = await sdk.deposits.wait(handle, { for: 'l1' });
   console.log('Included at block:', receipt?.blockNumber, 'status:', receipt?.status);
+
+  // // Wait until the corresponding L2 tx exists and is marked successful
+  //   const l2Receipt = await sdk.deposits.wait(handle, { for: "l2" });
+  //   console.log("L2 RECEIPT", l2Receipt);
+  //   console.log("Deposit executed on L2:", (l2Receipt as any)?.transactionHash);
+  
+  //   // Wait until the L2 deposit is finalized/provable (zks_getL2ToL1LogProof returns)
+  //   const finalizedReceipt = await sdk.deposits.wait(handle, { for: "finalized" });
+  //   console.log("finalizedreceipt", finalizedReceipt);
+  //   console.log("Deposit finalized:", (finalizedReceipt as any)?.transactionHash);
 }
 
 main().catch((e) => {
