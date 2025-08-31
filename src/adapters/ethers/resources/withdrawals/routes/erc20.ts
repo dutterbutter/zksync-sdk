@@ -1,0 +1,79 @@
+// src/adapters/ethers/resources/withdrawals/routes/erc20.ts
+import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
+import type { WithdrawRouteStrategy } from './types';
+import type { PlanStep, ApprovalNeed } from '../../../../../types/flows/base';
+import IERC20ABI from '../../../../../internal/abis/json/IERC20.json' assert { type: 'json' };
+
+const L2NativeTokenVaultAbi = [
+  'function ensureTokenIsRegistered(address _token) external returns (bytes32 assetId)',
+] as const;
+
+const L2AssetRouterAbi = [
+  'function withdraw(bytes32 _assetId, bytes _assetData) external returns (bytes32)',
+] as const;
+
+export function routeErc20(): WithdrawRouteStrategy {
+  return {
+    async build(p, ctx) {
+      const steps: Array<PlanStep<TransactionRequest>> = [];
+      const approvals: ApprovalNeed[] = [];
+
+      const l2Signer = ctx.client.signer.connect(ctx.client.l2);
+
+      // 1) L2 allowance to the NativeTokenVault (burner)
+      const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const current: bigint = await erc20.allowance(ctx.sender, ctx.l2NativeTokenVault);
+      if (current < p.amount) {
+        approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
+
+        const data = erc20.interface.encodeFunctionData('approve', [
+          ctx.l2NativeTokenVault,
+          p.amount,
+        ]);
+
+        steps.push({
+          key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
+          kind: 'approve:l2',
+          description: `Approve ${p.amount} to NativeTokenVault`,
+          canSkip: false,
+          tx: { to: p.token, data, from: ctx.sender, ...(ctx.fee ?? {}) },
+        });
+      }
+
+      // 2) Compute assetId + assetData
+      // Option A: per-method access (nice & explicit)
+      const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultAbi, ctx.client.l2);
+      const assetId = (await ntv
+        .getFunction('ensureTokenIsRegistered')
+        .staticCall(p.token)) as `0x${string}`;
+
+      // DataEncoding.encodeBridgeBurnData(amount, l1Receiver, l2Token)
+      const assetData = AbiCoder.defaultAbiCoder().encode(
+        ['uint256', 'address', 'address'],
+        [p.amount, p.to ?? ctx.sender, p.token],
+      ) as `0x${string}`;
+
+      // 3) L2AssetRouter.withdraw(assetId, assetData)
+      const l2ar = new Contract(ctx.l2AssetRouter, L2AssetRouterAbi, ctx.client.l2);
+      const dataWithdraw = l2ar.interface.encodeFunctionData('withdraw', [assetId, assetData]);
+
+      const withdrawTx: TransactionRequest = {
+        to: ctx.l2AssetRouter,
+        data: dataWithdraw,
+        from: ctx.sender,
+        ...(ctx.fee ?? {}),
+      };
+
+      steps.push({
+        key: 'l2-asset-router:withdraw',
+        kind: 'l2-asset-router:withdraw',
+        description: 'Burn on L2 & send L2→L1 message',
+        canSkip: false,
+        tx: withdrawTx,
+      });
+
+      return { steps, approvals, quoteExtras: {} };
+    },
+  };
+}

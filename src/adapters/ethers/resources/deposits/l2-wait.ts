@@ -1,85 +1,96 @@
-// import { Interface, Log, type AbstractProvider } from "ethers";
-// import type { Hex } from "../../../../types/primitives";
-// import type { TransactionReceipt as EthersTxReceipt } from "ethers";
+// src/adapters/ethers/resources/l2-wait.ts
+import type { Log } from 'ethers';
+import { AbiCoder } from 'ethers';
+import type { Hex } from '../../../../types/primitives';
 
-// // --- ABI for NewPriorityRequest: keep only fields we need (txHash) ---
-// const NEW_PRIORITY_IFACE = new Interface([
-//   // if txHash is not indexed; if your impl has a different tail, decoding still works
-//   "event NewPriorityRequest(bytes32 txHash, address sender, uint256 txId, uint256 value, uint64 expiration, bytes data)",
-//   // fallback shape (some variants use uint256 for expiration or reorder). We'll try both.
-//   "event NewPriorityRequest(bytes32 txHash, address sender, uint256 txId, uint256 value, uint256 expiration, bytes data)",
-// ]);
+const coder = AbiCoder.defaultAbiCoder();
 
-// /** Try to decode the L2 tx hash from any log using the NewPriorityRequest ABIs. */
-// export function tryExtractL2TxHashFromLogs(logs: ReadonlyArray<Log>): Hex | null {
-//   for (const log of logs) {
-//     try {
-//       const parsed = NEW_PRIORITY_IFACE.parseLog(log);
-//       if (parsed?.name !== "NewPriorityRequest") continue;
+// Known topics
+const LEGACY_MAILBOX_NEW_PRIORITY =
+  '0x1cd02155ad1064c60598a8bd0e4e795d7e7d0a0f3c38aad04d261f1297fb2545';
+const BRIDGEHUB_NEW_PRIORITY = '0x0f87e1ea5eb1f034a6071ef630c174063e3d48756f853efaaf4292b929298240';
 
-//       // args may be both indexed/non-indexed; ethers normalizes them
-//       const txHash = (parsed.args?.txHash ?? parsed.args?.[0]) as string | undefined;
-//       if (txHash && txHash.startsWith("0x") && txHash.length === 66) {
-//         return txHash as Hex;
-//       }
-//     } catch {
-//       // parseLog throws if the topics don't match any event in the interface; ignore
-//     }
-//   }
-//   return null;
-// }
+// **Canonical** L2 tx hash markers (prefer these)
+const TOPIC_CANONICAL_ASSIGNED =
+  '0x779f441679936c5441b671969f37400b8c3ed0071cb47444431bf985754560df'; // canonical hash in topics[2]
+const TOPIC_CANONICAL_SUCCESS =
+  '0xe4def01b981193a97a9e81230d7b9f31812ceaf23f864a828a82c687911cb2df'; // canonical hash in topics[3]
 
-// /** Raw-call eth_getTransactionReceipt to access zkSync-specific fields like l2ToL1Logs. */
-// export async function getRawReceipt(provider: AbstractProvider, hash: Hex): Promise<any | null> {
-//   const rpc = provider as unknown as { send(m: string, p: unknown[]): Promise<any> };
-//   return await rpc.send("eth_getTransactionReceipt", [hash]);
-// }
+function isHash(x?: string): x is Hex {
+  return !!x && x.startsWith('0x') && x.length === 66;
+}
 
-// /** Check the zkSync OS service log marks the canonical tx hash as successful (value == 1). */
-// export function isServiceSuccess(rawL2Receipt: any, l2TxHash: Hex): boolean {
-//   const logs = rawL2Receipt?.l2ToL1Logs ?? [];
-//   if (!Array.isArray(logs) || logs.length === 0) return false;
+/**
+ * Extract the **canonical** L2 tx hash from L1 logs.
+ * Returns the first canonical hash it finds, plus optional chainId/txId for debugging.
+ */
+export function tryExtractL2TxHashFromLogs(
+  logs: ReadonlyArray<Log>,
+): { l2Hash: Hex; chainId?: bigint; txId?: bigint } | null {
+  // 1) Prefer canonical-hash markers
+  for (const log of logs) {
+    const t0 = log.topics?.[0]?.toLowerCase();
+    if (!t0) continue;
 
-//   // 0x...8001 system address
-//   const SYS = "0x0000000000000000000000000000000000008001".toLowerCase();
+    // Canonical hash assigned: topics[2] is the hash
+    if (t0 === TOPIC_CANONICAL_ASSIGNED) {
+      const l2Hash = log.topics?.[2];
+      if (isHash(l2Hash)) return { l2Hash: l2Hash as Hex };
+    }
 
-//   for (const lg of logs) {
-//     const sender = String(lg.sender ?? "").toLowerCase();
-//     const isService = !!lg.is_service || !!lg.isService; // handle both casings
-//     const key = String(lg.key ?? "");
-//     const value = String(lg.value ?? "0x0"); // hex 0x1 on success
+    // Marked successful: topics[3] is the canonical hash
+    if (t0 === TOPIC_CANONICAL_SUCCESS) {
+      const l2Hash = log.topics?.[3];
+      if (isHash(l2Hash)) return { l2Hash: l2Hash as Hex };
+    }
+  }
 
-//     if (isService && sender === SYS && key.toLowerCase() === l2TxHash.toLowerCase()) {
-//       // value may be hex "0x1" or number 1
-//       if (value === "0x1" || value === "1" || Number(value) === 1) return true;
-//     }
-//   }
-//   return false;
-// }
+  // 2) Fallbacks (less reliable in this OS build)
+  for (const log of logs) {
+    const t0 = log.topics?.[0]?.toLowerCase();
+    if (!t0) continue;
 
-// /** Wait helper with timeout/backoff. Returns raw receipt (L2) when condition met, else null. */
-// export async function pollUntil<T>(
-//   fn: () => Promise<T | null>,
-//   opts: { timeoutMs?: number; intervalMs?: number } = {}
-// ): Promise<T | null> {
-//   const timeoutMs = opts.timeoutMs ?? 120_000;  // 2m default
-//   const intervalMs = opts.intervalMs ?? 1_000;  // 1s
-//   const start = Date.now();
-//   while (true) {
-//     const v = await fn();
-//     if (v) return v;
-//     if (Date.now() - start > timeoutMs) return null;
-//     await new Promise((r) => setTimeout(r, intervalMs));
-//   }
-// }
+    // Legacy Mailbox: we *used* to take topics[2], but it’s not the canonical hash here.
+    // Keep as a last resort for other deployments.
+    if (t0 === LEGACY_MAILBOX_NEW_PRIORITY) {
+      console.log('DONT WANT TO BE HERE!');
+      const chainId = log.topics?.[1] ? BigInt(log.topics[1]) : undefined;
+      const candidate = log.topics?.[2];
+      if (isHash(candidate)) {
+        // Decode optional txId from data tail
+        let txId: bigint | undefined;
+        try {
+          if (log.data && log.data.length >= 2 + 64 * 4) {
+            const [id] = coder.decode(['uint256', 'uint256', 'uint256', 'bytes'], log.data);
+            txId = BigInt(id);
+          }
+        } catch {}
+        return { l2Hash: candidate as Hex, chainId, txId };
+      }
+    }
 
-// /** Optional: for 'finalized' — existence of a proof is a strong signal the L2 result is enshrined. */
-// export async function hasL2ToL1Proof(providerL2: AbstractProvider, l2TxHash: Hex): Promise<boolean> {
-//   const rpc = providerL2 as unknown as { send(m: string, p: unknown[]): Promise<any> };
-//   try {
-//     const proof = await rpc.send("zks_getL2ToL1LogProof", [l2TxHash]);
-//     return !!proof;
-//   } catch {
-//     return false;
-//   }
-// }
+    // Bridgehub flavor: first 32 bytes of data looked like a hash but
+    // in this OS build it is **not** the canonical L2 tx hash.
+    if (t0 === BRIDGEHUB_NEW_PRIORITY) {
+      console.log('DO NOT WANT TO BE HERE EITHER');
+      if (log.data && log.data.length >= 2 + 64) {
+        const chainId = log.topics?.[1] ? BigInt(log.topics[1]) : undefined;
+
+        // Still expose it as a fallback (for other networks),
+        // but it will *not* be used if canonical markers were found.
+        const word0 = ('0x' + log.data.slice(2, 2 + 64)) as Hex;
+
+        let txId: bigint | undefined;
+        try {
+          const rest = '0x' + log.data.slice(2 + 64);
+          const [id] = coder.decode(['uint256', 'uint256', 'uint256', 'bytes'], rest);
+          txId = BigInt(id);
+        } catch {}
+
+        if (isHash(word0)) return { l2Hash: word0, chainId, txId };
+      }
+    }
+  }
+
+  return null;
+}

@@ -1,14 +1,18 @@
-import type { DepositParams, PlanStep, ApprovalNeed } from "../../../../../types/deposits";
-import type { BuildCtx } from "../context";
+// src/adapters/ethers/resources/deposits/routes/types.ts
+import type { TransactionRequest } from 'ethers';
+import type { DepositParams } from '../../../../../types/flows/deposits';
+import type { RouteStrategy } from '../../../../../types/flows/route';
+import type { BuildCtx as DepositBuildCtx } from '../context';
 
-export interface RouteStrategy {
-  preflight?(p: DepositParams, ctx: BuildCtx): Promise<void>;
-  build(p: DepositParams, ctx: BuildCtx): Promise<{
-    steps: PlanStep[];
-    approvals: ApprovalNeed[];
-    baseCost: bigint;
-    mintValue: bigint;
-  }>;
-}
+// What the route wants to add to the final quote
+export type DepositQuoteExtras = {
+  baseCost: bigint;
+  mintValue: bigint;
+};
 
-
+export type DepositRouteStrategy = RouteStrategy<
+  DepositParams,
+  TransactionRequest,
+  DepositQuoteExtras,
+  DepositBuildCtx
+>;

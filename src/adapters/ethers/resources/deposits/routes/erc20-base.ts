@@ -2,30 +2,36 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import type { RouteStrategy } from "./types";
-import { Contract } from "ethers";
-import type { TransactionRequest } from "ethers";
-import { resolveAssetRouter, encodeSecondBridgeErc20Args, pct } from "../../helpers";
-import { ERC20Abi, IBridgehubAbi } from "../../../internal/abis";
-import type { ApprovalNeed, PlanStep } from "../../../../../types/deposits";
+import type { DepositRouteStrategy } from './types';
+import { Contract } from 'ethers';
+import type { TransactionRequest } from 'ethers';
+import { encodeSecondBridgeErc20Args, pct } from '../../helpers';
+import IERC20ABI from '../../../../../internal/abis/json/IERC20.json' assert { type: 'json' };
+import IBridgehubABI from '../../../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
+import type { ApprovalNeed, PlanStep } from '../../../../../types/flows/base';
 
-export function routeErc20Base(): RouteStrategy {
+export function routeErc20Base(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
-      const bh = new Contract(ctx.bridgehub, IBridgehubAbi, ctx.client.l1);
-      const router = await resolveAssetRouter(ctx.client, ctx.bridgehub);
+      const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const router = ctx.l1AssetRouter;
 
-      const erc20 = new Contract(p.token, ERC20Abi, ctx.client.signer);
+      const erc20 = new Contract(p.token, IERC20ABI, ctx.client.signer);
       const allowance: bigint = await erc20.allowance(ctx.sender, router);
       const needsApprove = allowance < p.amount;
 
       const baseCost = BigInt(
-        await bh.l2TransactionBaseCost(ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata)
+        await bh.l2TransactionBaseCost(
+          ctx.chainIdL2,
+          ctx.fee.gasPriceForBaseCost,
+          ctx.l2GasLimit,
+          ctx.gasPerPubdata,
+        ),
       );
       const mintValue = baseCost + ctx.operatorTip;
 
       const approvals: ApprovalNeed[] = [];
-      const steps: PlanStep[] = [];
+      const steps: PlanStep<TransactionRequest>[] = [];
 
       if (needsApprove) {
         approvals.push({ token: p.token, spender: router, amount: p.amount });
@@ -35,11 +41,15 @@ export function routeErc20Base(): RouteStrategy {
           kind: 'approve',
           description: `Approve ${p.amount} for router`,
           canSkip: false,
-          tx: { to: p.token, data, from: ctx.sender, ...ctx.fee }
+          tx: { to: p.token, data, from: ctx.sender, ...ctx.fee },
         });
       }
 
-      const secondBridgeCalldata = encodeSecondBridgeErc20Args(p.token, p.amount, p.to ?? ctx.sender);
+      const secondBridgeCalldata = encodeSecondBridgeErc20Args(
+        p.token,
+        p.amount,
+        p.to ?? ctx.sender,
+      );
       const outer = {
         chainId: ctx.chainIdL2,
         mintValue,
@@ -53,8 +63,17 @@ export function routeErc20Base(): RouteStrategy {
       } as const;
 
       const dataTwo = bh.interface.encodeFunctionData('requestL2TransactionTwoBridges', [outer]);
-      const bridgeTx: TransactionRequest = { to: ctx.bridgehub, data: dataTwo, value: mintValue, from: ctx.sender, ...ctx.fee };
-      try { const est = await ctx.client.l1.estimateGas(bridgeTx); bridgeTx.gasLimit = pct(est, 15); } catch {
+      const bridgeTx: TransactionRequest = {
+        to: ctx.bridgehub,
+        data: dataTwo,
+        value: mintValue,
+        from: ctx.sender,
+        ...ctx.fee,
+      };
+      try {
+        const est = await ctx.client.l1.estimateGas(bridgeTx);
+        bridgeTx.gasLimit = pct(est, 15);
+      } catch {
         // ignore
       }
 
@@ -63,10 +82,10 @@ export function routeErc20Base(): RouteStrategy {
         kind: 'bridgehub:two-bridges',
         description: 'Bridge ERC20 via Bridgehub.requestL2TransactionTwoBridges',
         canSkip: false,
-        tx: bridgeTx
+        tx: bridgeTx,
       });
 
-      return { steps, approvals, baseCost, mintValue };
-    }
+      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+    },
   };
 }

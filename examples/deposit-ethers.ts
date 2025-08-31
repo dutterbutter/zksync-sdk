@@ -25,7 +25,7 @@ async function main() {
   // 3) Deposit params: send 0.01 ETH to my own L2 address
   const me = (await signer.getAddress()) as Address;
   const params = {
-    amount: parseEther('0.001'), // 0.01 ETH
+    amount: parseEther('0.01'), // 0.01 ETH
     to: me,
     token: '0x0000000000000000000000000000000000000001' as Address,
     // optional:

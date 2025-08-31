@@ -3,22 +3,27 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import type { RouteStrategy } from "./types";
-import { Contract } from "ethers";
-import type { TransactionRequest } from "ethers";
-import { pct, buildDirectRequestStruct } from "../../helpers";
-import { IBridgehubAbi } from "../../../internal/abis";
-import type { PlanStep } from "../../../../../types/deposits";
+import type { DepositRouteStrategy } from './types';
+import { Contract } from 'ethers';
+import type { TransactionRequest } from 'ethers';
+import { pct, buildDirectRequestStruct } from '../../helpers';
+import IBridgehubABI from '../../../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
+import type { PlanStep } from '../../../../../types/flows/base';
 
-export function routeEthDirect(): RouteStrategy {
+export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
-      const bh = new Contract(ctx.bridgehub, IBridgehubAbi, ctx.client.l1);
+      const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const baseCost = BigInt(
-        await bh.l2TransactionBaseCost(ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata)
+        await bh.l2TransactionBaseCost(
+          ctx.chainIdL2,
+          ctx.fee.gasPriceForBaseCost,
+          ctx.l2GasLimit,
+          ctx.gasPerPubdata,
+        ),
       );
 
-      const l2Contract = (p.to ?? ctx.sender);
+      const l2Contract = p.to ?? ctx.sender;
       const l2Value = p.amount;
       const mintValue = baseCost + ctx.operatorTip + l2Value;
 
@@ -33,20 +38,31 @@ export function routeEthDirect(): RouteStrategy {
       });
 
       const data = bh.interface.encodeFunctionData('requestL2TransactionDirect', [req]);
-      const tx: TransactionRequest = { to: ctx.bridgehub, data, value: mintValue, from: ctx.sender, ...ctx.fee };
-      try { const est = await ctx.client.l1.estimateGas(tx); tx.gasLimit = pct(est, 15); } catch {
+      const tx: TransactionRequest = {
+        to: ctx.bridgehub,
+        data,
+        value: mintValue,
+        from: ctx.sender,
+        ...ctx.fee,
+      };
+      try {
+        const est = await ctx.client.l1.estimateGas(tx);
+        tx.gasLimit = pct(est, 15);
+      } catch {
         // ignore
       }
 
-      const steps: PlanStep[] = [{
-        key: 'bridgehub:direct',
-        kind: 'bridgehub:direct',
-        description: 'Bridge ETH via Bridgehub.requestL2TransactionDirect',
-        canSkip: false,
-        tx
-      }];
+      const steps: PlanStep<TransactionRequest>[] = [
+        {
+          key: 'bridgehub:direct',
+          kind: 'bridgehub:direct',
+          description: 'Bridge ETH via Bridgehub.requestL2TransactionDirect',
+          canSkip: false,
+          tx,
+        },
+      ];
 
-      return { steps, approvals: [], baseCost, mintValue };
-    }
+      return { steps, approvals: [], quoteExtras: { baseCost, mintValue } };
+    },
   };
 }
