@@ -15,16 +15,10 @@ import type {
 import type { Address, Hex } from '../../../../types/primitives.ts';
 import {
   tryExtractL2TxHashFromLogs,
-  // extractCandidateHashesFromLogs,
-  // getRawReceipt,
-  // isServiceSuccess,
-  // pollUntil,
-  // hasL2ToL1Proof,
 } from './l2-wait';
 
-import { Contract, TransactionRequest, type TransactionReceipt } from 'ethers';
-// import { IBridgehubAbi } from '../../internal/abis/Bridgehub.ts';
-import IERC20ABI from '../../../../internal/abis/json/IERC20.json' assert { type: 'json' };
+import { Contract, type TransactionRequest, type TransactionReceipt } from 'ethers';
+import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'json' };
 
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';

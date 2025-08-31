@@ -16,9 +16,9 @@ import type { EthersClient } from "../../../client";
 import { FinalizeDepositParams, type WithdrawalKey } from "../../../../../types/flows/withdrawals";
 import { L2_MESSENGER_ADDR } from "../../utils";
 
-import IBridgehubABI from "../../../../../internal/abis/json/IBridgehub.json" assert { type: "json" };
-import IL1AssetRouterABI from "../../../../../internal/abis/json/IL1AssetRouter.json" assert { type: "json" };
-import IL1NullifierABI from "../../../../../internal/abis/json/IL1Nullifier.json" assert { type: "json" };
+import IBridgehubABI from "../../../../../internal/abis/IBridgehub.json" assert { type: "json" };
+import IL1AssetRouterABI from "../../../../../internal/abis/IL1AssetRouter.json" assert { type: "json" };
+import IL1NullifierABI from "../../../../../internal/abis/IL1Nullifier.json" assert { type: "json" };
 
 export interface FinalizationServices {
   l2WaitForTransaction(hash: string): Promise<TransactionReceipt | null>;

@@ -8,7 +8,7 @@ import { getFeeOverrides } from '../helpers';
 import { pickRouteSmart } from '../helpers';
 import type { DepositParams, DepositRoute } from '../../../../types/flows/deposits';
 import type { CommonCtx } from '../../../../types/flows/base';
-import IBridgehubABI from '../../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
+import IBridgehubABI from '../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 
 export interface BuildCtx extends CommonCtx {
   client: EthersClient;

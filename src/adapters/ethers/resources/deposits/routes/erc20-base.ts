@@ -6,8 +6,8 @@ import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
 import type { TransactionRequest } from 'ethers';
 import { encodeSecondBridgeErc20Args, pct } from '../../helpers';
-import IERC20ABI from '../../../../../internal/abis/json/IERC20.json' assert { type: 'json' };
-import IBridgehubABI from '../../../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
+import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
+import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 import type { ApprovalNeed, PlanStep } from '../../../../../types/flows/base';
 
 export function routeErc20Base(): DepositRouteStrategy {

@@ -4,7 +4,7 @@ import type { EthersClient } from '../client';
 import type { Address,UInt } from '../../../types/primitives';
 import { ETH_ADDRESS, ETH_ADDRESS_IN_CONTRACTS, L2_ETH_ADDRESS } from '../../../types/primitives';
 import type { DepositRoute } from '../../../types/deposits';
-import IBridgehubABI from "../../../internal/abis/json/IBridgehub.json" assert { type: "json" };
+import IBridgehubABI from "../../../internal/abis/IBridgehub.json" assert { type: "json" };
 
 // --- Token utils ---
 export function isEth(token: Address): boolean {

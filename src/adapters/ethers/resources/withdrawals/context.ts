@@ -5,8 +5,8 @@ import type { EthersClient } from '../../client';
 import type { Address } from '../../../../types/primitives';
 import type { WithdrawParams, WithdrawRoute } from '../../../../types/flows/withdrawals';
 import type { CommonCtx } from '../../../../types/flows/base';
-import IBridgehubABI from '../../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
-import IL1AssetRouterABI from '../../../../internal/abis/json/IL1AssetRouter.json' assert { type: 'json' };
+import IBridgehubABI from '../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
+import IL1AssetRouterABI from '../../../../internal/abis/IL1AssetRouter.json' assert { type: 'json' };
 import {
   L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
   L2_ASSET_ROUTER_ADDR,

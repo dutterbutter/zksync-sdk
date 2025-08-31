@@ -2,7 +2,7 @@
 import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../types/flows/base';
-import IERC20ABI from '../../../../../internal/abis/json/IERC20.json' assert { type: 'json' };
+import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
 
 const L2NativeTokenVaultAbi = [
   'function ensureTokenIsRegistered(address _token) external returns (bytes32 assetId)',

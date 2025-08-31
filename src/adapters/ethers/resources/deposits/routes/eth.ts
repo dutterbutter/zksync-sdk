@@ -7,7 +7,7 @@ import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
 import type { TransactionRequest } from 'ethers';
 import { pct, buildDirectRequestStruct } from '../../helpers';
-import IBridgehubABI from '../../../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
+import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 import type { PlanStep } from '../../../../../types/flows/base';
 
 export function routeEthDirect(): DepositRouteStrategy {
