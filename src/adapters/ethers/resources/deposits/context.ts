@@ -13,7 +13,7 @@ import IBridgehubABI from '../../../../internal/abis/IBridgehub.json' assert { t
 export interface BuildCtx extends CommonCtx {
   client: EthersClient;
 
-  // 
+  //
   l1AssetRouter: Address;
 
   fee: Partial<TransactionRequest> & { gasPriceForBaseCost: bigint };

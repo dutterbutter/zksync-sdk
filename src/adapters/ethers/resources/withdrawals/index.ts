@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/adapters/ethers/resources/withdrawals/index.ts
@@ -12,7 +13,8 @@ import type {
   WithdrawPlan,
   WithdrawHandle,
   WithdrawalWaitable,
-  WithdrawRoute, FinalizedTriState
+  WithdrawRoute,
+  FinalizedTriState,
 } from '../../../../types/flows/withdrawals';
 import type { Hex } from '../../../../types/primitives';
 import { commonCtx } from './context';
@@ -20,10 +22,7 @@ import { WithdrawalNotReady } from '../../../../types/flows/withdrawals';
 import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes/types';
 import { routeEth } from './routes/eth';
 import { routeErc20 } from './routes/erc20';
-import {
-  createFinalizationServices,
-  type FinalizationServices,
-} from './services/finalization';
+import { createFinalizationServices, type FinalizationServices } from './services/finalization';
 
 const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
   eth: routeEth(),
@@ -48,7 +47,7 @@ export interface WithdrawalsResource {
     { ok: true; value: WithdrawHandle<TransactionRequest> } | { ok: false; error: unknown }
   >;
 
-   /**
+  /**
    * Waits for the L2 withdrawal tx to be mined and returns an enriched receipt
    * (with l2ToL1Logs when supported). This does NOT attempt L1 finalization.
    */
@@ -71,12 +70,12 @@ export interface WithdrawalsResource {
 }
 
 export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
-    const svc: FinalizationServices = createFinalizationServices(client);
+  const svc: FinalizationServices = createFinalizationServices(client);
   async function buildPlan(p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>> {
     const ctx = await commonCtx(p, client);
-     svc.primeKnownAddresses({
+    svc.primeKnownAddresses({
       l1AssetRouter: ctx.l1AssetRouter,
-      nullifier:     ctx.l1Nullifier,
+      nullifier: ctx.l1Nullifier,
     });
 
     const route = ctx.route;
@@ -167,11 +166,11 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       }
     },
 
-     async wait(h, opts) {
+    async wait(h, opts) {
       if (opts.for !== 'l2') return null;
 
       const l2Hash =
-        typeof h === 'string' ? h : ('l2TxHash' in h && h.l2TxHash ? h.l2TxHash : undefined);
+        typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : undefined;
       if (!l2Hash) return null;
 
       const base = await svc.l2WaitForTransaction(l2Hash);
@@ -199,8 +198,9 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       const pack = await (async () => {
         try {
           return await svc.fetchFinalizeDepositParams(l2TxHash);
-        } catch {
-          throw new WithdrawalNotReady();
+        } catch(e) {
+          console.error("Error fetching finalize deposit params:", e);
+          //   throw new WithdrawalNotReady();
         }
       })();
 

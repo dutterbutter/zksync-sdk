@@ -1,12 +1,12 @@
 import {
   AbiCoder,
-//   BigNumberish,
+  //   BigNumberish,
   BytesLike,
   ethers,
-//   SignatureLike,
-//   resolveProperties,
-//   Provider,
-//   TransactionLike,
+  //   SignatureLike,
+  //   resolveProperties,
+  //   Provider,
+  //   TransactionLike,
 } from 'ethers';
 import { Address } from '../../../types';
 // import IBridgehubABI from '../../../internal/abis/json/IBridgehub.json' assert { type: 'json' };
@@ -43,7 +43,7 @@ export const L2_ASSET_ROUTER_ADDRESS: Address = '0x00000000000000000000000000000
 
 export const L2_NATIVE_TOKEN_VAULT_ADDRESS: Address = '0x0000000000000000000000000000000000010004';
 
-export const L2_MESSENGER_ADDR = "0x0000000000000000000000000000000000008008" as const;
+export const L1_MESSENGER_ADDRESS = '0x0000000000000000000000000000000000008008' as const;
 
 export const L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR =
   '0x000000000000000000000000000000000000800A' as const;

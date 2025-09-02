@@ -1,10 +1,12 @@
 // src/adapters/ethers/resources/helpers.ts
-import { Contract, AbiCoder, type TransactionRequest } from 'ethers';
+import { Contract, AbiCoder, type TransactionRequest, AbstractProvider, BytesLike, hexlify, id as topicId, Interface } from 'ethers';
 import type { EthersClient } from '../client';
-import type { Address,UInt } from '../../../types/primitives';
+import type { Address, UInt } from '../../../types/primitives';
 import { ETH_ADDRESS, ETH_ADDRESS_IN_CONTRACTS, L2_ETH_ADDRESS } from '../../../types/primitives';
+import { isAddressEq, L1_MESSENGER_ADDRESS, L2_ASSET_ROUTER_ADDRESS } from "./utils";
 import type { DepositRoute } from '../../../types/deposits';
-import IBridgehubABI from "../../../internal/abis/IBridgehub.json" assert { type: "json" };
+import IBridgehubABI from '../../../internal/abis/IBridgehub.json' assert { type: 'json' };
+import IL2AssetRouterABI from '../../../internal/abis/IL2AssetRouter.json' assert { type: 'json' };
 
 // --- Token utils ---
 export function isEth(token: Address): boolean {
@@ -118,6 +120,60 @@ function eqAddr(token: string, base: string): boolean {
     return t.startsWith('0x') ? t : `0x${t}`;
   };
   return normalize(token) === normalize(base);
+}
+
+
+// Find the L1MessageSent(...) event in normal logs and return it.
+export async function _getWithdrawalLog(
+  providerL2: AbstractProvider,
+  withdrawalHash: BytesLike,
+  index = 0
+): Promise<{ log: any }> {
+  const hash = hexlify(withdrawalHash);
+  const receipt = await providerL2.getTransactionReceipt(hash);
+  if (!receipt) {
+    throw new Error("Transaction is not mined!");
+  }
+
+  const TOPIC0 = topicId("L1MessageSent(address,bytes32,bytes)").toLowerCase();
+
+  // Prefer logs from known L2 senders (AssetRouter / BaseToken), but fall back to any matching topic.
+  const logs = receipt.logs.filter((lg: any) => (lg.topics?.[0] ?? "").toLowerCase() === TOPIC0);
+  if (!logs.length) {
+    throw new Error("No L1MessageSent event found in L2 receipt logs.");
+  }
+
+  // If multiple, prefer the one from AssetRouter; otherwise take by index.
+  const preferred = logs.find((lg: any) => (lg.address ?? "").toLowerCase() === L2_ASSET_ROUTER_ADDRESS.toLowerCase());
+  const log = preferred ?? logs[index];
+  if (!log) {
+    throw new Error("No suitable L1MessageSent event found.");
+  }
+
+  return { log };
+}
+
+// Locate the messenger entry in l2ToL1Logs and return its index.
+export async function _getWithdrawalL2ToL1Log(
+  providerL2: AbstractProvider,
+  withdrawalHash: BytesLike,
+  index = 0
+): Promise<{ l2ToL1LogIndex: number }> {
+  const hash = hexlify(withdrawalHash);
+  const raw = await (providerL2 as any).send("eth_getTransactionReceipt", [hash]);
+  const l2ToL1Logs: any[] = Array.isArray(raw?.l2ToL1Logs) ? raw.l2ToL1Logs : [];
+
+  const entries = l2ToL1Logs
+    .map((lg, i) => ({ i, lg }))
+    .filter(({ lg }) => (lg?.sender ?? "").toLowerCase() === L1_MESSENGER_ADDRESS.toLowerCase());
+
+  if (!entries.length) {
+    throw new Error("No L2->L1 messenger logs found in receipt.");
+  }
+
+  // Mirror the test: take the first messenger entry (index 0 by default).
+  const { i: l2ToL1LogIndex } = entries[index] ?? entries[0];
+  return { l2ToL1LogIndex };
 }
 
 // type WithdrawalKey = {

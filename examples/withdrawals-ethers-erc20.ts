@@ -29,19 +29,17 @@ import type { Address } from '../src/types/primitives';
 
 import { Contract } from 'ethers';
 import {
-  L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
 } from '../src/adapters/ethers/resources/utils';
 
 import { TransactionReceiptZKsyncOS } from '../src/adapters/ethers/resources/withdrawals/routes/types';
 
-import IBridgehubABI from "../src/internal/abis/json/IBridgehub.json" assert { type: "json" };
-import IL1AssetRouterABI from "../src/internal/abis/json/IL1AssetRouter.json" assert { type: "json" };
-import IL1NullifierABI from "../src/internal/abis/json/IL1Nullifier.json" assert { type: "json" };
-import IL2AssetRouterABI from "../src/internal/abis/json/IL2AssetRouter.json" assert { type: "json" };
-import IL1NativeTokenVaultABI from "../src/internal/abis/json/IL1NativeTokenVault.json" assert { type: "json" };
-import IL2NativeTokenVaultABI from "../src/internal/abis/json/IL2NativeTokenVault.json" assert { type: "json" };
-import { ERC20Abi } from '../src/internal/abis';
+import IBridgehubABI from "../src/internal/abis/IBridgehub.json" assert { type: "json" };
+import IL1AssetRouterABI from "../src/internal/abis/IL1AssetRouter.json" assert { type: "json" };
+import IL1NativeTokenVaultABI from "../src/internal/abis/IL1NativeTokenVault.json" assert { type: "json" };
+import IL2NativeTokenVaultABI from "../src/internal/abis/IL2NativeTokenVault.json" assert { type: "json" };
+import IERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
+import { sleep } from 'bun';
 
 async function resolveL2TokenAddressViaAssetId(
   l1: JsonRpcProvider,
@@ -97,8 +95,8 @@ async function main() {
   const l2Token = await resolveL2TokenAddressViaAssetId(l1, l2, bridgehub, L1_ERC20_TOKEN);
 
   // (Optional) Read symbols/decimals to make the logs nice
-  const erc20L1 = new Contract(L1_ERC20_TOKEN, ERC20Abi, l1);
-  const erc20L2 = new Contract(l2Token, ERC20Abi, l2);
+  const erc20L1 = new Contract(L1_ERC20_TOKEN, IERC20ABI, l1);
+  const erc20L2 = new Contract(l2Token, IERC20ABI, l2);
   const [sym, dec] = await Promise.all([erc20L2.symbol(), erc20L2.decimals()]);
 
   // 4) Balances before
@@ -131,6 +129,8 @@ async function main() {
   console.log('L2 l2ToL1Logs (if any):', (l2Receipt as any)?.l2ToL1Logs ?? []);
 
   console.log('Withdrawal initiated on L2. Finalization on L1 can take several hours.');
+
+  await sleep(100000);
 
   // 9) (Later) Check tri-state. We DO NOT poll tightly; we just check now.
   const state = await sdk.withdrawals.isFinalized(handle.l2TxHash);

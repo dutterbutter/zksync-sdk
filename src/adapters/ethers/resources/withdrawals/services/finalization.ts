@@ -6,147 +6,119 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
+  AbiCoder,
   Contract,
   Interface,
   type TransactionReceipt,
+  hexlify,
+  BigNumberish,
+  BytesLike,
 } from "ethers";
 import type { Address, Hex } from "../../../../../types/primitives";
 import type { TransactionReceiptZKsyncOS } from "../routes/types";
 import type { EthersClient } from "../../../client";
 import { FinalizeDepositParams, type WithdrawalKey } from "../../../../../types/flows/withdrawals";
-import { L2_MESSENGER_ADDR } from "../../utils";
+import { L2_ASSET_ROUTER_ADDR } from "../../utils";
 
 import IBridgehubABI from "../../../../../internal/abis/IBridgehub.json" assert { type: "json" };
 import IL1AssetRouterABI from "../../../../../internal/abis/IL1AssetRouter.json" assert { type: "json" };
 import IL1NullifierABI from "../../../../../internal/abis/IL1Nullifier.json" assert { type: "json" };
 
-export interface FinalizationServices {
-  l2WaitForTransaction(hash: string): Promise<TransactionReceipt | null>;
+import { _getWithdrawalLog, _getWithdrawalL2ToL1Log } from "../../helpers";
 
-  /** Enrich with l2ToL1Logs when supported */
-  enrichL2Receipt(
-    hash: string,
-    rcpt: TransactionReceipt | null
-  ): Promise<TransactionReceiptZKsyncOS | null>;
+const IL1NullifierMini = [
+  "function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)"
+] as const;
 
-  fetchFinalizeDepositParams(
-    l2TxHash: Hex
-  ): Promise<{ params: FinalizeDepositParams; l1AssetRouter: Address; nullifier: Address }>;
-
-  isWithdrawalFinalized(
-    l1AssetRouter: Address,
-    key: WithdrawalKey
-  ): Promise<boolean>;
-
-  finalizeDeposit?(
-    params: FinalizeDepositParams,
-    nullifier: Address
-  ): Promise<{ hash: string; wait: () => Promise<TransactionReceipt> }>;
-
-  /** NEW: allow callers (commonCtx) to inject known addresses to avoid discovery */
-  primeKnownAddresses(addrs: { l1AssetRouter?: Address; nullifier?: Address }): void;
-}
-
-export function createFinalizationServices(client: EthersClient): FinalizationServices {
+export function createFinalizationServices(client: EthersClient) {
   const l1 = client.l1;
   const l2 = client.l2;
   const signer = client.signer;
 
-  const IBridgehub    = new Interface(IBridgehubABI as any);
+  const IBridgehub = new Interface(IBridgehubABI as any);
   const IL1AssetRouter = new Interface(IL1AssetRouterABI as any);
-  const IL1Nullifier   = new Interface(IL1NullifierABI as any);
+  const IL1Nullifier = new Interface(IL1NullifierABI as any);
 
-  // --- tiny local cache primed by commonCtx ---
   const known: { l1AssetRouter?: Address; nullifier?: Address } = {};
 
   async function resolveRouters(): Promise<{ l1AssetRouter: Address; nullifier: Address }> {
-    // Prefer primed addresses
-    if (known.l1AssetRouter && known.nullifier) {
-      return { l1AssetRouter: known.l1AssetRouter, nullifier: known.nullifier };
-    }
-    // Fallback: discover via Bridgehub (once)
+    if (known.l1AssetRouter && known.nullifier) return known as Required<typeof known>;
     const { bridgehub } = await client.ensureAddresses();
     const bh = new Contract(bridgehub, IBridgehub, l1);
-    const l1AssetRouter = (await bh.sharedBridge()) as Address;
+    const l1AssetRouter = (await bh.assetRouter()) as Address;
     const ar = new Contract(l1AssetRouter, IL1AssetRouter, l1);
     const nullifier = (await ar.L1_NULLIFIER()) as Address;
-
-    // cache for next time
     known.l1AssetRouter = l1AssetRouter;
     known.nullifier = nullifier;
-
     return { l1AssetRouter, nullifier };
   }
 
   return {
-    primeKnownAddresses(addrs) {
+    primeKnownAddresses(addrs: { l1AssetRouter?: Address; nullifier?: Address }) {
       if (addrs.l1AssetRouter) known.l1AssetRouter = addrs.l1AssetRouter;
       if (addrs.nullifier)     known.nullifier     = addrs.nullifier;
     },
 
     async l2WaitForTransaction(hash: string) {
-      return l2.waitForTransaction(hash);
+      return await l2.waitForTransaction(hash);
     },
 
     async enrichL2Receipt(hash: string, rcpt: TransactionReceipt | null) {
-      if (!rcpt) return null;
+      const receipt = rcpt ?? (await l2.getTransactionReceipt(hash));
+      if (!receipt) return null;
       try {
         const raw = await (l2 as any).send("eth_getTransactionReceipt", [hash]);
-        (rcpt as any).l2ToL1Logs = raw?.l2ToL1Logs ?? [];
+        (receipt as any).l2ToL1Logs = raw?.l2ToL1Logs ?? [];
       } catch {
-        (rcpt as any).l2ToL1Logs = (rcpt as any).l2ToL1Logs ?? [];
+        (receipt as any).l2ToL1Logs = (receipt as any).l2ToL1Logs ?? [];
       }
-      return rcpt as TransactionReceiptZKsyncOS;
+      return receipt as unknown as TransactionReceiptZKsyncOS;
     },
 
+    // === The core: mirror the Rust e2e ===
     async fetchFinalizeDepositParams(l2TxHash: Hex) {
-      const l2Rcpt = await l2.getTransactionReceipt(l2TxHash);
-      if (!l2Rcpt) throw new Error("No L2 receipt found");
+      const idx = 0;
 
-      // Ensure l2ToL1Logs
-      let logs: any[] = (l2Rcpt as any).l2ToL1Logs;
-      if (!logs) {
-        try {
-          const raw = await (l2 as any).send("eth_getTransactionReceipt", [l2TxHash]);
-          logs = raw?.l2ToL1Logs ?? [];
-          (l2Rcpt as any).l2ToL1Logs = logs;
-        } catch {
-          logs = [];
-          (l2Rcpt as any).l2ToL1Logs = logs;
-        }
-      }
+      // 1) Find the L1MessageSent(...) event in normal logs and extract `message`
+      const { log } = await _getWithdrawalLog(l2, l2TxHash, idx);
+      const message = AbiCoder.defaultAbiCoder().decode(["bytes"], log.data)[0] as Hex;
 
-      // Pick messenger log
-      const idx = logs.findIndex(
-        (log) => (log.sender ?? "").toLowerCase() === L2_MESSENGER_ADDR.toLowerCase()
-      );
-      if (idx === -1) throw new Error("No messenger l2ToL1 log found");
+      // 2) From raw receipt, pick the messenger L2->L1 log and get proof for its index
+      const { l2ToL1LogIndex } = await _getWithdrawalL2ToL1Log(l2, l2TxHash, idx);
+      const proof = await (l2 as any).send("zks_getL2ToL1LogProof", [
+        hexlify(l2TxHash),
+        l2ToL1LogIndex
+      ]);
+      if (!proof) throw new Error("node failed to provide proof for withdrawal log");
 
-      const chosenLog = logs[idx];
+      // 3) Assemble params exactly like the test
+      const { chainId } = await l2.getNetwork();
 
-      // Proof for that message
-      const proof = await (l2 as any).send("zks_getL2ToL1LogProof", [l2TxHash, idx]);
-      if (!proof) throw new Error("No proof returned from zks_getL2ToL1LogProof");
-
-      const net = await l2.getNetwork();
+      // transactionIndex comes from the parsed receipt (ethers). If unavailable, default to 0.
+      const parsed = await l2.getTransactionReceipt(l2TxHash);
+      const txIndex = Number(parsed?.transactionIndex ?? 0);
 
       const params: FinalizeDepositParams = {
-        chainId: BigInt(net.chainId),
-        l2BatchNumber: BigInt(proof.batch_number ?? proof.batchNumber),
-        l2MessageIndex: BigInt(proof.id ?? proof.index ?? 0),
-        l2Sender: chosenLog.sender as Address,
-        l2TxNumberInBatch: Number(chosenLog.tx_number_in_block ?? 0),
-        message: chosenLog.value as Hex,
-        merkleProof: (proof.proof ?? []) as Hex[],
+        chainId: chainId as unknown as BigNumberish,
+        l2BatchNumber: (proof.batch_number ?? proof.batchNumber) as BigNumberish,
+        l2MessageIndex: (proof.id ?? proof.index) as BigNumberish,
+        // Rust derives sender from l2_to_l1_log.key; the Nullifier accepts AssetRouter or BaseToken.
+        // For ERC-20 withdrawals, AssetRouter is the correct L2 sender:
+        l2Sender: L2_ASSET_ROUTER_ADDR,
+        l2TxNumberInBatch: txIndex,
+        message,
+        merkleProof: (proof.proof ?? []) as Hex[]
       };
 
       const { l1AssetRouter, nullifier } = await resolveRouters();
       return { params, l1AssetRouter, nullifier };
     },
 
-    async isWithdrawalFinalized(l1AssetRouter: Address, key: WithdrawalKey) {
-      const router = new Contract(l1AssetRouter, IL1AssetRouter, l1);
-      return await router.isWithdrawalFinalized(
+    // IMPORTANT: query the Nullifier’s public mapping (not the AssetRouter)
+    async isWithdrawalFinalized(_l1AssetRouter: Address, key: WithdrawalKey) {
+      const { nullifier } = await resolveRouters();
+      const c = new Contract(nullifier, IL1NullifierMini, l1);
+      return await c.isWithdrawalFinalized(
         key.chainIdL2,
         key.l2BatchNumber,
         key.l2MessageIndex

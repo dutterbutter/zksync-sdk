@@ -45,10 +45,10 @@ export interface WithdrawHandle<Tx>
 /** Waitable */
 export type WithdrawalWaitable = Hex | { l2TxHash?: Hex; l1TxHash?: Hex } | WithdrawHandle<unknown>;
 
-type WaitTarget = "l2" | "l1" | "finalized";
+type WaitTarget = 'l2' | 'l1' | 'finalized';
 
 export interface WaitOpts {
-  for: WaitTarget;          // what are we waiting on?
+  for: WaitTarget; // what are we waiting on?
 }
 
 export interface FinalizeDepositParams {

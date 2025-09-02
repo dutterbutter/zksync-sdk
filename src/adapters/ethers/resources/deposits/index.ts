@@ -13,9 +13,7 @@ import type {
   DepositRoute,
 } from '../../../../types/flows/deposits.ts';
 import type { Address, Hex } from '../../../../types/primitives.ts';
-import {
-  tryExtractL2TxHashFromLogs,
-} from './l2-wait';
+import { waitForL2ExecutionFromL1Tx } from './services/verification.ts';
 
 import { Contract, type TransactionRequest, type TransactionReceipt } from 'ethers';
 import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'json' };
@@ -55,7 +53,7 @@ export interface DepositsResource {
 
   wait(
     h: DepositWaitable,
-    opts: { for: 'l1' | 'l2' | 'finalized' },
+    opts: { for: 'l1' | 'l2' },
   ): Promise<TransactionReceipt | null>;
 }
 
@@ -140,7 +138,6 @@ export function DepositsResource(client: EthersClient): DepositsResource {
             // ignore
           }
         }
-        console.log('Sending transaction:', step.tx);
         const sent = await client.signer.sendTransaction(step.tx);
         stepHashes[step.key] = sent.hash as Hex;
         await sent.wait();
@@ -161,30 +158,20 @@ export function DepositsResource(client: EthersClient): DepositsResource {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // inside DepositsResource(client)
     async wait(h, opts) {
-      const l1Hash = typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
+      const l1Hash =
+        typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
       if (!l1Hash) return null;
 
-      // 1) Wait for L1 inclusion
-      const l1Rcpt = await client.l1.waitForTransaction(l1Hash);
-      if (!l1Rcpt) return null;
-      if (opts.for === 'l1') return l1Rcpt;
+      // 1) Wait for L1 inclusion (and optionally return it)
+      const l1Receipt = await client.l1.waitForTransaction(l1Hash);
+      if (!l1Receipt) return null;
+      if (opts.for === 'l1') return l1Receipt;
 
-      // 2) Extract **canonical** L2 tx hash (new, robust helper)
-      const info = tryExtractL2TxHashFromLogs(l1Rcpt.logs);
-      if (!info?.l2Hash) {
-        throw new Error('Could not find canonical L2 tx hash in L1 receipt logs.');
-      }
-      const l2Hash = info.l2Hash;
-
-      // 3) Wait for the L2 priority tx to execute
-      const l2Rcpt = await client.l2.waitForTransaction(l2Hash);
-      if (!l2Rcpt) return null;
-      if ((l2Rcpt as any).status !== 1) {
-        throw new Error(`L2 deposit execution failed (tx: ${l2Hash})`);
-      }
-      // Return the full L2 receipt for "l2" or "finalized" requests (matches declared return type).
-      if (opts.for === 'l2' || opts.for === 'finalized') return l2Rcpt;
-      return null;
+      // 2) Derive canonical L2 hash + wait for L2 execution
+      const { l2Receipt, l2TxHash } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
+      // Only 'l2' is supported here (no "finalized" concept for deposits)
+      console.log("L2", l2TxHash);
+      return l2Receipt;
     },
   };
 }
