@@ -14,6 +14,10 @@ export function messengerLogIndex(
     .map((lg, i) => ({ i, lg }))
     .filter(({ lg }) => (lg?.sender ?? "").toLowerCase() === messenger);
 
-  if (!hits.length) throw new Error("No L2->L1 messenger logs found in receipt.");
+  if (!hits.length) {
+    throw new Error("No L2->L1 messenger logs found in receipt.");
+  }
+
+  // Legacy-aligned: take the provided index when available, otherwise first hit.
   return (hits[index] ?? hits[0]).i;
 }

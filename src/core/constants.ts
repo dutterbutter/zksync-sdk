@@ -1,3 +1,4 @@
+import { keccak256, toUtf8Bytes } from 'ethers';
 import type { Address } from './types/primitives';
 /**
  * The address of the L1 `ETH` token.
@@ -39,6 +40,25 @@ export const L2_NATIVE_TOKEN_VAULT_ADDR = '0x00000000000000000000000000000000000
 // topic0 for L1MessageSent(address,bytes32,bytes)
 export const TOPIC_L1_MESSAGE_SENT =
   "0x2632cc0d58b0cb1017b99cc0b6cc66ad86440cc0dd923bfdaa294f95ba1b0201" as const;
+
+// Support both OS flavors
+export const TOPIC_L1_MESSAGE_SENT_NEW = keccak256(
+  toUtf8Bytes("L1MessageSent(uint256,bytes32,bytes)")
+).toLowerCase();
+export const TOPIC_L1_MESSAGE_SENT_LEG = keccak256(
+  toUtf8Bytes("L1MessageSent(address,bytes32,bytes)")
+).toLowerCase();
+
+// Bridgehub.NewPriorityRequest(chainId indexed, sender indexed, txHash bytes32, txId uint256, data bytes)
+// topic hash (stable across adapters)
+export const TOPIC_BRIDGEHUB_NEW_PRIORITY =
+  "0x0f87e1ea5eb1f034a6071ef630c174063e3d48756f853efaaf4292b929298240";
+
+// Optional canonical markers (some OS builds)
+export const TOPIC_CANONICAL_ASSIGNED =
+  "0x779f441679936c5441b671969f37400b8c3ed0071cb47444431bf985754560df"; // hash in topics[2]
+export const TOPIC_CANONICAL_SUCCESS =
+  "0xe4def01b981193a97a9e81230d7b9f31812ceaf23f864a828a82c687911cb2df"; // hash in topics[3]
 
 /**
  * Numerator used in scaling the gas limit to ensure acceptance of `L1->L2` transactions.

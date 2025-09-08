@@ -52,7 +52,7 @@ async function resolveL2TokenAddressViaAssetId(
 
   const ar = new Contract(l1AssetRouter, IL1AssetRouterABI, l1);
   const l1NTV = (await ar.nativeTokenVault()) as Address;
-  console.log('L1 NTV:', l1NTV);
+  
   const ntvL1 = new Contract(l1NTV, IL1NativeTokenVaultABI, l1);
   const assetId = (await ntvL1.assetId(l1Token)) as `0x${string}`;
   if (!assetId || /^0x0+$/.test(assetId)) {
@@ -106,51 +106,40 @@ async function main() {
   ]);
   console.log(`[${sym}] balances before  L1=${balL1Before}  L2=${balL2Before}`);
 
-  // // 5) Prepare withdraw params (ERC-20 route uses L2 token address)
-  // const params = {
-  //   token: l2Token,                  // L2 ERC-20
-  //   amount: parseUnits('25', dec),   // withdraw 25 tokens
-  //   to: me,                          // optional; defaults to sender if omitted
-  //   // l2GasLimit: 300_000n,         // optional override
-  // } as const;
+  // 5) Prepare withdraw params (ERC-20 route uses L2 token address)
+  const params = {
+    token: l2Token,                  // L2 ERC-20
+    amount: parseUnits('25', dec),   // withdraw 25 tokens
+    to: me,                          // optional; defaults to sender if omitted
+    // l2GasLimit: 300_000n,         // optional override
+  } as const;
 
-  // // 6) Quote (dry-run)
-  // const quote = await sdk.withdrawals.quote(params);
-  // console.log('QUOTE:', quote);
+  // 6) Quote (dry-run)
+  const quote = await sdk.withdrawals.quote(params);
+  console.log('QUOTE:', quote);
 
-  // // 7) Create → sends L2 approval(s) if needed, then withdraw call
-  // const handle = await sdk.withdrawals.create(params);
-  // console.log('Withdrawal handle:', handle);
-  // console.log('L2 withdraw tx hash:', handle.l2TxHash);
+  // 7) Create → sends L2 approval(s) if needed, then withdraw call
+  const handle = await sdk.withdrawals.create(params);
+  console.log('Withdrawal handle:', handle);
+  console.log('L2 withdraw tx hash:', handle.l2TxHash);
 
-  // // 8) Wait for L2 inclusion (only)
-  // const l2Receipt: TransactionReceiptZKsyncOS | null = await sdk.withdrawals.wait(handle, { for: 'l2' });
-  // console.log('L2 receipt hash:', l2Receipt?.hash);
-  // console.log('L2 l2ToL1Logs (if any):', (l2Receipt as any)?.l2ToL1Logs ?? []);
+  // 8) Wait for L2 inclusion (only)
+  const l2Receipt: TransactionReceiptZKsyncOS | null = await sdk.withdrawals.wait(handle, { for: 'l2' });
+  console.log('L2 receipt hash:', l2Receipt?.hash);
+  console.log('L2 l2ToL1Logs (if any):', (l2Receipt as any)?.l2ToL1Logs ?? []);
 
   // console.log('Withdrawal initiated on L2. Finalization on L1 can take several hours.');
 
   // await sleep(100000);
 
-  // 9) (Later) Check tri-state. We DO NOT poll tightly; we just check now.
-  const state = await sdk.withdrawals.isFinalized("0x11d076da79a77792e1d6311aeb556b44abcbdb56dee461892c203ddc1d5f789d");
-  console.log('Finalization state:', state); // 'unknown' | 'pending' | 'finalized'
 
-   const res = await sdk.withdrawals.finalize("0x11d076da79a77792e1d6311aeb556b44abcbdb56dee461892c203ddc1d5f789d");
-    console.log('Finalize result:', res.status, res.receipt?.hash ?? '(already finalized)');
+  // const state = await sdk.withdrawals.isFinalized("0x608eab50bf07195f35ca3441f39eab32b4149f210f858fa5473b14453b2f9a79");
+  // console.log('Finalization state:', state); // 'unknown' | 'pending' | 'finalized'
 
-  // if (state === 'finalized') {
-  //   console.log('Already finalized on L1.');
-  // } else if (state === 'pending') {
-  //   // Proofs are ready and not yet finalized → finalize now
-  //   const res = await sdk.withdrawals.finalize("0x11d076da79a77792e1d6311aeb556b44abcbdb56dee461892c203ddc1d5f789d");
-  //   console.log('Finalize result:', res.status, res.receipt?.hash ?? '(already finalized)');
-  // } else {
-  //   // 'unknown' => proofs not ready yet
-  //   console.log('Not ready to finalize yet. Try again later.');
-  // }  
+  //  const res = await sdk.withdrawals.finalize("0x608eab50bf07195f35ca3441f39eab32b4149f210f858fa5473b14453b2f9a79");
+  //   console.log('Finalize result:', res.status, res.receipt?.hash ?? '(already finalized)'); 
 
-  // 10) Balances after (useful when finalize just happened)
+  //10) Balances after (useful when finalize just happened)
   const [balL1After, balL2After] = await Promise.all([
     erc20L1.balanceOf(me),
     erc20L2.balanceOf(me),

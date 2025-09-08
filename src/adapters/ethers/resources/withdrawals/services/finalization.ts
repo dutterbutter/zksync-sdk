@@ -58,12 +58,10 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
   return {
     async fetchFinalizeDepositParams(l2TxHash: Hex) {
       // 1) Parsed L2 receipt → find L1MessageSent(...) → decode message bytes
-      const parsed = await l2.getTransactionReceipt(l2TxHash);
-      console.log("\n\n\n L2 receipt fetched:\n\n\n", parsed);
+      const parsed = await client.zks.getReceiptWithL2ToL1(l2TxHash);
       if (!parsed) throw new Error("L2 receipt not found");
 
       const ev = findL1MessageSentLog(parsed as any, {
-        preferAddr: L2_ASSET_ROUTER_ADDR,
         index: 0,
       });
       const message = AbiCoder.defaultAbiCoder().decode(["bytes"], ev.data)[0] as Hex;
@@ -79,10 +77,9 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
 
       const proof = await client.zks.getL2ToL1LogProof(l2TxHash, idx);
 
-      // 3) Assemble params matching the Rust e2e
       const { chainId } = await l2.getNetwork();
-      const txIndex = Number(parsed.index ?? 0);
-
+      const txIndex = Number((parsed as any).transactionIndex ?? 0);
+      
       const params: FinalizeDepositParams = {
         chainId: BigInt(chainId),
         l2BatchNumber: proof.batchNumber,
@@ -100,7 +97,6 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     async isWithdrawalFinalized(key: WithdrawalKey) {
       const { nullifier } = await client.ensureAddresses();
       const c = new Contract(nullifier, IL1NullifierMini, l1);
-      console.log("\n\n\n Checking finalization on Nullifier:\n\n\n", nullifier, key);
       return await c.isWithdrawalFinalized(
         key.chainIdL2,
         key.l2BatchNumber,
@@ -111,7 +107,6 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     async finalizeDeposit(params: FinalizeDepositParams, nullifier: Address) {
       // signer-bound for write
       const c = new Contract(nullifier, IL1NullifierABI as any, signer);
-      console.log("\n\n\n Sending finalizeDeposit to Nullifier:\n\n\n", nullifier, params);
       const tx = await c.finalizeDeposit(params);
       return { hash: tx.hash, wait: () => tx.wait() };
     },
