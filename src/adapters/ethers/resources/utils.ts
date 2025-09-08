@@ -1,13 +1,15 @@
-import type {
-  BytesLike} from 'ethers';
-import {
-  AbiCoder,
-  ethers,
-} from 'ethers';
+import type { BytesLike } from 'ethers';
+import { AbiCoder, ethers } from 'ethers';
 import type { Address } from '../../../core/types';
 import type { IL1NativeTokenVault } from '../typechain';
 import { isAddressEq } from '../../../core/utils/addr';
-import { L2_NATIVE_TOKEN_VAULT_ADDRESS, LEGACY_ETH_ADDRESS, ETH_ADDRESS_IN_CONTRACTS, L1_FEE_ESTIMATION_COEF_DENOMINATOR, L1_FEE_ESTIMATION_COEF_NUMERATOR } from '../../../core/constants';
+import {
+  L2_NATIVE_TOKEN_VAULT_ADDRESS,
+  LEGACY_ETH_ADDRESS,
+  ETH_ADDRESS_IN_CONTRACTS,
+  L1_FEE_ESTIMATION_COEF_DENOMINATOR,
+  L1_FEE_ESTIMATION_COEF_NUMERATOR,
+} from '../../../core/constants';
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../client';
 

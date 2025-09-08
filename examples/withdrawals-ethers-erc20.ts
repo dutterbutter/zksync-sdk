@@ -28,52 +28,17 @@ import { createEthersSdk } from '../src/adapters/ethers/kit';
 import type { Address } from '../src/core/types/primitives';
 
 import { Contract } from 'ethers';
-import {
-  L2_NATIVE_TOKEN_VAULT_ADDR,
-} from '../src/core/constants';
+import { L2_NATIVE_TOKEN_VAULT_ADDR } from '../src/core/constants';
 
 import { TransactionReceiptZKsyncOS } from '../src/adapters/ethers/resources/withdrawals/routes/types';
 
-import IBridgehubABI from "../src/internal/abis/IBridgehub.json" assert { type: "json" };
-import IL1AssetRouterABI from "../src/internal/abis/IL1AssetRouter.json" assert { type: "json" };
-import IL1NativeTokenVaultABI from "../src/internal/abis/IL1NativeTokenVault.json" assert { type: "json" };
-import IL2NativeTokenVaultABI from "../src/internal/abis/IL2NativeTokenVault.json" assert { type: "json" };
+import IBridgehubABI from '../src/internal/abis/IBridgehub.json' assert { type: 'json' };
+import IL1AssetRouterABI from '../src/internal/abis/IL1AssetRouter.json' assert { type: 'json' };
+import IL1NativeTokenVaultABI from '../src/internal/abis/L1NativeTokenVault.json' assert { type: 'json' };
+import L2NativeTokenVaultABI from '../src/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
 import IERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
 import { sleep } from 'bun';
 
-async function resolveL2TokenAddressViaAssetId(
-  l1: JsonRpcProvider,
-  l2: JsonRpcProvider,
-  bridgehub: Address,
-  l1Token: Address
-): Promise<Address> {
-  const bh = new Contract(bridgehub, IBridgehubABI, l1);
-  const l1AssetRouter = (await bh.assetRouter()) as Address;
-
-  const ar = new Contract(l1AssetRouter, IL1AssetRouterABI, l1);
-  const l1NTV = (await ar.nativeTokenVault()) as Address;
-  
-  const ntvL1 = new Contract(l1NTV, IL1NativeTokenVaultABI, l1);
-  const assetId = (await ntvL1.assetId(l1Token)) as `0x${string}`;
-  if (!assetId || /^0x0+$/.test(assetId)) {
-    throw new Error(`L1 NTV has no assetId for ${l1Token} (token not registered?)`);
-  }
-
-  const ntvL2 = new Contract(L2_NATIVE_TOKEN_VAULT_ADDR, IL2NativeTokenVaultABI, l2);
-  const l2Token = (await ntvL2.tokenAddress(assetId)) as Address;
-
-  if (!l2Token || /^0x0+$/.test(l2Token)) {
-    // predictable address fallback
-    const l1ChainId = await bh.L1_CHAIN_ID().catch(() => undefined);
-    if (l1ChainId != null) {
-      const expected = (await ntvL2.calculateCreate2TokenAddress(l1ChainId, l1Token)) as Address;
-      if (expected && !/^0x0+$/.test(expected)) return expected;
-    }
-    throw new Error(`L2 NTV has no tokenAddress for assetId ${assetId} (not deployed/registered yet)`);
-  }
-
-  return l2Token;
-}
 
 // Replace with a real **L2 ERC-20 token address** you hold on L2
 const L1_ERC20_TOKEN = '0x71C95911E9a5D330f4D621842EC243EE1343292e' as Address;
@@ -92,7 +57,8 @@ async function main() {
 
   // 3) Discover Bridgehub (no hardcoding) and resolve L2 token for our L1 token
   const { bridgehub } = await client.ensureAddresses();
-  const l2Token = await resolveL2TokenAddressViaAssetId(l1, l2, bridgehub, L1_ERC20_TOKEN);
+  const l2Token = await sdk.helpers.l2TokenAddress(L1_ERC20_TOKEN);
+  console.log(`Resolved L2 token for L1 ${L1_ERC20_TOKEN} as ${l2Token}`);
 
   // (Optional) Read symbols/decimals to make the logs nice
   const erc20L1 = new Contract(L1_ERC20_TOKEN, IERC20ABI, l1);
@@ -108,9 +74,9 @@ async function main() {
 
   // 5) Prepare withdraw params (ERC-20 route uses L2 token address)
   const params = {
-    token: l2Token,                  // L2 ERC-20
-    amount: parseUnits('25', dec),   // withdraw 25 tokens
-    to: me,                          // optional; defaults to sender if omitted
+    token: l2Token, // L2 ERC-20
+    amount: parseUnits('25', dec), // withdraw 25 tokens
+    to: me, // optional; defaults to sender if omitted
     // l2GasLimit: 300_000n,         // optional override
   } as const;
 
@@ -124,20 +90,20 @@ async function main() {
   console.log('L2 withdraw tx hash:', handle.l2TxHash);
 
   // 8) Wait for L2 inclusion (only)
-  const l2Receipt: TransactionReceiptZKsyncOS | null = await sdk.withdrawals.wait(handle, { for: 'l2' });
-  console.log('L2 receipt hash:', l2Receipt?.hash);
-  console.log('L2 l2ToL1Logs (if any):', (l2Receipt as any)?.l2ToL1Logs ?? []);
+  const l2Receipt = await sdk.withdrawals.wait(handle, {
+    for: 'l2',
+  });
+  console.log('Included at block:', l2Receipt?.blockNumber, 'status:', l2Receipt?.status, 'hash:', l2Receipt?.hash);
 
   // console.log('Withdrawal initiated on L2. Finalization on L1 can take several hours.');
 
   // await sleep(100000);
 
-
   // const state = await sdk.withdrawals.isFinalized("0x608eab50bf07195f35ca3441f39eab32b4149f210f858fa5473b14453b2f9a79");
   // console.log('Finalization state:', state); // 'unknown' | 'pending' | 'finalized'
 
   //  const res = await sdk.withdrawals.finalize("0x608eab50bf07195f35ca3441f39eab32b4149f210f858fa5473b14453b2f9a79");
-  //   console.log('Finalize result:', res.status, res.receipt?.hash ?? '(already finalized)'); 
+  //   console.log('Finalize result:', res.status, res.receipt?.hash ?? '(already finalized)');
 
   //10) Balances after (useful when finalize just happened)
   const [balL1After, balL2After] = await Promise.all([

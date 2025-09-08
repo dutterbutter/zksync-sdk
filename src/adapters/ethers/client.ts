@@ -6,14 +6,19 @@ import { isAddress, Contract, Interface } from 'ethers';
 import type { Address } from '../../core/types/primitives';
 import { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromEthers } from './rpc';
-import { L2_ASSET_ROUTER_ADDR, L2_NATIVE_TOKEN_VAULT_ADDR, L2_BASE_TOKEN_ADDRESS } from '../../core/constants';
+import {
+  L2_ASSET_ROUTER_ADDR,
+  L2_NATIVE_TOKEN_VAULT_ADDR,
+  L2_BASE_TOKEN_ADDRESS,
+} from '../../core/constants';
 
-import IBridgehubABI from "../../internal/abis/IBridgehub.json";
-import IL1AssetRouterABI from "../../internal/abis/IL1AssetRouter.json";
-import IL1NullifierABI from "../../internal/abis/IL1Nullifier.json";
-import IL2AssetRouterABI from "../../internal/abis/IL2AssetRouter.json";
-import IL2NativeTokenVaultABI from "../../internal/abis/IL2NativeTokenVault.json";
-import IBaseTokenABI from "../../internal/abis/IBaseToken.json";
+import IBridgehubABI from '../../internal/abis/IBridgehub.json';
+import IL1AssetRouterABI from '../../internal/abis/IL1AssetRouter.json';
+import IL1NullifierABI from '../../internal/abis/IL1Nullifier.json';
+import IL2AssetRouterABI from '../../internal/abis/IL2AssetRouter.json';
+import L2NativeTokenVaultABI from '../../internal/abis/L2NativeTokenVault.json';
+import L1NativeTokenVaultABI from '../../internal/abis/L1NativeTokenVault.json';
+import IBaseTokenABI from '../../internal/abis/IBaseToken.json';
 
 export interface ResolvedAddresses {
   bridgehub: Address;
@@ -22,7 +27,7 @@ export interface ResolvedAddresses {
   l1NativeTokenVault: Address;
   l2AssetRouter: Address;
   l2NativeTokenVault: Address;
-  l2BaseTokenSystem: Address; 
+  l2BaseTokenSystem: Address;
 }
 
 export interface EthersClient {
@@ -39,7 +44,7 @@ export interface EthersClient {
   /** Cached resolved addresses (Bridgehub today; can expand later) */
   ensureAddresses(): Promise<ResolvedAddresses>;
 
-    /** Convenience: connected ethers.Contract instances (also lazily created). */
+  /** Convenience: connected ethers.Contract instances (also lazily created). */
   contracts(): Promise<{
     bridgehub: Contract;
     l1AssetRouter: Contract;
@@ -64,7 +69,7 @@ type InitArgs = {
   l2: AbstractProvider;
   /** Signer for sending L1 txs. Should be connected to `l1` (we’ll ensure it). */
   signer: Signer;
-  
+
   /** Optional manual overrides (handy for local/dev) */
   overrides?: Partial<ResolvedAddresses>;
 };
@@ -113,47 +118,44 @@ export function createEthersClient(args: InitArgs): EthersClient {
     if (addrCache) return addrCache;
 
     // 1) Bridgehub (allow override)
-    const bridgehub =
-      args.overrides?.bridgehub ??
-      asAddress(await zks.getBridgehubAddress());
+    const bridgehub = args.overrides?.bridgehub ?? asAddress(await zks.getBridgehubAddress());
 
     // 2) L1 AssetRouter via Bridgehub.assetRouter()
     const IBridgehub = new Interface(IBridgehubABI as any);
     const bh = new Contract(bridgehub, IBridgehub, l1);
-    const l1AssetRouter =
-      args.overrides?.l1AssetRouter ??
-      asAddress(await bh.assetRouter());
+    const l1AssetRouter = args.overrides?.l1AssetRouter ?? asAddress(await bh.assetRouter());
 
     // 3) Nullifier via L1AssetRouter.L1_NULLIFIER()
     const IL1AssetRouter = new Interface(IL1AssetRouterABI as any);
     const ar = new Contract(l1AssetRouter, IL1AssetRouter, l1);
-    const nullifier =
-      args.overrides?.nullifier ??
-      asAddress(await ar.L1_NULLIFIER());
+    const nullifier = args.overrides?.nullifier ?? asAddress(await ar.L1_NULLIFIER());
 
     // 4) NTV via L1Nullifier.l1NativeTokenVault() (public var)
     const IL1Nullifier = new Interface(IL1NullifierABI as any);
     const nf = new Contract(nullifier, IL1Nullifier, l1);
     const l1NativeTokenVault =
-      args.overrides?.l1NativeTokenVault ??
-      asAddress(await nf.l1NativeTokenVault());
+      args.overrides?.l1NativeTokenVault ?? asAddress(await nf.l1NativeTokenVault());
 
     // 5) L2 AssetRouter (default known addr unless override provided)
-    const l2AssetRouter = asAddress(
-      args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDR,
-    );
+    const l2AssetRouter = asAddress(args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDR);
 
-        // 6) L2 NTV (predeploy; allow override)
+    // 6) L2 NTV (predeploy; allow override)
     const l2NativeTokenVault = asAddress(
-      args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDR
+      args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDR,
     );
 
     // 7) L2 BaseToken System (predeploy; allow override)
-    const l2BaseTokenSystem = asAddress(
-      args.overrides?.l2BaseTokenSystem ?? L2_BASE_TOKEN_ADDRESS
-    );
+    const l2BaseTokenSystem = asAddress(args.overrides?.l2BaseTokenSystem ?? L2_BASE_TOKEN_ADDRESS);
 
-    addrCache = { bridgehub, l1AssetRouter, nullifier, l1NativeTokenVault, l2AssetRouter, l2NativeTokenVault, l2BaseTokenSystem };
+    addrCache = {
+      bridgehub,
+      l1AssetRouter,
+      nullifier,
+      l1NativeTokenVault,
+      l2AssetRouter,
+      l2NativeTokenVault,
+      l2BaseTokenSystem,
+    };
     return addrCache;
   }
 
@@ -165,9 +167,9 @@ export function createEthersClient(args: InitArgs): EthersClient {
       bridgehub: new Contract(a.bridgehub, IBridgehubABI as any, l1),
       l1AssetRouter: new Contract(a.l1AssetRouter, IL1AssetRouterABI as any, l1),
       nullifier: new Contract(a.nullifier, IL1NullifierABI as any, l1),
-      l1NativeTokenVault: new Contract(a.l1NativeTokenVault, /* NTV ABI */ (await import("../../internal/abis/IL1NativeTokenVault.json")).default as any, l1),
+      l1NativeTokenVault: new Contract(a.l1NativeTokenVault, L1NativeTokenVaultABI as any, l1),
       l2AssetRouter: new Contract(a.l2AssetRouter, IL2AssetRouterABI as any, l2),
-      l2NativeTokenVault: new Contract(a.l2NativeTokenVault, IL2NativeTokenVaultABI as any, l2),
+      l2NativeTokenVault: new Contract(a.l2NativeTokenVault, L2NativeTokenVaultABI as any, l2),
       l2BaseTokenSystem: new Contract(a.l2BaseTokenSystem, IBaseTokenABI as any, l2),
     };
     return cCache;
@@ -178,9 +180,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     cCache = undefined;
   }
 
-  async function baseToken(
-    chainId: bigint,
-  ): Promise<Address> {
+  async function baseToken(chainId: bigint): Promise<Address> {
     const { bridgehub } = await ensureAddresses();
     const bh = new Contract(bridgehub, IBridgehubABI as any, l1);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -197,7 +197,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     ensureAddresses,
     contracts,
     refresh,
-    baseToken
+    baseToken,
   };
 
   return client;

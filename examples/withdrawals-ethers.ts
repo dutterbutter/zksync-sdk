@@ -44,13 +44,10 @@ async function main() {
   // 5) Create (sends approve if needed + withdraw call on L2)
   const handle = await sdk.withdrawals.create(params);
   console.log('Withdrawal handle:', handle);
-  console.log('L2 withdraw tx hash:', handle.l2TxHash);
 
   // 6) Wait for L2 inclusion
   const l2Receipt = await sdk.withdrawals.wait(handle, { for: 'l2' });
-  console.log('L2 receipt:', l2Receipt?.hash);
-
-  // Optional: later you can also add wait({for:"l1"}) or {for:"finalized"}
+  console.log('Included at block:', l2Receipt?.blockNumber, 'status:', l2Receipt?.status, 'hash:', l2Receipt?.hash);
 }
 
 main().catch((e) => {

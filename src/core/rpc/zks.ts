@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import type { RpcTransport } from "./transport";
-import type { AddressHex, ReceiptWithL2ToL1, ProofNormalized } from "./types";
-import type { Hex } from "../types/primitives";
+import type { RpcTransport } from './transport';
+import type { AddressHex, ReceiptWithL2ToL1, ProofNormalized } from './types';
+import type { Hex } from '../types/primitives';
 
 export interface ZksRpc {
   getBridgehubAddress(): Promise<AddressHex>;
@@ -12,9 +12,9 @@ export interface ZksRpc {
 }
 
 const METHODS = {
-  getBridgehub: "zks_getBridgehubContract",
-  getL2ToL1LogProof: "zks_getL2ToL1LogProof",
-  getReceipt: "eth_getTransactionReceipt",
+  getBridgehub: 'zks_getBridgehubContract',
+  getL2ToL1LogProof: 'zks_getL2ToL1LogProof',
+  getReceipt: 'eth_getTransactionReceipt',
 } as const;
 
 function toHexArray(arr: any): Hex[] {
@@ -28,12 +28,18 @@ export function normalizeProof(p: any): ProofNormalized {
   // batch_number | batchNumber
   const bnRaw = p?.batch_number ?? p?.batchNumber;
 
-  if (idRaw == null || bnRaw == null) throw new Error("ProofMalformed");
+  if (idRaw == null || bnRaw == null) throw new Error('ProofMalformed');
 
   const toBig = (x: any) =>
-    typeof x === "bigint" ? x :
-    typeof x === "number" ? BigInt(x) :
-    typeof x === "string" ? BigInt(x) : (() => { throw new Error("ProofType"); })();
+    typeof x === 'bigint'
+      ? x
+      : typeof x === 'number'
+        ? BigInt(x)
+        : typeof x === 'string'
+          ? BigInt(x)
+          : (() => {
+              throw new Error('ProofType');
+            })();
 
   return {
     id: toBig(idRaw),
@@ -47,8 +53,8 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
     async getBridgehubAddress() {
       const addr = await transport(METHODS.getBridgehub, []);
       // TODO: better validation
-      if (typeof addr !== "string" || !addr.startsWith("0x")) {
-        throw new Error("BridgehubUnavailable");
+      if (typeof addr !== 'string' || !addr.startsWith('0x')) {
+        throw new Error('BridgehubUnavailable');
       }
       return addr as AddressHex;
     },
@@ -56,7 +62,7 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
     async getL2ToL1LogProof(txHash, index) {
       const proof = await transport(METHODS.getL2ToL1LogProof, [txHash, index]);
       // TODO: better error envelope
-      if (!proof) throw new Error("ProofUnavailable");
+      if (!proof) throw new Error('ProofUnavailable');
       return normalizeProof(proof);
     },
 

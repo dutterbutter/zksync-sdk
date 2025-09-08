@@ -70,15 +70,14 @@ async function main() {
   console.log('QUOTE:', quote);
 
   const handle = await sdk.deposits.create({ token: TOKEN, to: me, amount: depositAmount });
-  console.log('L1 tx hash:', handle.l1TxHash);
+  console.log('CREATE response:', handle);
 
   const receipt = await sdk.deposits.wait(handle, { for: 'l1' });
-  console.log('Included at block:', receipt?.blockNumber, 'status:', receipt?.status);
+  console.log('Included at block:', receipt?.blockNumber, 'status:', receipt?.status, 'hash:', receipt?.hash);
 
   // // Wait until the corresponding L2 tx exists and is marked successful
   const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
-  console.log('L2 RECEIPT', l2Receipt);
-    console.log("Deposit executed on L2:", (l2Receipt as any)?.hash);
+  console.log('Included at block:', l2Receipt?.blockNumber, 'status:', l2Receipt?.status, 'hash:', l2Receipt?.hash);
 }
 
 main().catch((e) => {

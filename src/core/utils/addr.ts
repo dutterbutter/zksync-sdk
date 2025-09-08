@@ -1,8 +1,11 @@
 import type { Address, Hex } from '../types/primitives.ts';
-import { ETH_ADDRESS_IN_CONTRACTS, LEGACY_ETH_ADDRESS, L2_BASE_TOKEN_ADDRESS } from '../constants.ts';
+import {
+  ETH_ADDRESS_IN_CONTRACTS,
+  LEGACY_ETH_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
+} from '../constants.ts';
 
-
-export const isHash66 = (x?: string): x is Hex => !!x && x.startsWith("0x") && x.length === 66;
+export const isHash66 = (x?: string): x is Hex => !!x && x.startsWith('0x') && x.length === 66;
 
 /**
  * Compares stringified addresses, taking into account the fact that
@@ -47,6 +50,6 @@ export function isETH(token: Address) {
 
 export function normalizeAddrEq(a?: string, b?: string): boolean {
   if (!a || !b) return false;
-  const n = (s: string) => (s.startsWith("0x") ? s.toLowerCase() : `0x${s.toLowerCase()}`);
+  const n = (s: string) => (s.startsWith('0x') ? s.toLowerCase() : `0x${s.toLowerCase()}`);
   return n(a) === n(b);
 }

@@ -44,16 +44,18 @@ async function main() {
   // 4) Quote
   const quote = await sdk.deposits.quote(params);
   console.log('QUOTE response: ', quote);
-  console.log('Base cost (wei):', quote.baseCost.toString());
-
+  
   // 5) Create (prepare + send)
   const handle = await sdk.deposits.create(params);
-  console.log('L1 tx hash:', handle.l1TxHash);
   console.log('Handle response: ', handle);
 
   // 6) Wait (for now, L1 inclusion)
   const receipt = await sdk.deposits.wait(handle, { for: 'l1' });
-  console.log('Included at block:', receipt?.blockNumber, 'status:', receipt?.status);
+  console.log('Included at block:', receipt?.blockNumber, 'status:', receipt?.status, 'hash:', receipt?.hash);
+
+  // // Wait until the corresponding L2 tx exists and is marked successful
+  const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
+  console.log('Included at block:', l2Receipt?.blockNumber, 'status:', l2Receipt?.status, 'hash:', l2Receipt?.hash);
 }
 
 main().catch((e) => {

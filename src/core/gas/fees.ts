@@ -1,4 +1,4 @@
-import { L1_FEE_ESTIMATION_COEF_NUMERATOR, L1_FEE_ESTIMATION_COEF_DENOMINATOR } from "../constants";
+import { L1_FEE_ESTIMATION_COEF_NUMERATOR, L1_FEE_ESTIMATION_COEF_DENOMINATOR } from '../constants';
 
 /**
  * Scales the provided gas limit using a coefficient to ensure acceptance of L1->L2 transactions.

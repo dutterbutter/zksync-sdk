@@ -1,4 +1,4 @@
-import type { Hex } from "../types/primitives";
+import type { Hex } from '../types/primitives';
 
 export type AddressHex = `0x${string}`;
 
@@ -7,7 +7,7 @@ export type L2ToL1Log = {
   is_service: boolean;
   tx_number_in_block: number;
   sender: AddressHex;
-  key: Hex;                
+  key: Hex;
   value: Hex;
 };
 

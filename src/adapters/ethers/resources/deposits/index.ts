@@ -51,10 +51,7 @@ export interface DepositsResource {
     { ok: true; value: DepositHandle<TransactionRequest> } | { ok: false; error: unknown }
   >;
 
-  wait(
-    h: DepositWaitable,
-    opts: { for: 'l1' | 'l2' },
-  ): Promise<TransactionReceipt | null>;
+  wait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<TransactionReceipt | null>;
 }
 
 // --------------------
@@ -158,8 +155,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // inside DepositsResource(client)
     async wait(h, opts) {
-      const l1Hash =
-        typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
+      const l1Hash = typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
       if (!l1Hash) return null;
 
       // 1) Wait for L1 inclusion (and optionally return it)
@@ -168,9 +164,12 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       if (opts.for === 'l1') return l1Receipt;
 
       // 2) Derive canonical L2 hash + wait for L2 execution
-      const { l2Receipt, l2TxHash } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
-      // Only 'l2' is supported here (no "finalized" concept for deposits)
-      console.log("L2", l2TxHash);
+      const { l2Receipt } = await waitForL2ExecutionFromL1Tx(
+        client.l1,
+        client.l2,
+        l1Hash,
+      );
+    
       return l2Receipt;
     },
   };

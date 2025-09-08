@@ -1,4 +1,4 @@
-import type { Hex } from "../types/primitives";
+import type { Hex } from '../types/primitives';
 
 export type ParsedLog = {
   address: string;

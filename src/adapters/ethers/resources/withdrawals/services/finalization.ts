@@ -6,28 +6,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import {
-  AbiCoder,
-  Contract,
-  type TransactionReceipt,
-} from "ethers";
+import { AbiCoder, Contract, type TransactionReceipt } from 'ethers';
 
-import type { Address, Hex } from "../../../../../core/types/primitives";
-import type { EthersClient } from "../../../client";
+import type { Address, Hex } from '../../../../../core/types/primitives';
+import type { EthersClient } from '../../../client';
 import {
   type FinalizeDepositParams,
   type WithdrawalKey,
-} from "../../../../../core/types/flows/withdrawals";
+} from '../../../../../core/types/flows/withdrawals';
 
-import IL1NullifierABI from "../../../../../internal/abis/IL1Nullifier.json" assert { type: "json" };
+import IL1NullifierABI from '../../../../../internal/abis/IL1Nullifier.json' assert { type: 'json' };
 
 // core constants + helpers
-import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from "../../../../../core/constants";
-import { findL1MessageSentLog } from "../../../../../core/withdrawals/events";
-import { messengerLogIndex } from "../../../../../core/withdrawals/logs";
+import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
+import { findL1MessageSentLog } from '../../../../../core/withdrawals/events';
+import { messengerLogIndex } from '../../../../../core/withdrawals/logs';
 
 const IL1NullifierMini = [
-  "function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)"
+  'function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)',
 ] as const;
 
 export interface FinalizationServices {
@@ -35,7 +31,7 @@ export interface FinalizationServices {
    * Build finalizeDeposit params (mirrors the Rust e2e).
    */
   fetchFinalizeDepositParams(
-    l2TxHash: Hex
+    l2TxHash: Hex,
   ): Promise<{ params: FinalizeDepositParams; nullifier: Address }>;
 
   /**
@@ -48,7 +44,7 @@ export interface FinalizationServices {
    */
   finalizeDeposit(
     params: FinalizeDepositParams,
-    nullifier: Address
+    nullifier: Address,
   ): Promise<{ hash: string; wait: () => Promise<TransactionReceipt> }>;
 }
 
@@ -59,16 +55,16 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     async fetchFinalizeDepositParams(l2TxHash: Hex) {
       // 1) Parsed L2 receipt → find L1MessageSent(...) → decode message bytes
       const parsed = await client.zks.getReceiptWithL2ToL1(l2TxHash);
-      if (!parsed) throw new Error("L2 receipt not found");
+      if (!parsed) throw new Error('L2 receipt not found');
 
       const ev = findL1MessageSentLog(parsed as any, {
         index: 0,
       });
-      const message = AbiCoder.defaultAbiCoder().decode(["bytes"], ev.data)[0] as Hex;
+      const message = AbiCoder.defaultAbiCoder().decode(['bytes'], ev.data)[0] as Hex;
 
       // 2) Raw receipt → messenger entry index → proof
       const raw = await client.zks.getReceiptWithL2ToL1(l2TxHash);
-      if (!raw) throw new Error("Raw L2 receipt not found");
+      if (!raw) throw new Error('Raw L2 receipt not found');
 
       const idx = messengerLogIndex(raw, {
         index: 0,
@@ -79,7 +75,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
 
       const { chainId } = await l2.getNetwork();
       const txIndex = Number((parsed as any).transactionIndex ?? 0);
-      
+
       const params: FinalizeDepositParams = {
         chainId: BigInt(chainId),
         l2BatchNumber: proof.batchNumber,
@@ -97,11 +93,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     async isWithdrawalFinalized(key: WithdrawalKey) {
       const { nullifier } = await client.ensureAddresses();
       const c = new Contract(nullifier, IL1NullifierMini, l1);
-      return await c.isWithdrawalFinalized(
-        key.chainIdL2,
-        key.l2BatchNumber,
-        key.l2MessageIndex
-      );
+      return await c.isWithdrawalFinalized(key.chainIdL2, key.l2BatchNumber, key.l2MessageIndex);
     },
 
     async finalizeDeposit(params: FinalizeDepositParams, nullifier: Address) {

@@ -1,5 +1,6 @@
 // src/adapters/ethers/sdk.ts
-import type { EthersClient } from './client';
+import type { Contract } from 'ethers';
+import type { EthersClient, ResolvedAddresses } from './client';
 import {
   DepositsResource,
   type DepositsResource as DepositsResourceType,
@@ -8,15 +9,107 @@ import {
   WithdrawalsResource,
   type WithdrawalsResource as WithdrawalsResourceType,
 } from './resources/withdrawals/index';
+import { ETH_ADDRESS_IN_CONTRACTS, type Address, type Hex } from '../../core/types';
+import { isAddressEq } from '../../core/utils/addr';
+import { L2_BASE_TOKEN_ADDRESS, LEGACY_ETH_ADDRESS } from '../../core/constants';
 
 export interface EthersSdk {
   deposits: DepositsResourceType;
   withdrawals: WithdrawalsResourceType;
+  helpers: {
+    // addresses & contracts
+    addresses(): Promise<ResolvedAddresses>;
+    contracts(): Promise<{
+      bridgehub: Contract;
+      l1AssetRouter: Contract;
+      nullifier: Contract;
+      l1NativeTokenVault: Contract;
+      l2AssetRouter: Contract;
+      l2NativeTokenVault: Contract;
+      l2BaseTokenSystem: Contract;
+    }>;
+
+    // common getters
+    l1AssetRouter(): Promise<Contract>;
+    l1NativeTokenVault(): Promise<Contract>;
+    l1Nullifier(): Promise<Contract>;
+    baseToken(chainId?: bigint): Promise<Address>;
+    l2TokenAddress(l1Token: Address): Promise<Address>;
+    l1TokenAddress(l2Token: Address): Promise<Address>;
+    assetId(l1Token: Address): Promise<Hex>;
+  };
 }
 
 export function createEthersSdk(client: EthersClient): EthersSdk {
   return {
     deposits: DepositsResource(client),
     withdrawals: WithdrawalsResource(client),
+
+    // TODO: might update to create dedicated resources for these
+    helpers: {
+      addresses: () => client.ensureAddresses(),
+      contracts: () => client.contracts(),
+
+      async l1AssetRouter() {
+        const { l1AssetRouter } = await client.contracts();
+        return l1AssetRouter;
+      },
+      async l1NativeTokenVault() {
+        const { l1NativeTokenVault } = await client.contracts();
+        return l1NativeTokenVault;
+      },
+      async l1Nullifier() {
+        const { nullifier } = await client.contracts();
+        return nullifier;
+      },
+
+      async baseToken(chainId?: bigint) {
+        const id = chainId ?? BigInt((await client.l2.getNetwork()).chainId);
+        return client.baseToken(id);
+      },
+
+      async l2TokenAddress(l1Token: Address): Promise<Address> {
+        // ETH on L1 → contracts’ ETH placeholder on L2
+        if (isAddressEq(l1Token, LEGACY_ETH_ADDRESS)) {
+          return ETH_ADDRESS_IN_CONTRACTS;
+        }
+
+        // Base token short-circuit → L2 base-token system address
+        const { chainId } = await client.l2.getNetwork();
+        const base = await client.baseToken(BigInt(chainId));
+        if (isAddressEq(l1Token, base)) {
+          return L2_BASE_TOKEN_ADDRESS as Address;
+        }
+
+        // Default path: ask L2 NativeTokenVault
+        const { l2NativeTokenVault } = await client.contracts();
+        // IL2NativeTokenVault.l2TokenAddress(address) → address
+        const addr = (await l2NativeTokenVault.l2TokenAddress(l1Token)) as string;
+        return addr as Address;
+      },
+
+      async l1TokenAddress(l2Token: Address): Promise<Address> {
+        // ETH stays ETH (zero address) by convention
+        if (isAddressEq(l2Token, LEGACY_ETH_ADDRESS)) {
+          return LEGACY_ETH_ADDRESS;
+        }
+
+        // Default path: ask L2 AssetRouter (bridges expose reverse mapping)
+        const { l2AssetRouter } = await client.contracts();
+        // IL2AssetRouter.l1TokenAddress(address) → address
+        const addr = (await l2AssetRouter.l1TokenAddress(l2Token)) as string;
+        return addr as Address;
+      },
+
+      async assetId(l1Token: Address): Promise<Hex> {
+        // ETH normalization for NTV storage
+        const norm = isAddressEq(l1Token, LEGACY_ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
+
+        const { l1NativeTokenVault } = await client.contracts();
+        // IL1NativeTokenVault.assetId(address) → bytes32
+        const id = (await l1NativeTokenVault.assetId(norm)) as string;
+        return id as Hex;
+      },
+    },
   };
 }

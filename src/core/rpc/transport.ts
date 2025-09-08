@@ -4,7 +4,9 @@
 export type RpcTransport = (method: string, params?: unknown[]) => Promise<any>;
 
 // Ethers: provider.send(method, params)
-export function makeTransportFromEthers(provider: { send: (m: string, p: any[]) => Promise<any> }): RpcTransport {
+export function makeTransportFromEthers(provider: {
+  send: (m: string, p: any[]) => Promise<any>;
+}): RpcTransport {
   return (m, p = []) => provider.send(m, p);
 }
 

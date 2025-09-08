@@ -158,10 +158,10 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
     },
 
     async wait(h, opts) {
-      if (opts.for !== "l2") return null;
+      if (opts.for !== 'l2') return null;
 
       const l2Hash =
-        typeof h === "string" ? h : "l2TxHash" in h && h.l2TxHash ? h.l2TxHash : undefined;
+        typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : undefined;
       if (!l2Hash) return null;
 
       // Wait for L2 inclusion
@@ -180,18 +180,18 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
 
     async isFinalized(l2TxHash) {
       try {
-        console.log("\n\n\n Checking finalization for L2 tx:\n\n\n", l2TxHash);
+        console.log('\n\n\n Checking finalization for L2 tx:\n\n\n', l2TxHash);
         const { params } = await svc.fetchFinalizeDepositParams(l2TxHash);
-        console.log("\n\n\n Finalize params fetched:\n\n\n", params);
+        console.log('\n\n\n Finalize params fetched:\n\n\n', params);
         const done = await svc.isWithdrawalFinalized({
           chainIdL2: params.chainId,
           l2BatchNumber: params.l2BatchNumber,
           l2MessageIndex: params.l2MessageIndex,
         });
-        console.log("\n\n\n Finalization status:\n\n\n", done);
-        return done ? "finalized" : "pending";
+        console.log('\n\n\n Finalization status:\n\n\n', done);
+        return done ? 'finalized' : 'pending';
       } catch {
-        return "unknown";
+        return 'unknown';
       }
     },
 
@@ -200,7 +200,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         try {
           return await svc.fetchFinalizeDepositParams(l2TxHash);
         } catch (e) {
-          console.error("Error fetching finalize deposit params:", e);
+          console.error('Error fetching finalize deposit params:', e);
           // If you prefer, throw a domain error here (e.g., WithdrawalNotReady)
           throw e;
         }
@@ -213,11 +213,11 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         l2BatchNumber: params.l2BatchNumber,
         l2MessageIndex: params.l2MessageIndex,
       });
-      if (done) return { status: "finalized" as const };
+      if (done) return { status: 'finalized' as const };
 
       const tx = await svc.finalizeDeposit(params, nullifier);
       const rcpt = await tx.wait();
-      return { status: "finalized" as const, receipt: rcpt };
+      return { status: 'finalized' as const, receipt: rcpt };
     },
   };
 }
