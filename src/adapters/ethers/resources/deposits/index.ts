@@ -11,8 +11,8 @@ import type {
   DepositWaitable,
   DepositPlan,
   DepositRoute,
-} from '../../../../types/flows/deposits.ts';
-import type { Address, Hex } from '../../../../types/primitives.ts';
+} from '../../../../core/types/flows/deposits.ts';
+import type { Address, Hex } from '../../../../core/types/primitives.ts';
 import { waitForL2ExecutionFromL1Tx } from './services/verification.ts';
 
 import { Contract, type TransactionRequest, type TransactionReceipt } from 'ethers';

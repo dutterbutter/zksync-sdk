@@ -1,7 +1,7 @@
 // src/adapters/ethers/resources/withdrawals/routes/erc20.ts
 import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
-import type { PlanStep, ApprovalNeed } from '../../../../../types/flows/base';
+import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
 import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
 
 const L2NativeTokenVaultAbi = [

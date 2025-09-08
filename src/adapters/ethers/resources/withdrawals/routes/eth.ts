@@ -1,8 +1,8 @@
 // src/adapters/ethers/resources/withdrawals/routes/eth.ts
 import { Contract, Interface, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
-import type { PlanStep } from '../../../../../types/flows/base';
-import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../utils';
+import type { PlanStep } from '../../../../../core/types/flows/base';
+import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../../../../core/constants';
 
 const L2BaseTokenSystemAbi = [
   // NOTE: single-arg payable signature; amount is msg.value

@@ -2,7 +2,7 @@
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient } from '../src/adapters/ethers/client';
 import { createEthersSdk } from '../src/adapters/ethers/kit';
-import { Address } from '../src/types/primitives';
+import { Address } from '../src/core/types/primitives';
 
 // const L1_RPC = "https://sepolia.infura.io/v3/07e4434e9ba24cd68305123037336417";                     // e.g. https://sepolia.infura.io/v3/XXX
 // const L2_RPC = "https://zksync-os-stage-api.zksync-nodes.com";                     // your L2 RPC
@@ -17,6 +17,12 @@ async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);
   const l2 = new JsonRpcProvider(L2_RPC); // must support zks_getBridgehubContract
   const signer = new Wallet(PRIVATE_KEY, l1);
+
+  const balance = await l1.getBalance(signer.address);
+  console.log('L1 balance:', balance.toString());
+
+  const balanceL2 = await l2.getBalance(signer.address);
+  console.log('L2 balance:', balanceL2.toString());
 
   // 2) Create client + bounded SDK
   const client = await createEthersClient({ l1, l2, signer });

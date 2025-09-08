@@ -5,10 +5,10 @@
 import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
 import type { TransactionRequest } from 'ethers';
-import { encodeSecondBridgeErc20Args, pct } from '../../helpers';
+import { encodeSecondBridgeErc20Args } from '../../utils';
 import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
 import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
-import type { ApprovalNeed, PlanStep } from '../../../../../types/flows/base';
+import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/base';
 
 export function routeErc20Base(): DepositRouteStrategy {
   return {
@@ -72,7 +72,7 @@ export function routeErc20Base(): DepositRouteStrategy {
       };
       try {
         const est = await ctx.client.l1.estimateGas(bridgeTx);
-        bridgeTx.gasLimit = pct(est, 15);
+        bridgeTx.gasLimit = (BigInt(est) * 115n) / 100n;
       } catch {
         // ignore
       }

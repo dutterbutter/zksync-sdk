@@ -6,9 +6,9 @@
 import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
 import type { TransactionRequest } from 'ethers';
-import { pct, buildDirectRequestStruct } from '../../helpers';
+import { buildDirectRequestStruct } from '../../utils';
 import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
-import type { PlanStep } from '../../../../../types/flows/base';
+import type { PlanStep } from '../../../../../core/types/flows/base';
 
 export function routeEthDirect(): DepositRouteStrategy {
   return {
@@ -47,7 +47,7 @@ export function routeEthDirect(): DepositRouteStrategy {
       };
       try {
         const est = await ctx.client.l1.estimateGas(tx);
-        tx.gasLimit = pct(est, 15);
+        tx.gasLimit = (BigInt(est) * 115n) / 100n;
       } catch {
         // ignore
       }

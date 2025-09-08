@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Interface, type Log, type Provider, type TransactionReceipt } from "ethers";
-import type { Hex } from "../../../../../types/primitives";
+import type { Hex } from "../../../../../core/types/primitives";
 
 // Minimal fragments with a named txHash field
 const I_BRIDGEHUB = new Interface([
@@ -19,7 +19,7 @@ const TOPIC_CANONICAL_SUCCESS =
 const isHash66 = (x?: string): x is Hex => !!x && x.startsWith("0x") && x.length === 66;
 
 export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null {
-  // 1) Prefer Bridgehub.NewPriorityRequest (matches your e2e)
+  // Prefer Bridgehub.NewPriorityRequest (matches your e2e)
   for (const lg of logs) {
     if ((lg.topics?.[0] ?? "").toLowerCase() === TOPIC_BRIDGEHUB_NPR.toLowerCase()) {
       try {
@@ -32,7 +32,7 @@ export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null 
     }
   }
 
-  // 3) Last resort: canonical markers (if that network emits them)
+  // Last resort: canonical markers (if that network emits them)
   for (const lg of logs) {
     const t0 = (lg.topics?.[0] ?? "").toLowerCase();
     if (t0 === TOPIC_CANONICAL_ASSIGNED.toLowerCase()) {

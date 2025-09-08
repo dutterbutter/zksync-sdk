@@ -12,7 +12,6 @@ import {
 export interface EthersSdk {
   deposits: DepositsResourceType;
   withdrawals: WithdrawalsResourceType;
-  // later: finality, interop, allowances...
 }
 
 export function createEthersSdk(client: EthersClient): EthersSdk {

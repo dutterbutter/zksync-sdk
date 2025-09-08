@@ -1,18 +1,11 @@
 // src/adapters/ethers/resources/withdrawals/context.ts
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Contract, type TransactionRequest } from 'ethers';
+import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
-import type { Address } from '../../../../types/primitives';
-import type { WithdrawParams, WithdrawRoute } from '../../../../types/flows/withdrawals';
-import type { CommonCtx } from '../../../../types/flows/base';
-import IBridgehubABI from '../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
-import IL1AssetRouterABI from '../../../../internal/abis/IL1AssetRouter.json' assert { type: 'json' };
-import {
-  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-  L2_ASSET_ROUTER_ADDR,
-  L2_NATIVE_TOKEN_VAULT_ADDR,
-  isETH,
-} from '../utils';
+import type { Address } from '../../../../core/types/primitives';
+import { pickWithdrawRoute } from "../../../../core/withdrawals/route";
+import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
+import type { CommonCtx } from '../../../../core/types/flows/base';
 
 /** BuildCtx specialized for withdrawals (L2 send + optional L1 finalize) */
 export interface BuildCtx extends CommonCtx {
@@ -33,11 +26,6 @@ export interface BuildCtx extends CommonCtx {
   fee?: Partial<TransactionRequest>;
 }
 
-/** Route picker for withdrawals: ETH uses base-token system contract; ERC-20 uses L2AssetRouter */
-function pickWithdrawRoute(token: Address): WithdrawRoute {
-  return isETH(token) ? 'eth' : 'erc20';
-}
-
 export async function commonCtx(
   p: WithdrawParams,
   client: EthersClient,
@@ -45,20 +33,17 @@ export async function commonCtx(
   const sender = (await client.signer.getAddress()) as Address;
 
   // Resolve Bridgehub (L1) + L2 chain id
-  const { bridgehub } = await client.ensureAddresses();
+  const {
+    bridgehub,
+    l1AssetRouter,
+    nullifier: l1Nullifier,
+    l2AssetRouter,
+    l2NativeTokenVault,
+    l2BaseTokenSystem,
+  } = await client.ensureAddresses();
+
   const { chainId } = await client.l2.getNetwork();
   const chainIdL2 = BigInt(chainId);
-
-  // --- L1 side: get L1AssetRouter, then query its L1_NULLIFIER() ---
-  const bh = new Contract(bridgehub, IBridgehubABI, client.l1);
-  const l1AssetRouter = (await bh.assetRouter()) as Address;
-  const ar = new Contract(l1AssetRouter, IL1AssetRouterABI, client.l1);
-  const l1Nullifier = (await ar.nativeTokenVault()) as Address;
-
-  // --- L2 side: predeploys (fixed addresses) ---
-  const l2AssetRouter = L2_ASSET_ROUTER_ADDR as Address;
-  const l2NativeTokenVault = L2_NATIVE_TOKEN_VAULT_ADDR as Address;
-  const l2BaseTokenSystem = L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as Address;
 
   // Route: eth | erc20
   const route = pickWithdrawRoute(p.token);
@@ -77,7 +62,7 @@ export async function commonCtx(
     // Route
     route,
 
-    // Well-knowns
+    // Well-knowns (from client cache)
     l1AssetRouter,
     l1Nullifier,
     l2AssetRouter,

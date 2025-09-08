@@ -15,10 +15,10 @@ import type {
   WithdrawalWaitable,
   WithdrawRoute,
   FinalizedTriState,
-} from '../../../../types/flows/withdrawals';
-import type { Hex } from '../../../../types/primitives';
+} from '../../../../core/types/flows/withdrawals';
+import type { Hex } from '../../../../core/types/primitives';
 import { commonCtx } from './context';
-import { WithdrawalNotReady } from '../../../../types/flows/withdrawals';
+// import { WithdrawalNotReady } from '../../../../core/types/flows/withdrawals';
 import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes/types';
 import { routeEth } from './routes/eth';
 import { routeErc20 } from './routes/erc20';
@@ -73,26 +73,19 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
   const svc: FinalizationServices = createFinalizationServices(client);
   async function buildPlan(p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>> {
     const ctx = await commonCtx(p, client);
-    svc.primeKnownAddresses({
-      l1AssetRouter: ctx.l1AssetRouter,
-      nullifier: ctx.l1Nullifier,
-    });
 
-    const route = ctx.route;
-
-    await ROUTES[route].preflight?.(p, ctx);
-
-    const { steps, approvals /*, quoteExtras*/ } = await ROUTES[route].build(p, ctx);
+    await ROUTES[ctx.route].preflight?.(p, ctx);
+    const { steps, approvals } = await ROUTES[ctx.route].build(p, ctx);
 
     const summary: WithdrawQuote = {
-      route,
+      route: ctx.route,
       approvalsNeeded: approvals,
       suggestedL2GasLimit: ctx.l2GasLimit,
       minGasLimitApplied: true,
       gasBufferPctApplied: ctx.gasBufferPct,
     };
 
-    return { route, summary, steps };
+    return { route: ctx.route, summary, steps };
   }
 
   return {
@@ -135,14 +128,12 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
 
         if (!step.tx.gasLimit) {
           try {
-            console.log('tx', step.tx);
             const est = await client.l2.estimateGas(step.tx);
             step.tx.gasLimit = (BigInt(est) * 115n) / 100n;
           } catch {
             // ignore; user/provider will fill
           }
         }
-        console.log('tx for send', step.tx);
         const sent = await l2Signer.sendTransaction(step.tx);
         stepHashes[step.key] = sent.hash as Hex;
         await sent.wait();
@@ -167,60 +158,66 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
     },
 
     async wait(h, opts) {
-      if (opts.for !== 'l2') return null;
+      if (opts.for !== "l2") return null;
 
       const l2Hash =
-        typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : undefined;
+        typeof h === "string" ? h : "l2TxHash" in h && h.l2TxHash ? h.l2TxHash : undefined;
       if (!l2Hash) return null;
 
-      const base = await svc.l2WaitForTransaction(l2Hash);
-      return await svc.enrichL2Receipt(l2Hash, base);
+      // Wait for L2 inclusion
+      const rcpt = await client.l2.waitForTransaction(l2Hash);
+      if (!rcpt) return null;
+
+      try {
+        const raw = await client.zks.getReceiptWithL2ToL1(l2Hash);
+        (rcpt as any).l2ToL1Logs = raw?.l2ToL1Logs ?? [];
+      } catch {
+        (rcpt as any).l2ToL1Logs = (rcpt as any).l2ToL1Logs ?? [];
+      }
+
+      return rcpt as unknown as TransactionReceiptZKsyncOS;
     },
 
-    // === NEW: tri-state without encouraging tight polling ===
     async isFinalized(l2TxHash) {
       try {
-        const { params, l1AssetRouter } = await svc.fetchFinalizeDepositParams(l2TxHash);
-        const done = await svc.isWithdrawalFinalized(l1AssetRouter, {
+        console.log("\n\n\n Checking finalization for L2 tx:\n\n\n", l2TxHash);
+        const { params } = await svc.fetchFinalizeDepositParams(l2TxHash);
+        console.log("\n\n\n Finalize params fetched:\n\n\n", params);
+        const done = await svc.isWithdrawalFinalized({
           chainIdL2: params.chainId,
           l2BatchNumber: params.l2BatchNumber,
           l2MessageIndex: params.l2MessageIndex,
         });
-        return done ? 'finalized' : 'pending';
+        console.log("\n\n\n Finalization status:\n\n\n", done);
+        return done ? "finalized" : "pending";
       } catch {
-        // Cannot derive params (likely proofs not ready)
-        return 'unknown';
+        return "unknown";
       }
     },
 
-    // === NEW: attempt to finalize now; throws WithdrawalNotReady if not yet possible ===
     async finalize(l2TxHash) {
       const pack = await (async () => {
         try {
           return await svc.fetchFinalizeDepositParams(l2TxHash);
-        } catch(e) {
+        } catch (e) {
           console.error("Error fetching finalize deposit params:", e);
-          //   throw new WithdrawalNotReady();
+          // If you prefer, throw a domain error here (e.g., WithdrawalNotReady)
+          throw e;
         }
       })();
 
-      const { params, l1AssetRouter, nullifier } = pack;
+      const { params, nullifier } = pack;
 
-      const done = await svc.isWithdrawalFinalized(l1AssetRouter, {
+      const done = await svc.isWithdrawalFinalized({
         chainIdL2: params.chainId,
         l2BatchNumber: params.l2BatchNumber,
         l2MessageIndex: params.l2MessageIndex,
       });
-
-      if (done) return { status: 'finalized' as const };
-
-      if (!svc.finalizeDeposit) {
-        throw new Error('Finalize requires an L1 signer bound to the client.');
-      }
+      if (done) return { status: "finalized" as const };
 
       const tx = await svc.finalizeDeposit(params, nullifier);
       const rcpt = await tx.wait();
-      return { status: 'finalized' as const, receipt: rcpt };
+      return { status: "finalized" as const, receipt: rcpt };
     },
   };
 }

@@ -2,7 +2,7 @@
 import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethers';
 import { createEthersClient } from '../src/adapters/ethers/client';
 import { createEthersSdk } from '../src/adapters/ethers/kit';
-import { Address } from '../src/types/primitives';
+import { Address } from '../src/core/types/primitives';
 import { sleep } from 'bun';
 
 // const L1_RPC = "https://sepolia.infura.io/v3/07e4434e9ba24cd68305123037336417";                     // e.g. https://sepolia.infura.io/v3/XXX
@@ -51,10 +51,10 @@ async function main() {
   // 2) Create client + bounded SDK
   const client = await createEthersClient({ l1, l2, signer });
   const sdk = createEthersSdk(client);
-  // sepolia
+  // // sepolia
   //const TOKEN = '0x8464135c8F25Da09e49BC8782676a84730C318bC' as Address;
   //local
-  const TOKEN = '0x8464135c8F25Da09e49BC8782676a84730C318bC' as Address;
+  const TOKEN = '0x71C95911E9a5D330f4D621842EC243EE1343292e' as Address;
 
   // 3) Deposit params: send 10 units of ERC20 (respecting decimals) to my own L2 address
   const me = (await signer.getAddress()) as Address;
@@ -78,12 +78,7 @@ async function main() {
   // // Wait until the corresponding L2 tx exists and is marked successful
   const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
   console.log('L2 RECEIPT', l2Receipt);
-  //   console.log("Deposit executed on L2:", (l2Receipt as any)?.transactionHash);
-
-  //   // Wait until the L2 deposit is finalized/provable (zks_getL2ToL1LogProof returns)
-  //   const finalizedReceipt = await sdk.deposits.wait(handle, { for: "finalized" });
-  //   console.log("finalizedreceipt", finalizedReceipt);
-  //   console.log("Deposit finalized:", (finalizedReceipt as any)?.transactionHash);
+    console.log("Deposit executed on L2:", (l2Receipt as any)?.hash);
 }
 
 main().catch((e) => {

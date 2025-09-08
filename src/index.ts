@@ -1,1 +1,1 @@
-export * as types from './types';
+export * as types from './core/types';

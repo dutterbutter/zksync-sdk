@@ -1,9 +1,9 @@
 // src/adapters/ethers/resources/withdrawals/routes/types.ts
 import type { TransactionRequest, TransactionReceipt } from 'ethers';
-import type { WithdrawParams } from '../../../../../types/flows/withdrawals';
-import type { RouteStrategy } from '../../../../../types/flows/route';
+import type { WithdrawParams } from '../../../../../core/types/flows/withdrawals';
+import type { RouteStrategy } from '../../../../../core/types/flows/route';
 import type { BuildCtx as WithdrawBuildCtx } from '../context';
-import { Address, Hex } from '../../../../../types';
+import { Address, Hex } from '../../../../../core/types';
 
 // No special extras today, but keep extensible
 export type WithdrawQuoteExtras = Record<string, never>;
