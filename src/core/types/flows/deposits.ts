@@ -48,3 +48,19 @@ export interface DepositHandle<Tx>
 
 /** Waitable */
 export type DepositWaitable = Hex | { l1TxHash: Hex } | DepositHandle<unknown>;
+
+export type DepositPhase =
+  | 'L1_PENDING'
+  | 'L1_INCLUDED'  // L1 mined, L2 hash not derived yet
+  | 'L2_PENDING'   // we have L2 hash, but no receipt yet
+  | 'L2_EXECUTED'  // L2 receipt.status === 1
+  | 'L2_FAILED'    // L2 receipt.status === 0
+  | 'UNKNOWN';
+
+export type DepositStatus = {
+  phase: DepositPhase;
+  l1TxHash: Hex;
+  l2TxHash?: Hex;
+  hint?: 'retry-later' | 'already-executed' | 'check-logs' | 'unknown';
+};
+  

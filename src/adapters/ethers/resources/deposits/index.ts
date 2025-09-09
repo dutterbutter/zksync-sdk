@@ -11,9 +11,10 @@ import type {
   DepositWaitable,
   DepositPlan,
   DepositRoute,
+  DepositStatus,
 } from '../../../../core/types/flows/deposits.ts';
 import type { Address, Hex } from '../../../../core/types/primitives.ts';
-import { waitForL2ExecutionFromL1Tx } from './services/verification.ts';
+import { extractL2TxHashFromL1Logs, waitForL2ExecutionFromL1Tx } from './services/verification.ts';
 
 import { Contract, type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
 import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'json' };
@@ -51,7 +52,10 @@ export interface DepositsResource {
     { ok: true; value: DepositHandle<TransactionRequest> } | { ok: false; error: unknown }
   >;
 
+  status(h: DepositWaitable | Hex): Promise<DepositStatus>;
+
   wait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<TransactionReceipt | null>;
+  tryWait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<{ ok: true; value: TransactionReceipt } | { ok: false; error: unknown }>
 }
 
 // --------------------
@@ -153,6 +157,28 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       }
     },
 
+    async status(h: DepositWaitable | Hex): Promise<DepositStatus> {
+      const l1TxHash: Hex = typeof h === 'string' ? (h) : h.l1TxHash;
+      if (!l1TxHash) return { phase: 'UNKNOWN', l1TxHash: '0x' as Hex, hint: 'unknown' };
+
+      // L1 receipt?
+      const l1Rcpt = await client.l1.getTransactionReceipt(l1TxHash).catch(() => null);
+      if (!l1Rcpt) return { phase: 'L1_PENDING', l1TxHash, hint: 'retry-later' };
+
+      // Derive L2 canonical hash (from logs)
+      const l2TxHash = extractL2TxHashFromL1Logs(l1Rcpt.logs);
+      if (!l2TxHash) return { phase: 'L1_INCLUDED', l1TxHash, hint: 'retry-later' };
+
+      // L2 receipt?
+      const l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash).catch(() => null);
+      if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash, hint: 'retry-later' };
+
+      const ok = (l2Rcpt as any).status === 1;
+      return ok
+        ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash, hint: 'already-executed' }
+        : { phase: 'L2_FAILED', l1TxHash, l2TxHash, hint: 'check-logs' };
+    },
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async wait(h, opts) {
       const l1Hash = typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
@@ -167,6 +193,16 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       const { l2Receipt } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
 
       return l2Receipt;
+    },
+
+    async tryWait(h, opts) {
+      try {
+        const v = await this.wait(h, opts);
+        if (v) return { ok: true, value: v };
+        throw new Error('No receipt');
+      } catch (err) {
+        return { ok: false, error: err };
+      }
     },
   };
 }
