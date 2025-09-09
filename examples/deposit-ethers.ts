@@ -57,6 +57,9 @@ async function main() {
   const create = await sdk.deposits.create(params);
   console.log('CREATE response: ', create);
 
+  const status = await sdk.deposits.status(create);
+  console.log('STATUS response: ', status);
+  
   // Wait (for now, L1 inclusion)
   const receipt = await sdk.deposits.wait(create, { for: 'l1' });
   console.log(
@@ -67,6 +70,9 @@ async function main() {
     'hash:',
     receipt?.hash,
   );
+
+  const status2 = await sdk.deposits.status(create);
+  console.log('STATUS2 response: ', status2);
 
   // Wait (for now, L2 inclusion)
   const l2Receipt = await sdk.deposits.wait(create, { for: 'l2' });
