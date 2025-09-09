@@ -4,9 +4,7 @@ import type { Hex } from '../../../../../core/types/primitives';
 import { isHash66 } from '../../../../../core/utils/addr';
 import { TOPIC_CANONICAL_ASSIGNED, TOPIC_CANONICAL_SUCCESS } from '../../../../../core/constants';
 
-// Minimal fragments with a named txHash field
 const I_BRIDGEHUB = new Interface([
-  // Common recent OS builds expose txHash directly
   'event NewPriorityRequest(uint256 indexed chainId, address indexed sender, bytes32 txHash, uint256 txId, bytes data)',
 ]);
 const TOPIC_BRIDGEHUB_NPR = I_BRIDGEHUB.getEvent('NewPriorityRequest')!.topicHash;

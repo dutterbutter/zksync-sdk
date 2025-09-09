@@ -15,7 +15,7 @@ import type {
 import type { Address, Hex } from '../../../../core/types/primitives.ts';
 import { waitForL2ExecutionFromL1Tx } from './services/verification.ts';
 
-import { Contract, type TransactionRequest, type TransactionReceipt } from 'ethers';
+import { Contract, type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
 import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'json' };
 
 import { commonCtx } from './context';
@@ -114,11 +114,13 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       const plan = await this.prepare(p);
       const stepHashes: Record<string, Hex> = {};
 
-      const from = await client.signer.getAddress();
-      let next = await client.l1.getTransactionCount(from, 'pending');
+      const managed = new NonceManager(client.signer);
+
+      const from = await managed.getAddress();
+      let next = await client.l1.getTransactionCount(from, 'latest');
 
       for (const step of plan.steps) {
-        // re-check allowance so we only send real steps
+        // re-check allowance
         if (step.kind === 'approve') {
           const [, token, router] = step.key.split(':');
           const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
@@ -135,7 +137,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
             // ignore
           }
         }
-        const sent = await client.signer.sendTransaction(step.tx);
+        const sent = await managed.sendTransaction(step.tx);
         stepHashes[step.key] = sent.hash as Hex;
         await sent.wait();
       }
@@ -151,25 +153,19 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       }
     },
 
-    // TODO: still need clean up this flow for L1/L2
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // inside DepositsResource(client)
     async wait(h, opts) {
       const l1Hash = typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
       if (!l1Hash) return null;
 
-      // 1) Wait for L1 inclusion (and optionally return it)
+      // Wait for L1 inclusion
       const l1Receipt = await client.l1.waitForTransaction(l1Hash);
       if (!l1Receipt) return null;
       if (opts.for === 'l1') return l1Receipt;
 
-      // 2) Derive canonical L2 hash + wait for L2 execution
-      const { l2Receipt } = await waitForL2ExecutionFromL1Tx(
-        client.l1,
-        client.l2,
-        l1Hash,
-      );
-    
+      // Derive canonical L2 hash + wait for L2 execution
+      const { l2Receipt } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
+
       return l2Receipt;
     },
   };

@@ -29,3 +29,6 @@ export type ProofNormalized = {
   batchNumber: bigint;
   proof: Hex[];
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RpcTransport = (method: string, params?: unknown[]) => Promise<any>;

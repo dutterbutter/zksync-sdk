@@ -24,7 +24,7 @@ const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6
 
 import { Interface, JsonRpcProvider, Wallet, parseUnits } from 'ethers';
 import { createEthersClient } from '../src/adapters/ethers/client';
-import { createEthersSdk } from '../src/adapters/ethers/kit';
+import { createEthersSdk } from '../src/adapters/ethers/sdk';
 import type { Address } from '../src/core/types/primitives';
 
 import { Contract } from 'ethers';
@@ -39,73 +39,81 @@ import L2NativeTokenVaultABI from '../src/internal/abis/L2NativeTokenVault.json'
 import IERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
 import { sleep } from 'bun';
 
-
 // Replace with a real **L2 ERC-20 token address** you hold on L2
 const L1_ERC20_TOKEN = '0x71C95911E9a5D330f4D621842EC243EE1343292e' as Address;
 
 async function main() {
-  // 1) Providers + signer (signer is on L1; SDK will connect it as needed)
   const l1 = new JsonRpcProvider(L1_RPC);
   const l2 = new JsonRpcProvider(L2_RPC);
   const signer = new Wallet(PRIVATE_KEY, l1);
 
-  // 2) Client + SDK
   const client = createEthersClient({ l1, l2, signer });
   const sdk = createEthersSdk(client);
 
   const me = (await signer.getAddress()) as Address;
-
-  // 3) Discover Bridgehub (no hardcoding) and resolve L2 token for our L1 token
-  const { bridgehub } = await client.ensureAddresses();
   const l2Token = await sdk.helpers.l2TokenAddress(L1_ERC20_TOKEN);
-  console.log(`Resolved L2 token for L1 ${L1_ERC20_TOKEN} as ${l2Token}`);
 
-  // (Optional) Read symbols/decimals to make the logs nice
   const erc20L1 = new Contract(L1_ERC20_TOKEN, IERC20ABI, l1);
   const erc20L2 = new Contract(l2Token, IERC20ABI, l2);
   const [sym, dec] = await Promise.all([erc20L2.symbol(), erc20L2.decimals()]);
 
-  // 4) Balances before
+  // Balances before
   const [balL1Before, balL2Before] = await Promise.all([
     erc20L1.balanceOf(me),
     erc20L2.balanceOf(me),
   ]);
   console.log(`[${sym}] balances before  L1=${balL1Before}  L2=${balL2Before}`);
 
-  // 5) Prepare withdraw params (ERC-20 route uses L2 token address)
+  // Prepare withdraw params (ERC-20 route uses L2 token address)
   const params = {
     token: l2Token, // L2 ERC-20
     amount: parseUnits('25', dec), // withdraw 25 tokens
-    to: me, // optional; defaults to sender if omitted
-    // l2GasLimit: 300_000n,         // optional override
+    to: me,
+    // l2GasLimit: 300_000n,
   } as const;
 
-  // 6) Quote (dry-run)
-  const quote = await sdk.withdrawals.quote(params);
-  console.log('QUOTE:', quote);
+   // -------- Dry runs / planning --------
+  console.log('TRY QUOTE:', await sdk.withdrawals.tryQuote(params));
+  console.log('QUOTE:', await sdk.withdrawals.quote(params));
+  console.log('TRY PREPARE:', await sdk.withdrawals.tryPrepare(params));
+  console.log('PREPARE:', await sdk.withdrawals.prepare(params));
 
-  // 7) Create → sends L2 approval(s) if needed, then withdraw call
-  const handle = await sdk.withdrawals.create(params);
-  console.log('Withdrawal handle:', handle);
-  console.log('L2 withdraw tx hash:', handle.l2TxHash);
+  // -------- Create (L2 approvals if needed + withdraw) --------
+  const created = await sdk.withdrawals.create(params);
+  console.log('CREATE:', created);
 
-  // 8) Wait for L2 inclusion (only)
-  const l2Receipt = await sdk.withdrawals.wait(handle, {
-    for: 'l2',
-  });
-  console.log('Included at block:', l2Receipt?.blockNumber, 'status:', l2Receipt?.status, 'hash:', l2Receipt?.hash);
+  // Wait for L2 inclusion
+  const l2Receipt = await sdk.withdrawals.wait(created, { for: 'l2' });
+  console.log(
+    'L2 included: block=',
+    l2Receipt?.blockNumber,
+    'status=',
+    l2Receipt?.status,
+    'hash=',
+    l2Receipt?.hash,
+  );
 
-  // console.log('Withdrawal initiated on L2. Finalization on L1 can take several hours.');
+  // Wait until the withdrawal is ready to finalize (no side-effects)
+  await sdk.withdrawals.wait(created.l2TxHash, { for: 'ready' });
+  console.log('STATUS (ready):', await sdk.withdrawals.status(created.l2TxHash));
 
-  // await sleep(100000);
+  // Finalize on L1 (idempotent)
+  const fin = await sdk.withdrawals.tryFinalize(created.l2TxHash);
+  if (!fin.ok) {
+    console.error('FINALIZE failed:', fin.error);
+    return;
+  }
+  console.log('FINALIZE status:', fin.value.status, fin.value.receipt?.hash ?? '(already finalized)');
 
-  // const state = await sdk.withdrawals.isFinalized("0x608eab50bf07195f35ca3441f39eab32b4149f210f858fa5473b14453b2f9a79");
-  // console.log('Finalization state:', state); // 'unknown' | 'pending' | 'finalized'
+  // Optionally: wait until finalized mapping is true and fetch our L1 receipt if we sent it
+  const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });
+  if (l1Receipt) {
+    console.log('L1 finalize receipt:', l1Receipt.hash);
+  } else {
+    console.log('Finalized (no local L1 receipt available, possibly finalized by another actor).');
+  }
 
-  //  const res = await sdk.withdrawals.finalize("0x608eab50bf07195f35ca3441f39eab32b4149f210f858fa5473b14453b2f9a79");
-  //   console.log('Finalize result:', res.status, res.receipt?.hash ?? '(already finalized)');
-
-  //10) Balances after (useful when finalize just happened)
+  // Balances after (useful when finalize just happened)
   const [balL1After, balL2After] = await Promise.all([
     erc20L1.balanceOf(me),
     erc20L2.balanceOf(me),

@@ -1,12 +1,12 @@
 // src/types/flows/withdrawals.ts
 import type { Address, Hex, UInt } from '../primitives';
-import type { ApprovalNeed, Plan, PlanStep, Handle } from './base';
+import type { ApprovalNeed, Plan, Handle } from './base';
 
 /** Input */
 export interface WithdrawParams {
-  token: Address; // ETH sentinel or L2 ERC20
+  token: Address;
   amount: UInt;
-  to?: Address; // L1 receiver
+  to?: Address;
   l2GasLimit?: UInt;
 }
 
@@ -16,17 +16,17 @@ export type WithdrawRoute = 'eth' | 'erc20';
 /** Quote */
 export interface WithdrawQuote {
   route: WithdrawRoute;
-  approvalsNeeded: readonly ApprovalNeed[]; // L2 approvals
+  approvalsNeeded: readonly ApprovalNeed[];
   suggestedL2GasLimit: UInt;
   minGasLimitApplied: boolean;
   gasBufferPctApplied: number;
 }
 
-/** Step kinds */
-export type WithdrawPlanStepKind = 'approve:l2' | 'l2:withdraw' | 'l1:nullifier:finalize';
+// /** Step kinds */
+// export type WithdrawPlanStepKind = 'approve:l2' | 'l2:withdraw' | 'l1:nullifier:finalize';
 
-/** Step (Tx generic) */
-export type WithdrawPlanStep<Tx> = PlanStep<Tx> & { kind: WithdrawPlanStepKind };
+// /** Step (Tx generic) */
+// export type WithdrawPlanStep<Tx> = PlanStep<Tx> & { kind: WithdrawPlanStepKind };
 
 /** Plan (Tx generic) */
 export type WithdrawPlan<Tx> = Plan<Tx, WithdrawRoute, WithdrawQuote>;
@@ -45,12 +45,6 @@ export interface WithdrawHandle<Tx>
 /** Waitable */
 export type WithdrawalWaitable = Hex | { l2TxHash?: Hex; l1TxHash?: Hex } | WithdrawHandle<unknown>;
 
-type WaitTarget = 'l2' | 'l1' | 'finalized';
-
-export interface WaitOpts {
-  for: WaitTarget; // what are we waiting on?
-}
-
 export interface FinalizeDepositParams {
   chainId: bigint;
   l2BatchNumber: bigint;
@@ -62,16 +56,42 @@ export interface FinalizeDepositParams {
 }
 
 export type WithdrawalKey = {
-  chainIdL2: bigint; // your L2 chain id
-  l2BatchNumber: bigint; // from proof info / rpc
-  l2MessageIndex: bigint; // from proof info / rpc
+  chainIdL2: bigint;
+  l2BatchNumber: bigint;
+  l2MessageIndex: bigint;
 };
 
 export type FinalizedTriState = 'unknown' | 'pending' | 'finalized';
 
+// TODO: remove in favour of error envelope
 export class WithdrawalNotReady extends Error {
   constructor(message = 'Withdrawal not ready for finalization.') {
     super(message);
     this.name = 'WithdrawalNotReady';
   }
 }
+
+type WithdrawalPhase =
+  | 'L2_PENDING' // tx not in an L2 block yet
+  | 'L2_INCLUDED' // we have the L2 receipt
+  | 'PROOFS_PENDING' // inclusion known; proof data not yet derivable/available
+  | 'READY_TO_FINALIZE' // we can construct proof params; nullifier not set
+  | 'FINALIZING' // L1 tx sent but not mined
+  | 'FINALIZED' // nullifier says done
+  | 'FINALIZE_FAILED' // prior L1 finalize reverted
+  | 'UNKNOWN';
+
+export type WithdrawalStatus = {
+  phase: WithdrawalPhase;
+  l2TxHash: Hex;
+  l1FinalizeTxHash?: Hex;
+};
+
+export type FinalizeReadiness =
+  | { kind: 'READY' }
+  | { kind: 'FINALIZED' }
+  | {
+      kind: 'NOT_READY';
+      reason: 'invalid-proof' | 'paused' | 'message-mismatch' | 'config-missing' | 'unknown';
+      detail?: string;
+    };

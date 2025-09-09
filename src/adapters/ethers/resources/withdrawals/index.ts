@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { type TransactionRequest, type TransactionReceipt } from 'ethers';
+import { type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
 import type { EthersClient } from '../../client';
 import type {
   WithdrawParams,
@@ -14,9 +14,10 @@ import type {
   WithdrawHandle,
   WithdrawalWaitable,
   WithdrawRoute,
-  FinalizedTriState,
+  WithdrawalStatus,
+  FinalizeDepositParams,
 } from '../../../../core/types/flows/withdrawals';
-import type { Hex } from '../../../../core/types/primitives';
+import type { Address, Hex } from '../../../../core/types/primitives';
 import { commonCtx } from './context';
 // import { WithdrawalNotReady } from '../../../../core/types/flows/withdrawals';
 import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes/types';
@@ -47,26 +48,30 @@ export interface WithdrawalsResource {
     { ok: true; value: WithdrawHandle<TransactionRequest> } | { ok: false; error: unknown }
   >;
 
-  /**
-   * Waits for the L2 withdrawal tx to be mined and returns an enriched receipt
-   * (with l2ToL1Logs when supported). This does NOT attempt L1 finalization.
-   */
-  wait(h: WithdrawalWaitable, opts: { for: 'l2' }): Promise<TransactionReceiptZKsyncOS | null>;
+  // Returns finalization status
+  status(h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus>;
 
   /**
-   * Lightweight tri-state:
-   *  - "unknown": cannot derive finalize params (proof not ready or data unavailable)
-   *  - "pending": params derivable but not finalized yet
-   *  - "finalized": already finalized on L1
+   * Waits for the L2 withdrawal tx to be included and returns a receipt
+   * This does NOT attempt L1 finalization.
    */
-  isFinalized(l2TxHash: Hex): Promise<FinalizedTriState>;
+  wait(
+    h: WithdrawalWaitable | Hex,
+    opts: { for: 'l2' | 'ready' | 'finalized'; pollMs?: number; timeoutMs?: number },
+  ): Promise<TransactionReceiptZKsyncOS | TransactionReceipt | null>;
 
   /**
    * Attempts to finalize on L1 now. If proofs not yet available, throws WithdrawalNotReady.
    * If already finalized, returns { status: "finalized" } with no receipt.
    * If we just finalized, returns the new L1 receipt.
    */
-  finalize(l2TxHash: Hex): Promise<{ status: 'finalized'; receipt?: TransactionReceipt }>;
+  finalize(l2TxHash: Hex): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }>;
+  tryFinalize(
+    l2TxHash: Hex,
+  ): Promise<
+    | { ok: true; value: { status: WithdrawalStatus; receipt?: TransactionReceipt } }
+    | { ok: false; error: unknown }
+  >;
 }
 
 export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
@@ -87,7 +92,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
 
     return { route: ctx.route, summary, steps };
   }
-
+  const finalizeCache = new Map<Hex, string>();
   return {
     async quote(p) {
       const plan = await buildPlan(p);
@@ -118,9 +123,9 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       const plan = await this.prepare(p);
       const stepHashes: Record<string, Hex> = {};
 
-      // Send ALL withdrawal steps on L2
-      const from = (await client.signer.getAddress()) as `0x${string}`;
-      const l2Signer = client.signer.connect(client.l2);
+      const managed = new NonceManager(client.signer);
+      const from = await managed.getAddress();
+      const l2Signer = managed.connect(client.l2);
       let next = await client.l2.getTransactionCount(from, 'pending');
 
       for (const step of plan.steps) {
@@ -131,7 +136,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
             const est = await client.l2.estimateGas(step.tx);
             step.tx.gasLimit = (BigInt(est) * 115n) / 100n;
           } catch {
-            // ignore; user/provider will fill
+            // ignore;
           }
         }
         const sent = await l2Signer.sendTransaction(step.tx);
@@ -156,68 +161,225 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         return { ok: false, error: err };
       }
     },
+    async status(h) {
+      const l2TxHash: Hex =
+        typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : ('0x' as Hex);
 
-    async wait(h, opts) {
-      if (opts.for !== 'l2') return null;
-
-      const l2Hash =
-        typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : undefined;
-      if (!l2Hash) return null;
-
-      // Wait for L2 inclusion
-      const rcpt = await client.l2.waitForTransaction(l2Hash);
-      if (!rcpt) return null;
-
-      try {
-        const raw = await client.zks.getReceiptWithL2ToL1(l2Hash);
-        (rcpt as any).l2ToL1Logs = raw?.l2ToL1Logs ?? [];
-      } catch {
-        (rcpt as any).l2ToL1Logs = (rcpt as any).l2ToL1Logs ?? [];
+      if (!l2TxHash || l2TxHash === ('0x' as Hex)) {
+        return { phase: 'UNKNOWN', l2TxHash: '0x' as Hex, hint: 'unknown' };
       }
 
-      return rcpt as unknown as TransactionReceiptZKsyncOS;
+      // Has the L2 tx landed?
+      const l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash).catch(() => null);
+      if (!l2Rcpt) {
+        return { phase: 'L2_PENDING', l2TxHash, hint: 'retry-later' };
+      }
+
+      // Try to derive finalize params & proof bundle from L2 receipt/logs
+      let pack: { params: FinalizeDepositParams; nullifier: Address } | undefined;
+      try {
+        pack = await svc.fetchFinalizeDepositParams(l2TxHash);
+      } catch {
+        // L2 included but not ready for finalization
+        return {
+          phase: 'PROOFS_PENDING',
+          l2TxHash,
+          hint: 'retry-later',
+        };
+      }
+
+      const key = {
+        chainIdL2: pack.params.chainId,
+        l2BatchNumber: pack.params.l2BatchNumber,
+        l2MessageIndex: pack.params.l2MessageIndex,
+      };
+
+      // If already finalized, short-circuit
+      try {
+        const done = await svc.isWithdrawalFinalized(key);
+        if (done) {
+          return {
+            phase: 'FINALIZED',
+            l2TxHash,
+            proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
+            hint: 'already-finalized',
+          };
+        }
+      } catch {
+        // ignore; we'll fall through to simulate
+      }
+
+      // Ask L1 if finalization would succeed *right now*
+      const readiness = await svc.simulateFinalizeReadiness(pack.params, pack.nullifier);
+
+      if (readiness.kind === 'FINALIZED') {
+        return {
+          phase: 'FINALIZED',
+          l2TxHash,
+          proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
+          hint: 'already-finalized',
+        };
+      }
+      if (readiness.kind === 'READY') {
+        return {
+          phase: 'READY_TO_FINALIZE',
+          l2TxHash,
+          proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
+          hint: 'can-finalize-now',
+        };
+      }
+
+      // NOT_READY:
+      const hint =
+        readiness.reason === 'paused'
+          ? 'retry-later'
+          : readiness.reason === 'message-mismatch' || readiness.reason === 'config-missing'
+            ? 'check-logs'
+            : 'retry-later';
+
+      return {
+        phase: 'PROOFS_PENDING',
+        l2TxHash,
+        proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
+        hint,
+      };
     },
 
-    async isFinalized(l2TxHash) {
-      try {
-        console.log('\n\n\n Checking finalization for L2 tx:\n\n\n', l2TxHash);
-        const { params } = await svc.fetchFinalizeDepositParams(l2TxHash);
-        console.log('\n\n\n Finalize params fetched:\n\n\n', params);
-        const done = await svc.isWithdrawalFinalized({
-          chainIdL2: params.chainId,
-          l2BatchNumber: params.l2BatchNumber,
-          l2MessageIndex: params.l2MessageIndex,
-        });
-        console.log('\n\n\n Finalization status:\n\n\n', done);
-        return done ? 'finalized' : 'pending';
-      } catch {
-        return 'unknown';
+    async wait(h, opts) {
+      const l2Hash: Hex =
+        typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : ('0x' as Hex);
+
+      if (!l2Hash || l2Hash === ('0x' as Hex)) return null;
+
+      // Case 1: wait for L2 inclusion
+      if (opts.for === 'l2') {
+        const rcpt = await client.l2.waitForTransaction(l2Hash);
+        if (!rcpt) return null;
+
+        try {
+          const raw = await client.zks.getReceiptWithL2ToL1(l2Hash);
+          (rcpt as any).l2ToL1Logs = raw?.l2ToL1Logs ?? [];
+        } catch {
+          (rcpt as any).l2ToL1Logs = (rcpt as any).l2ToL1Logs ?? [];
+        }
+        return rcpt as unknown as TransactionReceiptZKsyncOS;
+      }
+
+      // Cases 2 & 3: poll status() until condition holds
+      const poll = Math.max(1000, opts.pollMs ?? 2500);
+      const deadline = opts.timeoutMs ? Date.now() + opts.timeoutMs : undefined;
+
+      while (true) {
+        const s = await this.status(l2Hash);
+
+        if (opts.for === 'ready') {
+          // Resolve when finalization becomes possible OR already finalized.
+          if (s.phase === 'READY_TO_FINALIZE' || s.phase === 'FINALIZED') return null;
+        } else {
+          // for: 'finalized'
+          if (s.phase === 'FINALIZED') {
+            // If we were the sender, return the L1 receipt; otherwise null is fine.
+            const l1Hash = finalizeCache.get(l2Hash);
+            if (l1Hash) {
+              try {
+                const l1Rcpt = await client.l1.getTransactionReceipt(l1Hash);
+                if (l1Rcpt) {
+                  finalizeCache.delete(l2Hash);
+                  return l1Rcpt;
+                }
+              } catch {
+                /* ignore; fall through to returning null */
+              }
+            }
+            return null;
+          }
+        }
+
+        if (deadline && Date.now() > deadline) return null;
+        await new Promise((r) => setTimeout(r, poll));
       }
     },
 
     async finalize(l2TxHash) {
+      // Build finalize params 
       const pack = await (async () => {
         try {
           return await svc.fetchFinalizeDepositParams(l2TxHash);
-        } catch (e) {
-          console.error('Error fetching finalize deposit params:', e);
-          // If you prefer, throw a domain error here (e.g., WithdrawalNotReady)
-          throw e;
+        } catch (e: any) {
+          const err = new Error('WithdrawalNotReady');
+          (err as any).meta = {
+            kind: 'NOT_READY',
+            reason: 'params-unavailable',
+            detail: e?.message,
+          };
+          throw err;
         }
       })();
 
       const { params, nullifier } = pack;
-
-      const done = await svc.isWithdrawalFinalized({
+      const key = {
         chainIdL2: params.chainId,
         l2BatchNumber: params.l2BatchNumber,
         l2MessageIndex: params.l2MessageIndex,
-      });
-      if (done) return { status: 'finalized' as const };
+      };
 
-      const tx = await svc.finalizeDeposit(params, nullifier);
-      const rcpt = await tx.wait();
-      return { status: 'finalized' as const, receipt: rcpt };
+      try {
+        const done = await svc.isWithdrawalFinalized(key);
+        if (done) {
+          const status = await this.status(l2TxHash);
+          return { status }; // no receipt
+        }
+      } catch {
+        /* ignore; we’ll still simulate below */
+      }
+
+      // Readiness: static-call finalizeDeposit on L1
+      const readiness = await svc.simulateFinalizeReadiness(params, nullifier);
+      if (readiness.kind === 'FINALIZED') {
+        const status = await this.status(l2TxHash);
+        return { status };
+      }
+      if (readiness.kind === 'NOT_READY') {
+        const err = new Error('WithdrawalNotReady');
+        (err as any).meta = readiness;
+        throw err;
+      }
+
+      // READY → send tx, wait, re-check status
+      try {
+        const tx = await svc.finalizeDeposit(params, nullifier);
+        finalizeCache.set(l2TxHash, tx.hash);
+        const rcpt = await tx.wait();
+
+        const status = await this.status(l2TxHash);
+        return { status, receipt: rcpt };
+      } catch (e) {
+        // finalized after we simulated but before our tx landed
+        const status = await this.status(l2TxHash);
+        if (status.phase === 'FINALIZED') return { status };
+
+        // If not finalized, reclassify as "not ready" if simulation now says so
+        try {
+          const again = await svc.simulateFinalizeReadiness(params, nullifier);
+          if (again.kind === 'NOT_READY') {
+            const err = new Error('WithdrawalNotReady');
+            (err as any).meta = again;
+            throw err;
+          }
+        } catch {
+          /* ignore; fall through */
+        }
+        throw e;
+      }
+    },
+
+    async tryFinalize(l2TxHash) {
+      try {
+        const value = await this.finalize(l2TxHash);
+        return { ok: true, value };
+      } catch (error) {
+        return { ok: false, error };
+      }
     },
   };
 }

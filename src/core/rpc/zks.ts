@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import type { RpcTransport } from './transport';
+import type { RpcTransport } from './types';
 import type { AddressHex, ReceiptWithL2ToL1, ProofNormalized } from './types';
 import type { Hex } from '../types/primitives';
 
@@ -17,6 +17,7 @@ const METHODS = {
   getReceipt: 'eth_getTransactionReceipt',
 } as const;
 
+// TODO: move to utils or common
 function toHexArray(arr: any): Hex[] {
   return (Array.isArray(arr) ? arr : []).map((x) => x as Hex);
 }

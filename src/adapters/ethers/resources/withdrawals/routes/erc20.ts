@@ -3,14 +3,16 @@ import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
 import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
+import L2NativeTokenVaultABI from '../../../../../internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
+import L2AssetRouterABI from '../../../../../internal/abis/IL2AssetRouter.json' assert { type: 'json' };
 
-const L2NativeTokenVaultAbi = [
-  'function ensureTokenIsRegistered(address _token) external returns (bytes32 assetId)',
-] as const;
+// const L2NativeTokenVaultAbi = [
+//   'function ensureTokenIsRegistered(address _token) external returns (bytes32 assetId)',
+// ] as const;
 
-const L2AssetRouterAbi = [
-  'function withdraw(bytes32 _assetId, bytes _assetData) external returns (bytes32)',
-] as const;
+// const L2AssetRouterAbi = [
+//   'function withdraw(bytes32 _assetId, bytes _assetData) external returns (bytes32)',
+// ] as const;
 
 export function routeErc20(): WithdrawRouteStrategy {
   return {
@@ -20,7 +22,7 @@ export function routeErc20(): WithdrawRouteStrategy {
 
       const l2Signer = ctx.client.signer.connect(ctx.client.l2);
 
-      // 1) L2 allowance to the NativeTokenVault (burner)
+      // L2 allowance to the NativeTokenVault
       const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const current: bigint = await erc20.allowance(ctx.sender, ctx.l2NativeTokenVault);
@@ -41,9 +43,8 @@ export function routeErc20(): WithdrawRouteStrategy {
         });
       }
 
-      // 2) Compute assetId + assetData
-      // Option A: per-method access (nice & explicit)
-      const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultAbi, ctx.client.l2);
+      // Compute assetId + assetData
+      const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultABI, ctx.client.l2);
       const assetId = (await ntv
         .getFunction('ensureTokenIsRegistered')
         .staticCall(p.token)) as `0x${string}`;
@@ -54,8 +55,8 @@ export function routeErc20(): WithdrawRouteStrategy {
         [p.amount, p.to ?? ctx.sender, p.token],
       ) as `0x${string}`;
 
-      // 3) L2AssetRouter.withdraw(assetId, assetData)
-      const l2ar = new Contract(ctx.l2AssetRouter, L2AssetRouterAbi, ctx.client.l2);
+      // L2AssetRouter.withdraw(assetId, assetData)
+      const l2ar = new Contract(ctx.l2AssetRouter, L2AssetRouterABI, ctx.client.l2);
       const dataWithdraw = l2ar.interface.encodeFunctionData('withdraw', [assetId, assetData]);
 
       const withdrawTx: TransactionRequest = {

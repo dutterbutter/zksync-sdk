@@ -1,6 +1,6 @@
 // src/types/flows/deposits.ts
 import type { Address, Hex, UInt } from '../primitives';
-import type { ApprovalNeed, Plan, PlanStep, Handle } from './base';
+import type { ApprovalNeed, Plan, Handle } from './base';
 
 /** Input */
 export interface DepositParams {
@@ -28,11 +28,11 @@ export interface DepositQuote {
   gasBufferPctApplied: number;
 }
 
-/** Plan step kinds */
-export type DepositPlanStepKind = 'approve' | 'bridgehub:direct' | 'bridgehub:two-bridges';
+// /** Plan step kinds */
+// export type DepositPlanStepKind = 'approve' | 'bridgehub:direct' | 'bridgehub:two-bridges';
 
-/** Adapter-agnostic step (Tx generic) */
-export type DepositPlanStep<Tx> = PlanStep<Tx> & { kind: DepositPlanStepKind };
+// /** Adapter-agnostic step (Tx generic) */
+// export type DepositPlanStep<Tx> = PlanStep<Tx> & { kind: DepositPlanStepKind };
 
 /** Plan (Tx generic) */
 export type DepositPlan<Tx> = Plan<Tx, DepositRoute, DepositQuote>;

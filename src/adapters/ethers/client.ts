@@ -4,7 +4,7 @@
 import type { AbstractProvider, ContractRunner, Signer } from 'ethers';
 import { isAddress, Contract, Interface } from 'ethers';
 import type { Address } from '../../core/types/primitives';
-import { ZksRpc } from '../../core/rpc/zks';
+import type { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromEthers } from './rpc';
 import {
   L2_ASSET_ROUTER_ADDR,
@@ -23,7 +23,7 @@ import IBaseTokenABI from '../../internal/abis/IBaseToken.json';
 export interface ResolvedAddresses {
   bridgehub: Address;
   l1AssetRouter: Address;
-  nullifier: Address;
+  l1Nullifier: Address;
   l1NativeTokenVault: Address;
   l2AssetRouter: Address;
   l2NativeTokenVault: Address;
@@ -41,21 +41,21 @@ export interface EthersClient {
   /** ZK Sync-specific RPC methods */
   readonly zks: ZksRpc;
 
-  /** Cached resolved addresses (Bridgehub today; can expand later) */
+  /** Cached resolved addresses */
   ensureAddresses(): Promise<ResolvedAddresses>;
 
   /** Convenience: connected ethers.Contract instances (also lazily created). */
   contracts(): Promise<{
     bridgehub: Contract;
     l1AssetRouter: Contract;
-    nullifier: Contract;
+    l1Nullifier: Contract;
     l1NativeTokenVault: Contract;
     l2AssetRouter: Contract;
     l2NativeTokenVault: Contract;
     l2BaseTokenSystem: Contract;
   }>;
 
-  /** Clear all cached addresses/contracts (e.g. after overrides change). */
+  /** Clear all cached addresses/contracts. */
   refresh(): void;
 
   /** Lookup the base token for a given chain ID via Bridgehub.baseToken(chainId) */
@@ -63,14 +63,13 @@ export interface EthersClient {
 }
 
 type InitArgs = {
-  /** L1 provider (Bridgehub is on L1) */
+  /** L1 provider */
   l1: AbstractProvider;
-  /** L2 provider (used for zks_getBridgehubContract + later L2 reads) */
+  /** L2 provider */
   l2: AbstractProvider;
-  /** Signer for sending L1 txs. Should be connected to `l1` (we’ll ensure it). */
+  /** Signer for sending txs. */
   signer: Signer;
-
-  /** Optional manual overrides (handy for local/dev) */
+  /** Optional manual overrides */
   overrides?: Partial<ResolvedAddresses>;
 };
 
@@ -79,7 +78,6 @@ function asAddress(x: string): Address {
   if (!isAddress(x)) {
     throw new Error(`Invalid address: ${String(x)}`);
   }
-  // ethers returns a checksummed string already; type-cast to our Address
   return x as Address;
 }
 
@@ -92,7 +90,6 @@ export function createEthersClient(args: InitArgs): EthersClient {
 
   // Ensure signer is connected to L1 provider; if not, connect it.
   let boundSigner = signer;
-
   if (!boundSigner.provider || (boundSigner.provider as unknown as ContractRunner) !== l1) {
     boundSigner = signer.connect(l1);
   }
@@ -106,7 +103,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     | {
         bridgehub: Contract;
         l1AssetRouter: Contract;
-        nullifier: Contract;
+        l1Nullifier: Contract;
         l1NativeTokenVault: Contract;
         l2AssetRouter: Contract;
         l2NativeTokenVault: Contract;
@@ -117,40 +114,40 @@ export function createEthersClient(args: InitArgs): EthersClient {
   async function ensureAddresses(): Promise<ResolvedAddresses> {
     if (addrCache) return addrCache;
 
-    // 1) Bridgehub (allow override)
+    // Bridgehub (allow override)
     const bridgehub = args.overrides?.bridgehub ?? asAddress(await zks.getBridgehubAddress());
 
-    // 2) L1 AssetRouter via Bridgehub.assetRouter()
+    // L1 AssetRouter via Bridgehub.assetRouter()
     const IBridgehub = new Interface(IBridgehubABI as any);
     const bh = new Contract(bridgehub, IBridgehub, l1);
     const l1AssetRouter = args.overrides?.l1AssetRouter ?? asAddress(await bh.assetRouter());
 
-    // 3) Nullifier via L1AssetRouter.L1_NULLIFIER()
+    // L1Nullifier via L1AssetRouter.L1_NULLIFIER()
     const IL1AssetRouter = new Interface(IL1AssetRouterABI as any);
     const ar = new Contract(l1AssetRouter, IL1AssetRouter, l1);
-    const nullifier = args.overrides?.nullifier ?? asAddress(await ar.L1_NULLIFIER());
+    const l1Nullifier = args.overrides?.l1Nullifier ?? asAddress(await ar.L1_NULLIFIER());
 
-    // 4) NTV via L1Nullifier.l1NativeTokenVault() (public var)
+    // L1NativeTokenVault via L1Nullifier.l1NativeTokenVault() (public var)
     const IL1Nullifier = new Interface(IL1NullifierABI as any);
-    const nf = new Contract(nullifier, IL1Nullifier, l1);
+    const nf = new Contract(l1Nullifier, IL1Nullifier, l1);
     const l1NativeTokenVault =
       args.overrides?.l1NativeTokenVault ?? asAddress(await nf.l1NativeTokenVault());
 
-    // 5) L2 AssetRouter (default known addr unless override provided)
+    // L2AssetRouter
     const l2AssetRouter = asAddress(args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDR);
 
-    // 6) L2 NTV (predeploy; allow override)
+    // L2NativeTokenVault
     const l2NativeTokenVault = asAddress(
       args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDR,
     );
 
-    // 7) L2 BaseToken System (predeploy; allow override)
+    // L2BaseToken
     const l2BaseTokenSystem = asAddress(args.overrides?.l2BaseTokenSystem ?? L2_BASE_TOKEN_ADDRESS);
 
     addrCache = {
       bridgehub,
       l1AssetRouter,
-      nullifier,
+      l1Nullifier,
       l1NativeTokenVault,
       l2AssetRouter,
       l2NativeTokenVault,
@@ -166,7 +163,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     cCache = {
       bridgehub: new Contract(a.bridgehub, IBridgehubABI as any, l1),
       l1AssetRouter: new Contract(a.l1AssetRouter, IL1AssetRouterABI as any, l1),
-      nullifier: new Contract(a.nullifier, IL1NullifierABI as any, l1),
+      l1Nullifier: new Contract(a.l1Nullifier, IL1NullifierABI as any, l1),
       l1NativeTokenVault: new Contract(a.l1NativeTokenVault, L1NativeTokenVaultABI as any, l1),
       l2AssetRouter: new Contract(a.l2AssetRouter, IL2AssetRouterABI as any, l2),
       l2NativeTokenVault: new Contract(a.l2NativeTokenVault, L2NativeTokenVaultABI as any, l2),

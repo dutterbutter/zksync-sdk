@@ -9,9 +9,13 @@ import {
   WithdrawalsResource,
   type WithdrawalsResource as WithdrawalsResourceType,
 } from './resources/withdrawals/index';
-import { ETH_ADDRESS_IN_CONTRACTS, type Address, type Hex } from '../../core/types';
+import { type Address, type Hex } from '../../core/types';
 import { isAddressEq } from '../../core/utils/addr';
-import { L2_BASE_TOKEN_ADDRESS, LEGACY_ETH_ADDRESS } from '../../core/constants';
+import {
+  L2_BASE_TOKEN_ADDRESS,
+  LEGACY_ETH_ADDRESS,
+  ETH_ADDRESS_IN_CONTRACTS,
+} from '../../core/constants';
 
 export interface EthersSdk {
   deposits: DepositsResourceType;
@@ -22,7 +26,7 @@ export interface EthersSdk {
     contracts(): Promise<{
       bridgehub: Contract;
       l1AssetRouter: Contract;
-      nullifier: Contract;
+      l1Nullifier: Contract;
       l1NativeTokenVault: Contract;
       l2AssetRouter: Contract;
       l2NativeTokenVault: Contract;
@@ -59,8 +63,8 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
         return l1NativeTokenVault;
       },
       async l1Nullifier() {
-        const { nullifier } = await client.contracts();
-        return nullifier;
+        const { l1Nullifier } = await client.contracts();
+        return l1Nullifier;
       },
 
       async baseToken(chainId?: bigint) {
@@ -74,14 +78,13 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
           return ETH_ADDRESS_IN_CONTRACTS;
         }
 
-        // Base token short-circuit → L2 base-token system address
+        // Base token → L2 base-token system address
         const { chainId } = await client.l2.getNetwork();
         const base = await client.baseToken(BigInt(chainId));
         if (isAddressEq(l1Token, base)) {
           return L2_BASE_TOKEN_ADDRESS as Address;
         }
 
-        // Default path: ask L2 NativeTokenVault
         const { l2NativeTokenVault } = await client.contracts();
         // IL2NativeTokenVault.l2TokenAddress(address) → address
         const addr = (await l2NativeTokenVault.l2TokenAddress(l1Token)) as string;
@@ -89,12 +92,10 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
       },
 
       async l1TokenAddress(l2Token: Address): Promise<Address> {
-        // ETH stays ETH (zero address) by convention
         if (isAddressEq(l2Token, LEGACY_ETH_ADDRESS)) {
           return LEGACY_ETH_ADDRESS;
         }
 
-        // Default path: ask L2 AssetRouter (bridges expose reverse mapping)
         const { l2AssetRouter } = await client.contracts();
         // IL2AssetRouter.l1TokenAddress(address) → address
         const addr = (await l2AssetRouter.l1TokenAddress(l2Token)) as string;
@@ -102,7 +103,6 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
       },
 
       async assetId(l1Token: Address): Promise<Hex> {
-        // ETH normalization for NTV storage
         const norm = isAddressEq(l1Token, LEGACY_ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
 
         const { l1NativeTokenVault } = await client.contracts();

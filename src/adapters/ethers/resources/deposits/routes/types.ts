@@ -4,7 +4,6 @@ import type { DepositParams } from '../../../../../core/types/flows/deposits';
 import type { RouteStrategy } from '../../../../../core/types/flows/route';
 import type { BuildCtx as DepositBuildCtx } from '../context';
 
-// What the route wants to add to the final quote
 export type DepositQuoteExtras = {
   baseCost: bigint;
   mintValue: bigint;

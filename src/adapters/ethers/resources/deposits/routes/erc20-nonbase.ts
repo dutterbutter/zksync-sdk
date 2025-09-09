@@ -15,7 +15,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async preflight(p, ctx) {
-      // Example: validate token is not the base token for this L2
+      // validate token is not the base token for this L2
       // const baseToken = await resolveBaseToken(ctx.client, ctx.bridgehub, ctx.chainIdL2);
       // if (eqAddr(baseToken, p.token)) throw new Error('non-base route requires a non-base token');
     },
@@ -27,7 +27,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const needsApprove = allowance < p.amount;
 
       // TODO: clean up gas estimation
-      const MIN_L2_GAS_FOR_ERC20 = 2_500_000n; // matches the passing test
+      const MIN_L2_GAS_FOR_ERC20 = 2_500_000n;
       const l2GasLimitUsed =
         ctx.l2GasLimit && ctx.l2GasLimit > 0n
           ? ctx.l2GasLimit < MIN_L2_GAS_FOR_ERC20

@@ -1,11 +1,8 @@
 import type { BytesLike } from 'ethers';
 import { AbiCoder, ethers } from 'ethers';
 import type { Address } from '../../../core/types';
-import type { IL1NativeTokenVault } from '../typechain';
-import { isAddressEq } from '../../../core/utils/addr';
 import {
   L2_NATIVE_TOKEN_VAULT_ADDRESS,
-  LEGACY_ETH_ADDRESS,
   ETH_ADDRESS_IN_CONTRACTS,
   L1_FEE_ESTIMATION_COEF_DENOMINATOR,
   L1_FEE_ESTIMATION_COEF_NUMERATOR,
@@ -21,42 +18,6 @@ export function encodeNativeTokenVaultAssetId(chainId: bigint, address: string) 
     [chainId, L2_NATIVE_TOKEN_VAULT_ADDRESS, address],
   );
   return ethers.keccak256(hex);
-}
-
-/**
- * Resolves the assetId for a token
- **/
-export async function resolveAssetId(
-  token: Address,
-  ntvContract: IL1NativeTokenVault,
-): Promise<BytesLike> {
-  if (isAddressEq(token, LEGACY_ETH_ADDRESS)) {
-    token = ETH_ADDRESS_IN_CONTRACTS;
-  }
-
-  // In case only token is provided, we expect that it is a token inside Native Token Vault
-  const assetIdFromNTV = await ntvContract.assetId(token);
-
-  if (assetIdFromNTV && assetIdFromNTV !== ethers.ZeroHash) {
-    return assetIdFromNTV;
-  }
-
-  // Okay, the token have not been registered within the Native token vault.
-  // There are two cases when it is possible:
-  // - The token is native to L1 (it may or may not be bridged), but it has not been
-  // registered within NTV after the Gateway upgrade. We assume that this is not the case
-  // as the SDK is expected to work only after the full migration is done.
-  // - The token is native to the current chain and it has never been bridged.
-
-  const network = await ntvContract.runner?.provider?.getNetwork();
-
-  if (!network) {
-    throw new Error('Can not derive assetId since chainId is not available');
-  }
-
-  const ntvAssetId = encodeNativeTokenVaultAssetId(network.chainId, token);
-
-  return ntvAssetId;
 }
 
 /**

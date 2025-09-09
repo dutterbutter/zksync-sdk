@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// todo: deal with any types
-
-export type RpcTransport = (method: string, params?: unknown[]) => Promise<any>;
+import type { RpcTransport } from './types';
 
 // Ethers: provider.send(method, params)
 export function makeTransportFromEthers(provider: {
