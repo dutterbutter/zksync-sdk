@@ -7,6 +7,7 @@ import IL1NullifierABI from '../../../internal/abis/IL1Nullifier.json' assert { 
 import IL1NativeTokenVaultABI from '../../../internal/abis/L1NativeTokenVault.json' assert { type: 'json' };
 import IL2NativeTokenVaultABI from '../../../internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
 import IERC20ABI from '../../../internal/abis/IERC20.json' assert { type: 'json' };
+import MailboxABI from '../../../internal/abis/Mailbox.json' assert { type: 'json' };
 import { REVERT_TO_READINESS } from '../../../core/errors/withdrawal-revert-map';
 import type { FinalizeReadiness } from '../../../core/types/flows/withdrawals';
 
@@ -60,6 +61,11 @@ const IFACE_PANIC = new Interface(['error Panic(uint256)']);
       name: 'IL2NativeTokenVault',
       iface: new Interface(IL2NativeTokenVaultABI as JsonFragment[]),
     });
+  } catch {
+    // ignore
+  }
+  try {
+    ERROR_IFACES.push({ name: 'Mailbox', iface: new Interface(MailboxABI as JsonFragment[]) });
   } catch {
     // ignore
   }

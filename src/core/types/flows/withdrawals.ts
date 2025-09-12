@@ -67,6 +67,7 @@ export type WithdrawalStatus = {
   phase: WithdrawalPhase;
   l2TxHash: Hex;
   l1FinalizeTxHash?: Hex;
+  key?: WithdrawalKey;
 };
 
 export type FinalizeReadiness =

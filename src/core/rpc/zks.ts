@@ -17,7 +17,7 @@ const METHODS = {
   getReceipt: 'eth_getTransactionReceipt',
 } as const;
 
-// TODO: move to utils or common
+// TODO: move to utils
 function toHexArray(arr: any): Hex[] {
   return (Array.isArray(arr) ? arr : []).map((x) => x as Hex);
 }

@@ -1,7 +1,3 @@
-const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
-
 import { JsonRpcProvider, Wallet, parseUnits } from 'ethers';
 import { createEthersClient } from '../src/adapters/ethers/client';
 import { createEthersSdk } from '../src/adapters/ethers/sdk';
@@ -10,8 +6,12 @@ import type { Address } from '../src/core/types/primitives';
 import { Contract } from 'ethers';
 import IERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
 
+const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+
 // Replace with a real **L2 ERC-20 token address** you hold on L2
-const L1_ERC20_TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
+const L1_ERC20_TOKEN = '0x71C95911E9a5D330f4D621842EC243EE1343292e' as Address;
 
 async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);

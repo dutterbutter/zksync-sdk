@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { createError } from '../../../core/errors/factory';
-import { type ErrorEnvelope, type ErrorType } from '../../../core/types/errors';
+import {
+  isZKsyncError,
+  type TryResult,
+  type ErrorEnvelope,
+  type ErrorType,
+  type Resource,
+} from '../../../core/types/errors';
 import { decodeRevert } from '../errors/revert';
 
 /**
@@ -12,14 +18,14 @@ export function toZKsyncError(
   type: ErrorType,
   base: Omit<ErrorEnvelope, 'type' | 'revert' | 'cause'>,
   err: unknown,
-  message: string,
 ) {
+  if (isZKsyncError(err)) return err;
+
   const revert = decodeRevert(err);
   return createError(type, {
     ...base,
     ...(revert ? { revert } : {}),
     cause: shapeCause(err),
-    message,
   });
 }
 
@@ -38,4 +44,60 @@ function shapeCause(err: unknown) {
     code: e?.code,
     data: typeof data === 'string' && data.startsWith('0x') ? `${data.slice(0, 10)}…` : undefined,
   };
+}
+
+export function makeErrorOps(resource: Resource) {
+  type Ctx = Record<string, unknown>;
+
+  async function withOp<T>(
+    operation: string,
+    message: string,
+    ctx: Ctx,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (e) {
+      if (isZKsyncError(e)) throw e;
+      throw toZKsyncError('INTERNAL', { resource, operation, context: ctx, message }, e);
+    }
+  }
+
+  async function withRouteOp<T>(
+    kind: 'RPC' | 'INTERNAL',
+    operation: string,
+    message: string,
+    ctx: Ctx,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (e) {
+      throw toZKsyncError(kind, { resource, operation, context: ctx, message }, e);
+    }
+  }
+
+  async function toResult<T>(
+    operation: string,
+    ctx: Ctx,
+    fn: () => Promise<T>,
+  ): Promise<TryResult<T>> {
+    try {
+      const value = await fn();
+      return { ok: true, value };
+    } catch (e) {
+      return {
+        ok: false,
+        error: isZKsyncError(e)
+          ? e
+          : toZKsyncError(
+              'INTERNAL',
+              { resource, operation, context: ctx, message: `Internal error during ${operation}.` },
+              e,
+            ),
+      };
+    }
+  }
+
+  return { withOp, withRouteOp, toResult };
 }

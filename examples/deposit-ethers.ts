@@ -5,13 +5,9 @@ import { createEthersSdk } from '../src/adapters/ethers/sdk';
 import { Address } from '../src/core/types/primitives';
 import { ETH_ADDRESS_IN_CONTRACTS } from '../src/core/constants';
 
-const L1_RPC = 'https://sepolia.infura.io/v3/07e4434e9ba24cd68305123037336417';
-const L2_RPC = 'https://zksync-os-stage-api-b.zksync-nodes.com/';
-const PRIVATE_KEY = '0x77b0287249f5c92f66814e9cf6f88fe6d6df6d9a878f5bba78a5074883fb4373';
-
-// const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
-// const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-// const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
 
 async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);

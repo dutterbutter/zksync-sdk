@@ -25,7 +25,11 @@ import { routeErc20Base } from './routes/erc20-base';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import type { DepositRouteStrategy } from './routes/types.ts';
 
-// import type { TryResult, ZKsyncError } from '../../../../core/types/errors';
+import { isZKsyncError, OP_DEPOSITS } from '../../../../core/types/errors';
+import { createError } from '../../../../core/errors/factory.ts';
+import { toZKsyncError, makeErrorOps } from '../../errors/to-zksync-error';
+
+const { withOp, toResult } = makeErrorOps('deposits');
 
 const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
   eth: routeEthDirect(),
@@ -91,121 +95,283 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       steps,
     };
   }
-  return {
-    async quote(p) {
-      const plan = await buildPlan(p);
-      return plan.summary;
-    },
+  const quote = async (p: DepositParams): Promise<DepositQuote> =>
+    withOp(
+      OP_DEPOSITS.quote,
+      'Internal error while preparing a deposit quote.',
+      { token: p.token, where: 'deposits.quote' },
+      async () => {
+        const plan = await buildPlan(p);
+        return plan.summary;
+      },
+    );
 
-    async tryQuote(p) {
-      try {
-        return { ok: true, value: await this.quote(p) };
-      } catch (err) {
-        return { ok: false, error: err };
-      }
-    },
+  const tryQuote = (p: DepositParams) =>
+    toResult<DepositQuote>(
+      OP_DEPOSITS.tryQuote,
+      { token: p.token, where: 'deposits.tryQuote' },
+      () => quote(p),
+    );
 
-    async prepare(p) {
-      return await buildPlan(p);
-    },
+  const prepare = (p: DepositParams): Promise<DepositPlan<TransactionRequest>> =>
+    withOp(
+      OP_DEPOSITS.prepare,
+      'Internal error while preparing a deposit plan.',
+      { token: p.token, where: 'deposits.prepare' },
+      () => buildPlan(p),
+    );
 
-    async tryPrepare(p) {
-      try {
-        return { ok: true, value: await this.prepare(p) };
-      } catch (err) {
-        return { ok: false, error: err };
-      }
-    },
+  const tryPrepare = (p: DepositParams) =>
+    toResult<DepositPlan<TransactionRequest>>(
+      OP_DEPOSITS.tryPrepare,
+      { token: p.token, where: 'deposits.tryPrepare' },
+      () => prepare(p),
+    );
 
-    async create(p) {
-      const plan = await this.prepare(p);
-      const stepHashes: Record<string, Hex> = {};
+  const create = (p: DepositParams): Promise<DepositHandle<TransactionRequest>> =>
+    withOp(
+      OP_DEPOSITS.create,
+      'Internal error while creating deposit transactions.',
+      { token: p.token, amount: p.amount, to: p.to, where: 'deposits.create' },
+      async () => {
+        const plan = await prepare(p);
+        const stepHashes: Record<string, Hex> = {};
 
-      const managed = new NonceManager(client.signer);
+        const managed = new NonceManager(client.signer);
 
-      const from = await managed.getAddress();
-      let next = await client.l1.getTransactionCount(from, 'latest');
+        const from = await managed.getAddress();
+        let next = await client.l1.getTransactionCount(from, 'latest');
 
-      for (const step of plan.steps) {
-        // re-check allowance
-        if (step.kind === 'approve') {
-          const [, token, router] = step.key.split(':');
-          const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
-          const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
-          if ((await erc20.allowance(from, router as Address)) >= target) continue;
-        }
-        step.tx.nonce = next++;
+        for (const step of plan.steps) {
+          // re-check allowance
+          if (step.kind === 'approve') {
+            try {
+              const [, token, router] = step.key.split(':');
+              const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
+              const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
+              const current = await erc20.allowance(from, router as Address);
+              if (current >= target) {
+                // Skip redundant approve
+                continue;
+              }
+            } catch (e) {
+              throw toZKsyncError(
+                'RPC',
+                {
+                  resource: 'deposits',
+                  operation: 'deposits.create.erc20-allowance-recheck',
+                  context: { where: 'erc20.allowance(recheck)', step: step.key, from },
+                  message: 'Failed to read ERC-20 allowance during deposit step.',
+                },
+                e,
+              );
+            }
+          }
+          step.tx.nonce = next++;
 
-        if (!step.tx.gasLimit) {
+          if (!step.tx.gasLimit) {
+            try {
+              const est = await client.l1.estimateGas(step.tx);
+              step.tx.gasLimit = (BigInt(est) * 115n) / 100n;
+            } catch {
+              // ignore
+            }
+          }
+
+          let hash: Hex | undefined;
           try {
-            const est = await client.l1.estimateGas(step.tx);
-            step.tx.gasLimit = (BigInt(est) * 115n) / 100n;
-          } catch {
-            // ignore
+            const sent = await managed.sendTransaction(step.tx);
+            hash = sent.hash as Hex;
+            stepHashes[step.key] = hash;
+
+            const rcpt = await sent.wait();
+            if ((rcpt as any)?.status === 0) {
+              throw createError('EXECUTION', {
+                resource: 'deposits',
+                operation: 'deposits.create.sendTransaction',
+                message: 'Deposit transaction reverted on L1 during a step.',
+                context: { step: step.key, txHash: hash },
+              });
+            }
+          } catch (e) {
+            if (isZKsyncError(e)) throw e;
+            throw toZKsyncError(
+              'EXECUTION',
+              {
+                resource: 'deposits',
+                operation: 'deposits.create.sendTransaction',
+                context: { step: step.key, txHash: hash, nonce: Number(step.tx.nonce ?? -1) },
+                message: 'Failed to send or confirm a deposit transaction step.',
+              },
+              e,
+            );
           }
         }
-        const sent = await managed.sendTransaction(step.tx);
-        stepHashes[step.key] = sent.hash as Hex;
-        await sent.wait();
-      }
+        const ordered = Object.entries(stepHashes);
+        const last = ordered[ordered.length - 1][1];
+        return { kind: 'deposit', l1TxHash: last, stepHashes, plan };
+      },
+    );
+  const tryCreate = (p: DepositParams) =>
+    toResult<DepositHandle<TransactionRequest>>(
+      OP_DEPOSITS.tryCreate,
+      { token: p.token, amount: p.amount, to: p.to, where: 'deposits.tryCreate' },
+      () => create(p),
+    );
 
-      const keys = Object.keys(stepHashes);
-      return { kind: 'deposit', l1TxHash: stepHashes[keys[keys.length - 1]], stepHashes, plan };
-    },
-    async tryCreate(p) {
-      try {
-        return { ok: true, value: await this.create(p) };
-      } catch (err) {
-        return { ok: false, error: err };
-      }
-    },
+  const status = (h: DepositWaitable | Hex): Promise<DepositStatus> =>
+    withOp(
+      OP_DEPOSITS.status,
+      'Internal error while checking deposit status.',
+      { input: h, where: 'deposits.status' },
+      async () => {
+        const l1TxHash: Hex = typeof h === 'string' ? h : h.l1TxHash;
+        if (!l1TxHash) {
+          return { phase: 'UNKNOWN', l1TxHash: '0x' as Hex };
+        }
 
-    async status(h: DepositWaitable | Hex): Promise<DepositStatus> {
-      const l1TxHash: Hex = typeof h === 'string' ? h : h.l1TxHash;
-      if (!l1TxHash) return { phase: 'UNKNOWN', l1TxHash: '0x' as Hex };
+        // ---- L1 receipt ----
+        let l1Rcpt;
+        try {
+          l1Rcpt = await client.l1.getTransactionReceipt(l1TxHash);
+        } catch (e) {
+          throw toZKsyncError(
+            'RPC',
+            {
+              resource: 'deposits',
+              operation: 'deposits.status.getTransactionReceipt',
+              context: { where: 'l1.getTransactionReceipt', l1TxHash },
+              message: 'Failed to fetch L1 transaction receipt.',
+            },
+            e,
+          );
+        }
+        if (!l1Rcpt) return { phase: 'L1_PENDING', l1TxHash };
 
-      // L1 receipt?
-      const l1Rcpt = await client.l1.getTransactionReceipt(l1TxHash).catch(() => null);
-      if (!l1Rcpt) return { phase: 'L1_PENDING', l1TxHash };
+        let l2TxHash: Hex | undefined;
+        try {
+          l2TxHash = extractL2TxHashFromL1Logs(l1Rcpt.logs) ?? undefined;
+        } catch (e) {
+          throw toZKsyncError(
+            'INTERNAL',
+            {
+              resource: 'deposits',
+              operation: 'deposits.status.extractL2TxHashFromL1Logs',
+              context: { where: 'extractL2TxHashFromL1Logs', l1TxHash },
+              message: 'Failed to derive L2 transaction hash from L1 logs.',
+            },
+            e,
+          );
+        }
+        if (!l2TxHash) return { phase: 'L1_INCLUDED', l1TxHash };
 
-      // Derive L2 canonical hash (from logs)
-      const l2TxHash = extractL2TxHashFromL1Logs(l1Rcpt.logs);
-      if (!l2TxHash) return { phase: 'L1_INCLUDED', l1TxHash };
+        // ---- L2 receipt ----
+        let l2Rcpt;
+        try {
+          l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash);
+        } catch (e) {
+          throw toZKsyncError(
+            'RPC',
+            {
+              resource: 'deposits',
+              operation: 'deposits.status.getTransactionReceipt',
+              context: { where: 'l2.getTransactionReceipt', l1TxHash, l2TxHash },
+              message: 'Failed to fetch L2 transaction receipt.',
+            },
+            e,
+          );
+        }
+        if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash };
 
-      // L2 receipt?
-      const l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash).catch(() => null);
-      if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash };
+        // ---- Execution outcome ----
+        const ok = (l2Rcpt as any).status === 1;
+        return ok
+          ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash }
+          : { phase: 'L2_FAILED', l1TxHash, l2TxHash };
+      },
+    );
 
-      const ok = (l2Rcpt as any).status === 1;
-      return ok
-        ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash }
-        : { phase: 'L2_FAILED', l1TxHash, l2TxHash };
-    },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const wait = (
+    h: DepositWaitable | Hex,
+    opts: { for: 'l1' | 'l2' },
+  ): Promise<TransactionReceipt | null> =>
+    withOp(
+      OP_DEPOSITS.wait,
+      'Internal error while waiting for deposit.',
+      { input: h, for: opts?.for, where: 'deposits.wait' },
+      async () => {
+        const l1Hash: Hex | undefined =
+          typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async wait(h, opts) {
-      const l1Hash = typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
-      if (!l1Hash) return null;
+        if (!l1Hash) return null;
 
-      // Wait for L1 inclusion
-      const l1Receipt = await client.l1.waitForTransaction(l1Hash);
-      if (!l1Receipt) return null;
-      if (opts.for === 'l1') return l1Receipt;
+        // ---- Wait for L1 inclusion ----
+        let l1Receipt: TransactionReceipt | null;
+        try {
+          l1Receipt = await client.l1.waitForTransaction(l1Hash);
+        } catch (e) {
+          throw toZKsyncError(
+            'RPC',
+            {
+              resource: 'deposits',
+              operation: 'deposits.waitForTransaction',
+              context: { where: 'l1.waitForTransaction', l1TxHash: l1Hash, for: opts.for },
+              message: 'Failed while waiting for L1 transaction.',
+            },
+            e,
+          );
+        }
 
-      // Derive canonical L2 hash + wait for L2 execution
-      const { l2Receipt } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
+        if (!l1Receipt) return null;
+        if (opts.for === 'l1') return l1Receipt;
 
-      return l2Receipt;
-    },
+        // ---- Derive canonical L2 hash + wait for L2 execution ----
+        try {
+          const { l2Receipt } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
+          return l2Receipt ?? null;
+        } catch (e) {
+          if (isZKsyncError(e)) throw e;
+          throw toZKsyncError(
+            'INTERNAL',
+            {
+              resource: 'deposits',
+              operation: 'deposits.waitForL2ExecutionFromL1Tx',
+              context: { where: 'waitForL2ExecutionFromL1Tx', l1TxHash: l1Hash },
+              message: 'Internal error while waiting for L2 execution.',
+            },
+            e,
+          );
+        }
+      },
+    );
 
-    async tryWait(h, opts) {
-      try {
-        const v = await this.wait(h, opts);
-        if (v) return { ok: true, value: v };
-        throw new Error('No receipt');
-      } catch (err) {
-        return { ok: false, error: err };
-      }
-    },
-  };
+  const tryWait = (h: DepositWaitable | Hex, opts: { for: 'l1' | 'l2' }) =>
+    toResult<TransactionReceipt>(
+      OP_DEPOSITS.tryWait,
+      { for: opts.for, where: OP_DEPOSITS.tryWait },
+      async () => {
+        const v = await wait(h, opts);
+        if (v) return v;
+        throw createError('STATE', {
+          resource: 'deposits',
+          operation: 'deposits.tryWait',
+          message:
+            opts.for === 'l2'
+              ? 'No L2 receipt yet; the deposit has not executed on L2.'
+              : 'No L1 receipt yet; the deposit has not been included on L1.',
+          context: {
+            for: opts.for,
+            l1TxHash:
+              typeof h === 'string'
+                ? h
+                : 'l1TxHash' in h
+                  ? (h.l1TxHash as Hex | undefined)
+                  : undefined,
+            where: 'deposits.tryWait',
+          },
+        });
+      },
+    );
+  return { quote, tryQuote, prepare, tryPrepare, create, tryCreate, status, wait, tryWait };
 }
