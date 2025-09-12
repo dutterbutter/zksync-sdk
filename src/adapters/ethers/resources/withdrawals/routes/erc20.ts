@@ -38,7 +38,6 @@ export function routeErc20(): WithdrawRouteStrategy {
           key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
           kind: 'approve:l2',
           description: `Approve ${p.amount} to NativeTokenVault`,
-          canSkip: false,
           tx: { to: p.token, data, from: ctx.sender, ...(ctx.fee ?? {}) },
         });
       }
@@ -70,7 +69,6 @@ export function routeErc20(): WithdrawRouteStrategy {
         key: 'l2-asset-router:withdraw',
         kind: 'l2-asset-router:withdraw',
         description: 'Burn on L2 & send L2→L1 message',
-        canSkip: false,
         tx: withdrawTx,
       });
 

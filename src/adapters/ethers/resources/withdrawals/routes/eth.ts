@@ -45,7 +45,6 @@ export function routeEth(): WithdrawRouteStrategy {
         key: 'l2-base-token:withdraw',
         kind: 'l2-base-token:withdraw',
         description: 'Withdraw ETH via L2 Base Token System',
-        canSkip: false,
         tx,
       });
 

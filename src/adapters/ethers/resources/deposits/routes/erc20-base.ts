@@ -40,7 +40,6 @@ export function routeErc20Base(): DepositRouteStrategy {
           key: `approve:${p.token}:${router}`,
           kind: 'approve',
           description: `Approve ${p.amount} for router`,
-          canSkip: false,
           tx: { to: p.token, data, from: ctx.sender, ...ctx.fee },
         });
       }
@@ -81,7 +80,6 @@ export function routeErc20Base(): DepositRouteStrategy {
         key: 'bridgehub:two-bridges',
         kind: 'bridgehub:two-bridges',
         description: 'Bridge ERC20 via Bridgehub.requestL2TransactionTwoBridges',
-        canSkip: false,
         tx: bridgeTx,
       });
 

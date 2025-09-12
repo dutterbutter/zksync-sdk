@@ -18,15 +18,7 @@ export interface WithdrawQuote {
   route: WithdrawRoute;
   approvalsNeeded: readonly ApprovalNeed[];
   suggestedL2GasLimit: UInt;
-  minGasLimitApplied: boolean;
-  gasBufferPctApplied: number;
 }
-
-// /** Step kinds */
-// export type WithdrawPlanStepKind = 'approve:l2' | 'l2:withdraw' | 'l1:nullifier:finalize';
-
-// /** Step (Tx generic) */
-// export type WithdrawPlanStep<Tx> = PlanStep<Tx> & { kind: WithdrawPlanStepKind };
 
 /** Plan (Tx generic) */
 export type WithdrawPlan<Tx> = Plan<Tx, WithdrawRoute, WithdrawQuote>;
@@ -61,22 +53,12 @@ export type WithdrawalKey = {
   l2MessageIndex: bigint;
 };
 
-export type FinalizedTriState = 'unknown' | 'pending' | 'finalized';
-
-// TODO: remove in favour of error envelope
-export class WithdrawalNotReady extends Error {
-  constructor(message = 'Withdrawal not ready for finalization.') {
-    super(message);
-    this.name = 'WithdrawalNotReady';
-  }
-}
-
 type WithdrawalPhase =
   | 'L2_PENDING' // tx not in an L2 block yet
   | 'L2_INCLUDED' // we have the L2 receipt
-  | 'PROOFS_PENDING' // inclusion known; proof data not yet derivable/available
+  | 'PENDING' // inclusion known; proof data not yet derivable/available
   | 'READY_TO_FINALIZE' // we can construct proof params; nullifier not set
-  | 'FINALIZING' // L1 tx sent but not mined
+  | 'FINALIZING' // L1 tx sent but not picked up yet
   | 'FINALIZED' // nullifier says done
   | 'FINALIZE_FAILED' // prior L1 finalize reverted
   | 'UNKNOWN';
@@ -92,6 +74,23 @@ export type FinalizeReadiness =
   | { kind: 'FINALIZED' }
   | {
       kind: 'NOT_READY';
-      reason: 'invalid-proof' | 'paused' | 'message-mismatch' | 'config-missing' | 'unknown';
+      // temporary, retry later
+      reason: 'paused' | 'batch-not-executed' | 'root-missing' | 'unknown';
+      detail?: string;
+    }
+  | {
+      kind: 'UNFINALIZABLE';
+      // permanent, won’t become ready
+      reason: 'message-invalid' | 'invalid-chain' | 'settlement-layer' | 'unsupported';
       detail?: string;
     };
+
+export type ParsedLog = {
+  address: string;
+  topics: Hex[];
+  data: Hex;
+};
+
+export type ParsedReceipt = {
+  logs: ParsedLog[];
+};

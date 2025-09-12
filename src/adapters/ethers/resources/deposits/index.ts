@@ -25,6 +25,8 @@ import { routeErc20Base } from './routes/erc20-base';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import type { DepositRouteStrategy } from './routes/types.ts';
 
+// import type { TryResult, ZKsyncError } from '../../../../core/types/errors';
+
 const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
   eth: routeEthDirect(),
   'erc20-base': routeErc20Base(),
@@ -55,7 +57,10 @@ export interface DepositsResource {
   status(h: DepositWaitable | Hex): Promise<DepositStatus>;
 
   wait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<TransactionReceipt | null>;
-  tryWait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<{ ok: true; value: TransactionReceipt } | { ok: false; error: unknown }>
+  tryWait(
+    h: DepositWaitable,
+    opts: { for: 'l1' | 'l2' },
+  ): Promise<{ ok: true; value: TransactionReceipt } | { ok: false; error: unknown }>;
 }
 
 // --------------------
@@ -82,8 +87,6 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         mintValue,
         suggestedL2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
-        minGasLimitApplied: true,
-        gasBufferPctApplied: 10,
       },
       steps,
     };
@@ -158,25 +161,25 @@ export function DepositsResource(client: EthersClient): DepositsResource {
     },
 
     async status(h: DepositWaitable | Hex): Promise<DepositStatus> {
-      const l1TxHash: Hex = typeof h === 'string' ? (h) : h.l1TxHash;
-      if (!l1TxHash) return { phase: 'UNKNOWN', l1TxHash: '0x' as Hex, hint: 'unknown' };
+      const l1TxHash: Hex = typeof h === 'string' ? h : h.l1TxHash;
+      if (!l1TxHash) return { phase: 'UNKNOWN', l1TxHash: '0x' as Hex };
 
       // L1 receipt?
       const l1Rcpt = await client.l1.getTransactionReceipt(l1TxHash).catch(() => null);
-      if (!l1Rcpt) return { phase: 'L1_PENDING', l1TxHash, hint: 'retry-later' };
+      if (!l1Rcpt) return { phase: 'L1_PENDING', l1TxHash };
 
       // Derive L2 canonical hash (from logs)
       const l2TxHash = extractL2TxHashFromL1Logs(l1Rcpt.logs);
-      if (!l2TxHash) return { phase: 'L1_INCLUDED', l1TxHash, hint: 'retry-later' };
+      if (!l2TxHash) return { phase: 'L1_INCLUDED', l1TxHash };
 
       // L2 receipt?
       const l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash).catch(() => null);
-      if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash, hint: 'retry-later' };
+      if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash };
 
       const ok = (l2Rcpt as any).status === 1;
       return ok
-        ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash, hint: 'already-executed' }
-        : { phase: 'L2_FAILED', l1TxHash, l2TxHash, hint: 'check-logs' };
+        ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash }
+        : { phase: 'L2_FAILED', l1TxHash, l2TxHash };
     },
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

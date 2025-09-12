@@ -1,46 +1,17 @@
-// examples/withdraw-eth.ts
-// import { Interface, JsonRpcProvider, Wallet, parseUnits } from 'ethers';
-// import { createEthersClient } from '../src/adapters/ethers/client';
-// import { createEthersSdk } from '../src/adapters/ethers/kit';
-// import type { Address } from '../src/types/primitives';
-
-// import { TransactionReceiptZKsyncOS } from '../src/adapters/ethers/resources/withdrawals/routes/types';
-
-// const L1_RPC = "https://sepolia.infura.io/v3/07e4434e9ba24cd68305123037336417";                     // e.g. https://sepolia.infura.io/v3/XXX
-// const L1_RPC = "https://rpc.ankr.com/eth_sepolia/070715f5f3878124fc8e3b05fa7e5f8ec165ffc887f2ffd3a51c9e906681492c"
-// const L2_RPC = "https://zksync-os-stage-api.zksync-nodes.com";                     // your L2 RPC
-// const PRIVATE_KEY = "0x3a86a76b2aee7d0742f2da930b3289cfcff31f57ffc923c672715ead32dc01a0";
-
-// constants
-// import { Contract } from 'ethers';
-// import {
-//   L2_ASSET_ROUTER_ADDR,
-//   L2_NATIVE_TOKEN_VAULT_ADDR,
-// } from '../src/adapters/ethers/resources/utils';
-
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
 const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
 
-import { Interface, JsonRpcProvider, Wallet, parseUnits } from 'ethers';
+import { JsonRpcProvider, Wallet, parseUnits } from 'ethers';
 import { createEthersClient } from '../src/adapters/ethers/client';
 import { createEthersSdk } from '../src/adapters/ethers/sdk';
 import type { Address } from '../src/core/types/primitives';
 
 import { Contract } from 'ethers';
-import { L2_NATIVE_TOKEN_VAULT_ADDR } from '../src/core/constants';
-
-import { TransactionReceiptZKsyncOS } from '../src/adapters/ethers/resources/withdrawals/routes/types';
-
-import IBridgehubABI from '../src/internal/abis/IBridgehub.json' assert { type: 'json' };
-import IL1AssetRouterABI from '../src/internal/abis/IL1AssetRouter.json' assert { type: 'json' };
-import IL1NativeTokenVaultABI from '../src/internal/abis/L1NativeTokenVault.json' assert { type: 'json' };
-import L2NativeTokenVaultABI from '../src/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
 import IERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
-import { sleep } from 'bun';
 
 // Replace with a real **L2 ERC-20 token address** you hold on L2
-const L1_ERC20_TOKEN = '0x71C95911E9a5D330f4D621842EC243EE1343292e' as Address;
+const L1_ERC20_TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
 
 async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);
@@ -72,7 +43,7 @@ async function main() {
     // l2GasLimit: 300_000n,
   } as const;
 
-   // -------- Dry runs / planning --------
+  // -------- Dry runs / planning --------
   console.log('TRY QUOTE:', await sdk.withdrawals.tryQuote(params));
   console.log('QUOTE:', await sdk.withdrawals.quote(params));
   console.log('TRY PREPARE:', await sdk.withdrawals.tryPrepare(params));
@@ -103,7 +74,11 @@ async function main() {
     console.error('FINALIZE failed:', fin.error);
     return;
   }
-  console.log('FINALIZE status:', fin.value.status, fin.value.receipt?.hash ?? '(already finalized)');
+  console.log(
+    'FINALIZE status:',
+    fin.value.status,
+    fin.value.receipt?.hash ?? '(already finalized)',
+  );
 
   // Optionally: wait until finalized mapping is true and fetch our L1 receipt if we sent it
   const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });

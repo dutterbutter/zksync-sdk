@@ -1,43 +1,57 @@
-import type { Hex } from './primitives';
+// src/core/types/errors.ts
 
-export type ErrorKind =
-  | 'ValidationError'
-  | 'Config'
-  | 'GasEstimationFailed'
-  | 'SendFailed'
-  | 'OnChainRevert'
-  | 'FinalityTimeout'
-  | 'Unsupported';
+// TODO: revisit these types
+export type ErrorType = 'VALIDATION' | 'STATE' | 'EXECUTION' | 'RPC' | 'INTERNAL' | 'VERIFICATION';
 
-export type ErrorCode =
-  // Generic
-  | 'VALIDATION'
-  | 'CONFIG'
-  | 'GAS_ESTIMATION_FAILED'
-  | 'SEND_FAILED'
-  | 'ONCHAIN_REVERT'
-  | 'TIMEOUT'
-  | 'UNSUPPORTED'
-  // Bridges / interop (seed a few now; more later)
-  | 'NO_ETH_ALLOWED'
-  | 'TOKEN_NOT_SUPPORTED'
-  | 'AMOUNT_TOO_LOW'
-  | 'WRONG_DESTINATION_CHAIN_ID';
+/** Resource surface */
+export type Resource =
+  | 'deposits'
+  | 'withdrawals'
+  | 'withdrawal-finalization'
+  | 'helpers'
+  | 'zksrpc';
 
-export interface ZkOsError {
-  kind: ErrorKind;
-  code: ErrorCode;
+/** Envelope we throw only for SDK-domain errors. */
+export interface ErrorEnvelope {
+  /** Resource surface that raised the error. */
+  resource: Resource;
+  /** SDK operation, e.g. 'withdrawals.finalize' */
+  operation: string;
+  /** Broad category */
+  type: ErrorType;
+  /** Human-readable, stable message for developers. */
   message: string;
-  /** 4-byte selector if revert data present */
-  selector?: Hex;
-  /** Decoded error args (preserve high-signal types like address/uint256/bytes32) */
-  args?: unknown[];
-  /** Structured context (tx hash, route, chain ids, etc.) */
-  meta?: Record<string, unknown>;
-  /** Raw/cascaded provider error or string */
+
+  /** Optional detail that adapters may enrich (reverts, extra context) */
+  context?: Record<string, unknown>;
+
+  /** If the error is a contract revert, adapters add decoded info here. */
+  revert?: {
+    /** 4-byte selector as 0x…8 hex */
+    selector: `0x${string}`;
+    /** Decoded error name when available (e.g. 'InvalidProof') */
+    name?: string;
+    /** Decoded args (ethers/viem output), when available */
+    args?: unknown[];
+    /** Optional adapter-known labels */
+    contract?: string;
+    fn?: string;
+  };
+
+  /** Original thrown error  */
   cause?: unknown;
 }
 
-export type Ok<T> = { ok: true; value: T };
-export type Err<E extends ZkOsError = ZkOsError> = { ok: false; error: E };
-export type Result<T, E extends ZkOsError = ZkOsError> = Ok<T> | Err<E>;
+/** Error class for all SDK errors. */
+export class ZKsyncError extends Error {
+  constructor(public readonly envelope: ErrorEnvelope) {
+    super(envelope.message);
+    this.name = 'ZKsyncError';
+  }
+}
+
+export type TryResult<T> = { ok: true; value: T } | { ok: false; error: ZKsyncError };
+
+export function isZKsyncError(e: unknown): e is ZKsyncError {
+  return e instanceof ZKsyncError && !!e.envelope?.type && !!e.envelope?.message;
+}

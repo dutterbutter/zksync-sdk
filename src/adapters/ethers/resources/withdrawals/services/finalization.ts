@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { AbiCoder, Contract, Interface, type TransactionReceipt } from 'ethers';
+import { AbiCoder, Contract, type TransactionReceipt } from 'ethers';
 
 import type { Address, Hex } from '../../../../../core/types/primitives';
 import type { EthersClient } from '../../../client';
@@ -21,10 +21,11 @@ import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/
 import { findL1MessageSentLog } from '../../../../../core/withdrawals/events';
 import { messengerLogIndex } from '../../../../../core/withdrawals/logs';
 
+import { classifyReadinessFromRevert } from '../../../errors/revert';
+
 const IL1NullifierMini = [
   'function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)',
 ] as const;
-const NullifierIface = new Interface(IL1NullifierABI as any);
 
 export interface FinalizationServices {
   /**
@@ -116,35 +117,8 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
       try {
         await (c as any).finalizeDeposit.staticCall(params);
         return { kind: 'READY' };
-      } catch (e: any) {
-        // TODO: proper error envelope
-        let name: string | undefined;
-        try {
-          const data = e?.data ?? e?.error?.data;
-          const parsed = data ? NullifierIface.parseError(data) : undefined;
-          name = parsed?.name;
-        } catch {
-          /* ignore */
-        }
-
-        if (name === 'WithdrawalAlreadyFinalized') return { kind: 'FINALIZED' };
-        if (name === 'InvalidProof') return { kind: 'NOT_READY', reason: 'invalid-proof' };
-
-        const msg = (e?.shortMessage ?? e?.message ?? '').toLowerCase();
-
-        if (msg.includes('paused')) return { kind: 'NOT_READY', reason: 'paused' };
-        if (msg.includes('sharedbridge'))
-          return {
-            kind: 'NOT_READY',
-            reason: 'config-missing',
-            detail: e?.shortMessage ?? e?.message,
-          };
-
-        if (name === 'WrongL2Sender' || name === 'InvalidSelector' || name === 'TokenNotLegacy') {
-          return { kind: 'NOT_READY', reason: 'message-mismatch', detail: name };
-        }
-
-        return { kind: 'NOT_READY', reason: 'unknown', detail: e?.shortMessage ?? e?.message };
+      } catch (e) {
+        return classifyReadinessFromRevert(e);
       }
     },
 

@@ -24,15 +24,7 @@ export interface DepositQuote {
   mintValue: UInt;
   suggestedL2GasLimit: UInt;
   gasPerPubdata: UInt;
-  minGasLimitApplied: boolean;
-  gasBufferPctApplied: number;
 }
-
-// /** Plan step kinds */
-// export type DepositPlanStepKind = 'approve' | 'bridgehub:direct' | 'bridgehub:two-bridges';
-
-// /** Adapter-agnostic step (Tx generic) */
-// export type DepositPlanStep<Tx> = PlanStep<Tx> & { kind: DepositPlanStepKind };
 
 /** Plan (Tx generic) */
 export type DepositPlan<Tx> = Plan<Tx, DepositRoute, DepositQuote>;
@@ -51,15 +43,14 @@ export type DepositWaitable = Hex | { l1TxHash: Hex } | DepositHandle<unknown>;
 
 export type DepositPhase =
   | 'L1_PENDING'
-  | 'L1_INCLUDED'  // L1 included, L2 hash not derived yet
-  | 'L2_PENDING'   // we have L2 hash, but no receipt yet
-  | 'L2_EXECUTED'  // L2 receipt.status === 1
-  | 'L2_FAILED'    // L2 receipt.status === 0
+  | 'L1_INCLUDED' // L1 included, L2 hash not derived yet
+  | 'L2_PENDING' // we have L2 hash, but no receipt yet
+  | 'L2_EXECUTED' // L2 receipt.status === 1
+  | 'L2_FAILED' // L2 receipt.status === 0
   | 'UNKNOWN';
 
 export type DepositStatus = {
   phase: DepositPhase;
   l1TxHash: Hex;
   l2TxHash?: Hex;
-  hint?: 'retry-later' | 'already-executed' | 'check-logs' | 'unknown';
 };

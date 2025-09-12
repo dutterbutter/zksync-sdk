@@ -86,8 +86,6 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       route: ctx.route,
       approvalsNeeded: approvals,
       suggestedL2GasLimit: ctx.l2GasLimit,
-      minGasLimitApplied: true,
-      gasBufferPctApplied: ctx.gasBufferPct,
     };
 
     return { route: ctx.route, summary, steps };
@@ -166,13 +164,13 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : ('0x' as Hex);
 
       if (!l2TxHash || l2TxHash === ('0x' as Hex)) {
-        return { phase: 'UNKNOWN', l2TxHash: '0x' as Hex, hint: 'unknown' };
+        return { phase: 'UNKNOWN', l2TxHash: '0x' as Hex };
       }
 
       // Has the L2 tx landed?
       const l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash).catch(() => null);
       if (!l2Rcpt) {
-        return { phase: 'L2_PENDING', l2TxHash, hint: 'retry-later' };
+        return { phase: 'L2_PENDING', l2TxHash };
       }
 
       // Try to derive finalize params & proof bundle from L2 receipt/logs
@@ -182,9 +180,8 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       } catch {
         // L2 included but not ready for finalization
         return {
-          phase: 'PROOFS_PENDING',
+          phase: 'PENDING',
           l2TxHash,
-          hint: 'retry-later',
         };
       }
 
@@ -202,7 +199,6 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
             phase: 'FINALIZED',
             l2TxHash,
             proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
-            hint: 'already-finalized',
           };
         }
       } catch {
@@ -217,7 +213,6 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           phase: 'FINALIZED',
           l2TxHash,
           proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
-          hint: 'already-finalized',
         };
       }
       if (readiness.kind === 'READY') {
@@ -225,23 +220,13 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           phase: 'READY_TO_FINALIZE',
           l2TxHash,
           proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
-          hint: 'can-finalize-now',
         };
       }
 
-      // NOT_READY:
-      const hint =
-        readiness.reason === 'paused'
-          ? 'retry-later'
-          : readiness.reason === 'message-mismatch' || readiness.reason === 'config-missing'
-            ? 'check-logs'
-            : 'retry-later';
-
       return {
-        phase: 'PROOFS_PENDING',
+        phase: 'PENDING',
         l2TxHash,
         proof: { batchNumber: key.l2BatchNumber, messageIndex: key.l2MessageIndex },
-        hint,
       };
     },
 
@@ -301,7 +286,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
     },
 
     async finalize(l2TxHash) {
-      // Build finalize params 
+      // Build finalize params
       const pack = await (async () => {
         try {
           return await svc.fetchFinalizeDepositParams(l2TxHash);

@@ -5,6 +5,6 @@
     "outDir": "dist",
     "emitDeclarationOnly": false
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["**/*.test.ts", "**/__tests__/**", "test/**"]
 }

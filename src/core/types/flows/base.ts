@@ -11,9 +11,8 @@ export interface ApprovalNeed {
 /** Generic step (adapter injects Tx type) */
 export interface PlanStep<Tx> {
   key: string;
-  kind: string; // route-specific discriminator
+  kind: string;
   description: string;
-  canSkip: boolean;
   tx: Tx; // adapter-specific tx (e.g., ethers TransactionRequest)
 }
 

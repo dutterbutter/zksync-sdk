@@ -5,7 +5,7 @@ import {
   TOPIC_L1_MESSAGE_SENT_NEW,
   TOPIC_L1_MESSAGE_SENT_LEG,
 } from '../constants';
-import type { ParsedLog, ParsedReceipt } from './types';
+import type { ParsedLog, ParsedReceipt } from '../types/flows/withdrawals';
 
 type Prefer = 'messenger' | 'assetRouter' | { address: string };
 

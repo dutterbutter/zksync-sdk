@@ -57,7 +57,6 @@ export function routeEthDirect(): DepositRouteStrategy {
           key: 'bridgehub:direct',
           kind: 'bridgehub:direct',
           description: 'Bridge ETH via Bridgehub.requestL2TransactionDirect',
-          canSkip: false,
           tx,
         },
       ];

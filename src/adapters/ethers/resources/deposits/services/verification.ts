@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Interface, type Log, type Provider, type TransactionReceipt } from 'ethers';
 import type { Hex } from '../../../../../core/types/primitives';
 import { isHash66 } from '../../../../../core/utils/addr';
 import { TOPIC_CANONICAL_ASSIGNED, TOPIC_CANONICAL_SUCCESS } from '../../../../../core/constants';
+
+import { createError } from '../../../../../core/errors/factory.ts';
 
 const I_BRIDGEHUB = new Interface([
   'event NewPriorityRequest(uint256 indexed chainId, address indexed sender, bytes32 txHash, uint256 txId, bytes data)',
@@ -47,14 +50,37 @@ export async function waitForL2ExecutionFromL1Tx(
 
   const l2TxHash = extractL2TxHashFromL1Logs(l1Receipt.logs);
   if (!l2TxHash) {
-    throw new Error('Could not find canonical L2 tx hash in L1 receipt logs.');
+    throw createError('VERIFICATION', {
+      message: 'Failed to extract L2 transaction hash from L1 logs',
+      resource: 'deposits',
+      operation: 'deposits.wait',
+      context: { l1TxHash, logCount: l1Receipt.logs?.length ?? 0 },
+    });
   }
 
   const l2Receipt = await l2.waitForTransaction(l2TxHash);
-  if (!l2Receipt) throw new Error('No L2 receipt found');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((l2Receipt as any).status !== 1) {
-    throw new Error(`L2 deposit execution failed (tx: ${l2TxHash})`);
+  if (!l2Receipt) {
+    // double-check in case the provider’s wait returned null but the receipt exists now
+    const maybe = await l2.getTransactionReceipt(l2TxHash).catch(() => null);
+    if (!maybe) {
+      throw createError('VERIFICATION', {
+        message: 'L2 transaction was not found after waiting for its execution',
+        resource: 'deposits',
+        operation: 'deposits.wait',
+        context: { l1TxHash, l2TxHash, where: 'l2.waitForTransaction' },
+      });
+    }
+    // we did find it on the second try — continue with the normal check
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((maybe as any).status !== 1) {
+      throw createError('VERIFICATION', {
+        message: 'L2 transaction execution failed',
+        resource: 'deposits',
+        operation: 'deposits.wait',
+        context: { l1TxHash, l2TxHash, status: (maybe as any).status },
+      });
+    }
+    return { l2Receipt: maybe, l2TxHash };
   }
 
   return { l2Receipt, l2TxHash };

@@ -55,7 +55,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           key: `approve:${p.token}:${assetRouter}`,
           kind: 'approve',
           description: `Approve ${p.amount} for router (non-base)`,
-          canSkip: false,
           tx: { to: p.token, data, from: ctx.sender, ...ctx.fee },
         });
       }
@@ -98,7 +97,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         key: 'bridgehub:two-bridges:nonbase',
         kind: 'bridgehub:two-bridges',
         description: 'Bridge ERC20 (non-base) via Bridgehub.requestL2TransactionTwoBridges',
-        canSkip: false,
         tx: bridgeTx,
       });
 
