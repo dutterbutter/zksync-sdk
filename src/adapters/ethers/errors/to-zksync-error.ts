@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { createError } from '../../../core/errors/factory';
+import { createError, shapeCause } from '../../../core/errors/factory';
 import {
   isZKsyncError,
   type TryResult,
@@ -27,23 +27,6 @@ export function toZKsyncError(
     ...(revert ? { revert } : {}),
     cause: shapeCause(err),
   });
-}
-
-function shapeCause(err: unknown) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const e = err as any;
-  const data = e?.data?.data ?? e?.error?.data ?? e?.data ?? undefined;
-  return {
-    name: typeof e?.name === 'string' ? e.name : undefined,
-    message:
-      typeof e?.message === 'string'
-        ? e.message
-        : typeof e?.shortMessage === 'string'
-          ? e.shortMessage
-          : undefined,
-    code: e?.code,
-    data: typeof data === 'string' && data.startsWith('0x') ? `${data.slice(0, 10)}…` : undefined,
-  };
 }
 
 export function makeErrorOps(resource: Resource) {
