@@ -36,7 +36,7 @@ export function normalizeProof(p: unknown): ProofNormalized {
         resource: RESOURCE,
         operation: 'zksrpc.normalizeProof',
         message: 'Malformed proof: missing id or batch number.',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+         
         context: { keys: Object.keys(raw ?? {}) },
       });
     }

@@ -71,7 +71,7 @@ export async function waitForL2ExecutionFromL1Tx(
       });
     }
     // we did find it on the second try — continue with the normal check
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     if ((maybe as any).status !== 1) {
       throw createError('VERIFICATION', {
         message: 'L2 transaction execution failed',

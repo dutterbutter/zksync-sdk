@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+ 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/adapters/ethers/resources/deposits.ts
@@ -291,7 +291,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       },
     );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const wait = (
     h: DepositWaitable | Hex,
     opts: { for: 'l1' | 'l2' },

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
+ 
 // context.ts
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';

@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+ 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+ 
 // src/adapters/ethers/resources/withdrawals/index.ts
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+ 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
@@ -319,7 +319,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         const poll = Math.max(1000, opts.pollMs ?? 2500);
         const deadline = opts.timeoutMs ? Date.now() + opts.timeoutMs : undefined;
 
-        // eslint-disable-next-line no-constant-condition
+         
         while (true) {
           const s = await status(l2Hash);
 

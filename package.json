@@ -82,6 +82,7 @@
     "types": "typechain --target ethers-v6 --out-dir src/adapters/ethers/typechain src/internal/abis/json/*.json && ncp src/adapters/ethers/typechain typechain",
     "prepublishOnly": "bun run clean && bun run build",
     "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier . --write",
     "docs:gen": "node ./node_modules/typedoc/bin/typedoc",
     "docs:serve": "mdbook serve docs -p 3000",

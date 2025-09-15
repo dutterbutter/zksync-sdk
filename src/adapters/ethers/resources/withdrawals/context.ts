@@ -1,5 +1,5 @@
 // src/adapters/ethers/resources/withdrawals/context.ts
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';

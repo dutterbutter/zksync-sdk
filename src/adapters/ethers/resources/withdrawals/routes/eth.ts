@@ -17,7 +17,7 @@ export function routeEth(): WithdrawRouteStrategy {
 
       const base = new Contract(
         L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+         
         new Interface(L2BaseTokenABI),
         ctx.client.l2,
       );
