@@ -83,10 +83,13 @@
     "prepublishOnly": "bun run clean && bun run build",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier . --write",
-    "test": "bun test",
     "docs:gen": "node ./node_modules/typedoc/bin/typedoc",
     "docs:serve": "mdbook serve docs -p 3000",
-    "docs:build": "mdbook build docs"
+    "docs:build": "mdbook build docs",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:cov": "bun test --coverage",
+    "test:core": "bun test src/core"
   },
   "sideEffects": false,
   "type": "module",
