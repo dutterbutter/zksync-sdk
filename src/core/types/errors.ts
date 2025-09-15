@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/core/types/errors.ts
+
 import util from 'node:util';
 import { formatEnvelopePretty } from '../errors/formatter';
 
@@ -65,13 +63,13 @@ export class ZKsyncError extends Error {
 
 //  ---- Factory & type guards ----
 export function isZKsyncError(e: unknown): e is ZKsyncError {
-  return (
-    !!e &&
-    typeof e === 'object' &&
-    'envelope' in (e as any) &&
-    typeof (e as any).envelope?.type === 'string' &&
-    typeof (e as any).envelope?.message === 'string'
-  );
+  if (!e || typeof e !== 'object') return false;
+
+  const maybe = e as { envelope?: unknown };
+  if (!('envelope' in maybe)) return false;
+
+  const envelope = maybe.envelope as Record<string, unknown> | undefined;
+  return typeof envelope?.type === 'string' && typeof envelope?.message === 'string';
 }
 
 export type TryResult<T> = { ok: true; value: T } | { ok: false; error: ZKsyncError };

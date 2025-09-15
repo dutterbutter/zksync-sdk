@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-base-to-string */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// src/core/errors/formatter.ts
 
 /* -------------------- Formatting helpers -------------------- */
 import type { ErrorEnvelope } from '../types';
@@ -15,7 +12,7 @@ function elideMiddle(s: string, max = 96): string {
 
 function shortJSON(v: unknown, max = 240): string {
   try {
-    const s = JSON.stringify(v, (_k, val) =>
+    const s = JSON.stringify(v, (_k: string, val: unknown): unknown =>
       typeof val === 'bigint' ? `${val.toString()}n` : val,
     );
     return s.length > max ? elideMiddle(s, max) : s;
@@ -36,8 +33,15 @@ function formatContextLine(ctx?: Record<string, unknown>): string | undefined {
   const nonce = ctx['nonce'];
   const parts: string[] = [];
   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  if (txHash !== undefined) parts.push(`txHash=${txHash ?? '<none>'}`);
-  if (nonce !== undefined) parts.push(`nonce=${String(nonce)}`);
+  if (txHash !== undefined)
+    parts.push(`txHash=${typeof txHash === 'string' ? txHash : shortJSON(txHash, 96)}`);
+  if (nonce !== undefined) {
+    const nonceStr =
+      typeof nonce === 'string' || typeof nonce === 'number' || typeof nonce === 'bigint'
+        ? String(nonce)
+        : shortJSON(nonce, 48);
+    parts.push(`nonce=${nonceStr}`);
+  }
   return parts.length ? `  ${kv('Context', parts.join('  •  '))}` : undefined;
 }
 
@@ -60,20 +64,56 @@ function formatRevert(r?: ErrorEnvelope['revert']): string | undefined {
   return lines.join('\n');
 }
 
-function formatCause(c?: any): string[] {
+function formatCause(c?: unknown): string[] {
   if (!c) return [];
   const out: string[] = [];
-  const head: string[] = [];
-  if (c.name) head.push(`name=${c.name}`);
-  if (c.code) head.push(`code=${c.code}`);
-  if (head.length) out.push(`  ${kv('Cause', head.join('  '))}`);
 
-  if (c.message) {
-    out.push(`              message=${elideMiddle(String(c.message), 600)}`);
+  // If the cause is an object, read known fields safely; otherwise stringify it.
+  if (typeof c === 'object' && c !== null) {
+    const obj = c as Record<string, unknown>;
+    const head: string[] = [];
+    if (obj.name !== undefined) {
+      const nameVal = obj.name;
+      const nameStr =
+        typeof nameVal === 'string' ||
+        typeof nameVal === 'number' ||
+        typeof nameVal === 'bigint' ||
+        typeof nameVal === 'boolean'
+          ? String(nameVal)
+          : shortJSON(nameVal, 120);
+      head.push(`name=${nameStr}`);
+    }
+    if (obj.code !== undefined) {
+      const codeVal = obj.code;
+      const codeStr =
+        typeof codeVal === 'string' ||
+        typeof codeVal === 'number' ||
+        typeof codeVal === 'bigint' ||
+        typeof codeVal === 'boolean'
+          ? String(codeVal)
+          : shortJSON(codeVal, 120);
+      head.push(`code=${codeStr}`);
+    }
+    if (head.length) out.push(`  ${kv('Cause', head.join('  '))}`);
+
+    if (obj.message) {
+      const messageStr =
+        typeof obj.message === 'string' ||
+        typeof obj.message === 'number' ||
+        typeof obj.message === 'bigint' ||
+        typeof obj.message === 'boolean'
+          ? String(obj.message)
+          : shortJSON(obj.message, 600);
+      out.push(`              message=${elideMiddle(messageStr, 600)}`);
+    }
+    if (obj.data) {
+      const dataStr = shortJSON(obj.data, 200);
+      out.push(`              data=${elideMiddle(dataStr, 200)}`);
+    }
+  } else {
+    out.push(`  ${kv('Cause', shortJSON(c, 200))}`);
   }
-  if (c.data) {
-    out.push(`              data=${elideMiddle(String(c.data), 200)}`);
-  }
+
   return out;
 }
 
@@ -86,18 +126,28 @@ export function formatEnvelopePretty(e: ErrorEnvelope): string {
   lines.push('');
 
   lines.push(`  ${kv('Operation', e.operation)}`);
-  lines.push(`  ${kv('Resource', e.resource)}`);
-  const step = formatStep(e.context);
-  if (step) lines.push(step);
-  lines.push('');
 
-  const ctxLine = formatContextLine(e.context);
+  const ctx = (() => {
+    const u = e as unknown;
+    if (!u || typeof u !== 'object') return undefined;
+    const obj = u as Record<string, unknown>;
+    const candidate = obj['ctx'] ?? obj['context'];
+    if (candidate && typeof candidate === 'object' && candidate !== null) {
+      return candidate as Record<string, unknown>;
+    }
+    return undefined;
+  })();
+
+  const ctxLine = formatContextLine(ctx);
   if (ctxLine) lines.push(ctxLine);
+
+  const stepLine = formatStep(ctx);
+  if (stepLine) lines.push(stepLine);
 
   const rv = formatRevert(e.revert);
   if (rv) lines.push(rv);
 
-  const causeLines = formatCause(e.cause as any);
+  const causeLines = formatCause(e.cause);
   if (causeLines.length) {
     if (!ctxLine && !rv) lines.push('');
     lines.push(...causeLines);

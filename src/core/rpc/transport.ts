@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/core/rpc/transport.ts
+
 import type { RpcTransport } from './types';
 
 // Ethers: provider.send(method, params)
 export function makeTransportFromEthers(provider: {
-  send: (m: string, p: any[]) => Promise<any>;
+  send: (m: string, p: unknown[]) => Promise<unknown>;
 }): RpcTransport {
   return (m, p = []) => provider.send(m, p);
 }

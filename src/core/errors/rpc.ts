@@ -14,6 +14,12 @@ export async function withRpcOp<T>(
     return await fn();
   } catch (e) {
     if (isZKsyncError(e)) throw e;
-    throw createError('RPC', { resource: RESOURCE, operation, message, context: ctx, cause: shapeCause(e) });
+    throw createError('RPC', {
+      resource: RESOURCE,
+      operation,
+      message,
+      context: ctx,
+      cause: shapeCause(e),
+    });
   }
 }

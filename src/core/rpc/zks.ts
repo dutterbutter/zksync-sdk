@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// src/core/rpc/zks.ts
+
 import type { RpcTransport } from './types';
 import type { AddressHex, ReceiptWithL2ToL1, ProofNormalized } from './types';
 import type { Hex } from '../types/primitives';
@@ -21,45 +20,47 @@ const METHODS = {
 } as const;
 
 // TODO: move to utils
-function toHexArray(arr: any): Hex[] {
-  return (Array.isArray(arr) ? arr : []).map((x) => x as Hex);
+function toHexArray(arr: unknown): Hex[] {
+  const list = Array.isArray(arr) ? (arr as unknown[]) : [];
+  return list.map((x) => x as Hex);
 }
 
 // TODO: better validation
-export function normalizeProof(p: any): ProofNormalized {
+export function normalizeProof(p: unknown): ProofNormalized {
   try {
-    const idRaw = p?.id ?? p?.index;
-    const bnRaw = p?.batch_number ?? p?.batchNumber;
+    const raw = (p ?? {}) as Record<string, unknown>;
+    const idRaw = raw?.id ?? raw?.index;
+    const bnRaw = raw?.batch_number ?? raw?.batchNumber;
     if (idRaw == null || bnRaw == null) {
       throw createError('RPC', {
         resource: RESOURCE,
         operation: 'zksrpc.normalizeProof',
         message: 'Malformed proof: missing id or batch number.',
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        context: { keys: Object.keys(p ?? {}) },
+        context: { keys: Object.keys(raw ?? {}) },
       });
     }
 
-    const toBig = (x: any) =>
+    const toBig = (x: unknown) =>
       typeof x === 'bigint'
         ? x
         : typeof x === 'number'
-        ? BigInt(x)
-        : typeof x === 'string'
-        ? BigInt(x)
-        : (() => {
-            throw createError('RPC', {
-              resource: RESOURCE,
-              operation: 'zksrpc.normalizeProof',
-              message: 'Malformed proof: invalid numeric field.',
-              context: { valueType: typeof x },
-            });
-          })();
+          ? BigInt(x)
+          : typeof x === 'string'
+            ? BigInt(x)
+            : (() => {
+                throw createError('RPC', {
+                  resource: RESOURCE,
+                  operation: 'zksrpc.normalizeProof',
+                  message: 'Malformed proof: invalid numeric field.',
+                  context: { valueType: typeof x },
+                });
+              })();
 
     return {
       id: toBig(idRaw),
       batchNumber: toBig(bnRaw),
-      proof: toHexArray(p?.proof),
+      proof: toHexArray(raw?.proof),
     };
   } catch (e) {
     if (isZKsyncError(e)) throw e;
@@ -81,17 +82,17 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
         'Failed to fetch Bridgehub address.',
         {},
         async () => {
-          const addr = await transport(METHODS.getBridgehub, []);
+          const addrRaw = (await transport(METHODS.getBridgehub, [])) as unknown;
           // Validate response shape
-          if (typeof addr !== 'string' || !addr.startsWith('0x')) {
+          if (typeof addrRaw !== 'string' || !addrRaw.startsWith('0x')) {
             throw createError('RPC', {
               resource: RESOURCE,
               operation: 'zksrpc.getBridgehubAddress',
               message: 'Unexpected Bridgehub address response.',
-              context: { valueType: typeof addr },
+              context: { valueType: typeof addrRaw },
             });
           }
-          return addr as AddressHex;
+          return addrRaw as AddressHex;
         },
       );
     },
@@ -102,7 +103,7 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
         'Failed to fetch L2→L1 log proof.',
         { txHash, index },
         async () => {
-          const proof = await transport(METHODS.getL2ToL1LogProof, [txHash, index]);
+          const proof: unknown = await transport(METHODS.getL2ToL1LogProof, [txHash, index]);
           if (!proof) {
             // proof missing is a normal “unavailable yet” state from node → classify as STATE
             throw createError('STATE', {
@@ -123,10 +124,15 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
         'Failed to fetch transaction receipt.',
         { txHash },
         async () => {
-          const rcpt = await transport(METHODS.getReceipt, [txHash]);
-          if (!rcpt) return null;
-          rcpt.l2ToL1Logs = Array.isArray(rcpt.l2ToL1Logs) ? rcpt.l2ToL1Logs : [];
-          return rcpt as ReceiptWithL2ToL1;
+          const rcptRaw: unknown = await transport(METHODS.getReceipt, [txHash]);
+          if (!rcptRaw) return null;
+          const rcptObj = rcptRaw as Record<string, unknown>;
+          // ensure l2ToL1Logs is always an array
+          const logs = Array.isArray(rcptObj['l2ToL1Logs'])
+            ? (rcptObj['l2ToL1Logs'] as unknown[])
+            : [];
+          rcptObj['l2ToL1Logs'] = logs;
+          return rcptObj as ReceiptWithL2ToL1;
         },
       );
     },

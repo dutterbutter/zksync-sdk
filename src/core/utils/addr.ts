@@ -50,6 +50,13 @@ export function isETH(token: Address) {
 
 export function normalizeAddrEq(a?: string, b?: string): boolean {
   if (!a || !b) return false;
-  const n = (s: string) => (s.startsWith('0x') ? s.toLowerCase() : `0x${s.toLowerCase()}`);
-  return n(a) === n(b);
+
+  const normalize = (s: string) => {
+    // Treat "0x" or "0X" as prefix
+    const hasPrefix = s.slice(0, 2).toLowerCase() === '0x';
+    const body = hasPrefix ? s.slice(2) : s;
+    return `0x${body.toLowerCase()}`;
+  };
+
+  return normalize(a) === normalize(b);
 }

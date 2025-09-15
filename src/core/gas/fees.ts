@@ -1,4 +1,4 @@
-import { L1_FEE_ESTIMATION_COEF_NUMERATOR, L1_FEE_ESTIMATION_COEF_DENOMINATOR } from '../constants';
+// import { L1_FEE_ESTIMATION_COEF_NUMERATOR, L1_FEE_ESTIMATION_COEF_DENOMINATOR } from '../constants';
 
 /**
  * Scales the provided gas limit using a coefficient to ensure acceptance of L1->L2 transactions.
@@ -15,12 +15,12 @@ import { L1_FEE_ESTIMATION_COEF_NUMERATOR, L1_FEE_ESTIMATION_COEF_DENOMINATOR } 
  * const scaledGasLimit = utils.scaleGasLimit(10_000);
  * // scaledGasLimit = 12_000
  */
-export function scaleGasLimit(gasLimit: bigint): bigint {
-  return (
-    (gasLimit * BigInt(L1_FEE_ESTIMATION_COEF_NUMERATOR)) /
-    BigInt(L1_FEE_ESTIMATION_COEF_DENOMINATOR)
-  );
-}
+// export function scaleGasLimit(gasLimit: bigint): bigint {
+//   return (
+//     (gasLimit * BigInt(L1_FEE_ESTIMATION_COEF_NUMERATOR)) /
+//     BigInt(L1_FEE_ESTIMATION_COEF_DENOMINATOR)
+//   );
+// }
 
 /**
  * Checks if the transaction's base cost is greater than the provided value, which covers the transaction's cost.

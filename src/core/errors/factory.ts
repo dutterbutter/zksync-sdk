@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 // src/core/errors/factory.ts
 import { ZKsyncError, type ErrorEnvelope, type ErrorType } from '../types/errors';
 
@@ -9,19 +6,37 @@ export function createError(type: ErrorType, input: Omit<ErrorEnvelope, 'type'>)
 }
 
 export function shapeCause(err: unknown) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const e = err as any;
-  const data = e?.data?.data ?? e?.error?.data ?? e?.data ?? undefined;
+  const isRecord = (x: unknown): x is Record<string, unknown> =>
+    x !== null && typeof x === 'object';
+
+  let data: unknown = undefined;
+  if (isRecord(err)) {
+    const r = err;
+    const d = r.data;
+    if (isRecord(d) && 'data' in d) {
+      data = d.data;
+    } else if ('error' in r && isRecord(r.error) && 'data' in r.error) {
+      data = r.error.data;
+    } else if ('data' in r) {
+      data = r.data;
+    }
+  }
+
+  const r = isRecord(err) ? err : undefined;
+
+  const name = r && typeof r.name === 'string' ? r.name : undefined;
+  const message =
+    r && typeof r.message === 'string'
+      ? r.message
+      : r && typeof r.shortMessage === 'string'
+        ? r.shortMessage
+        : undefined;
+  const code = r && 'code' in r ? r.code : undefined;
+
   return {
-    name: typeof e?.name === 'string' ? e.name : undefined,
-    message:
-      typeof e?.message === 'string'
-        ? e.message
-        : typeof e?.shortMessage === 'string'
-          ? e.shortMessage
-          : undefined,
-    code: e?.code,
+    name,
+    message,
+    code,
     data: typeof data === 'string' && data.startsWith('0x') ? `${data.slice(0, 10)}…` : undefined,
   };
 }
-
