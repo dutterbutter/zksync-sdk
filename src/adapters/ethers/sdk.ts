@@ -17,6 +17,7 @@ import {
   ETH_ADDRESS_IN_CONTRACTS,
 } from '../../core/constants';
 
+// Main SDK interface, combining deposits, withdrawals, and helpers
 export interface EthersSdk {
   deposits: DepositsResourceType;
   withdrawals: WithdrawalsResourceType;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import type { Address, Hex, UInt } from '../primitives';
+import type { Address, Hex } from '../primitives';
 import type { ApprovalNeed, PlanStep, Plan, Handle, Waitable, CommonCtx } from '../flows/base';
 
 // ------------------------ Type-only helpers ------------------------
@@ -15,21 +15,21 @@ describe('types/flows/base — ApprovalNeed', () => {
     const a: ApprovalNeed = {
       token: '0x1111111111111111111111111111111111111111' as Address,
       spender: '0x2222222222222222222222222222222222222222' as Address,
-      amount: 123n as UInt,
+      amount: 123n as bigint,
     };
     expectType<ApprovalNeed>(a);
 
     const bad1: ApprovalNeed = {
       token: 'not-hex' as unknown as Address,
       spender: '0x0' as Address,
-      amount: 1n as UInt,
+      amount: 1n as bigint,
     };
     expect(bad1).toBeDefined();
 
     const bad2: ApprovalNeed = {
       token: '0x1' as Address,
       spender: '0x2' as Address,
-      amount: 1 as unknown as UInt,
+      amount: 1 as unknown as bigint,
     };
     expect(bad2).toBeDefined();
   });
@@ -60,11 +60,11 @@ describe('types/flows/base — Plan<Tx, Route, Quote>', () => {
   it('composes route, summary(quote), steps', () => {
     type Tx = { to: Address };
     type Route = 'eth' | 'erc20';
-    type Quote = { route: Route; baseCost: UInt };
+    type Quote = { route: Route; baseCost: bigint };
 
     const p: Plan<Tx, Route, Quote> = {
       route: 'erc20',
-      summary: { route: 'erc20', baseCost: 0n as UInt },
+      summary: { route: 'erc20', baseCost: 0n as bigint },
       steps: [
         {
           key: 'approve',
@@ -77,11 +77,10 @@ describe('types/flows/base — Plan<Tx, Route, Quote>', () => {
     };
     expectType<Plan<Tx, Route, Quote>>(p);
 
-    // @ts-expect-error steps must be PlanStep<Tx>[]
     const bad: Plan<Tx, Route, Quote> = {
       route: p.route,
       summary: p.summary,
-      steps: [{ key: 'x' }],
+      steps: [{ key: 'x', kind: 'y', description: 'z', tx: { to: '0x3' as Address } }],
     };
     expect(bad).toBeDefined();
   });
@@ -91,7 +90,7 @@ describe('types/flows/base — Handle<TxHashMap, Route, PlanT>', () => {
   it('requires kind union and accepts optional route', () => {
     type Tx = { to: Address };
     type Route = 'eth' | 'erc20';
-    type Quote = { route: Route; baseCost: UInt };
+    type Quote = { route: Route; baseCost: bigint };
     type MyPlan = Plan<Tx, Route, Quote>;
 
     type Hashes = { approve: Hex; send: Hex };
@@ -104,7 +103,7 @@ describe('types/flows/base — Handle<TxHashMap, Route, PlanT>', () => {
       },
       plan: {
         route: 'eth',
-        summary: { route: 'eth', baseCost: 0n as UInt },
+        summary: { route: 'eth', baseCost: 0n as bigint },
         steps: [{ key: 'send', kind: 'bridge', description: 'Send', tx: { to: '0x1' as Address } }],
       },
     };

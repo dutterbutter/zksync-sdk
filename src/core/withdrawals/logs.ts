@@ -2,6 +2,7 @@
 import { L1_MESSENGER_ADDRESS } from '../constants';
 import type { ReceiptWithL2ToL1 } from '../rpc/types';
 
+// Finds the index of the L2->L1 log emitted by the messenger contract in a transaction receipt.
 export function messengerLogIndex(
   raw: ReceiptWithL2ToL1,
   opts?: { index?: number; messenger?: string },

@@ -1,16 +1,16 @@
 // src/types/flows/deposits.ts
-import type { Address, Hex, UInt } from '../primitives';
+import type { Address, Hex } from '../primitives';
 import type { ApprovalNeed, Plan, Handle } from './base';
 
 /** Input */
 export interface DepositParams {
   token: Address;
-  amount: UInt;
+  amount: bigint;
   to?: Address;
   refundRecipient?: Address;
-  l2GasLimit?: UInt;
-  gasPerPubdata?: UInt;
-  operatorTip?: UInt;
+  l2GasLimit?: bigint;
+  gasPerPubdata?: bigint;
+  operatorTip?: bigint;
 }
 
 /** Routes */
@@ -20,10 +20,10 @@ export type DepositRoute = 'eth' | 'erc20-base' | 'erc20-nonbase';
 export interface DepositQuote {
   route: DepositRoute;
   approvalsNeeded: readonly ApprovalNeed[];
-  baseCost: UInt;
-  mintValue: UInt;
-  suggestedL2GasLimit: UInt;
-  gasPerPubdata: UInt;
+  baseCost: bigint;
+  mintValue: bigint;
+  suggestedL2GasLimit: bigint;
+  gasPerPubdata: bigint;
 }
 
 /** Plan (Tx generic) */
@@ -41,6 +41,7 @@ export interface DepositHandle<Tx>
 /** Waitable */
 export type DepositWaitable = Hex | { l1TxHash: Hex } | DepositHandle<unknown>;
 
+// Status and phases
 export type DepositPhase =
   | 'L1_PENDING'
   | 'L1_INCLUDED' // L1 included, L2 hash not derived yet
@@ -49,6 +50,7 @@ export type DepositPhase =
   | 'L2_FAILED' // L2 receipt.status === 0
   | 'UNKNOWN';
 
+// Deposit Status
 export type DepositStatus = {
   phase: DepositPhase;
   l1TxHash: Hex;

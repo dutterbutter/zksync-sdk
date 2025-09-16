@@ -7,7 +7,11 @@ export interface BaseTokenLookup {
   baseToken(chainId: bigint): Promise<Address>;
 }
 
-export async function pickRouteSmart(
+// Route picker for deposits:
+// ETH: ETH as base token
+// ERC-20-base: ERC-20 as base token
+// ERC-20-nonbase: ERC-20 not as base token, asset transfer
+export async function pickDepositRoute(
   client: BaseTokenLookup,
   chainIdL2: bigint,
   token: Address,

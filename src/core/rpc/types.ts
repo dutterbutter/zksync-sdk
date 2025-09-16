@@ -1,12 +1,10 @@
-import type { Hex } from '../types/primitives';
-
-export type AddressHex = `0x${string}`;
+import type { Hex, Address } from '../types/primitives';
 
 export type L2ToL1Log = {
   l2_shard_id: number;
   is_service: boolean;
   tx_number_in_block: number;
-  sender: AddressHex;
+  sender: Address;
   key: Hex;
   value: Hex;
 };
@@ -16,7 +14,7 @@ export type ReceiptWithL2ToL1 = {
   status?: string | number;
   blockNumber?: string | number;
   logs?: Array<{
-    address: AddressHex;
+    address: Address;
     topics: Hex[];
     data: Hex;
   }>;

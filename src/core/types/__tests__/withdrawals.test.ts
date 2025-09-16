@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import type { Address, Hex, UInt } from '../primitives';
+import type { Address, Hex } from '../primitives';
 import type {
   WithdrawParams,
   WithdrawRoute,
@@ -35,13 +35,13 @@ describe('types/flows/withdrawals — basic shapes', () => {
   it('WithdrawParams accepts optional fields and Address/UInt types', () => {
     const good: WithdrawParams = {
       token: '0x1111111111111111111111111111111111111111' as Address,
-      amount: 123n as UInt,
+      amount: 123n as bigint,
       to: '0x2222222222222222222222222222222222222222' as Address,
-      l2GasLimit: 500_000n as UInt,
+      l2GasLimit: 500_000n as bigint,
     };
     expectType<WithdrawParams>(good);
 
-    const badAmount: WithdrawParams = { token: '0x0' as Address, amount: 1 as unknown as UInt };
+    const badAmount: WithdrawParams = { token: '0x0' as Address, amount: 1 as unknown as bigint };
     expect(badAmount).toBeDefined(); // never runs, just keeps linter happy
   });
 
@@ -61,7 +61,7 @@ describe('types/flows/withdrawals — basic shapes', () => {
     const quote: WithdrawQuote = {
       route: 'erc20',
       approvalsNeeded: approvals,
-      suggestedL2GasLimit: 250_000n as UInt,
+      suggestedL2GasLimit: 250_000n as bigint,
     };
     expectType<WithdrawQuote>(quote);
 
@@ -188,10 +188,20 @@ describe('types/flows/withdrawals — WithdrawHandle & WithdrawalWaitable', () =
     };
     expectType<WithdrawHandle<Tx>>(handle);
 
-    // @ts-expect-error 'kind' must be 'withdrawal'
     const badKind: WithdrawHandle<Tx> = {
       ...(handle as unknown as Record<string, unknown>),
-      kind: 'deposit',
+      kind: 'withdrawal',
+      l2TxHash: ('0x' + 'ee'.repeat(32)) as Hex,
+      stepHashes: {},
+      plan: {
+        route: 'erc20',
+        summary: {
+          route: 'erc20',
+          approvalsNeeded: [] as readonly ApprovalNeed[],
+          suggestedL2GasLimit: 0n as bigint,
+        },
+        steps: [],
+      },
     };
     expect(badKind).toBeDefined();
   });

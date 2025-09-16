@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import { Interface, type JsonFragment } from 'ethers';
 import IL1NullifierABI from '../../../internal/abis/IL1Nullifier.json' assert { type: 'json' };
 import IL1NativeTokenVaultABI from '../../../internal/abis/L1NativeTokenVault.json' assert { type: 'json' };
@@ -10,8 +6,10 @@ import IERC20ABI from '../../../internal/abis/IERC20.json' assert { type: 'json'
 import MailboxABI from '../../../internal/abis/Mailbox.json' assert { type: 'json' };
 import { REVERT_TO_READINESS } from '../../../core/errors/withdrawal-revert-map';
 import type { FinalizeReadiness } from '../../../core/types/flows/withdrawals';
+import type { Address } from '../../../core/types';
 
 export interface DecodedRevert {
+  /** 4-byte selector, always present if this is a revert */
   selector: `0x${string}`;
   /** Decoded Solidity error name */
   name?: string;
@@ -19,18 +17,14 @@ export interface DecodedRevert {
   args?: unknown[];
   /** Optional labels if we know the contract/function context */
   contract?: string;
+  /** Function name if known */
   fn?: string;
 }
 
-// ---- Internal registry of Interfaces --------------
-
 /**
- * Minimal, global registry of Interfaces for decode.
- * Keep this list small & focused on contracts we actually call.
+ * Minimal registry of Interfaces for decode.
  */
 const ERROR_IFACES: { name: string; iface: Interface }[] = [];
-
-/** Standard built-ins we *always* try */
 const IFACE_ERROR_STRING = new Interface(['error Error(string)']);
 const IFACE_PANIC = new Interface(['error Panic(uint256)']);
 
@@ -75,6 +69,7 @@ const IFACE_PANIC = new Interface(['error Panic(uint256)']);
 
 /**
  * Allow callers to extend the error-decode registry at runtime.
+ * Example: registerErrorAbi('MyContract', MyContractABI);
  */
 export function registerErrorAbi(name: string, abi: ReadonlyArray<JsonFragment>) {
   const existing = ERROR_IFACES.findIndex((x) => x.name === name);
@@ -86,8 +81,12 @@ export function registerErrorAbi(name: string, abi: ReadonlyArray<JsonFragment>)
 /**
  * Extract revert data.
  */
+// TODO: fixme
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractRevertData(e: any): string | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const maybe =
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     e?.data?.data ?? e?.error?.data ?? e?.data ?? e?.error?.error?.data ?? e?.info?.error?.data;
 
   if (typeof maybe === 'string' && maybe.startsWith('0x') && maybe.length >= 10) {
@@ -102,12 +101,11 @@ function extractRevertData(e: any): string | undefined {
  *
  * Returns `undefined` if no revert data detected. Otherwise returns at least { selector }.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function decodeRevert(e: any): DecodedRevert | undefined {
   const data = extractRevertData(e);
   if (!data) return;
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-  const selector = `0x${data.slice(2, 10)}` as `0x${string}`;
+  const selector: Address = `0x${data.slice(2, 10)}`;
 
   // Try Error(string)
   try {
@@ -164,7 +162,12 @@ export function classifyReadinessFromRevert(e: unknown): FinalizeReadiness {
 
   if (name && REVERT_TO_READINESS[name]) return REVERT_TO_READINESS[name];
 
-  const msg = (typeof e === 'object' && e && ((e as any).shortMessage || (e as any).message)) || '';
+  const msg = (() => {
+    if (typeof e !== 'object' || e === null) return '';
+    const obj = e as Record<string, unknown>;
+    const maybeMsg = obj['shortMessage'] ?? obj['message'];
+    return typeof maybeMsg === 'string' ? maybeMsg : '';
+  })();
   const lower = String(msg).toLowerCase();
   if (lower.includes('paused')) return { kind: 'NOT_READY', reason: 'paused' };
 

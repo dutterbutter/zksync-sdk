@@ -24,17 +24,39 @@ export const ETH_ADDRESS_IN_CONTRACTS: Address = '0x0000000000000000000000000000
  */
 export const L2_BASE_TOKEN_ADDRESS = '0x000000000000000000000000000000000000800a';
 
+/**
+ * The address of the L1 messenger contract.
+ * @readonly
+ */
 export const L2_ASSET_ROUTER_ADDRESS: Address = '0x0000000000000000000000000000000000010003';
 
+/**
+ * The address of the L2 Native Token Vault contract.
+ * @readonly
+ */
 export const L2_NATIVE_TOKEN_VAULT_ADDRESS: Address = '0x0000000000000000000000000000000000010004';
 
+/** The address of the L1 messenger contract.
+ * @readonly
+ */
 export const L1_MESSENGER_ADDRESS = '0x0000000000000000000000000000000000008008' as const;
 
+/** The address of the L2 Base Token System contract.
+ * @readonly
+ */
 export const L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR =
   '0x000000000000000000000000000000000000800A' as const;
 
+/**
+ * The address of the L2 Asset Router contract.
+ * @readonly
+ */
 export const L2_ASSET_ROUTER_ADDR = '0x0000000000000000000000000000000000010003' as const;
 
+/**
+ * The address of the L2 Native Token Vault contract.
+ * @readonly
+ */
 export const L2_NATIVE_TOKEN_VAULT_ADDR = '0x0000000000000000000000000000000000010004' as const;
 
 // topic0 for L1MessageSent(address,bytes32,bytes)

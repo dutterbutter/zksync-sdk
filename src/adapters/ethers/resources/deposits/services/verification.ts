@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Interface, type Log, type Provider, type TransactionReceipt } from 'ethers';
 import type { Hex } from '../../../../../core/types/primitives';
 import { isHash66 } from '../../../../../core/utils/addr';
@@ -7,11 +5,15 @@ import { TOPIC_CANONICAL_ASSIGNED, TOPIC_CANONICAL_SUCCESS } from '../../../../.
 
 import { createError } from '../../../../../core/errors/factory.ts';
 
+// Event ABI for Bridgehub's NewPriorityRequest
 const I_BRIDGEHUB = new Interface([
   'event NewPriorityRequest(uint256 indexed chainId, address indexed sender, bytes32 txHash, uint256 txId, bytes data)',
 ]);
+// topic0 for Bridgehub.NewPriorityRequest
 const TOPIC_BRIDGEHUB_NPR = I_BRIDGEHUB.getEvent('NewPriorityRequest')!.topicHash;
 
+// Extracts the L2 transaction hash from L1 logs emitted by Bridgehub during deposit
+// Returns null if not found
 export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null {
   for (const lg of logs) {
     if ((lg.topics?.[0] ?? '').toLowerCase() === TOPIC_BRIDGEHUB_NPR.toLowerCase()) {
@@ -40,6 +42,8 @@ export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null 
   return null;
 }
 
+// Waits for the L2 transaction corresponding to the given L1 transaction to be executed
+// Throws if the L2 transaction fails or cannot be found
 export async function waitForL2ExecutionFromL1Tx(
   l1: Provider,
   l2: Provider,
@@ -71,13 +75,12 @@ export async function waitForL2ExecutionFromL1Tx(
       });
     }
     // we did find it on the second try — continue with the normal check
-     
-    if ((maybe as any).status !== 1) {
+    if (maybe.status !== 1) {
       throw createError('VERIFICATION', {
         message: 'L2 transaction execution failed',
         resource: 'deposits',
         operation: 'deposits.wait',
-        context: { l1TxHash, l2TxHash, status: (maybe as any).status },
+        context: { l1TxHash, l2TxHash, status: maybe.status },
       });
     }
     return { l2Receipt: maybe, l2TxHash };

@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect } from 'bun:test';
-import { withRpcOp, RESOURCE } from '../rpc';
+import { withRpcOp } from '../rpc';
 import { createError } from '../factory';
-import { isZKsyncError } from '../../types/errors';
+import { isZKsyncError, Resource } from '../../types/errors';
 
 describe('errors/rpc.withRpcOp', () => {
   it('returns value on success', async () => {
@@ -32,7 +32,7 @@ describe('errors/rpc.withRpcOp', () => {
     const env = (err as any).envelope;
     expect(env.type).toBe('RPC');
     expect(env.operation).toBe('op.test');
-    expect(env.resource).toBe(RESOURCE);
+    expect(env.resource).toBe('zksrpc' as Resource);
     expect(env.message).toBe('Failed op');
     // shaped cause fields retained
     expect(env.cause?.message).toBe('boom');
@@ -44,7 +44,7 @@ describe('errors/rpc.withRpcOp', () => {
     const original = createError('STATE', {
       message: 'not ready',
       operation: 'op.inner',
-      resource: RESOURCE,
+      resource: 'zksrpc' as Resource,
       context: { step: 'waiting' },
     });
 

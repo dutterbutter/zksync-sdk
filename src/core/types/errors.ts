@@ -4,7 +4,14 @@ import util from 'node:util';
 import { formatEnvelopePretty } from '../errors/formatter';
 
 // TODO: revisit these types
-export type ErrorType = 'VALIDATION' | 'STATE' | 'EXECUTION' | 'RPC' | 'INTERNAL' | 'VERIFICATION';
+export type ErrorType =
+  | 'VALIDATION'
+  | 'STATE'
+  | 'EXECUTION'
+  | 'RPC'
+  | 'INTERNAL'
+  | 'VERIFICATION'
+  | 'CONTRACT';
 
 /** Resource surface */
 export type Resource =
@@ -38,6 +45,7 @@ export interface ErrorEnvelope {
     args?: unknown[];
     /** Optional adapter-known labels */
     contract?: string;
+    /** Optional adapter-known function name */
     fn?: string;
   };
 
@@ -45,7 +53,11 @@ export interface ErrorEnvelope {
   cause?: unknown;
 }
 
-/** Error class for all SDK errors. */
+/** Error class.
+ * Represents an error that occurs within the ZKsync SDK.
+ * It encapsulates an ErrorEnvelope which provides detailed information about the error,
+ *
+ */
 export class ZKsyncError extends Error {
   constructor(public readonly envelope: ErrorEnvelope) {
     super(formatEnvelopePretty(envelope), envelope.cause ? { cause: envelope.cause } : undefined);
@@ -72,8 +84,10 @@ export function isZKsyncError(e: unknown): e is ZKsyncError {
   return typeof envelope?.type === 'string' && typeof envelope?.message === 'string';
 }
 
+// TryResult type for operations that can fail without throwing
 export type TryResult<T> = { ok: true; value: T } | { ok: false; error: ZKsyncError };
 
+// Operation constants for Deposit error contexts
 export const OP_DEPOSITS = {
   quote: 'deposits.quote',
   tryQuote: 'deposits.tryQuote',
@@ -102,7 +116,7 @@ export const OP_DEPOSITS = {
   },
 } as const;
 
-// src/core/types/errors.ts (or your ops constants file)
+// Operation constants for Withdrawal error contexts
 export const OP_WITHDRAWALS = {
   quote: 'withdrawals.quote',
   tryQuote: 'withdrawals.tryQuote',

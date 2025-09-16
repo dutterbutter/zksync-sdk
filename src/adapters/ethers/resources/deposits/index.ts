@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
- 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/adapters/ethers/resources/deposits.ts
 import type { EthersClient } from '../../client.ts';
 import type {
@@ -27,10 +23,14 @@ import type { DepositRouteStrategy } from './routes/types.ts';
 
 import { isZKsyncError, OP_DEPOSITS } from '../../../../core/types/errors';
 import { createError } from '../../../../core/errors/factory.ts';
-import { toZKsyncError, makeErrorOps } from '../../errors/to-zksync-error';
+import { toZKsyncError, makeErrorOps } from '../../errors/error-ops.ts';
 
 const { withOp, toResult } = makeErrorOps('deposits');
 
+// --------------------
+// Deposit Route map
+// --------------------
+// DepositRoute = 'eth' | 'erc20-base' | 'erc20-nonbase';
 const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
   eth: routeEthDirect(),
   'erc20-base': routeErc20Base(),
@@ -41,26 +41,44 @@ const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
 // Public interface
 // --------------------
 export interface DepositsResource {
+  // Get a quote for a deposit operation
   quote(p: DepositParams): Promise<DepositQuote>;
+
+  // Try to get a quote for a deposit operation
   tryQuote(
     p: DepositParams,
   ): Promise<{ ok: true; value: DepositQuote } | { ok: false; error: unknown }>;
 
+  // Prepare a deposit plan (route + steps) without executing it
   prepare(p: DepositParams): Promise<DepositPlan<TransactionRequest>>;
+
+  // Try to prepare a deposit plan without executing it
   tryPrepare(
     p: DepositParams,
   ): Promise<{ ok: true; value: DepositPlan<TransactionRequest> } | { ok: false; error: unknown }>;
 
+  // Execute a deposit operation
+  // Returns a handle that can be used to track the status of the deposit
   create(p: DepositParams): Promise<DepositHandle<TransactionRequest>>;
+
+  // Try to execute a deposit operation
   tryCreate(
     p: DepositParams,
   ): Promise<
     { ok: true; value: DepositHandle<TransactionRequest> } | { ok: false; error: unknown }
   >;
 
+  // Check the status of a deposit operation
+  // Can be given either a DepositWaitable (from create) or an L1 tx hash
   status(h: DepositWaitable | Hex): Promise<DepositStatus>;
 
+  // Wait for a deposit to be completed
+  // If 'for' is 'l1', waits for L1 inclusion only
+  // If 'for' is 'l2', waits for L1 inclusion and L2 execution
+  // Returns the relevant receipt, or null if the input handle has no L1 tx hash
   wait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<TransactionReceipt | null>;
+
+  // Try to wait for a deposit to be completed
   tryWait(
     h: DepositWaitable,
     opts: { for: 'l1' | 'l2' },
@@ -71,10 +89,12 @@ export interface DepositsResource {
 // Resource factory
 // --------------------
 export function DepositsResource(client: EthersClient): DepositsResource {
+  // buildPlan constructs a DepositPlan for the given params
+  // It does not execute any transactions
+  // It runs preflight checks and may throw if the deposit cannot be performed
   async function buildPlan(p: DepositParams): Promise<DepositPlan<TransactionRequest>> {
     const ctx = await commonCtx(p, client);
 
-    // allow route to refine (e.g., switch to non-base after checking base token)
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const route = ctx.route as DepositRoute;
     await ROUTES[route].preflight?.(p, ctx);
@@ -95,6 +115,8 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       steps,
     };
   }
+
+  // quote prepares a deposit and returns its summary without executing it
   const quote = async (p: DepositParams): Promise<DepositQuote> =>
     withOp(
       OP_DEPOSITS.quote,
@@ -106,6 +128,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       },
     );
 
+  // tryQuote is like quote, but returns a TryResult instead of throwing
   const tryQuote = (p: DepositParams) =>
     toResult<DepositQuote>(
       OP_DEPOSITS.tryQuote,
@@ -113,6 +136,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       () => quote(p),
     );
 
+  // prepare prepares a deposit plan without executing it
   const prepare = (p: DepositParams): Promise<DepositPlan<TransactionRequest>> =>
     withOp(
       OP_DEPOSITS.prepare,
@@ -121,6 +145,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       () => buildPlan(p),
     );
 
+  // tryPrepare is like prepare, but returns a TryResult instead of throwing
   const tryPrepare = (p: DepositParams) =>
     toResult<DepositPlan<TransactionRequest>>(
       OP_DEPOSITS.tryPrepare,
@@ -128,6 +153,8 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       () => prepare(p),
     );
 
+  // create prepares and executes a deposit plan
+  // It returns a handle that can be used to track the status of the deposit
   const create = (p: DepositParams): Promise<DepositHandle<TransactionRequest>> =>
     withOp(
       OP_DEPOSITS.create,
@@ -149,6 +176,8 @@ export function DepositsResource(client: EthersClient): DepositsResource {
               const [, token, router] = step.key.split(':');
               const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
               const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
+              // TODO: fix eslint
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               const current = await erc20.allowance(from, router as Address);
               if (current >= target) {
                 // Skip redundant approve
@@ -185,7 +214,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
             stepHashes[step.key] = hash;
 
             const rcpt = await sent.wait();
-            if ((rcpt as any)?.status === 0) {
+            if (rcpt?.status === 0) {
               throw createError('EXECUTION', {
                 resource: 'deposits',
                 operation: 'deposits.create.sendTransaction',
@@ -212,6 +241,8 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         return { kind: 'deposit', l1TxHash: last, stepHashes, plan };
       },
     );
+
+  // tryCreate is like create, but returns a TryResult instead of throwing
   const tryCreate = (p: DepositParams) =>
     toResult<DepositHandle<TransactionRequest>>(
       OP_DEPOSITS.tryCreate,
@@ -219,6 +250,8 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       () => create(p),
     );
 
+  // status checks the status of a deposit given its handle or L1 tx hash
+  // It queries both L1 and L2 to determine the current phase
   const status = (h: DepositWaitable | Hex): Promise<DepositStatus> =>
     withOp(
       OP_DEPOSITS.status,
@@ -284,14 +317,17 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash };
 
         // ---- Execution outcome ----
-        const ok = (l2Rcpt as any).status === 1;
+        const ok = l2Rcpt.status === 1;
         return ok
           ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash }
           : { phase: 'L2_FAILED', l1TxHash, l2TxHash };
       },
     );
 
-   
+  // wait waits for a deposit to be completed
+  // If 'for' is 'l1', waits for L1 inclusion only
+  // If 'for' is 'l2', waits for L1 inclusion and L2 execution
+  // Returns the relevant receipt, or null if the input handle has no L1 tx hash
   const wait = (
     h: DepositWaitable | Hex,
     opts: { for: 'l1' | 'l2' },
@@ -346,6 +382,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
       },
     );
 
+  // tryWait is like wait, but returns a TryResult instead of throwing
   const tryWait = (h: DepositWaitable | Hex, opts: { for: 'l1' | 'l2' }) =>
     toResult<TransactionReceipt>(
       OP_DEPOSITS.tryWait,

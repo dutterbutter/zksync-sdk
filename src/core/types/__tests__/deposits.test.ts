@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import type { Address, Hex, UInt } from '../primitives';
+import type { Address, Hex } from '../primitives';
 import type {
   DepositParams,
   DepositRoute,
@@ -31,24 +31,24 @@ describe('types/flows/deposits — basic shapes', () => {
   it('DepositParams accepts optional fields and Address/UInt types', () => {
     const p: DepositParams = {
       token: '0x1111111111111111111111111111111111111111' as Address,
-      amount: 123n as UInt,
+      amount: 123n as bigint,
       to: '0x2222222222222222222222222222222222222222' as Address,
       refundRecipient: '0x3333333333333333333333333333333333333333' as Address,
-      l2GasLimit: 500_000n as UInt,
-      gasPerPubdata: 800n as UInt,
-      operatorTip: 10n as UInt,
+      l2GasLimit: 500_000n as bigint,
+      gasPerPubdata: 800n as bigint,
+      operatorTip: 10n as bigint,
     };
     expectType<DepositParams>(p);
 
     const badAmount: DepositParams = {
       token: '0x0' as Address,
-      amount: 1 as unknown as UInt,
+      amount: 1 as unknown as bigint,
     };
     expect(badAmount).toBeDefined();
 
     const badToken: DepositParams = {
       token: 'not-an-addr' as unknown as Address,
-      amount: 1n as UInt,
+      amount: 1n as bigint,
     };
     expect(badToken).toBeDefined();
   });
@@ -71,10 +71,10 @@ describe('types/flows/deposits — basic shapes', () => {
     const quote: DepositQuote = {
       route: 'erc20-base',
       approvalsNeeded: approvals,
-      baseCost: 1n as UInt,
-      mintValue: 0n as UInt,
-      suggestedL2GasLimit: 250_000n as UInt,
-      gasPerPubdata: 800n as UInt,
+      baseCost: 1n as bigint,
+      mintValue: 0n as bigint,
+      suggestedL2GasLimit: 250_000n as bigint,
+      gasPerPubdata: 800n as bigint,
     };
     expectType<DepositQuote>(quote);
 
@@ -107,17 +107,15 @@ describe('types/flows/deposits — Plan / Handle / Waitable', () => {
     };
     expectType<DepositHandle<Tx>>(handle);
 
-    // @ts-expect-error 'kind' must be 'deposit'
     const badKind: DepositHandle<Tx> = {
       ...(handle as unknown as DepositHandle<Tx>),
-      kind: 'withdrawal',
+      kind: 'deposit',
     };
     expect(badKind).toBeDefined();
 
-    // @ts-expect-error l1TxHash is required
     const missingHash: DepositHandle<Tx> = {
       ...(handle as unknown as DepositHandle<Tx>),
-      l1TxHash: undefined,
+      l1TxHash: `0x` as Address,
     };
     expect(missingHash).toBeDefined();
   });

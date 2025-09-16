@@ -1,9 +1,9 @@
 import { createError, shapeCause } from '../errors/factory';
-import { isZKsyncError } from '../types/errors';
+import { isZKsyncError, type Resource } from '../types/errors';
 
 type Ctx = Record<string, unknown>;
-export const RESOURCE = 'zksrpc';
 
+/** Wraps an async function, catching errors and rethrowing them as ZKsyncErrors with context. */
 export async function withRpcOp<T>(
   operation: string,
   message: string,
@@ -15,7 +15,7 @@ export async function withRpcOp<T>(
   } catch (e) {
     if (isZKsyncError(e)) throw e;
     throw createError('RPC', {
-      resource: RESOURCE,
+      resource: 'zksrpc' as Resource,
       operation,
       message,
       context: ctx,

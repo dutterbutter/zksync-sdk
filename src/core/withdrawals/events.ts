@@ -9,6 +9,9 @@ import type { ParsedLog, ParsedReceipt } from '../types/flows/withdrawals';
 
 type Prefer = 'messenger' | 'assetRouter' | { address: string };
 
+// Finds the L1MessageSent log in an L2 transaction receipt.
+// If multiple are found, uses opts to determine which to return.
+// By default, prefers the messenger address; otherwise uses the user-specified index.
 export function findL1MessageSentLog(
   receipt: ParsedReceipt,
   opts?: { prefer?: Prefer; index?: number },

@@ -1,5 +1,14 @@
 {
   "extends": "./tsconfig.base.json",
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "build", "examples/*", "eslint.config.mjs", "docs/**", "**/__tests__/**", "typechain/factories/**", "typechain/contracts/**"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "examples/*",
+    "eslint.config.mjs",
+    "docs/**",
+    "**/__tests__/**",
+    "typechain/factories/**",
+    "typechain/contracts/**"
+  ]
 }

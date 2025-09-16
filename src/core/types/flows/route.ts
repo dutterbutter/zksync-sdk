@@ -1,4 +1,5 @@
-// src/types/flows/route-strategy.ts
+// src/types/flows/route.ts
+
 import type { ApprovalNeed, PlanStep } from './base';
 
 // Generic strategy contract for any flow

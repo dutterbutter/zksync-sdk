@@ -1,6 +1,6 @@
 {
   "name": "@zksync/sdk",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha.1",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "devDependencies": {
@@ -78,12 +78,13 @@
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:js": "tsup --config tsup.config.ts",
     "build": "bun run clean && bun run build:types && bun run build:js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "types": "typechain --target ethers-v6 --out-dir src/adapters/ethers/typechain src/internal/abis/json/*.json && ncp src/adapters/ethers/typechain typechain",
     "prepublishOnly": "bun run clean && bun run build",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "docs:gen": "node ./node_modules/typedoc/bin/typedoc",
     "docs:serve": "mdbook serve docs -p 3000",
     "docs:build": "mdbook build docs",

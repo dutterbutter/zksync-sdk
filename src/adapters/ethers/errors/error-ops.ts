@@ -1,5 +1,3 @@
- 
- 
 import { createError, shapeCause } from '../../../core/errors/factory';
 import {
   isZKsyncError,
@@ -8,7 +6,7 @@ import {
   type ErrorType,
   type Resource,
 } from '../../../core/types/errors';
-import { decodeRevert } from '../errors/revert';
+import { decodeRevert } from './revert';
 
 /**
  * Wrap any unknown error into a ZKsyncError with a chosen type+message.
@@ -29,6 +27,8 @@ export function toZKsyncError(
   });
 }
 
+// Factory for error wrappers for a specific resource.
+// Example: const { withOp, withRouteOp, toResult } = makeErrorOps('deposits');
 export function makeErrorOps(resource: Resource) {
   type Ctx = Record<string, unknown>;
 
@@ -45,9 +45,9 @@ export function makeErrorOps(resource: Resource) {
       throw toZKsyncError('INTERNAL', { resource, operation, context: ctx, message }, e);
     }
   }
-
+  // Like withOp, but also takes 'kind' (RPC vs INTERNAL) to pick error type.
   async function withRouteOp<T>(
-    kind: 'RPC' | 'INTERNAL',
+    kind: 'RPC' | 'INTERNAL' | 'CONTRACT',
     operation: string,
     message: string,
     ctx: Ctx,
@@ -60,6 +60,7 @@ export function makeErrorOps(resource: Resource) {
     }
   }
 
+  // Like withOp, but returns TryResult<T> instead of throwing.
   async function toResult<T>(
     operation: string,
     ctx: Ctx,

@@ -16,6 +16,8 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run lint
+      - run: bun run format:check
+      - run: bun run test
       - run: |
           cd packages/core && bun run build
           cd ../ethers && bun run build

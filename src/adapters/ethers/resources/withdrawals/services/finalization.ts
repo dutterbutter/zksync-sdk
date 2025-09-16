@@ -20,12 +20,12 @@ import IL1NullifierABI from '../../../../../internal/abis/IL1Nullifier.json' ass
 import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
 import { findL1MessageSentLog } from '../../../../../core/withdrawals/events';
 import { messengerLogIndex } from '../../../../../core/withdrawals/logs';
-import { makeErrorOps } from '../../../errors/to-zksync-error';
+import { makeErrorOps } from '../../../errors/error-ops';
 import { classifyReadinessFromRevert } from '../../../errors/revert';
 const { withRouteOp } = makeErrorOps('withdrawals');
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 import { createError } from '../../../../../core/errors/factory';
-import { toZKsyncError } from '../../../errors/to-zksync-error';
+import { toZKsyncError } from '../../../errors/error-ops';
 
 const IL1NullifierMini = [
   'function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)',

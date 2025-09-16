@@ -1,5 +1,6 @@
 import type { FinalizeReadiness } from '../../core/types/flows/withdrawals';
 
+/** Maps withdrawal revert reasons to readiness states. */
 export const REVERT_TO_READINESS: Record<string, FinalizeReadiness> = {
   // Already done
   WithdrawalAlreadyFinalized: { kind: 'FINALIZED' },
@@ -20,7 +21,7 @@ export const REVERT_TO_READINESS: Record<string, FinalizeReadiness> = {
   InvalidChainId: { kind: 'UNFINALIZABLE', reason: 'invalid-chain' },
   NotSettlementLayer: { kind: 'UNFINALIZABLE', reason: 'settlement-layer' },
 
-  // Likely environment/config path mismatches — treat as permanent for this tx
+  // Likely environment mismatch — treat as permanent for this tx
   OnlyEraSupported: { kind: 'UNFINALIZABLE', reason: 'unsupported' },
   LocalRootMustBeZero: { kind: 'UNFINALIZABLE', reason: 'unsupported' },
 };

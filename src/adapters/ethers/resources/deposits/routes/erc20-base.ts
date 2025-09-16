@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
- 
- 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// src/adapters/ethers/resources/deposits/routes/erc20-base.ts
+
 import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
 import type { TransactionRequest } from 'ethers';
@@ -9,11 +7,14 @@ import { encodeSecondBridgeErc20Args } from '../../utils';
 import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
 import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/base';
-import { makeErrorOps } from '../../../errors/to-zksync-error';
+import { makeErrorOps } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 
+// error handling
 const { withRouteOp } = makeErrorOps('deposits');
 
+// ERC20 deposit route via Bridgehub.requestL2TransactionTwoBridges
+// ERC20 is base token
 export function routeErc20Base(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
@@ -21,6 +22,8 @@ export function routeErc20Base(): DepositRouteStrategy {
       const assetRouter = ctx.l1AssetRouter;
 
       const erc20 = new Contract(p.token, IERC20ABI, ctx.client.signer);
+      // TODO: fix eslint
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const allowance = await withRouteOp(
         'RPC',
         OP_DEPOSITS.base.allowance,
@@ -30,8 +33,12 @@ export function routeErc20Base(): DepositRouteStrategy {
       );
       const needsApprove = allowance < p.amount;
 
-      const rawBaseCost = await withRouteOp(
-        'RPC',
+      // Estimate base cost
+      // return the cost of the base cost or error if fails
+      // TODO: fix eslint
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const rawBaseCost: bigint = await withRouteOp(
+        'CONTRACT',
         OP_DEPOSITS.base.baseCost,
         'Could not fetch L2 base cost from Bridgehub.',
         { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },

@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
- 
- 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// src/adapters/ethers/resources/deposits/routes/erc20-nonbase.ts
 
 import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
@@ -10,11 +7,14 @@ import { encodeSecondBridgeErc20Args } from '../../utils';
 import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
 import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/base';
-import { makeErrorOps } from '../../../errors/to-zksync-error';
+import { makeErrorOps } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 
+// error handling
 const { withRouteOp } = makeErrorOps('deposits');
 
+// ERC20 deposit route via Bridgehub.requestL2TransactionTwoBridges
+// ERC20 is non-base token
 export function routeErc20NonBase(): DepositRouteStrategy {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -29,6 +29,8 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const assetRouter = ctx.l1AssetRouter;
 
       const erc20 = new Contract(p.token, IERC20ABI, ctx.client.signer);
+      // TODO: fix eslint
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const allowance = await withRouteOp(
         'RPC',
         OP_DEPOSITS.nonbase.allowance,
@@ -39,6 +41,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const needsApprove = allowance < p.amount;
 
       // TODO: clean up gas estimation
+      // Maybe write dedicated gas resource?
       const MIN_L2_GAS_FOR_ERC20 = 2_500_000n;
       const l2GasLimitUsed =
         ctx.l2GasLimit && ctx.l2GasLimit > 0n
@@ -47,7 +50,9 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             : ctx.l2GasLimit
           : MIN_L2_GAS_FOR_ERC20;
 
-      const rawBaseCost = await withRouteOp(
+      // TODO: fix eslint
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const rawBaseCost: bigint = await withRouteOp(
         'RPC',
         OP_DEPOSITS.nonbase.baseCost,
         'Could not fetch L2 base cost from Bridgehub.',

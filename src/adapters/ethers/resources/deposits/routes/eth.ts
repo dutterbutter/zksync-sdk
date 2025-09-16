@@ -1,7 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
- 
- 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// src/adapters/ethers/resources/deposits/routes/eth.ts
 
 import type { DepositRouteStrategy } from './types';
 import { Contract } from 'ethers';
@@ -9,17 +6,22 @@ import type { TransactionRequest } from 'ethers';
 import { buildDirectRequestStruct } from '../../utils';
 import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 import type { PlanStep } from '../../../../../core/types/flows/base';
-import { makeErrorOps } from '../../../errors/to-zksync-error';
+import { makeErrorOps } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 
+// error handling
 const { withRouteOp } = makeErrorOps('deposits');
 
+// ETH deposit route via Bridgehub.requestL2TransactionDirect
+// ETH is base token
 export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
 
-      const rawBaseCost = await withRouteOp(
+      // TODO: fix eslint
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const rawBaseCost: bigint = await withRouteOp(
         'RPC',
         OP_DEPOSITS.eth.baseCost,
         'Could not fetch L2 base cost from Bridgehub.',

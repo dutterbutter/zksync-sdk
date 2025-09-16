@@ -32,7 +32,7 @@ function formatContextLine(ctx?: Record<string, unknown>): string | undefined {
   const txHash = ctx['txHash'] ?? ctx['l1TxHash'] ?? ctx['hash'];
   const nonce = ctx['nonce'];
   const parts: string[] = [];
-   
+
   if (txHash !== undefined)
     parts.push(`txHash=${typeof txHash === 'string' ? txHash : shortJSON(txHash, 96)}`);
   if (nonce !== undefined) {

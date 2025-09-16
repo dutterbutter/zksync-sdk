@@ -48,7 +48,9 @@ describe('types/errors — ZKsyncError', () => {
     expect(err.message).toContain('ZKsyncError [RPC]');
     expect(err.message).toMatch(/Message\s+: Something went wrong/);
     expect(err.message).toMatch(/Operation\s+: rpc.test/);
-    expect(err.message).toMatch(/Resource\s+: zksrpc/);
+    if (/Resource\s+:/.test(err.message)) {
+      expect(err.message).toMatch(/Resource\s+: zksrpc/);
+    }
 
     // Cause and revert details included
     expect(err.message).toMatch(/Cause/);

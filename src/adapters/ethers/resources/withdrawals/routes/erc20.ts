@@ -6,11 +6,12 @@ import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 
 import L2NativeTokenVaultABI from '../../../../../internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
 import L2AssetRouterABI from '../../../../../internal/abis/IL2AssetRouter.json' assert { type: 'json' };
 
-import { makeErrorOps } from '../../../errors/to-zksync-error';
+import { makeErrorOps } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 
 const { withRouteOp } = makeErrorOps('withdrawals');
 
+// Route for withdrawing ERC-20 via L2-L1
 export function routeErc20(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {

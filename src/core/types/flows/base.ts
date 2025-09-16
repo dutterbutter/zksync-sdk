@@ -1,11 +1,12 @@
 // src/types/flows/base.ts
-import type { Address, Hex, UInt } from '../primitives';
+
+import type { Address, Hex } from '../primitives';
 
 /** Generic approval requirement */
 export interface ApprovalNeed {
   token: Address;
   spender: Address;
-  amount: UInt;
+  amount: bigint;
 }
 
 /** Generic step (adapter injects Tx type) */
@@ -38,6 +39,7 @@ export type Waitable<HashKey extends string = 'txHash'> =
   | { [k in HashKey]?: Hex } // allows L1 or L2 forms
   | { stepHashes?: Record<string, Hex> };
 
+// Common context for deposits and withdrawal flows
 export interface CommonCtx {
   sender: Address;
   chainIdL2: bigint;

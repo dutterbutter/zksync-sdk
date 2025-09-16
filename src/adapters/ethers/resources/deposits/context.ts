@@ -1,14 +1,13 @@
- 
- 
 // context.ts
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
 import { getFeeOverrides } from '../utils';
-import { pickRouteSmart } from '../../../../core/deposits/route';
+import { pickDepositRoute } from '../../../../core/deposits/route';
 import type { DepositParams, DepositRoute } from '../../../../core/types/flows/deposits';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 
+// Common context for building deposit (L1-L2) transactions
 export interface BuildCtx extends CommonCtx {
   client: EthersClient;
 
@@ -21,6 +20,7 @@ export interface BuildCtx extends CommonCtx {
   refundRecipient: Address;
 }
 
+// Prepare a common context for deposit operations
 export async function commonCtx(p: DepositParams, client: EthersClient) {
   const { bridgehub, l1AssetRouter } = await client.ensureAddresses();
   const { chainId } = await client.l2.getNetwork();
@@ -32,7 +32,7 @@ export async function commonCtx(p: DepositParams, client: EthersClient) {
   const operatorTip = p.operatorTip ?? 0n;
   const refundRecipient = p.refundRecipient ?? sender;
 
-  const route = await pickRouteSmart(client, BigInt(chainId), p.token);
+  const route = await pickDepositRoute(client, BigInt(chainId), p.token);
 
   return {
     client,

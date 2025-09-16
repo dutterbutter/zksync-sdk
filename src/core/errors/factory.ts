@@ -1,10 +1,12 @@
 // src/core/errors/factory.ts
 import { ZKsyncError, type ErrorEnvelope, type ErrorType } from '../types/errors';
 
+/** Creates a ZKsyncError of the specified type, with the provided details. */
 export function createError(type: ErrorType, input: Omit<ErrorEnvelope, 'type'>): ZKsyncError {
   return new ZKsyncError({ ...input, type });
 }
 
+/** Extracts and shapes the cause of an error into a standardized format. */
 export function shapeCause(err: unknown) {
   const isRecord = (x: unknown): x is Record<string, unknown> =>
     x !== null && typeof x === 'object';

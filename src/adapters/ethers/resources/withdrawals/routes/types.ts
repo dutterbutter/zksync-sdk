@@ -16,12 +16,12 @@ export type WithdrawRouteStrategy = RouteStrategy<
 
 // L2→L1 service log
 export interface L2ToL1Log {
-  l2ShardId: number;
-  isService: boolean;
-  txNumberInBlock: number;
-  sender: Address;
-  key: Hex;
-  value: Hex;
+  l2ShardId?: number;
+  isService?: boolean;
+  txNumberInBlock?: number;
+  sender?: Address;
+  key?: Hex;
+  value?: Hex;
 }
 
 // Ethers receipt extended with L2→L1 logs

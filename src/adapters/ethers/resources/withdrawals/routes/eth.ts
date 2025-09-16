@@ -5,11 +5,12 @@ import type { PlanStep } from '../../../../../core/types/flows/base';
 import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../../../../core/constants';
 import L2BaseTokenABI from '../../../../../internal/abis/IBaseToken.json' assert { type: 'json' };
 
-import { makeErrorOps } from '../../../errors/to-zksync-error';
+import { makeErrorOps } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 
 const { withRouteOp } = makeErrorOps('withdrawals');
 
+// Route for withdrawing ETH via L2-L1
 export function routeEth(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
@@ -17,7 +18,7 @@ export function routeEth(): WithdrawRouteStrategy {
 
       const base = new Contract(
         L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-         
+
         new Interface(L2BaseTokenABI),
         ctx.client.l2,
       );

@@ -1,10 +1,5 @@
- 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
- 
 // src/adapters/ethers/resources/withdrawals/index.ts
- 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
 import type { EthersClient } from '../../client';
 import type {
@@ -19,59 +14,82 @@ import type {
 } from '../../../../core/types/flows/withdrawals';
 import type { Address, Hex } from '../../../../core/types/primitives';
 import { commonCtx } from './context';
-import { toZKsyncError } from '../../errors/to-zksync-error';
+import { toZKsyncError } from '../../errors/error-ops';
 import { createError } from '../../../../core/errors/factory';
 import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes/types';
 import { routeEth } from './routes/eth';
 import { routeErc20 } from './routes/erc20';
 import { createFinalizationServices, type FinalizationServices } from './services/finalization';
-import { makeErrorOps } from '../../errors/to-zksync-error';
+import { makeErrorOps } from '../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../core/types/errors';
+import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
 
-// bind helpers to the withdrawals resource once
+// error handling helpers
 const { withOp, toResult } = makeErrorOps('withdrawals');
 
+// --------------------
+// Withdrawal Route map
+// --------------------
+// WithdrawalRoute = 'eth' | 'erc20';
 const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
   eth: routeEth(),
   erc20: routeErc20(),
 };
 
 export interface WithdrawalsResource {
+  // Get a quote for a withdrawal operation
   quote(p: WithdrawParams): Promise<WithdrawQuote>;
+
+  // Try to get a quote for a withdrawal operation
   tryQuote(
     p: WithdrawParams,
   ): Promise<{ ok: true; value: WithdrawQuote } | { ok: false; error: unknown }>;
 
+  // Prepare a withdrawal plan (route + steps) without executing it
   prepare(p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>>;
+
+  // Try to prepare a withdrawal plan without executing it
   tryPrepare(
     p: WithdrawParams,
   ): Promise<{ ok: true; value: WithdrawPlan<TransactionRequest> } | { ok: false; error: unknown }>;
 
+  // Execute a withdrawal operation
+  // Returns a handle that can be used to track the status of the withdrawal
   create(p: WithdrawParams): Promise<WithdrawHandle<TransactionRequest>>;
+
+  // Try to execute a withdrawal operation
   tryCreate(
     p: WithdrawParams,
   ): Promise<
     { ok: true; value: WithdrawHandle<TransactionRequest> } | { ok: false; error: unknown }
   >;
 
-  // Returns finalization status
+  // Check the status of a withdrawal operation
+  // If the handle has no L2 tx hash, returns { phase: 'UNKNOWN' }
+  // If L2 tx not yet included, returns { phase: 'L2_PENDING', l2TxHash }
+  // If L2 tx included but not yet finalizable, returns { phase: 'PENDING', l2TxHash }
+  // If finalizable, returns { phase: 'READY_TO_FINALIZE', l2TxHash, key }
+  // If finalized, returns { phase: 'FINALIZED', l2TxHash, key }
   status(h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus>;
 
-  /**
-   * Waits for the L2 withdrawal tx to be included and returns a receipt
-   * This does NOT attempt L1 finalization.
-   */
+  // Wait until the withdrawal reaches the desired state
+  // If the handle has no L2 tx hash, returns null immediately
+  // If 'for' is 'l2', waits for L2 inclusion and returns the L2 receipt
+  // If 'for' is 'ready', waits until finalization is possible (no side-effects) and returns null
+  // If 'for' is 'finalized', waits until finalized and returns the L1 receipt, or null if not found
+  // pollMs is the polling interval (default: 2500ms, minimum: 1000ms)
+  // timeoutMs is the maximum time to wait (default: no timeout)
   wait(
     h: WithdrawalWaitable | Hex,
     opts: { for: 'l2' | 'ready' | 'finalized'; pollMs?: number; timeoutMs?: number },
   ): Promise<TransactionReceiptZKsyncOS | TransactionReceipt | null>;
 
-  /**
-   * Attempts to finalize on L1 now. If proofs not yet available, throws WithdrawalNotReady.
-   * If already finalized, returns { status: "finalized" } with no receipt.
-   * If we just finalized, returns the new L1 receipt.
-   */
+  // Finalize a withdrawal operation on L1 (if not already finalized)
+  // Returns the updated status and, if we sent the finalization tx, the L1 receipt
+  // May throw if the withdrawal is not yet ready to finalize or if the finalization tx fails
   finalize(l2TxHash: Hex): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }>;
+
+  // Try to finalize a withdrawal operation on L1
   tryFinalize(
     l2TxHash: Hex,
   ): Promise<
@@ -81,7 +99,10 @@ export interface WithdrawalsResource {
 }
 
 export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
+  // Finalization services
   const svc: FinalizationServices = createFinalizationServices(client);
+
+  // Build a withdrawal plan (route + steps) without executing it
   async function buildPlan(p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>> {
     const ctx = await commonCtx(p, client);
 
@@ -98,6 +119,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
   }
   const finalizeCache = new Map<Hex, string>();
 
+  // quote prepares a withdrawal and returns its summary without executing it
   const quote = (p: WithdrawParams): Promise<WithdrawQuote> =>
     withOp(
       OP_WITHDRAWALS.quote,
@@ -109,6 +131,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       },
     );
 
+  // tryQuote attempts to prepare a withdrawal and returns its summary without executing it
   const tryQuote = (p: WithdrawParams) =>
     toResult(
       OP_WITHDRAWALS.tryQuote,
@@ -119,6 +142,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       },
     );
 
+  // prepare prepares a withdrawal plan without executing it
   const prepare = (p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>> =>
     withOp(
       OP_WITHDRAWALS.prepare,
@@ -127,11 +151,13 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       () => buildPlan(p),
     );
 
+  // tryPrepare attempts to prepare a withdrawal plan without executing it
   const tryPrepare = (p: WithdrawParams) =>
     toResult(OP_WITHDRAWALS.tryPrepare, { token: p.token, where: 'withdrawals.tryPrepare' }, () =>
       buildPlan(p),
     );
 
+  // create prepares and executes a withdrawal plan
   const create = (p: WithdrawParams): Promise<WithdrawHandle<TransactionRequest>> =>
     withOp(
       OP_WITHDRAWALS.create,
@@ -165,7 +191,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
             stepHashes[step.key] = hash;
 
             const rcpt = await sent.wait();
-            if ((rcpt as any)?.status === 0) {
+            if (rcpt?.status === 0) {
               throw createError('EXECUTION', {
                 resource: 'withdrawals',
                 operation: 'withdrawals.create.sendTransaction',
@@ -174,7 +200,6 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
               });
             }
           } catch (e) {
-            // Map send/wait failures to EXECUTION; revert data decoded by toZKsyncError
             throw toZKsyncError(
               'EXECUTION',
               {
@@ -194,6 +219,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       },
     );
 
+  // tryCreate attempts to prepare and execute a withdrawal plan
   const tryCreate = (p: WithdrawParams) =>
     toResult(
       OP_WITHDRAWALS.tryCreate,
@@ -201,6 +227,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       () => create(p),
     );
 
+  // Returns the status of a withdrawal operation
   const status = (h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus> =>
     withOp(
       OP_WITHDRAWALS.status,
@@ -264,6 +291,13 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       },
     );
 
+  // wait until the withdrawal reaches the desired state
+  // If the handle has no L2 tx hash, returns null immediately
+  // If 'for' is 'l2', waits for L2 inclusion and returns the L2 receipt
+  // If 'for' is 'ready', waits until finalization is possible (no side-effects) and returns null
+  // If 'for' is 'finalized', waits until finalized and returns the L1 receipt, or null if not found
+  // pollMs is the polling interval (default: 2500ms, minimum: 1000ms)
+  // timeoutMs is the maximum time to wait (default: no timeout)
   const wait = (
     h: WithdrawalWaitable | Hex,
     opts: { for: 'l2' | 'ready' | 'finalized'; pollMs?: number; timeoutMs?: number } = {
@@ -289,7 +323,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
 
         // wait for L2 inclusion
         if (opts.for === 'l2') {
-          let rcpt;
+          let rcpt: TransactionReceiptZKsyncOS | null;
           try {
             rcpt = await client.l2.waitForTransaction(l2Hash);
           } catch (e) {
@@ -306,20 +340,18 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           }
           if (!rcpt) return null;
 
-          // Best-effort enrichment; non-fatal if it fails
           try {
-            const raw = await client.zks.getReceiptWithL2ToL1(l2Hash);
-            (rcpt as any).l2ToL1Logs = raw?.l2ToL1Logs ?? [];
+            const raw = (await client.zks.getReceiptWithL2ToL1(l2Hash)) as ReceiptWithL2ToL1;
+            rcpt.l2ToL1Logs = raw?.l2ToL1Logs ?? [];
           } catch {
-            (rcpt as any).l2ToL1Logs = (rcpt as any).l2ToL1Logs ?? [];
+            rcpt.l2ToL1Logs = rcpt.l2ToL1Logs ?? [];
           }
-          return rcpt as unknown as TransactionReceiptZKsyncOS;
+          return rcpt;
         }
 
         const poll = Math.max(1000, opts.pollMs ?? 2500);
         const deadline = opts.timeoutMs ? Date.now() + opts.timeoutMs : undefined;
 
-         
         while (true) {
           const s = await status(l2Hash);
 

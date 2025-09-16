@@ -1,15 +1,21 @@
 // src/core/rpc/zks.ts
 
 import type { RpcTransport } from './types';
-import type { AddressHex, ReceiptWithL2ToL1, ProofNormalized } from './types';
-import type { Hex } from '../types/primitives';
+import type { ReceiptWithL2ToL1, ProofNormalized } from './types';
+import type { Hex, Address } from '../types/primitives';
 import { createError, shapeCause } from '../errors/factory';
-import { RESOURCE, withRpcOp } from '../errors/rpc';
-import { isZKsyncError } from '../types/errors';
+import { withRpcOp } from '../errors/rpc';
+import { isZKsyncError, type Resource } from '../types/errors';
 
+/** ZKsync-specific RPC methods. */
 export interface ZksRpc {
-  getBridgehubAddress(): Promise<AddressHex>;
+  // Fetches the Bridgehub contract address.
+  getBridgehubAddress(): Promise<Address>;
+
+  // Fetches a proof for an L2→L1 log emitted in the given transaction.
   getL2ToL1LogProof(txHash: Hex, index: number): Promise<ProofNormalized>;
+
+  // Fetches the transaction receipt, including the `l2ToL1Logs` field.
   getReceiptWithL2ToL1(txHash: Hex): Promise<ReceiptWithL2ToL1 | null>;
 }
 
@@ -26,6 +32,7 @@ function toHexArray(arr: unknown): Hex[] {
 }
 
 // TODO: better validation
+// normalize proof response into consistent shape
 export function normalizeProof(p: unknown): ProofNormalized {
   try {
     const raw = (p ?? {}) as Record<string, unknown>;
@@ -33,10 +40,10 @@ export function normalizeProof(p: unknown): ProofNormalized {
     const bnRaw = raw?.batch_number ?? raw?.batchNumber;
     if (idRaw == null || bnRaw == null) {
       throw createError('RPC', {
-        resource: RESOURCE,
+        resource: 'zksrpc' as Resource,
         operation: 'zksrpc.normalizeProof',
         message: 'Malformed proof: missing id or batch number.',
-         
+
         context: { keys: Object.keys(raw ?? {}) },
       });
     }
@@ -50,7 +57,7 @@ export function normalizeProof(p: unknown): ProofNormalized {
             ? BigInt(x)
             : (() => {
                 throw createError('RPC', {
-                  resource: RESOURCE,
+                  resource: 'zksrpc' as Resource,
                   operation: 'zksrpc.normalizeProof',
                   message: 'Malformed proof: invalid numeric field.',
                   context: { valueType: typeof x },
@@ -65,7 +72,7 @@ export function normalizeProof(p: unknown): ProofNormalized {
   } catch (e) {
     if (isZKsyncError(e)) throw e;
     throw createError('RPC', {
-      resource: RESOURCE,
+      resource: 'zksrpc' as Resource,
       operation: 'zksrpc.normalizeProof',
       message: 'Failed to normalize proof.',
       context: { receivedType: typeof p },
@@ -74,8 +81,10 @@ export function normalizeProof(p: unknown): ProofNormalized {
   }
 }
 
+// Constructs a ZksRpc instance using the given transport function.
 export function createZksRpc(transport: RpcTransport): ZksRpc {
   return {
+    // Fetches the Bridgehub contract address.
     async getBridgehubAddress() {
       return withRpcOp(
         'zksrpc.getBridgehubAddress',
@@ -86,17 +95,18 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
           // Validate response shape
           if (typeof addrRaw !== 'string' || !addrRaw.startsWith('0x')) {
             throw createError('RPC', {
-              resource: RESOURCE,
+              resource: 'zksrpc' as Resource,
               operation: 'zksrpc.getBridgehubAddress',
               message: 'Unexpected Bridgehub address response.',
               context: { valueType: typeof addrRaw },
             });
           }
-          return addrRaw as AddressHex;
+          return addrRaw as Address;
         },
       );
     },
 
+    // Fetches a proof for an L2→L1 log emitted in the given transaction.
     async getL2ToL1LogProof(txHash, index) {
       return withRpcOp(
         'zksrpc.getL2ToL1LogProof',
@@ -107,7 +117,7 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
           if (!proof) {
             // proof missing is a normal “unavailable yet” state from node → classify as STATE
             throw createError('STATE', {
-              resource: RESOURCE,
+              resource: 'zksrpc' as Resource,
               operation: 'zksrpc.getL2ToL1LogProof',
               message: 'Proof not yet available. Please try again later.',
               context: { txHash, index },
@@ -118,6 +128,7 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
       );
     },
 
+    // Fetches the transaction receipt, including the `l2ToL1Logs` field.
     async getReceiptWithL2ToL1(txHash) {
       return withRpcOp(
         'zksrpc.getReceiptWithL2ToL1',
