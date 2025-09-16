@@ -6,11 +6,11 @@ import type { TransactionRequest } from 'ethers';
 import { buildDirectRequestStruct } from '../../utils';
 import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
 import type { PlanStep } from '../../../../../core/types/flows/base';
-import { makeErrorOps } from '../../../errors/error-ops';
+import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 
 // error handling
-const { withRouteOp } = makeErrorOps('deposits');
+const { wrapAs } = createErrorHandlers('deposits');
 
 // ETH deposit route via Bridgehub.requestL2TransactionDirect
 // ETH is base token
@@ -21,11 +21,9 @@ export function routeEthDirect(): DepositRouteStrategy {
 
       // TODO: fix eslint
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const rawBaseCost: bigint = await withRouteOp(
+      const rawBaseCost: bigint = await wrapAs(
         'RPC',
         OP_DEPOSITS.eth.baseCost,
-        'Could not fetch L2 base cost from Bridgehub.',
-        { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
         () =>
           bh.l2TransactionBaseCost(
             ctx.chainIdL2,
@@ -33,6 +31,10 @@ export function routeEthDirect(): DepositRouteStrategy {
             ctx.l2GasLimit,
             ctx.gasPerPubdata,
           ),
+        {
+          ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
+          message: 'Could not fetch L2 base cost from Bridgehub.',
+        },
       );
       const baseCost = BigInt(rawBaseCost);
 
@@ -59,12 +61,14 @@ export function routeEthDirect(): DepositRouteStrategy {
         ...ctx.fee,
       };
       try {
-        const est = await withRouteOp(
+        const est = await wrapAs(
           'RPC',
           OP_DEPOSITS.eth.estGas,
-          'Failed to estimate gas for Bridgehub request.',
-          { where: 'l1.estimateGas', to: ctx.bridgehub },
           () => ctx.client.l1.estimateGas(tx),
+          {
+            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
+            message: 'Failed to estimate gas for Bridgehub request.',
+          },
         );
         tx.gasLimit = (BigInt(est) * 115n) / 100n;
       } catch {

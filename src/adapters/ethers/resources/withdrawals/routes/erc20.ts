@@ -6,10 +6,10 @@ import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 
 import L2NativeTokenVaultABI from '../../../../../internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
 import L2AssetRouterABI from '../../../../../internal/abis/IL2AssetRouter.json' assert { type: 'json' };
 
-import { makeErrorOps } from '../../../errors/error-ops';
+import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 
-const { withRouteOp } = makeErrorOps('withdrawals');
+const { wrapAs } = createErrorHandlers('withdrawals');
 
 // Route for withdrawing ERC-20 via L2-L1
 export function routeErc20(): WithdrawRouteStrategy {
@@ -23,12 +23,19 @@ export function routeErc20(): WithdrawRouteStrategy {
       // L2 allowance to the NativeTokenVault
       const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const current: bigint = await withRouteOp(
+      const current: bigint = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.erc20.allowance,
-        'Failed to read L2 ERC-20 allowance.',
-        { where: 'erc20.allowance', chain: 'L2', token: p.token, spender: ctx.l2NativeTokenVault },
         () => erc20.allowance(ctx.sender, ctx.l2NativeTokenVault),
+        {
+          ctx: {
+            where: 'erc20.allowance',
+            chain: 'L2',
+            token: p.token,
+            spender: ctx.l2NativeTokenVault,
+          },
+          message: 'Failed to read L2 ERC-20 allowance.',
+        },
       );
 
       if (current < p.amount) {
@@ -49,20 +56,20 @@ export function routeErc20(): WithdrawRouteStrategy {
 
       // Compute assetId + assetData
       const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultABI, ctx.client.l2);
-      const assetId = (await withRouteOp(
+      const assetId = (await wrapAs(
         'RPC',
         OP_WITHDRAWALS.erc20.ensureRegistered,
-        'Failed to ensure token is registered in L2NativeTokenVault.',
-        { where: 'L2NativeTokenVault.ensureTokenIsRegistered', token: p.token },
         () => ntv.getFunction('ensureTokenIsRegistered').staticCall(p.token),
+        {
+          ctx: { where: 'L2NativeTokenVault.ensureTokenIsRegistered', token: p.token },
+          message: 'Failed to ensure token is registered in L2NativeTokenVault.',
+        },
       )) as `0x${string}`;
 
       // DataEncoding.encodeBridgeBurnData(amount, l1Receiver, l2Token)
-      const assetData = await withRouteOp(
+      const assetData = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.erc20.encodeAssetData,
-        'Failed to encode burn/withdraw asset data.',
-        { where: 'AbiCoder.encode', token: p.token, to: p.to ?? ctx.sender },
         () =>
           Promise.resolve(
             AbiCoder.defaultAbiCoder().encode(
@@ -70,16 +77,22 @@ export function routeErc20(): WithdrawRouteStrategy {
               [p.amount, p.to ?? ctx.sender, p.token],
             ),
           ),
+        {
+          ctx: { where: 'AbiCoder.encode', token: p.token, to: p.to ?? ctx.sender },
+          message: 'Failed to encode burn/withdraw asset data.',
+        },
       );
 
       // L2AssetRouter.withdraw(assetId, assetData)
       const l2ar = new Contract(ctx.l2AssetRouter, L2AssetRouterABI, ctx.client.l2);
-      const dataWithdraw = await withRouteOp(
+      const dataWithdraw = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.erc20.encodeWithdraw,
-        'Failed to encode withdraw calldata.',
-        { where: 'L2AssetRouter.withdraw', assetId },
         () => Promise.resolve(l2ar.interface.encodeFunctionData('withdraw', [assetId, assetData])),
+        {
+          ctx: { where: 'L2AssetRouter.withdraw', assetId },
+          message: 'Failed to encode withdraw calldata.',
+        },
       );
 
       const withdrawTx: TransactionRequest = {

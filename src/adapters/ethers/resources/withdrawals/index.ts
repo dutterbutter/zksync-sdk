@@ -20,12 +20,9 @@ import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes
 import { routeEth } from './routes/eth';
 import { routeErc20 } from './routes/erc20';
 import { createFinalizationServices, type FinalizationServices } from './services/finalization';
-import { makeErrorOps } from '../../errors/error-ops';
+import { createErrorHandlers } from '../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../core/types/errors';
 import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
-
-// error handling helpers
-const { withOp, toResult } = makeErrorOps('withdrawals');
 
 // --------------------
 // Withdrawal Route map
@@ -101,6 +98,8 @@ export interface WithdrawalsResource {
 export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
   // Finalization services
   const svc: FinalizationServices = createFinalizationServices(client);
+  // error handling helpers
+  const { wrap, toResult } = createErrorHandlers('withdrawals');
 
   // Build a withdrawal plan (route + steps) without executing it
   async function buildPlan(p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>> {
@@ -121,13 +120,15 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
 
   // quote prepares a withdrawal and returns its summary without executing it
   const quote = (p: WithdrawParams): Promise<WithdrawQuote> =>
-    withOp(
+    wrap(
       OP_WITHDRAWALS.quote,
-      'Internal error while preparing a withdrawal quote.',
-      { token: p.token, where: 'withdrawals.quote' },
       async () => {
         const plan = await buildPlan(p);
         return plan.summary;
+      },
+      {
+        message: 'Internal error while preparing a withdrawal quote.',
+        ctx: { token: p.token, where: 'withdrawals.quote' },
       },
     );
 
@@ -135,36 +136,36 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
   const tryQuote = (p: WithdrawParams) =>
     toResult(
       OP_WITHDRAWALS.tryQuote,
-      { token: p.token, where: 'withdrawals.tryQuote' },
       async () => {
         const plan = await buildPlan(p);
         return plan.summary;
+      },
+      {
+        message: 'Internal error while preparing a withdrawal quote.',
+        ctx: { token: p.token, where: 'withdrawals.tryQuote' },
       },
     );
 
   // prepare prepares a withdrawal plan without executing it
   const prepare = (p: WithdrawParams): Promise<WithdrawPlan<TransactionRequest>> =>
-    withOp(
-      OP_WITHDRAWALS.prepare,
-      'Internal error while preparing a withdrawal plan.',
-      { token: p.token, where: 'withdrawals.prepare' },
-      () => buildPlan(p),
-    );
+    wrap(OP_WITHDRAWALS.prepare, () => buildPlan(p), {
+      message: 'Internal error while preparing a withdrawal plan.',
+      ctx: { token: p.token, where: 'withdrawals.prepare' },
+    });
 
   // tryPrepare attempts to prepare a withdrawal plan without executing it
   const tryPrepare = (p: WithdrawParams) =>
-    toResult(OP_WITHDRAWALS.tryPrepare, { token: p.token, where: 'withdrawals.tryPrepare' }, () =>
-      buildPlan(p),
-    );
+    toResult(OP_WITHDRAWALS.tryPrepare, () => buildPlan(p), {
+      message: 'Internal error while preparing a withdrawal plan.',
+      ctx: { token: p.token, where: 'withdrawals.tryPrepare' },
+    });
 
   // create prepares and executes a withdrawal plan
   const create = (p: WithdrawParams): Promise<WithdrawHandle<TransactionRequest>> =>
-    withOp(
+    wrap(
       OP_WITHDRAWALS.create,
-      'Internal error while creating withdrawal transactions.',
-      { token: p.token, amount: p.amount, to: p.to, where: 'withdrawals.create' },
       async () => {
-        const plan = await prepare(p); // uses its own withOp(OP_WITHDRAWALS.prepare)
+        const plan = await prepare(p);
         const stepHashes: Record<string, Hex> = {};
 
         const managed = new NonceManager(client.signer);
@@ -217,22 +218,23 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         const l2TxHash = stepHashes[keys[keys.length - 1]];
         return { kind: 'withdrawal', l2TxHash, stepHashes, plan };
       },
+      {
+        message: 'Internal error while creating withdrawal transactions.',
+        ctx: { token: p.token, amount: p.amount, to: p.to, where: 'withdrawals.create' },
+      },
     );
 
   // tryCreate attempts to prepare and execute a withdrawal plan
   const tryCreate = (p: WithdrawParams) =>
-    toResult(
-      OP_WITHDRAWALS.tryCreate,
-      { token: p.token, amount: p.amount, to: p.to, where: 'withdrawals.tryCreate' },
-      () => create(p),
-    );
+    toResult(OP_WITHDRAWALS.tryCreate, () => create(p), {
+      message: 'Internal error while creating withdrawal transactions.',
+      ctx: { token: p.token, amount: p.amount, to: p.to, where: 'withdrawals.tryCreate' },
+    });
 
   // Returns the status of a withdrawal operation
   const status = (h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus> =>
-    withOp(
+    wrap(
       OP_WITHDRAWALS.status,
-      'Internal error while checking withdrawal status.',
-      { input: h, where: 'withdrawals.status' },
       async () => {
         const l2TxHash: Hex =
           typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : ('0x' as Hex);
@@ -289,6 +291,10 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
 
         return { phase: 'PENDING', l2TxHash, key };
       },
+      {
+        message: 'Internal error while checking withdrawal status.',
+        ctx: { where: 'withdrawals.status', l2TxHash: typeof h === 'string' ? h : h.l2TxHash },
+      },
     );
 
   // wait until the withdrawal reaches the desired state
@@ -305,16 +311,8 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       pollMs: 2500,
     },
   ): Promise<TransactionReceiptZKsyncOS | TransactionReceipt | null> =>
-    withOp(
+    wrap(
       OP_WITHDRAWALS.wait,
-      'Internal error while waiting for withdrawal.',
-      {
-        input: h,
-        for: opts?.for,
-        timeoutMs: opts?.timeoutMs,
-        pollMs: opts?.pollMs,
-        where: 'withdrawals.wait',
-      },
       async () => {
         const l2Hash: Hex =
           typeof h === 'string' ? h : 'l2TxHash' in h && h.l2TxHash ? h.l2TxHash : ('0x' as Hex);
@@ -381,15 +379,21 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           await new Promise((r) => setTimeout(r, poll));
         }
       },
+      {
+        message: 'Internal error while waiting for withdrawal.',
+        ctx: {
+          where: 'withdrawals.wait',
+          l2TxHash: typeof h === 'string' ? h : h.l2TxHash,
+          for: opts.for,
+        },
+      },
     );
 
   const finalize = (
     l2TxHash: Hex,
   ): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }> =>
-    withOp(
-      'withdrawals.finalize',
-      'Internal error while attempting to finalize withdrawal.',
-      { l2TxHash, where: 'withdrawals.finalize' },
+    wrap(
+      OP_WITHDRAWALS.finalize.send,
       async () => {
         const pack = await (async () => {
           try {
@@ -464,12 +468,17 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           throw e;
         }
       },
+      {
+        message: 'Internal error while attempting to finalize withdrawal.',
+        ctx: { l2TxHash, where: 'withdrawals.finalize' },
+      },
     );
 
   const tryFinalize = (l2TxHash: Hex) =>
-    toResult('withdrawals.tryFinalize', { l2TxHash, where: 'withdrawals.tryFinalize' }, () =>
-      finalize(l2TxHash),
-    );
+    toResult('withdrawals.tryFinalize', () => finalize(l2TxHash), {
+      message: 'Internal error while attempting to tryFinalize withdrawal.',
+      ctx: { l2TxHash, where: 'withdrawals.tryFinalize' },
+    });
 
   return {
     quote,

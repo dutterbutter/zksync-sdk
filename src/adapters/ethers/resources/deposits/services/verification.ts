@@ -6,11 +6,11 @@ import { TOPIC_CANONICAL_ASSIGNED, TOPIC_CANONICAL_SUCCESS } from '../../../../.
 import { createError } from '../../../../../core/errors/factory.ts';
 
 // Event ABI for Bridgehub's NewPriorityRequest
-const I_BRIDGEHUB = new Interface([
+export const I_BRIDGEHUB = new Interface([
   'event NewPriorityRequest(uint256 indexed chainId, address indexed sender, bytes32 txHash, uint256 txId, bytes data)',
 ]);
 // topic0 for Bridgehub.NewPriorityRequest
-const TOPIC_BRIDGEHUB_NPR = I_BRIDGEHUB.getEvent('NewPriorityRequest')!.topicHash;
+export const TOPIC_BRIDGEHUB_NPR = I_BRIDGEHUB.getEvent('NewPriorityRequest')!.topicHash;
 
 // Extracts the L2 transaction hash from L1 logs emitted by Bridgehub during deposit
 // Returns null if not found

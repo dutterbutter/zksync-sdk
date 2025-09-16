@@ -23,9 +23,9 @@ import type { DepositRouteStrategy } from './routes/types.ts';
 
 import { isZKsyncError, OP_DEPOSITS } from '../../../../core/types/errors';
 import { createError } from '../../../../core/errors/factory.ts';
-import { toZKsyncError, makeErrorOps } from '../../errors/error-ops.ts';
+import { toZKsyncError, createErrorHandlers } from '../../errors/error-ops.ts';
 
-const { withOp, toResult } = makeErrorOps('deposits');
+const { wrap, toResult } = createErrorHandlers('deposits');
 
 // --------------------
 // Deposit Route map
@@ -118,48 +118,43 @@ export function DepositsResource(client: EthersClient): DepositsResource {
 
   // quote prepares a deposit and returns its summary without executing it
   const quote = async (p: DepositParams): Promise<DepositQuote> =>
-    withOp(
+    wrap(
       OP_DEPOSITS.quote,
-      'Internal error while preparing a deposit quote.',
-      { token: p.token, where: 'deposits.quote' },
       async () => {
         const plan = await buildPlan(p);
         return plan.summary;
+      },
+      {
+        message: 'Internal error while preparing a deposit quote.',
+        ctx: { token: p.token, where: 'deposits.quote' },
       },
     );
 
   // tryQuote is like quote, but returns a TryResult instead of throwing
   const tryQuote = (p: DepositParams) =>
-    toResult<DepositQuote>(
-      OP_DEPOSITS.tryQuote,
-      { token: p.token, where: 'deposits.tryQuote' },
-      () => quote(p),
-    );
+    toResult<DepositQuote>(OP_DEPOSITS.tryQuote, () => quote(p), {
+      message: 'Internal error while preparing a deposit quote.',
+      ctx: { token: p.token, where: 'deposits.tryQuote' },
+    });
 
   // prepare prepares a deposit plan without executing it
   const prepare = (p: DepositParams): Promise<DepositPlan<TransactionRequest>> =>
-    withOp(
-      OP_DEPOSITS.prepare,
-      'Internal error while preparing a deposit plan.',
-      { token: p.token, where: 'deposits.prepare' },
-      () => buildPlan(p),
-    );
+    wrap(OP_DEPOSITS.prepare, () => buildPlan(p), {
+      message: 'Internal error while preparing a deposit plan.',
+      ctx: { token: p.token, where: 'deposits.prepare' },
+    });
 
   // tryPrepare is like prepare, but returns a TryResult instead of throwing
   const tryPrepare = (p: DepositParams) =>
-    toResult<DepositPlan<TransactionRequest>>(
-      OP_DEPOSITS.tryPrepare,
-      { token: p.token, where: 'deposits.tryPrepare' },
-      () => prepare(p),
-    );
+    toResult<DepositPlan<TransactionRequest>>(OP_DEPOSITS.tryPrepare, () => prepare(p), {
+      ctx: { token: p.token, where: 'deposits.tryPrepare' },
+    });
 
   // create prepares and executes a deposit plan
   // It returns a handle that can be used to track the status of the deposit
   const create = (p: DepositParams): Promise<DepositHandle<TransactionRequest>> =>
-    withOp(
+    wrap(
       OP_DEPOSITS.create,
-      'Internal error while creating deposit transactions.',
-      { token: p.token, amount: p.amount, to: p.to, where: 'deposits.create' },
       async () => {
         const plan = await prepare(p);
         const stepHashes: Record<string, Hex> = {};
@@ -240,23 +235,24 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         const last = ordered[ordered.length - 1][1];
         return { kind: 'deposit', l1TxHash: last, stepHashes, plan };
       },
+      {
+        message: 'Internal error while creating a deposit.',
+        ctx: { token: p.token, amount: p.amount, to: p.to, where: 'deposits.create' },
+      },
     );
 
   // tryCreate is like create, but returns a TryResult instead of throwing
   const tryCreate = (p: DepositParams) =>
-    toResult<DepositHandle<TransactionRequest>>(
-      OP_DEPOSITS.tryCreate,
-      { token: p.token, amount: p.amount, to: p.to, where: 'deposits.tryCreate' },
-      () => create(p),
-    );
+    toResult<DepositHandle<TransactionRequest>>(OP_DEPOSITS.tryCreate, () => create(p), {
+      message: 'Internal error while creating a deposit.',
+      ctx: { token: p.token, amount: p.amount, to: p.to, where: 'deposits.tryCreate' },
+    });
 
   // status checks the status of a deposit given its handle or L1 tx hash
   // It queries both L1 and L2 to determine the current phase
   const status = (h: DepositWaitable | Hex): Promise<DepositStatus> =>
-    withOp(
+    wrap(
       OP_DEPOSITS.status,
-      'Internal error while checking deposit status.',
-      { input: h, where: 'deposits.status' },
       async () => {
         const l1TxHash: Hex = typeof h === 'string' ? h : h.l1TxHash;
         if (!l1TxHash) {
@@ -322,6 +318,10 @@ export function DepositsResource(client: EthersClient): DepositsResource {
           ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash }
           : { phase: 'L2_FAILED', l1TxHash, l2TxHash };
       },
+      {
+        message: 'Internal error while checking deposit status.',
+        ctx: { input: h, where: 'deposits.status' },
+      },
     );
 
   // wait waits for a deposit to be completed
@@ -332,10 +332,8 @@ export function DepositsResource(client: EthersClient): DepositsResource {
     h: DepositWaitable | Hex,
     opts: { for: 'l1' | 'l2' },
   ): Promise<TransactionReceipt | null> =>
-    withOp(
+    wrap(
       OP_DEPOSITS.wait,
-      'Internal error while waiting for deposit.',
-      { input: h, for: opts?.for, where: 'deposits.wait' },
       async () => {
         const l1Hash: Hex | undefined =
           typeof h === 'string' ? h : 'l1TxHash' in h ? h.l1TxHash : undefined;
@@ -380,13 +378,16 @@ export function DepositsResource(client: EthersClient): DepositsResource {
           );
         }
       },
+      {
+        message: 'Internal error while waiting for deposit.',
+        ctx: { input: h, for: opts?.for, where: 'deposits.wait' },
+      },
     );
 
   // tryWait is like wait, but returns a TryResult instead of throwing
   const tryWait = (h: DepositWaitable | Hex, opts: { for: 'l1' | 'l2' }) =>
     toResult<TransactionReceipt>(
       OP_DEPOSITS.tryWait,
-      { for: opts.for, where: OP_DEPOSITS.tryWait },
       async () => {
         const v = await wait(h, opts);
         if (v) return v;
@@ -408,6 +409,10 @@ export function DepositsResource(client: EthersClient): DepositsResource {
             where: 'deposits.tryWait',
           },
         });
+      },
+      {
+        message: 'Internal error while waiting for deposit.',
+        ctx: { input: h, for: opts?.for, where: 'deposits.tryWait' },
       },
     );
   return { quote, tryQuote, prepare, tryPrepare, create, tryCreate, status, wait, tryWait };

@@ -5,10 +5,10 @@ import type { PlanStep } from '../../../../../core/types/flows/base';
 import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../../../../core/constants';
 import L2BaseTokenABI from '../../../../../internal/abis/IBaseToken.json' assert { type: 'json' };
 
-import { makeErrorOps } from '../../../errors/error-ops';
+import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 
-const { withRouteOp } = makeErrorOps('withdrawals');
+const { wrapAs } = createErrorHandlers('withdrawals');
 
 // Route for withdrawing ETH via L2-L1
 export function routeEth(): WithdrawRouteStrategy {
@@ -24,12 +24,14 @@ export function routeEth(): WithdrawRouteStrategy {
       );
 
       const toL1 = p.to ?? ctx.sender;
-      const data = await withRouteOp(
+      const data = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.eth.encodeWithdraw,
-        'Failed to encode ETH withdraw calldata.',
-        { where: 'L2BaseToken.withdraw', to: toL1 },
         () => Promise.resolve(base.interface.encodeFunctionData('withdraw', [toL1])),
+        {
+          ctx: { where: 'L2BaseToken.withdraw', to: toL1 },
+          message: 'Failed to encode ETH withdraw calldata.',
+        },
       );
 
       const tx: TransactionRequest = {
@@ -41,12 +43,14 @@ export function routeEth(): WithdrawRouteStrategy {
 
       // TODO: improve gas estimations
       try {
-        const est = await withRouteOp(
+        const est = await wrapAs(
           'RPC',
           OP_WITHDRAWALS.eth.estGas,
-          'Failed to estimate gas for L2 ETH withdraw.',
-          { where: 'l2.estimateGas', to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR },
           () => ctx.client.l2.estimateGas(tx),
+          {
+            ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR },
+            message: 'Failed to estimate gas for L2 ETH withdraw.',
+          },
         );
         tx.gasLimit = (BigInt(est) * 115n) / 100n;
       } catch {

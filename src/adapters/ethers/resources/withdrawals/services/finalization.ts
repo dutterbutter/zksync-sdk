@@ -20,12 +20,14 @@ import IL1NullifierABI from '../../../../../internal/abis/IL1Nullifier.json' ass
 import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
 import { findL1MessageSentLog } from '../../../../../core/withdrawals/events';
 import { messengerLogIndex } from '../../../../../core/withdrawals/logs';
-import { makeErrorOps } from '../../../errors/error-ops';
+import { createErrorHandlers } from '../../../errors/error-ops';
 import { classifyReadinessFromRevert } from '../../../errors/revert';
-const { withRouteOp } = makeErrorOps('withdrawals');
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 import { createError } from '../../../../../core/errors/factory';
 import { toZKsyncError } from '../../../errors/error-ops';
+
+// error handling
+const { wrapAs } = createErrorHandlers('withdrawals');
 
 const IL1NullifierMini = [
   'function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)',
@@ -64,12 +66,14 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
   return {
     async fetchFinalizeDepositParams(l2TxHash: Hex) {
       // Parsed L2 receipt → find L1MessageSent(...) → decode message bytes
-      const parsed = await withRouteOp(
+      const parsed = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.receipt,
-        'Failed to fetch L2 receipt (with L2→L1 logs).',
-        { l2TxHash },
         () => client.zks.getReceiptWithL2ToL1(l2TxHash),
+        {
+          ctx: { where: 'getReceiptWithL2ToL1', l2TxHash },
+          message: 'Failed to fetch L2 receipt (with L2→L1 logs).',
+        },
       );
       if (!parsed) {
         throw createError('STATE', {
@@ -81,29 +85,35 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
       }
 
       // Find L1MessageSent event and decode message bytes
-      const ev = await withRouteOp(
+      const ev = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.findMessage,
-        'Failed to locate L1MessageSent event in L2 receipt.',
-        { l2TxHash, index: 0 },
         () => Promise.resolve(findL1MessageSentLog(parsed as any, { index: 0 })),
+        {
+          ctx: { l2TxHash, index: 0 },
+          message: 'Failed to locate L1MessageSent event in L2 receipt.',
+        },
       );
 
-      const message = await withRouteOp(
+      const message = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.decodeMessage,
-        'Failed to decode withdrawal message.',
-        { abi: 'bytes' },
         () => Promise.resolve(AbiCoder.defaultAbiCoder().decode(['bytes'], ev.data)[0] as Hex),
+        {
+          ctx: { where: 'decode L1MessageSent', data: ev.data },
+          message: 'Failed to decode withdrawal message.',
+        },
       );
 
       // Fetch raw receipt again (unparsed) to derive messenger index
-      const raw = await withRouteOp(
+      const raw = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.rawReceipt,
-        'Failed to fetch raw L2 receipt.',
-        { l2TxHash },
         () => client.zks.getReceiptWithL2ToL1(l2TxHash),
+        {
+          ctx: { where: 'getReceiptWithL2ToL1 (raw)', l2TxHash },
+          message: 'Failed to fetch raw L2 receipt.',
+        },
       );
       if (!raw) {
         throw createError('STATE', {
@@ -114,29 +124,35 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         });
       }
 
-      const idx = await withRouteOp(
+      const idx = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.messengerIndex,
-        'Failed to derive messenger log index.',
-        { index: 0, messenger: L1_MESSENGER_ADDRESS },
         () =>
           Promise.resolve(messengerLogIndex(raw, { index: 0, messenger: L1_MESSENGER_ADDRESS })),
+        {
+          ctx: { where: 'derive messenger log index', l2TxHash, receipt: raw },
+          message: 'Failed to derive messenger log index.',
+        },
       );
 
-      const proof = await withRouteOp(
+      const proof = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.proof,
-        'Failed to fetch L2→L1 log proof.',
-        { l2TxHash, messengerLogIndex: idx },
         () => client.zks.getL2ToL1LogProof(l2TxHash, idx),
+        {
+          ctx: { where: 'get L2→L1 log proof', l2TxHash, messengerLogIndex: idx },
+          message: 'Failed to fetch L2→L1 log proof.',
+        },
       );
 
-      const { chainId } = await withRouteOp(
+      const { chainId } = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.network,
-        'Failed to read L2 network.',
-        {},
         () => l2.getNetwork(),
+        {
+          ctx: { where: 'l2.getNetwork' },
+          message: 'Failed to read L2 network.',
+        },
       );
 
       const txIndex = Number((parsed as any).transactionIndex ?? 0);
@@ -151,12 +167,14 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         merkleProof: proof.proof,
       };
 
-      const { l1Nullifier } = await withRouteOp(
+      const { l1Nullifier } = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.ensureAddresses,
-        'Failed to ensure L1 Nullifier address.',
-        {},
         () => client.ensureAddresses(),
+        {
+          ctx: { where: 'ensureAddresses' },
+          message: 'Failed to ensure L1 Nullifier address.',
+        },
       );
       return { params, nullifier: l1Nullifier };
     },
@@ -164,25 +182,25 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     async simulateFinalizeReadiness(params, nullifier) {
       const done = await (async () => {
         try {
-          const { l1Nullifier } = await withRouteOp(
+          const { l1Nullifier } = await wrapAs(
             'INTERNAL',
             OP_WITHDRAWALS.finalize.readiness.ensureAddresses,
-            'Failed to ensure L1 Nullifier address.',
-            {},
             () => client.ensureAddresses(),
+            {
+              ctx: { where: 'ensureAddresses' },
+              message: 'Failed to ensure L1 Nullifier address.',
+            },
           );
           const c = new Contract(l1Nullifier, IL1NullifierMini, l1);
-          return await withRouteOp(
+          return await wrapAs(
             'RPC',
             OP_WITHDRAWALS.finalize.readiness.isFinalized,
-            'Failed to read finalization status.',
-            {
-              chainIdL2: params.chainId,
-              l2BatchNumber: params.l2BatchNumber,
-              l2MessageIndex: params.l2MessageIndex,
-            },
             () =>
               c.isWithdrawalFinalized(params.chainId, params.l2BatchNumber, params.l2MessageIndex),
+            {
+              ctx: { where: 'isWithdrawalFinalized', params },
+              message: 'Failed to read finalization status.',
+            },
           );
         } catch {
           return false;
@@ -201,20 +219,24 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     },
 
     async isWithdrawalFinalized(key: WithdrawalKey) {
-      const { l1Nullifier } = await withRouteOp(
+      const { l1Nullifier } = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.ensureAddresses,
-        'Failed to ensure L1 Nullifier address.',
-        {},
         () => client.ensureAddresses(),
+        {
+          ctx: { where: 'ensureAddresses' },
+          message: 'Failed to ensure L1 Nullifier address.',
+        },
       );
       const c = new Contract(l1Nullifier, IL1NullifierMini, l1);
-      return await withRouteOp(
+      return await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.isFinalized,
-        'Failed to read finalization status.',
-        { key },
         () => c.isWithdrawalFinalized(key.chainIdL2, key.l2BatchNumber, key.l2MessageIndex),
+        {
+          ctx: { where: 'isWithdrawalFinalized', key },
+          message: 'Failed to read finalization status.',
+        },
       );
     },
 
