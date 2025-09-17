@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { describe, it, expect } from 'bun:test';
 import { routeEthDirect } from '../eth';
 import { isZKsyncError } from '../../../../../../core/types/errors';

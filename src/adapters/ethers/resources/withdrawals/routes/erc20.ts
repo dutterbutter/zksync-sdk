@@ -19,7 +19,6 @@ export function routeErc20(): WithdrawRouteStrategy {
       const approvals: ApprovalNeed[] = [];
 
       const l2Signer = ctx.client.signer.connect(ctx.client.l2);
-
       // L2 allowance to the NativeTokenVault
       const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

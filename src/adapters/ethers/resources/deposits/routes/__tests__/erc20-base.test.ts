@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { describe, it, expect } from 'bun:test';
 import { routeErc20Base } from '../erc20-base';
 import { isZKsyncError } from '../../../../../../core/types/errors';

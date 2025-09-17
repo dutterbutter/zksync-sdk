@@ -7,7 +7,7 @@ import { ETH_ADDRESS } from '../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);

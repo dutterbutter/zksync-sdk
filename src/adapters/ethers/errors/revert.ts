@@ -84,6 +84,8 @@ export function registerErrorAbi(name: string, abi: ReadonlyArray<JsonFragment>)
 // TODO: fixme
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractRevertData(e: any): string | undefined {
+  // TODO: support nested custom errors?
+  // Can be simplfiied
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const maybe =
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

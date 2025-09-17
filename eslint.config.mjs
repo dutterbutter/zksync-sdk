@@ -13,6 +13,7 @@ export default [
       'eslint.config.mjs',
       'docs/**',
       '**/__tests__/**',
+      '**/*.test.ts',
       'typechain/**/**',
       'tsup.config.ts',
     ],

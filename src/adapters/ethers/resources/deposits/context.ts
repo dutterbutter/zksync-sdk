@@ -3,7 +3,7 @@ import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
 import { getFeeOverrides } from '../utils';
-import { pickDepositRoute } from '../../../../core/deposits/route';
+import { pickDepositRoute } from '../../../../core/resources/deposits/route';
 import type { DepositParams, DepositRoute } from '../../../../core/types/flows/deposits';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 

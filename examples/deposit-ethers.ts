@@ -7,9 +7,12 @@ import { ETH_ADDRESS_IN_CONTRACTS } from '../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
+  if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
+    throw new Error('Set your PRIVATE_KEY in the .env file');
+  }
   const l1 = new JsonRpcProvider(L1_RPC);
   const l2 = new JsonRpcProvider(L2_RPC);
   const signer = new Wallet(PRIVATE_KEY, l1);
@@ -25,7 +28,7 @@ async function main() {
 
   const me = (await signer.getAddress()) as Address;
   const params = {
-    amount: parseEther('.1'), // 0.1 ETH
+    amount: parseEther('.01'), // 0.01 ETH
     to: me,
     token: ETH_ADDRESS_IN_CONTRACTS,
     // optional:

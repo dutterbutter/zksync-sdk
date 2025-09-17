@@ -1,5 +1,5 @@
 {
-  "name": "@zksync/sdk",
+  "name": "@zksync-sdk",
   "version": "0.0.1-alpha.1",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -33,20 +33,10 @@
       "import": "./dist/types/index.js",
       "require": "./dist/types/index.cjs"
     },
-    "./chains": {
-      "types": "./dist/chains/index.d.ts",
-      "import": "./dist/chains/index.js",
-      "require": "./dist/chains/index.cjs"
-    },
     "./types/*": {
       "types": "./dist/types/*.d.ts",
       "import": "./dist/types/*.js",
       "require": "./dist/types/*.cjs"
-    },
-    "./chains/*": {
-      "types": "./dist/chains/*.d.ts",
-      "import": "./dist/chains/*.js",
-      "require": "./dist/chains/*.cjs"
     },
     "./ethers/*": {
       "types": "./dist/adapters/ethers/*.d.ts",
@@ -100,9 +90,6 @@
     "*": {
       "types/*": [
         "dist/types/*"
-      ],
-      "chains/*": [
-        "dist/chains/*"
       ],
       "ethers/*": [
         "dist/adapters/ethers/*"

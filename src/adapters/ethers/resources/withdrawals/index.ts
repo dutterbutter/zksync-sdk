@@ -308,7 +308,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
     h: WithdrawalWaitable | Hex,
     opts: { for: 'l2' | 'ready' | 'finalized'; pollMs?: number; timeoutMs?: number } = {
       for: 'l2',
-      pollMs: 2500,
+      pollMs: 5500,
     },
   ): Promise<TransactionReceiptZKsyncOS | TransactionReceipt | null> =>
     wrap(

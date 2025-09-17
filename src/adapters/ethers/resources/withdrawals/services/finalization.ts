@@ -18,8 +18,8 @@ import {
 import IL1NullifierABI from '../../../../../internal/abis/IL1Nullifier.json' assert { type: 'json' };
 
 import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
-import { findL1MessageSentLog } from '../../../../../core/withdrawals/events';
-import { messengerLogIndex } from '../../../../../core/withdrawals/logs';
+import { findL1MessageSentLog } from '../../../../../core/resources/withdrawals/events';
+import { messengerLogIndex } from '../../../../../core/resources/withdrawals/logs';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { classifyReadinessFromRevert } from '../../../errors/revert';
 import { OP_WITHDRAWALS } from '../../../../../core/types';

@@ -3,7 +3,7 @@
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
-import { pickWithdrawRoute } from '../../../../core/withdrawals/route';
+import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 

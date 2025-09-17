@@ -18,5 +18,12 @@
     "noEmit": true
   },
   "files": [],
-  "exclude": ["node_modules", "build", "examples/*"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "examples/*",
+    "docs/**",
+    "**/__tests__/**",
+    "typechain/**/**"
+  ]
 }

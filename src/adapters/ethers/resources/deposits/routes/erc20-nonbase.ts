@@ -27,11 +27,12 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const assetRouter = ctx.l1AssetRouter;
-
-      const erc20 = new Contract(p.token, IERC20ABI, ctx.client.signer);
+    
+      const l1Signer = ctx.client.signer.connect(ctx.client.l1);
+      const erc20 = new Contract(p.token, IERC20ABI, l1Signer);
       // TODO: fix eslint
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const allowance = await wrapAs(
+      const allowance: bigint = await wrapAs(
         'RPC',
         OP_DEPOSITS.nonbase.allowance,
         () => erc20.allowance(ctx.sender, assetRouter),
