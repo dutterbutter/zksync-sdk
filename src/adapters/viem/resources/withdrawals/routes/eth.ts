@@ -11,20 +11,19 @@ import { OP_WITHDRAWALS } from '../../../../../core/types';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
-// Withdraw ETH from L2 → L1 via Base Token System
+// Route for withdrawing ETH via L2-L1
 export function routeEth(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
 
-      // Prefer 1559 fields (don’t send gasPrice)
       const feeOverrides: Record<string, unknown> = {};
       if (ctx.fee?.maxFeePerGas != null && ctx.fee?.maxPriorityFeePerGas != null) {
         feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
         feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
       }
 
-      // Simulate the L2 call to produce a write-ready request (auto gas pick-up)
+      // Simulate the L2 call to produce a write-ready request
       const sim = await wrapAs(
         'CONTRACT',
         OP_WITHDRAWALS.eth.estGas,
@@ -34,9 +33,9 @@ export function routeEth(): WithdrawRouteStrategy {
             abi: L2BaseTokenABI,
             functionName: 'withdraw',
             args: [toL1] as const,
-            value: p.amount, // payable: amount to withdraw
-            account: ctx.client.account, // signer/account
-            ...feeOverrides, // 1559 overrides if provided
+            value: p.amount,
+            account: ctx.client.account,
+            ...feeOverrides,
           }),
         {
           ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR },

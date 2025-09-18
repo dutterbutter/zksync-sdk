@@ -7,6 +7,7 @@ import type { BuildCtx as DepositBuildCtx } from '../context';
 type WriteParams = Parameters<WalletClient<Transport, Chain, Account>['writeContract']>[0];
 
 /**
+ * viem specific
  * Plan-time write request: relax 'value' so a single type can hold both
  * non-payable (no value) and payable (value: bigint) requests.
  */
@@ -18,7 +19,7 @@ export type DepositQuoteExtras = {
   mintValue: bigint;
 };
 
-// Route strategy (tx type = relaxed plan request)
+// Route strategy
 export type DepositRouteStrategy = RouteStrategy<
   DepositParams,
   ViemPlanWriteRequest,

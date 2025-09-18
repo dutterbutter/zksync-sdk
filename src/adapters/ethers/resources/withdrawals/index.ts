@@ -1,5 +1,4 @@
 // src/adapters/ethers/resources/withdrawals/index.ts
-
 import { type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
 import type { EthersClient } from '../../client';
 import type {
@@ -74,7 +73,7 @@ export interface WithdrawalsResource {
   // If 'for' is 'l2', waits for L2 inclusion and returns the L2 receipt
   // If 'for' is 'ready', waits until finalization is possible (no side-effects) and returns null
   // If 'for' is 'finalized', waits until finalized and returns the L1 receipt, or null if not found
-  // pollMs is the polling interval (default: 2500ms, minimum: 1000ms)
+  // pollMs is the polling interval (default: 5500ms, minimum: 1000ms)
   // timeoutMs is the maximum time to wait (default: no timeout)
   wait(
     h: WithdrawalWaitable | Hex,
@@ -98,7 +97,7 @@ export interface WithdrawalsResource {
 export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
   // Finalization services
   const svc: FinalizationServices = createFinalizationServices(client);
-  // error handling helpers
+  // error handling
   const { wrap, toResult } = createErrorHandlers('withdrawals');
 
   // Build a withdrawal plan (route + steps) without executing it
@@ -243,7 +242,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           return { phase: 'UNKNOWN', l2TxHash: '0x' as Hex };
         }
 
-        // ---- L2 receipt ----
+        // L2 receipt
         let l2Rcpt;
         try {
           l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash);
@@ -261,12 +260,12 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
         }
         if (!l2Rcpt) return { phase: 'L2_PENDING', l2TxHash };
 
-        // ---- Derive finalize params / key ----
+        // Derive finalize params/key — if unavailable, not ready yet
         let pack: { params: FinalizeDepositParams; nullifier: Address } | undefined;
         try {
-          pack = await svc.fetchFinalizeDepositParams(l2TxHash); // already wrapped via withRouteOp
+          pack = await svc.fetchFinalizeDepositParams(l2TxHash);
         } catch {
-          // L2 included but not yet finalizable (proofs/indices unavailable)
+          // L2 included but not yet finalizable
           return { phase: 'PENDING', l2TxHash };
         }
 
@@ -283,7 +282,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           // ignore; continue to readiness simulation
         }
 
-        // ---- Ask L1 if finalization would succeed right now ----
+        // check finalization would succeed right now
         const readiness = await svc.simulateFinalizeReadiness(pack.params, pack.nullifier); // wrapped via withRouteOp
 
         if (readiness.kind === 'FINALIZED') return { phase: 'FINALIZED', l2TxHash, key };
@@ -302,7 +301,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
   // If 'for' is 'l2', waits for L2 inclusion and returns the L2 receipt
   // If 'for' is 'ready', waits until finalization is possible (no side-effects) and returns null
   // If 'for' is 'finalized', waits until finalized and returns the L1 receipt, or null if not found
-  // pollMs is the polling interval (default: 2500ms, minimum: 1000ms)
+  // pollMs is the polling interval (default: 5500ms, minimum: 1000ms)
   // timeoutMs is the maximum time to wait (default: no timeout)
   const wait = (
     h: WithdrawalWaitable | Hex,
@@ -389,6 +388,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       },
     );
 
+  // Finalize a withdrawal operation on L1 (if not already finalized)
   const finalize = (
     l2TxHash: Hex,
   ): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }> =>
@@ -423,7 +423,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
             return { status: statusNow };
           }
         } catch {
-          /* best-effort; continue */
+          // ignore; continue to readiness simulation
         }
 
         const readiness = await svc.simulateFinalizeReadiness(params, nullifier);
@@ -440,7 +440,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
           });
         }
 
-        // READY → send tx, wait, then re-check
+        // READY → send finalize tx on L1
         try {
           const tx = await svc.finalizeDeposit(params, nullifier);
           finalizeCache.set(l2TxHash, tx.hash);
@@ -463,7 +463,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
               });
             }
           } catch {
-            /* ignore; fall through to rethrow EXECUTION error */
+            // ignore; rethrow EXECUTION error below
           }
           throw e;
         }
@@ -474,6 +474,7 @@ export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
       },
     );
 
+  // tryFinalize attempts to finalize a withdrawal operation on L1
   const tryFinalize = (l2TxHash: Hex) =>
     toResult('withdrawals.tryFinalize', () => finalize(l2TxHash), {
       message: 'Internal error while attempting to tryFinalize withdrawal.',

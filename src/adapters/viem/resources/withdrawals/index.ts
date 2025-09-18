@@ -35,39 +35,68 @@ import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
 // --------------------
 // Route map
 // --------------------
+// WithdrawalRoute = 'eth' | 'erc20';
 const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
   eth: routeEth(),
   erc20: routeErc20(),
 };
 
 export interface WithdrawalsResource {
+  // Get a quote for a withdrawal operation
   quote(p: WithdrawParams): Promise<WithdrawQuote>;
+
+  // Try to get a quote for a withdrawal operation
   tryQuote(
     p: WithdrawParams,
   ): Promise<{ ok: true; value: WithdrawQuote } | { ok: false; error: unknown }>;
 
+  // Prepare a withdrawal plan (route + steps) without executing it
   prepare(p: WithdrawParams): Promise<WithdrawPlan<ViemPlanWriteRequest>>;
+
+  // Try to prepare a withdrawal plan without executing it
   tryPrepare(
     p: WithdrawParams,
   ): Promise<
     { ok: true; value: WithdrawPlan<ViemPlanWriteRequest> } | { ok: false; error: unknown }
   >;
 
+  // Execute a withdrawal operation
+  // Returns a handle that can be used to track the status of the withdrawal
   create(p: WithdrawParams): Promise<WithdrawHandle<ViemPlanWriteRequest>>;
+
+  // Try to execute a withdrawal operation
   tryCreate(
     p: WithdrawParams,
   ): Promise<
     { ok: true; value: WithdrawHandle<ViemPlanWriteRequest> } | { ok: false; error: unknown }
   >;
 
+  // Check the status of a withdrawal operation
+  // If the handle has no L2 tx hash, returns { phase: 'UNKNOWN' }
+  // If L2 tx not yet included, returns { phase: 'L2_PENDING', l2TxHash }
+  // If L2 tx included but not yet finalizable, returns { phase: 'PENDING', l2TxHash }
+  // If finalizable, returns { phase: 'READY_TO_FINALIZE', l2TxHash, key }
+  // If finalized, returns { phase: 'FINALIZED', l2TxHash, key }
   status(h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus>;
 
+  // Wait until the withdrawal reaches the desired state
+  // If the handle has no L2 tx hash, returns null immediately
+  // If 'for' is 'l2', waits for L2 inclusion and returns the L2 receipt
+  // If 'for' is 'ready', waits until finalization is possible (no side-effects) and returns null
+  // If 'for' is 'finalized', waits until finalized and returns the L1 receipt, or null if not found
+  // pollMs is the polling interval (default: 5500ms, minimum: 1000ms)
+  // timeoutMs is the maximum time to wait (default: no timeout)
   wait(
     h: WithdrawalWaitable | Hex,
     opts: { for: 'l2' | 'ready' | 'finalized'; pollMs?: number; timeoutMs?: number },
   ): Promise<TransactionReceiptZKsyncOS | TransactionReceipt | null>;
 
+  // Finalize a withdrawal operation on L1 (if not already finalized)
+  // Returns the updated status and, if we sent the finalization tx, the L1 receipt
+  // May throw if the withdrawal is not yet ready to finalize or if the finalization tx fails
   finalize(l2TxHash: Hex): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }>;
+
+  // Try to finalize a withdrawal operation on L1
   tryFinalize(
     l2TxHash: Hex,
   ): Promise<
@@ -77,10 +106,12 @@ export interface WithdrawalsResource {
 }
 
 export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
+  // Finalization services
   const svc: FinalizationServices = createFinalizationServices(client);
+  // error handlers
   const { wrap, toResult } = createErrorHandlers('withdrawals');
 
-  // ---- Build (no execution) ----
+  // Build a withdrawal plan (route + steps) without executing it
   async function buildPlan(p: WithdrawParams): Promise<WithdrawPlan<ViemPlanWriteRequest>> {
     const ctx = await commonCtx(p, client);
 
@@ -97,32 +128,35 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
 
   const finalizeCache = new Map<Hex, string>();
 
-  // ---- Quote / Prepare ----
+  // quote prepares a withdrawal and returns its summary without executing it
   const quote = (p: WithdrawParams): Promise<WithdrawQuote> =>
     wrap(OP_WITHDRAWALS.quote, async () => (await buildPlan(p)).summary, {
       message: 'Internal error while preparing a withdrawal quote.',
       ctx: { token: p.token, where: 'withdrawals.quote' },
     });
 
+  // tryQuote attempts to prepare a withdrawal and returns its summary without executing it
   const tryQuote = (p: WithdrawParams) =>
     toResult(OP_WITHDRAWALS.tryQuote, () => quote(p), {
       message: 'Internal error while preparing a withdrawal quote.',
       ctx: { token: p.token, where: 'withdrawals.tryQuote' },
     });
 
+  // prepare prepares a withdrawal plan without executing it
   const prepare = (p: WithdrawParams): Promise<WithdrawPlan<ViemPlanWriteRequest>> =>
     wrap(OP_WITHDRAWALS.prepare, () => buildPlan(p), {
       message: 'Internal error while preparing a withdrawal plan.',
       ctx: { token: p.token, where: 'withdrawals.prepare' },
     });
 
+  // tryPrepare attempts to prepare a withdrawal plan without executing it
   const tryPrepare = (p: WithdrawParams) =>
     toResult(OP_WITHDRAWALS.tryPrepare, () => prepare(p), {
       message: 'Internal error while preparing a withdrawal plan.',
       ctx: { token: p.token, where: 'withdrawals.tryPrepare' },
     });
 
-  // ---- Create (execute steps on L2) ----
+  // create prepares and executes a withdrawal plan
   const create = (p: WithdrawParams): Promise<WithdrawHandle<ViemPlanWriteRequest>> =>
     wrap(
       OP_WITHDRAWALS.create,
@@ -158,8 +192,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
               /* ignore */
             }
           }
-
-          // Prefer 1559 only; never include gasPrice
+          // TODO: revisit fees
           const fee1559 =
             step.tx.maxFeePerGas != null && step.tx.maxPriorityFeePerGas != null
               ? {
@@ -168,7 +201,6 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
                 }
               : {};
 
-          // Build base (non-payable) request without `value`
           const baseReq = {
             address: step.tx.address,
             abi: step.tx.abi as Abi,
@@ -181,16 +213,14 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
             ...(step.tx.chain ? { chain: step.tx.chain } : {}),
           } as Omit<WriteContractParameters, 'value'>;
 
-          // Add `value` only if present (payable)
+          // viem hack
           const execReq: WriteContractParameters =
             step.tx.value != null
               ? ({ ...baseReq, value: step.tx.value } as WriteContractParameters)
               : (baseReq as WriteContractParameters);
 
-          // Send via the wallet (must be connected to L2 or `chain` asserted)
           let hash: Hex | undefined;
           try {
-            // TODO: investigate l1wallet usage here?
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             if (!client.l2Wallet) {
               throw createError('EXECUTION', {
@@ -236,13 +266,14 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
       },
     );
 
+  // tryCreate attempts to prepare and execute a withdrawal plan
   const tryCreate = (p: WithdrawParams) =>
     toResult(OP_WITHDRAWALS.tryCreate, () => create(p), {
       message: 'Internal error while creating withdrawal transactions.',
       ctx: { token: p.token, amount: p.amount, to: p.to, where: 'withdrawals.tryCreate' },
     });
 
-  // ---- Status ----
+  // Returns the status of a withdrawal operation
   const status = (h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus> =>
     wrap(
       OP_WITHDRAWALS.status,
@@ -290,9 +321,10 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
           const done = await svc.isWithdrawalFinalized(key);
           if (done) return { phase: 'FINALIZED', l2TxHash, key };
         } catch {
-          /* ignore; proceed to readiness sim */
+          // ignore; continue to readiness simulation
         }
 
+        // check finalization would succeed right now
         const readiness = await svc.simulateFinalizeReadiness(pack.params, pack.nullifier);
         if (readiness.kind === 'FINALIZED') return { phase: 'FINALIZED', l2TxHash, key };
         if (readiness.kind === 'READY') return { phase: 'READY_TO_FINALIZE', l2TxHash, key };
@@ -305,7 +337,13 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
       },
     );
 
-  // ---- Wait ----
+  // wait until the withdrawal reaches the desired state
+  // If the handle has no L2 tx hash, returns null immediately
+  // If 'for' is 'l2', waits for L2 inclusion and returns the L2 receipt
+  // If 'for' is 'ready', waits until finalization is possible (no side-effects) and returns null
+  // If 'for' is 'finalized', waits until finalized and returns the L1 receipt, or null if not found
+  // pollMs is the polling interval (default: 5500ms, minimum: 1000ms)
+  // timeoutMs is the maximum time to wait (default: no timeout)
   const wait = (
     h: WithdrawalWaitable | Hex,
     opts: { for: 'l2' | 'ready' | 'finalized'; pollMs?: number; timeoutMs?: number } = {
@@ -338,7 +376,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
           }
           if (!rcpt) return null;
 
-          // Attach L2→L1 logs (best-effort)
+          // Attach L2→L1 logs
           try {
             const raw = (await client.zks.getReceiptWithL2ToL1(l2Hash)) as ReceiptWithL2ToL1;
             const zkRcpt: TransactionReceiptZKsyncOS = {
@@ -393,7 +431,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
       },
     );
 
-  // ---- Finalize (L1) ----
+  // Finalize a withdrawal operation on L1 (if not already finalized)
   const finalize = (
     l2TxHash: Hex,
   ): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }> =>
@@ -428,7 +466,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
             return { status: statusNow };
           }
         } catch {
-          /* best-effort */
+          // ignore; continue to readiness simulation
         }
 
         const readiness = await svc.simulateFinalizeReadiness(params, nullifier);
@@ -467,7 +505,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
               });
             }
           } catch {
-            /* ignore; rethrow EXECUTION error below */
+            // ignore; rethrow EXECUTION error below
           }
           throw e;
         }
@@ -478,6 +516,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
       },
     );
 
+  // tryFinalize attempts to finalize a withdrawal operation on L1
   const tryFinalize = (l2TxHash: Hex) =>
     toResult('withdrawals.tryFinalize', () => finalize(l2TxHash), {
       message: 'Internal error while attempting to tryFinalize withdrawal.',

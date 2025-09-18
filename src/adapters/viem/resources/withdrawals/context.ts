@@ -6,14 +6,13 @@ import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route'
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 
-/** Optional 1559 fee overrides for L2 writes (viem shape). */
+// TODO: move all fee and gas items to dedicated resource?
 export type ViemFeeOverrides = {
-  /** Prefer 1559; leave undefined to let wallet/provider fill. */
   maxFeePerGas?: bigint;
   maxPriorityFeePerGas?: bigint;
 };
 
-// Common context for building withdrawal (L2 -> L1) transactions (viem)
+// Common context for building withdrawal (L2 -> L1) transactions
 export interface BuildCtx extends CommonCtx {
   client: ViemClient;
 
@@ -29,11 +28,11 @@ export interface BuildCtx extends CommonCtx {
   chainIdL2: bigint;
   sender: Address;
 
-  // L2 gas knobs for the withdraw tx
-  l2GasLimit: bigint; // default 300_000n
-  gasBufferPct: number; // default 15 (%)
+  // L2 gas
+  l2GasLimit: bigint;
+  gasBufferPct: number;
 
-  // Optional fee overrides for L2 send (viem 1559 fields)
+  // Optional fee overrides for L2 send
   fee?: ViemFeeOverrides;
 }
 
@@ -57,7 +56,7 @@ export async function commonCtx(
   // Route: 'eth' | 'erc20'
   const route = pickWithdrawRoute(p.token);
 
-  // Basic defaults; can be overridden per route if needed
+  // TODO: improve gas estimations
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasBufferPct = 15;
 
@@ -74,6 +73,5 @@ export async function commonCtx(
     l2BaseTokenSystem,
     l2GasLimit,
     gasBufferPct,
-    // fee?: you can thread in user-provided overrides later if you introduce them in WithdrawParams
   } satisfies BuildCtx & { route: WithdrawRoute };
 }

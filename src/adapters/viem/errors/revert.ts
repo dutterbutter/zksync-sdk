@@ -12,7 +12,6 @@ import { REVERT_TO_READINESS } from '../../../core/errors/withdrawal-revert-map'
 import type { FinalizeReadiness } from '../../../core/types/flows/withdrawals';
 import type { Address } from '../../../core/types';
 
-/** Decoded revert payload (adapter-agnostic) */
 export interface DecodedRevert {
   /** 4-byte selector, always present if this is a revert */
   selector: `0x${string}`;
@@ -28,11 +27,8 @@ export interface DecodedRevert {
 
 /**
  * Minimal registry of ABIs for decoding custom errors.
- * We use Viem's `decodeErrorResult({ abi, data })`.
  */
 const ERROR_ABIS: { name: string; abi: Abi }[] = [];
-
-// Built-in errors: Error(string) and Panic(uint256)
 const ABI_ERROR_STRING: Abi = [
   { type: 'error', name: 'Error', inputs: [{ name: 'message', type: 'string' }] },
 ];
@@ -76,7 +72,8 @@ export function registerErrorAbi(name: string, abi: Abi) {
   else ERROR_ABIS.push(entry);
 }
 
-/** Extract `0x` revert data from common Viem/Ethers/Raw shapes. */
+// TODO: fixme
+/** Extract `0x` revert data from common Viem shapes. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractRevertData(e: any): `0x${string}` | undefined {
   // Viem BaseError often nests under cause(s)
@@ -89,7 +86,7 @@ function extractRevertData(e: any): `0x${string}` | undefined {
     e?.info?.error?.data,
     e?.cause?.data,
     e?.cause?.cause?.data,
-    e?.details, // viem sometimes puts raw revert data here as hex
+    e?.details,
   ];
 
   for (const c of candidates) {
@@ -152,18 +149,16 @@ export function decodeRevert(e: any): DecodedRevert | undefined {
   return { selector };
 }
 
-/** Classify finalizeDeposit readiness from revert error (shared semantics). */
+/** Classify finalizeDeposit readiness from revert error . */
 export function classifyReadinessFromRevert(e: unknown): FinalizeReadiness {
   const r = decodeRevert(e);
   const name = r?.name;
 
   if (name && REVERT_TO_READINESS[name]) return REVERT_TO_READINESS[name];
 
-  // pull a short message for heuristics (paused, etc.)
   const msg = (() => {
     if (typeof e !== 'object' || e === null) return '';
     const obj = e as Record<string, unknown>;
-    // viem errors prefer shortMessage; details may contain raw hex
     const maybe = obj['shortMessage'] ?? obj['message'];
     return typeof maybe === 'string' ? maybe : '';
   })();

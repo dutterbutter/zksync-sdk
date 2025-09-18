@@ -19,13 +19,14 @@ export interface BuildCtx extends CommonCtx {
   refundRecipient: Address;
 }
 
-// Prepare a common context for deposit operations (Viem)
+// Prepare a common context for deposit operations
 export async function commonCtx(p: DepositParams, client: ViemClient) {
   const { bridgehub, l1AssetRouter } = await client.ensureAddresses();
   const chainId = await client.l2.getChainId();
   const sender = client.account.address;
   const fee = (await getFeeOverrides(client)) as FeeOverrides & { gasPriceForBaseCost: bigint };
 
+  // TODO: gas default values should be refactored
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasPerPubdata = p.gasPerPubdata ?? 800n;
   const operatorTip = p.operatorTip ?? 0n;

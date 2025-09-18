@@ -65,8 +65,6 @@ const IFACE_PANIC = new Interface(['error Panic(uint256)']);
   }
 })();
 
-// ---- Public API -------------------------------------------------------------
-
 /**
  * Allow callers to extend the error-decode registry at runtime.
  * Example: registerErrorAbi('MyContract', MyContractABI);
@@ -153,11 +151,7 @@ export function decodeRevert(e: any): DecodedRevert | undefined {
   return { selector };
 }
 
-/** Classify finalizeDeposit readiness from revert error.
- *
- * Uses both the decoded revert name (if any) and also does some
- * heuristic string-matching on the error message to catch "paused" etc.
- */
+/** Classify finalizeDeposit readiness from revert error. */
 export function classifyReadinessFromRevert(e: unknown): FinalizeReadiness {
   const r = decodeRevert(e);
   const name = r?.name;

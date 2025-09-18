@@ -11,12 +11,13 @@ import { OP_WITHDRAWALS } from '../../../../../core/types';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
+// Route for withdrawing ERC-20 via L2-L1
 export function routeErc20(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
 
-      // ---------- 1) L2 allowance to NativeTokenVault ----------
+      //  L2 allowance
       const current = (await wrapAs(
         'CONTRACT',
         OP_WITHDRAWALS.erc20.allowance,
@@ -41,7 +42,6 @@ export function routeErc20(): WithdrawRouteStrategy {
 
       const needsApprove = current < p.amount;
 
-      // Prefer 1559 fee fields (never send gasPrice on L2)
       const feeOverrides: Record<string, unknown> = {};
       if (ctx.fee?.maxFeePerGas != null && ctx.fee?.maxPriorityFeePerGas != null) {
         feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
@@ -51,7 +51,6 @@ export function routeErc20(): WithdrawRouteStrategy {
       const steps: Array<PlanStep<ViemPlanWriteRequest>> = [];
       const approvals: ApprovalNeed[] = [];
 
-      // ---------- 2) Optional approve on L2 ----------
       if (needsApprove) {
         approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
 
@@ -80,9 +79,7 @@ export function routeErc20(): WithdrawRouteStrategy {
           tx: approveSim.request as ViemPlanWriteRequest,
         });
       }
-
-      // ---------- 3) assetId via L2NativeTokenVault.ensureTokenIsRegistered(token) ----------
-      // Use simulate to "static call" a non-view if needed
+      // ensure token is registered in L2NativeTokenVault
       const ensure = await wrapAs(
         'CONTRACT',
         OP_WITHDRAWALS.erc20.ensureRegistered,
@@ -99,9 +96,7 @@ export function routeErc20(): WithdrawRouteStrategy {
           message: 'Failed to ensure token is registered in L2NativeTokenVault.',
         },
       );
-      const assetId = ensure.result as Hex; // bytes32
-
-      // ---------- 4) assetData = abi.encode(uint256, address, address) ----------
+      const assetId = ensure.result as Hex;
       const assetData = encodeAbiParameters(
         [
           { type: 'uint256', name: 'amount' },
@@ -111,11 +106,11 @@ export function routeErc20(): WithdrawRouteStrategy {
         [p.amount, toL1, p.token],
       );
 
-      // ---------- 5) Router.withdraw(assetId, assetData) ----------
       let withdrawTx: ViemPlanWriteRequest;
 
       if (needsApprove) {
         // Do NOT simulate (would revert before approve). Return raw write params.
+        // viem specific
         withdrawTx = {
           address: ctx.l2AssetRouter,
           abi: IL2AssetRouterABI,
@@ -125,6 +120,7 @@ export function routeErc20(): WithdrawRouteStrategy {
           ...(ctx.fee ?? {}),
         } satisfies ViemPlanWriteRequest;
       } else {
+        // L2AssetRouter.withdraw(assetId, assetData)
         const sim = await wrapAs(
           'CONTRACT',
           OP_WITHDRAWALS.erc20.estGas,

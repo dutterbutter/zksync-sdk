@@ -22,7 +22,9 @@ export function toZKsyncError(
 }
 
 type WrapOptions<TCtx extends Ctx = Ctx> = {
+  /** Optional contextual data for debugging */
   ctx?: TCtx;
+  /** Optional error message */
   message?: string | (() => string);
 };
 
@@ -31,7 +33,11 @@ function resolveMessage(op: string, msg?: string | (() => string)) {
   return typeof msg === 'function' ? msg() : msg;
 }
 
-/** Factory for resource-scoped error handlers. */
+/**
+ * Factory for resource-scoped error handlers.
+ * Example:
+ *   const { wrap, wrapAs, toResult } = createErrorHandlers('deposits');
+ */
 export function createErrorHandlers(resource: Resource) {
   async function run<T, TCtx extends Ctx = Ctx>(
     kind: ErrorType,
@@ -56,6 +62,7 @@ export function createErrorHandlers(resource: Resource) {
     return run('INTERNAL', operation, fn, opts);
   }
 
+  // TODO: can likely be removed
   function wrapAs<T, TCtx extends Ctx = Ctx>(
     kind: ErrorType,
     operation: string,

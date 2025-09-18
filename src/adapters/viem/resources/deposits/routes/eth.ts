@@ -15,9 +15,9 @@ const { wrapAs } = createErrorHandlers('deposits');
 export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
-      // --- 1) Fetch base cost from Bridgehub ---
+      // base cost
       const rawBaseCost = await wrapAs(
-        'RPC',
+        'CONTRACT',
         OP_DEPOSITS.eth.baseCost,
         () =>
           ctx.client.l1.readContract({
@@ -33,7 +33,6 @@ export function routeEthDirect(): DepositRouteStrategy {
       );
       const baseCost = BigInt(rawBaseCost as bigint);
 
-      // --- 2) Build request struct + values ---
       const l2Contract = p.to ?? ctx.sender;
       const l2Value = p.amount;
       const mintValue = baseCost + ctx.operatorTip + l2Value;
@@ -49,6 +48,7 @@ export function routeEthDirect(): DepositRouteStrategy {
       });
 
       // Optional fee overrides for simulate/write
+      // viem client requires these to be explicitly set
       const feeOverrides: Record<string, unknown> = {};
       if ('maxFeePerGas' in ctx.fee && ctx.fee.maxFeePerGas != null) {
         feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
@@ -60,10 +60,10 @@ export function routeEthDirect(): DepositRouteStrategy {
         feeOverrides.gasPrice = ctx.fee.gasPrice;
       }
 
-      // --- 3) Simulate to produce a writeContract-ready request (lets node pick gas appropriately) ---
+      // Simulate to produce a writeContract-ready request
       const sim = await wrapAs(
         'RPC',
-        OP_DEPOSITS.eth.estGas, // reuse the same op label as ethers; this step is the estimation/simulation
+        OP_DEPOSITS.eth.estGas,
         () =>
           ctx.client.l1.simulateContract({
             address: ctx.bridgehub,
@@ -79,8 +79,8 @@ export function routeEthDirect(): DepositRouteStrategy {
           message: 'Failed to simulate Bridgehub.requestL2TransactionDirect.',
         },
       );
-
-      // --- 4) Plan step — tx is the viem writeContract request returned by simulateContract ---
+      // TODO: add preview step
+      // right now it adds too much noise on response
       const steps: PlanStep<ViemPlanWriteRequest>[] = [
         {
           key: 'bridgehub:direct',

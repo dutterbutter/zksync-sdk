@@ -24,7 +24,7 @@ import { decodeAbiParameters } from 'viem';
 // error handling
 const { wrapAs } = createErrorHandlers('withdrawals');
 
-// Minimal ABI for read-only `isWithdrawalFinalized`
+// TODO: remove later
 const IL1NullifierMini = [
   {
     type: 'function',
@@ -40,17 +40,29 @@ const IL1NullifierMini = [
 ] as const;
 
 export interface FinalizationServices {
+  /**
+   * Build finalizeDeposit params.
+   */
   fetchFinalizeDepositParams(
     l2TxHash: Hex,
   ): Promise<{ params: FinalizeDepositParams; nullifier: Address }>;
 
+  /**
+   * Read the Nullifier mapping to check finalization status.
+   */
   isWithdrawalFinalized(key: WithdrawalKey): Promise<boolean>;
 
+  /**
+   * Simulate finalizeDeposit on L1 Nullifier to check readiness.
+   */
   simulateFinalizeReadiness(
     params: FinalizeDepositParams,
     nullifier: Address,
   ): Promise<FinalizeReadiness>;
 
+  /**
+   * Call finalizeDeposit on L1 Nullifier.
+   */
   finalizeDeposit(
     params: FinalizeDepositParams,
     nullifier: Address,
@@ -60,7 +72,7 @@ export interface FinalizationServices {
 export function createFinalizationServices(client: ViemClient): FinalizationServices {
   return {
     async fetchFinalizeDepositParams(l2TxHash: Hex) {
-      // 1) Fetch parsed L2 receipt (with L2->L1 logs)
+      // Fetch parsed L2 receipt (with L2->L1 logs)
       const parsed = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.receipt,
@@ -79,7 +91,7 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
         });
       }
 
-      // 2) Find L1MessageSent(...) event and decode message bytes
+      // Find L1MessageSent event and decode message bytes
       const ev = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.findMessage,
@@ -104,7 +116,7 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
         },
       );
 
-      // 3) Fetch raw receipt again (to derive messenger index)
+      // Fetch raw receipt again
       const raw = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.rawReceipt,
@@ -134,7 +146,7 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
         },
       );
 
-      // 4) Fetch proof for that messenger log
+      // Fetch L2->L1 log proof
       const proof = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.proof,
@@ -145,7 +157,6 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
         },
       );
 
-      // 5) Chain id (L2)
       const chainId = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.network,
@@ -181,7 +192,6 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
     },
 
     async simulateFinalizeReadiness(params, nullifier) {
-      // Quick path: already finalized?
       const done = await (async () => {
         try {
           const { l1Nullifier } = await wrapAs(
@@ -216,7 +226,7 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
 
       if (done) return { kind: 'FINALIZED' };
 
-      // Try simulating finalizeDeposit — if it reverts, classify readiness from revert
+      // Try simulating finalizeDeposit
       try {
         await client.l1.simulateContract({
           address: nullifier,

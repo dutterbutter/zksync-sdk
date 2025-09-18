@@ -20,12 +20,9 @@ const I_BRIDGEHUB_NEW_PRIORITY_REQUEST = {
   ],
 } as const satisfies AbiEvent;
 
-/**
- * Extracts the L2 transaction hash from L1 logs emitted by Bridgehub during deposit.
- * Returns null if not found.
- */
+// Extracts the L2 transaction hash from L1 logs emitted by Bridgehub during deposit
+// Returns null if not found
 export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null {
-  // Try decoding as Bridgehub.NewPriorityRequest
   for (const lg of logs) {
     try {
       const parsed = decodeEventLog({
@@ -39,11 +36,11 @@ export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null 
         if (h && isHash66(h)) return h;
       }
     } catch {
-      // not this event; keep scanning
+      // ignore
     }
   }
 
-  // Fallback: check canonical topics (Assigned/Success)
+  // Fallback
   for (const lg of logs) {
     const t0 = ((lg.topics?.[0] as Hex) ?? '0x').toLowerCase();
     if (t0 === TOPIC_CANONICAL_ASSIGNED.toLowerCase()) {
@@ -59,10 +56,8 @@ export function extractL2TxHashFromL1Logs(logs: ReadonlyArray<Log>): Hex | null 
   return null;
 }
 
-/**
- * Waits for the L2 transaction corresponding to the given L1 transaction to be executed.
- * Throws if the L2 transaction fails or cannot be found.
- */
+// Waits for the L2 transaction corresponding to the given L1 transaction to be executed
+// Throws if the L2 transaction fails or cannot be found
 export async function waitForL2ExecutionFromL1Tx(
   l1: PublicClient,
   l2: PublicClient,
@@ -86,7 +81,7 @@ export async function waitForL2ExecutionFromL1Tx(
   // Wait for L2 execution
   let l2Receipt = await l2.waitForTransactionReceipt({ hash: l2TxHash }).catch(() => null);
 
-  // If wait returned null/errored, double-check by fetching once
+  // double-check in case the provider’s wait returned null but the receipt exists now
   if (!l2Receipt) {
     const maybe = await l2.getTransactionReceipt({ hash: l2TxHash }).catch(() => null);
     if (!maybe) {

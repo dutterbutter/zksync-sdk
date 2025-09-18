@@ -11,12 +11,13 @@ const { wrapAs } = createErrorHandlers('deposits');
 
 export function routeErc20NonBase(): DepositRouteStrategy {
   return {
-    async preflight() {},
+    async preflight() {
+      // TODO: should move validation stuff here
+    },
 
     async build(p, ctx) {
       const assetRouter = ctx.l1AssetRouter;
-
-      // 1) allowance
+      // check allowance
       const allowance = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.nonbase.allowance,
@@ -32,10 +33,11 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           message: 'Failed to read ERC-20 allowance.',
         },
       )) as bigint;
-
       const needsApprove = allowance < p.amount;
 
-      // 2) gas floor on L2
+      // gas floor on L2
+      // TODO: this is ugly, lets clean up gas estimation
+      // perhaps create a dedicated gas resource?
       const MIN_L2_GAS_FOR_ERC20 = 2_500_000n;
       const l2GasLimitUsed =
         ctx.l2GasLimit && ctx.l2GasLimit > 0n
@@ -44,7 +46,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             : ctx.l2GasLimit
           : MIN_L2_GAS_FOR_ERC20;
 
-      // 3) base cost
+      // base cost
       const rawBaseCost = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.nonbase.baseCost,
@@ -64,7 +66,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const baseCost = BigInt(rawBaseCost);
       const mintValue = baseCost + ctx.operatorTip;
 
-      // 4) approvals
+      // approvals
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<ViemPlanWriteRequest>[] = [];
 
@@ -95,7 +97,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         });
       }
 
-      // 5) second-bridge calldata
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,
@@ -118,7 +119,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         secondBridgeCalldata,
       } as const;
 
-      // 6) bridge step:
+      // viem only
       //    - if approval needed → DO NOT simulate here (would revert). Return raw write params.
       //    - else → simulate to pick up gas automatically.
       let bridgeTx: ViemPlanWriteRequest;

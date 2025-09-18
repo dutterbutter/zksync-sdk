@@ -19,10 +19,9 @@ export function routeEthDirect(): DepositRouteStrategy {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
 
-      // TODO: fix eslint
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const rawBaseCost: bigint = await wrapAs(
-        'RPC',
+      // base cost
+      const rawBaseCost: bigint = (await wrapAs(
+        'CONTRACT',
         OP_DEPOSITS.eth.baseCost,
         () =>
           bh.l2TransactionBaseCost(
@@ -35,7 +34,7 @@ export function routeEthDirect(): DepositRouteStrategy {
           ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
           message: 'Could not fetch L2 base cost from Bridgehub.',
         },
-      );
+      )) as bigint;
       const baseCost = BigInt(rawBaseCost);
 
       const l2Contract = p.to ?? ctx.sender;

@@ -74,7 +74,7 @@ export async function waitForL2ExecutionFromL1Tx(
         context: { l1TxHash, l2TxHash, where: 'l2.waitForTransaction' },
       });
     }
-    // we did find it on the second try — continue with the normal check
+
     if (maybe.status !== 1) {
       throw createError('VERIFICATION', {
         message: 'L2 transaction execution failed',

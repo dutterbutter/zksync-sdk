@@ -1,11 +1,8 @@
 // src/adapters/viem/resources/utils.ts
 import { encodeAbiParameters, keccak256, concat, type Hex } from 'viem';
-import { encodeFunctionData, concatHex } from 'viem';
-import type { Abi, WalletClient, Transport, Chain, Account } from 'viem';
-
 import type { Address } from '../../../core/types';
 import {
-  L2_NATIVE_TOKEN_VAULT_ADDRESS, // ← ensure this exists (or swap to *_ADDR)
+  L2_NATIVE_TOKEN_VAULT_ADDRESS,
   L1_FEE_ESTIMATION_COEF_DENOMINATOR,
   L1_FEE_ESTIMATION_COEF_NUMERATOR,
 } from '../../../core/constants';
@@ -61,6 +58,7 @@ export function encodeSecondBridgeDataV1(assetId: Hex, transferData: Hex): Hex {
 export const encodeNTVAssetId = encodeNativeTokenVaultAssetId;
 export const encodeNTVTransferData = encodeNativeTokenVaultTransferData;
 
+// TODO: remove in next major
 /* -----------------------------------------------------------------------------
  * Gas helpers
  * ---------------------------------------------------------------------------*/
@@ -90,15 +88,12 @@ export type FeeOverrides =
   | ({ gasPriceForBaseCost: bigint } & { gasPrice: bigint })
   | ({ gasPriceForBaseCost: bigint } & { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint });
 
-/** Returns EIP-1559 fees when available, otherwise legacy gasPrice. Also returns a gasPriceForBaseCost bigint. */
 export async function getFeeOverrides(client: ViemClient): Promise<FeeOverrides> {
-  // Prefer EIP-1559 data if the network supports it
   try {
     // viem: estimateFeesPerGas returns { maxFeePerGas, maxPriorityFeePerGas, baseFeePerGas, gasPrice? }
     const fees = await client.l1.estimateFeesPerGas();
     const { maxFeePerGas, maxPriorityFeePerGas } = fees;
     if (maxFeePerGas != null && maxPriorityFeePerGas != null) {
-      // For base-cost math, prefer legacy gasPrice if viem provides it; else use maxFeePerGas
       const gasPriceForBaseCost = fees.gasPrice ?? maxFeePerGas;
       return {
         maxFeePerGas,
@@ -110,7 +105,6 @@ export async function getFeeOverrides(client: ViemClient): Promise<FeeOverrides>
     // fall through to legacy
   }
 
-  // Legacy gasPrice fallback
   const gasPrice = await client.l1.getGasPrice();
   return {
     gasPrice,
@@ -178,55 +172,4 @@ export function encodeSecondBridgeErc20Args(
     ],
     [token, amount, l2Receiver],
   );
-}
-
-// viem's write params type
-export type WriteParams = Parameters<WalletClient<Transport, Chain, Account>['writeContract']>[0];
-
-export type DisplayTx = {
-  to: Address;
-  from?: Address;
-  data: Hex;
-  value?: bigint;
-  maxFeePerGas?: bigint;
-  maxPriorityFeePerGas?: bigint;
-  gas?: bigint;
-  nonce?: number;
-};
-
-export type MinimalWriteLike = {
-  address: `0x${string}`;
-  abi: Abi | readonly unknown[];
-  functionName: string;
-  args?: readonly unknown[];
-  account?: `0x${string}` | Account | null;
-  value?: bigint;
-  dataSuffix?: `0x${string}`;
-  maxFeePerGas?: bigint;
-  maxPriorityFeePerGas?: bigint;
-  gas?: bigint;
-  nonce?: number;
-  chain?: Chain | null;
-};
-
-export function summarizeWriteRequest(req: MinimalWriteLike): DisplayTx {
-  const data = encodeFunctionData({
-    abi: req.abi as Abi,
-    functionName: req.functionName,
-    args: req.args ?? [],
-  });
-
-  const withSuffix = req.dataSuffix ? concatHex([data, req.dataSuffix]) : data;
-  const from = typeof req.account === 'string' ? req.account : req.account?.address;
-
-  return {
-    to: req.address,
-    from,
-    data: withSuffix,
-    value: req.value,
-    maxFeePerGas: req.maxFeePerGas,
-    maxPriorityFeePerGas: req.maxPriorityFeePerGas,
-    gas: req.gas,
-    nonce: req.nonce,
-  };
 }

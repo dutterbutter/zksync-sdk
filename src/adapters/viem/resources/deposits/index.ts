@@ -34,6 +34,7 @@ const { wrap, toResult } = createErrorHandlers('deposits');
 // --------------------
 // Deposit Route map
 // --------------------
+// DepositRoute = 'eth' | 'erc20-nonbase';
 const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
   eth: routeEthDirect(),
   'erc20-nonbase': routeErc20NonBase(),
@@ -43,28 +44,49 @@ const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
 // Public interface
 // --------------------
 export interface DepositsResource {
+  // Get a quote for a deposit operation
+  // TODO: should quote() method that doesn't require a wallet
+  // TODO: needs better gas response
   quote(p: DepositParams): Promise<DepositQuote>;
+
+  // Try to get a quote for a deposit operation
   tryQuote(
     p: DepositParams,
   ): Promise<{ ok: true; value: DepositQuote } | { ok: false; error: unknown }>;
 
+  // Prepare a deposit plan (route + steps) without executing it
+  // TODO: should prepare() method that doesn't require a wallet
   prepare(p: DepositParams): Promise<DepositPlan<ViemPlanWriteRequest>>;
+
+  // Try to prepare a deposit plan without executing it
   tryPrepare(
     p: DepositParams,
   ): Promise<
     { ok: true; value: DepositPlan<ViemPlanWriteRequest> } | { ok: false; error: unknown }
   >;
 
+  // Execute a deposit operation
+  // Returns a handle that can be used to track the status of the deposit
   create(p: DepositParams): Promise<DepositHandle<ViemPlanWriteRequest>>;
+
+  // Try to execute a deposit operation
   tryCreate(
     p: DepositParams,
   ): Promise<
     { ok: true; value: DepositHandle<ViemPlanWriteRequest> } | { ok: false; error: unknown }
   >;
 
+  // Check the status of a deposit operation
+  // Can be given either a DepositWaitable (from create) or an L1 tx hash
   status(h: DepositWaitable | Hex): Promise<DepositStatus>;
 
+  // Wait for a deposit to be completed
+  // If 'for' is 'l1', waits for L1 inclusion only
+  // If 'for' is 'l2', waits for L1 inclusion and L2 execution
+  // Returns the relevant receipt, or null if the input handle has no L1 tx hash
   wait(h: DepositWaitable, opts: { for: 'l1' | 'l2' }): Promise<TransactionReceipt | null>;
+
+  // Try to wait for a deposit to be completed
   tryWait(
     h: DepositWaitable,
     opts: { for: 'l1' | 'l2' },
@@ -75,7 +97,9 @@ export interface DepositsResource {
 // Resource factory
 // --------------------
 export function DepositsResource(client: ViemClient): DepositsResource {
-  // Build a plan (no execution)
+  // buildPlan constructs a DepositPlan for the given params
+  // It does not execute any transactions
+  // It can run preflight checks and may throw if the deposit cannot be performed
   async function buildPlan(p: DepositParams): Promise<DepositPlan<ViemPlanWriteRequest>> {
     const ctx = await commonCtx(p, client);
 
@@ -99,7 +123,7 @@ export function DepositsResource(client: ViemClient): DepositsResource {
     };
   }
 
-  // ---- Quote ----
+  // quote builds a deposit and returns its summary without executing it
   const quote = async (p: DepositParams): Promise<DepositQuote> =>
     wrap(
       OP_DEPOSITS.quote,
@@ -113,25 +137,28 @@ export function DepositsResource(client: ViemClient): DepositsResource {
       },
     );
 
+  // tryQuote is like quote, but returns a TryResult instead of throwing
   const tryQuote = (p: DepositParams) =>
     toResult<DepositQuote>(OP_DEPOSITS.tryQuote, () => quote(p), {
       message: 'Internal error while preparing a deposit quote.',
       ctx: { token: p.token, where: 'deposits.tryQuote' },
     });
 
-  // ---- Prepare (no execution) ----
+  // prepare prepares a deposit plan without executing it
   const prepare = (p: DepositParams): Promise<DepositPlan<ViemPlanWriteRequest>> =>
     wrap(OP_DEPOSITS.prepare, () => buildPlan(p), {
       message: 'Internal error while preparing a deposit plan.',
       ctx: { token: p.token, where: 'deposits.prepare' },
     });
 
+  // tryPrepare is like prepare, but returns a TryResult instead of throwing
   const tryPrepare = (p: DepositParams) =>
     toResult<DepositPlan<ViemPlanWriteRequest>>(OP_DEPOSITS.tryPrepare, () => prepare(p), {
       ctx: { token: p.token, where: 'deposits.tryPrepare' },
     });
 
-  // ---- Create (execute steps) ----
+  // create prepares and executes a deposit plan
+  // It returns a handle that can be used to track the status of the deposit
   const create = (p: DepositParams): Promise<DepositHandle<ViemPlanWriteRequest>> =>
     wrap(
       OP_DEPOSITS.create,
@@ -140,11 +167,11 @@ export function DepositsResource(client: ViemClient): DepositsResource {
         const stepHashes: Record<string, Hex> = {};
 
         const from = client.account.address;
-        // We’ll set explicit nonces to keep ordering deterministic (optional).
+        // TODO: remove this
         let next = await client.l1.getTransactionCount({ address: from, blockTag: 'latest' });
 
         for (const step of plan.steps) {
-          // Re-check allowance before an approve step (skip if already sufficient)
+          // Re-check allowance
           if (step.kind === 'approve') {
             try {
               const [, token, router] = step.key.split(':');
@@ -162,7 +189,7 @@ export function DepositsResource(client: ViemClient): DepositsResource {
               }
             } catch (e) {
               throw toZKsyncError(
-                'RPC',
+                'CONTRACT',
                 {
                   resource: 'deposits',
                   operation: 'deposits.create.erc20-allowance-recheck',
@@ -174,7 +201,7 @@ export function DepositsResource(client: ViemClient): DepositsResource {
             }
           }
 
-          // Ensure gas is present (simulateContract usually sets it; add a small buffer if estimating)
+          // todo: fix gas estimation
           if (step.tx.gas == null) {
             try {
               const feePart =
@@ -204,9 +231,9 @@ export function DepositsResource(client: ViemClient): DepositsResource {
             }
           }
 
+          // todo: fix nonce handling
           const nonce = next++;
 
-          // choose 1559 fee fields only if both are present
           const fee1559 =
             step.tx.maxFeePerGas != null && step.tx.maxPriorityFeePerGas != null
               ? {
@@ -215,7 +242,6 @@ export function DepositsResource(client: ViemClient): DepositsResource {
                 }
               : {};
 
-          // build base (non-payable) request WITHOUT `value`
           const baseReq = {
             address: step.tx.address,
             abi: step.tx.abi as Abi,
@@ -224,19 +250,16 @@ export function DepositsResource(client: ViemClient): DepositsResource {
             account: step.tx.account ?? client.account,
             gas: step.tx.gas,
             nonce,
-            // never include gasPrice (we are 1559-only)
             ...fee1559,
             ...(step.tx.dataSuffix ? { dataSuffix: step.tx.dataSuffix } : {}),
             ...(step.tx.chain ? { chain: step.tx.chain } : {}),
           } as Omit<WriteContractParameters, 'value'>;
 
-          // if payable, add `value`; otherwise leave it out entirely
           const req: WriteContractParameters =
             step.tx.value != null
               ? ({ ...baseReq, value: step.tx.value } as WriteContractParameters)
               : (baseReq as WriteContractParameters);
 
-          // send
           let hash: Hex | undefined;
           try {
             hash = await client.l1Wallet.writeContract(req);
@@ -276,13 +299,15 @@ export function DepositsResource(client: ViemClient): DepositsResource {
       },
     );
 
+  // tryCreate is like create, but returns a TryResult instead of throwing
   const tryCreate = (p: DepositParams) =>
     toResult<DepositHandle<ViemPlanWriteRequest>>(OP_DEPOSITS.tryCreate, () => create(p), {
       message: 'Internal error while creating a deposit.',
       ctx: { token: p.token, amount: p.amount, to: p.to, where: 'deposits.tryCreate' },
     });
 
-  // ---- Status ----
+  // status checks the status of a deposit given its handle or L1 tx hash
+  // It queries both L1 and L2 to determine the current phase
   const status = (h: DepositWaitable | Hex): Promise<DepositStatus> =>
     wrap(
       OP_DEPOSITS.status,
@@ -354,7 +379,10 @@ export function DepositsResource(client: ViemClient): DepositsResource {
       },
     );
 
-  // ---- Wait ----
+  // wait waits for a deposit to be completed
+  // If 'for' is 'l1', waits for L1 inclusion only
+  // If 'for' is 'l2', waits for L1 inclusion and L2 execution
+  // Returns the relevant receipt, or null if the input handle has no L1 tx hash
   const wait = (
     h: DepositWaitable | Hex,
     opts: { for: 'l1' | 'l2' },
@@ -409,6 +437,7 @@ export function DepositsResource(client: ViemClient): DepositsResource {
       },
     );
 
+  // tryWait is like wait, but returns a TryResult instead of throwing
   const tryWait = (h: DepositWaitable | Hex, opts: { for: 'l1' | 'l2' }) =>
     toResult<TransactionReceipt>(
       OP_DEPOSITS.tryWait,

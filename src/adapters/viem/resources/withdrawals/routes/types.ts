@@ -6,7 +6,7 @@ import type { RouteStrategy } from '../../../../../core/types/flows/route';
 import type { BuildCtx as WithdrawBuildCtx } from '../context';
 import type { Address, Hex } from '../../../../../core/types';
 
-// viem writeContract() parameter type (same approach as deposits)
+// viem writeContract() parameter type
 export type ViemPlanWriteRequest = Parameters<
   WalletClient<Transport, Chain, Account>['writeContract']
 >[0];
@@ -20,7 +20,7 @@ export type WithdrawRouteStrategy = RouteStrategy<
   WithdrawBuildCtx
 >;
 
-// ---- zkSync-specific L2->L1 log (kept identical to ethers version) ----
+// L2→L1 service log
 export interface L2ToL1Log {
   l2ShardId?: number;
   isService?: boolean;
@@ -30,7 +30,8 @@ export interface L2ToL1Log {
   value?: Hex;
 }
 
-// viem receipt extended with L2->L1 logs (same surface as ethers variant)
+// viem receipt extended with L2→L1 logs
+// TODO: this is what getTransactionReceipt should return
 export type TransactionReceiptZKsyncOS = TransactionReceipt & {
   l2ToL1Logs?: L2ToL1Log[];
 };
