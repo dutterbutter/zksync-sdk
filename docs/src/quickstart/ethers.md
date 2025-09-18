@@ -6,8 +6,8 @@ You'll set up your environment, write a short script to make a deposit, and run 
 
 ## 1. Prerequisites
 
-  * You have [Bun](https://bun.sh/) installed.
-  * You have an L1 wallet (e.g., Sepolia testnet) funded with some ETH to pay for gas and the deposit.
+- You have [Bun](https://bun.sh/) installed.
+- You have an L1 wallet (e.g., Sepolia testnet) funded with some ETH to pay for gas and the deposit.
 
 ## 2. Installation & Setup
 
@@ -67,7 +67,7 @@ async function main() {
 
   console.log(`Wallet balance on L1: ${await client.l1.getBalance(signer.address)}`);
   console.log(`Wallet balance on L2: ${await client.l2.getBalance(signer.address)}`);
-  
+
   // 3. PERFORM THE DEPOSIT
   // The create() method prepares and sends the transaction.
   // The wait() method polls until the transaction is complete.
@@ -131,16 +131,16 @@ You should see output confirming the L1 transaction, the wait periods, and final
 
 ## 5. Troubleshooting
 
-  * **Insufficient funds on L1:** Make sure your wallet has enough ETH on L1 to cover both the deposit amount (`0.001` ETH) and the L1 gas fees.
-  * **Invalid `PRIVATE_KEY`:** Ensure it’s a 64-character hex string, prefixed with `0x`.
-  * **Stuck waiting for L2:** This can take a few minutes. If it takes too long, check that your `L2_RPC_URL` is correct and the network is operational.
+- **Insufficient funds on L1:** Make sure your wallet has enough ETH on L1 to cover both the deposit amount (`0.001` ETH) and the L1 gas fees.
+- **Invalid `PRIVATE_KEY`:** Ensure it’s a 64-character hex string, prefixed with `0x`.
+- **Stuck waiting for L2:** This can take a few minutes. If it takes too long, check that your `L2_RPC_URL` is correct and the network is operational.
 
------
+---
 
 ## Next Steps
 
 Now that you've completed a deposit, you can:
 
-  * **Try an ERC20 Deposit:** This involves an additional `approve` step. The `quote()` method will tell you if an approval is needed.
-  * **Explore Withdrawals:** Check out the guides for withdrawing funds from L2 back to L1.
-  * **See the API Reference:** Dive deeper into the full capabilities of the SDK.
+- **Try an ERC20 Deposit:** This involves an additional `approve` step. The `quote()` method will tell you if an approval is needed.
+- **Explore Withdrawals:** Check out the guides for withdrawing funds from L2 back to L1.
+- **See the API Reference:** Dive deeper into the full capabilities of the SDK.

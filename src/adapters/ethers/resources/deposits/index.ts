@@ -17,7 +17,6 @@ import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'js
 
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';
-import { routeErc20Base } from './routes/erc20-base';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import type { DepositRouteStrategy } from './routes/types.ts';
 
@@ -30,10 +29,9 @@ const { wrap, toResult } = createErrorHandlers('deposits');
 // --------------------
 // Deposit Route map
 // --------------------
-// DepositRoute = 'eth' | 'erc20-base' | 'erc20-nonbase';
+// DepositRoute = 'eth' | 'erc20-nonbase';
 const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
   eth: routeEthDirect(),
-  'erc20-base': routeErc20Base(),
   'erc20-nonbase': routeErc20NonBase(),
 };
 

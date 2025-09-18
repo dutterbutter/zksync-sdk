@@ -8,8 +8,8 @@ The complete lifecycle for any action is:
 quote → prepare → create → status → wait → (finalize*)
 ```
 
-  * The first five steps are common to both **Deposits** and **Withdrawals**.
-  * Withdrawals require an additional **`finalize`** step to prove and claim the funds on L1.
+- The first five steps are common to both **Deposits** and **Withdrawals**.
+- Withdrawals require an additional **`finalize`** step to prove and claim the funds on L1.
 
 You can enter this lifecycle at different stages depending on how much control you need.
 
@@ -19,7 +19,7 @@ The core methods are designed to give you progressively more automation. You can
 
 ### `quote(params)`
 
-*"What will this operation involve and cost?"*
+_"What will this operation involve and cost?"_
 
 This is a **read-only** dry run. It performs no transactions and has no side effects. It inspects the parameters and returns a `Quote` object containing the estimated fees, gas costs, and the steps the SDK will take to complete the action.
 
@@ -27,7 +27,7 @@ This is a **read-only** dry run. It performs no transactions and has no side eff
 
 ### `prepare(params)`
 
-*"Build the transactions for me, but let me send them."*
+_"Build the transactions for me, but let me send them."_
 
 This method constructs all the necessary transactions for the operation and returns them as an array of `TransactionRequest` objects in a `Plan`. It does **not** sign or send them. This gives you full control over the final execution.
 
@@ -35,7 +35,7 @@ This method constructs all the necessary transactions for the operation and retu
 
 ### `create(params)`
 
-*"Prepare, sign, and send in one go."*
+_"Prepare, sign, and send in one go."_
 
 This is the most common entry point for a one-shot operation. It internally calls `prepare`, then uses your configured signer to sign and dispatch the transactions. It returns a `Handle` object, which is a lightweight tracker containing the transaction hash(es) needed for the next steps.
 
@@ -43,31 +43,31 @@ This is the most common entry point for a one-shot operation. It internally call
 
 ### `status(handle | txHash)`
 
-*"Where is my transaction right now?"*
+_"Where is my transaction right now?"_
 
 This is a **non-blocking** check to get the current state of an operation. It takes a `Handle` from the `create` method or a transaction hash and returns a structured status object, such as:
 
-  * **Deposits:** `{ phase: 'L1_PENDING' | 'L2_EXECUTED' }`
-  * **Withdrawals:** `{ phase: 'L1_INCLUDED','L2_PENDING' | 'READY_TO_FINALIZE' | 'FINALIZED' }`
+- **Deposits:** `{ phase: 'L1_PENDING' | 'L2_EXECUTED' }`
+- **Withdrawals:** `{ phase: 'L1_INCLUDED','L2_PENDING' | 'READY_TO_FINALIZE' | 'FINALIZED' }`
 
 ➡️ **Best for:** Polling in a UI to show a user the live progress of their transaction without blocking the interface.
 
 ### `wait(handle, { for })`
 
-*"Pause until a specific checkpoint is reached."*
+_"Pause until a specific checkpoint is reached."_
 
 This is a **blocking** (asynchronous) method that polls for you. It pauses execution until the operation reaches a desired checkpoint and then resolves with the relevant transaction receipt.
 
-  * **Deposits:** Wait for L1 inclusion (`'l1'`) or L2 execution (`'l2'`).
-  * **Withdrawals:** Wait for L2 inclusion (`'l2'`), finalization availability (`'ready'`), or final L1 finalization (`'finalized'`).
+- **Deposits:** Wait for L1 inclusion (`'l1'`) or L2 execution (`'l2'`).
+- **Withdrawals:** Wait for L2 inclusion (`'l2'`), finalization availability (`'ready'`), or final L1 finalization (`'finalized'`).
 
 ➡️ **Best for:** Scripts or backend processes where you need to ensure one step is complete before starting the next.
 
 ### `finalize(l2TxHash)`
 
-*(Withdrawals Only)*
+_(Withdrawals Only)_
 
-*"My funds are ready on L1. Finalize and release them."*
+_"My funds are ready on L1. Finalize and release them."_
 
 This method executes the final step of a withdrawal. After `status` reports `READY_TO_FINALIZE`, you call this method with the L2 transaction hash to submit the finalization transaction on L1, which releases the funds to the recipient.
 

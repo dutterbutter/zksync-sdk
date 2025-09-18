@@ -10,6 +10,8 @@ export function makeTransportFromEthers(provider: {
 }
 
 // Viem: client.request({ method, params })
-// export function makeTransportFromViem(client: { request: (args: { method: string; params?: any[] }) => Promise<any> }): RpcTransport {
-//   return (m, p = []) => client.request({ method: m, params: p });
-// }
+export function makeTransportFromViem(client: {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+}): RpcTransport {
+  return (m, p = []) => client.request({ method: m, params: p });
+}

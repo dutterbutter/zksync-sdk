@@ -27,7 +27,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const assetRouter = ctx.l1AssetRouter;
-    
+
       const l1Signer = ctx.client.signer.connect(ctx.client.l1);
       const erc20 = new Contract(p.token, IERC20ABI, l1Signer);
       // TODO: fix eslint

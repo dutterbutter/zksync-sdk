@@ -1,6 +1,6 @@
 # Adapters: `viem` & `ethers`
 
-The SDK is designed to work *with* the tools you already know and love. It's not a standalone library, but rather an extension that plugs into your existing `viem` or `ethers.js` setup.
+The SDK is designed to work _with_ the tools you already know and love. It's not a standalone library, but rather an extension that plugs into your existing `viem` or `ethers.js` setup.
 
 Think of it like a power adapter 🔌. You have your device (`viem` or `ethers` client), and this SDK adapts it to work seamlessly with zkSync's unique features. You bring your own client, and the SDK enhances it.
 
@@ -8,9 +8,9 @@ Think of it like a power adapter 🔌. You have your device (`viem` or `ethers` 
 
 This approach offers several key advantages:
 
-  * ✅ **Bring Your Own Stack:** You don't have to replace your existing setup. The SDK integrates directly with the `viem` clients (`PublicClient`, `WalletClient`) or `ethers` providers and signers you're already using.
-  * 📚 **Familiar Developer Experience (DX):** You continue to handle connections, accounts, and signing just as you always have.
-  * 🧩 **Lightweight & Focused:** The SDK remains small and focused on one thing: providing a robust API for ZKsync-specific actions like deposits and withdrawals.
+- ✅ **Bring Your Own Stack:** You don't have to replace your existing setup. The SDK integrates directly with the `viem` clients (`PublicClient`, `WalletClient`) or `ethers` providers and signers you're already using.
+- 📚 **Familiar Developer Experience (DX):** You continue to handle connections, accounts, and signing just as you always have.
+- 🧩 **Lightweight & Focused:** The SDK remains small and focused on one thing: providing a robust API for ZKsync-specific actions like deposits and withdrawals.
 
 ## Installation
 
@@ -24,7 +24,7 @@ npm install @zksync-sdk/viem viem
 npm install @zksync-sdk/ethers ethers
 ```
 
------
+---
 
 ## How to Use
 
@@ -81,11 +81,10 @@ const quote = await client.deposits.quote({
 console.log('Total fee:', quote.totalFee.toString());
 ```
 
------
+---
 
 ## Key Principles
 
-  * **No Key Management:** The SDK never asks for or stores private keys. All signing operations are delegated to the `viem` `WalletClient` or `ethers` `Signer` you provide.
-  * **API Parity:** Both adapters expose the exact same API. The code you write to call `client.deposits.quote()` is identical whether you're using `viem` or `ethers`.
-  * **Easy Migration:** Because the API is the same, switching your project from `ethers` to `viem` (or vice versa) is incredibly simple. You only need to change the initialization code.
-  
+- **No Key Management:** The SDK never asks for or stores private keys. All signing operations are delegated to the `viem` `WalletClient` or `ethers` `Signer` you provide.
+- **API Parity:** Both adapters expose the exact same API. The code you write to call `client.deposits.quote()` is identical whether you're using `viem` or `ethers`.
+- **Easy Migration:** Because the API is the same, switching your project from `ethers` to `viem` (or vice versa) is incredibly simple. You only need to change the initialization code.

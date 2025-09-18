@@ -155,6 +155,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         },
       );
 
+      // TODO: fix me
       const txIndex = Number((parsed as any).transactionIndex ?? 0);
 
       const params: FinalizeDepositParams = {

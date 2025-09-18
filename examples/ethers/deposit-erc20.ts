@@ -1,9 +1,9 @@
 // examples/deposit-eth.ts
 import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethers';
-import { createEthersClient } from '../src/adapters/ethers/client';
-import { createEthersSdk } from '../src/adapters/ethers/sdk';
-import { Address } from '../src/core/types/primitives';
-import MintableERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
+import { createEthersClient } from '../../src/adapters/ethers/client';
+import { createEthersSdk } from '../../src/adapters/ethers/sdk';
+import { Address } from '../../src/core/types/primitives';
+import MintableERC20ABI from '../../src/internal/abis/IERC20.json' assert { type: 'json' };
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
