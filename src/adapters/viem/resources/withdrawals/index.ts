@@ -221,7 +221,6 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
 
           let hash: Hex | undefined;
           try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             if (!client.l2Wallet) {
               throw createError('EXECUTION', {
                 resource: 'withdrawals',
@@ -393,7 +392,6 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
         const poll = Math.max(1000, opts.pollMs ?? 2500);
         const deadline = opts.timeoutMs ? Date.now() + opts.timeoutMs : undefined;
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           const s = await status(l2Hash);
 

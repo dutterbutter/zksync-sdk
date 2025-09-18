@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/adapters/viem/client.ts
 import type {
   PublicClient,
@@ -79,7 +76,6 @@ export function createViemClient(args: InitArgs): ViemClient {
   }
   if (l2Wallet && !l2Wallet.account) throw new Error('l2Wallet provided without an account.');
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const zks = zksRpcFromViem(l2);
 
   let addrCache: ResolvedAddresses | undefined;
