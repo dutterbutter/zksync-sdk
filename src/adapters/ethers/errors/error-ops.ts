@@ -25,7 +25,7 @@ export function toZKsyncError(
 type WrapOptions<TCtx extends Ctx = Ctx> = {
   /** Optional contextual data for debugging */
   ctx?: TCtx;
-  /** Optional error message or lazy message */
+  /** Optional error message */
   message?: string | (() => string);
 };
 

@@ -4,8 +4,8 @@ The SDK is designed to work with both `viem` and `ethers.js`, the two most popul
 
 ## The Short Answer (TL;DR)
 
-  * **If you're adding the SDK to an existing project:** Use the adapter for the library you're **already using**.
-  * **If you're starting a new project:** The choice is yours. **`viem` is generally recommended for new projects** due to its modern design, smaller bundle size, and excellent TypeScript support.
+- **If you're adding the SDK to an existing project:** Use the adapter for the library you're **already using**.
+- **If you're starting a new project:** The choice is yours. **`viem` is generally recommended for new projects** due to its modern design, smaller bundle size, and excellent TypeScript support.
 
 You can't make a wrong choice. Both adapters are fully supported and provide the same features.
 
@@ -70,6 +70,5 @@ The adapter model is designed to give you flexibility without adding complexity.
 
 **Ready to start building?** 🚀
 
-  * [**Go to Quickstart (viem)**]()
-  * [**Go to Quickstart (ethers)**]()
-
+- [**Go to Quickstart (viem)**]()
+- [**Go to Quickstart (ethers)**]()

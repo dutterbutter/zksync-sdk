@@ -19,11 +19,10 @@ export function routeErc20(): WithdrawRouteStrategy {
       const approvals: ApprovalNeed[] = [];
 
       const l2Signer = ctx.client.signer.connect(ctx.client.l2);
-      // L2 allowance to the NativeTokenVault
+      // L2 allowance
       const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const current: bigint = await wrapAs(
-        'RPC',
+      const current: bigint = (await wrapAs(
+        'CONTRACT',
         OP_WITHDRAWALS.erc20.allowance,
         () => erc20.allowance(ctx.sender, ctx.l2NativeTokenVault),
         {
@@ -35,7 +34,7 @@ export function routeErc20(): WithdrawRouteStrategy {
           },
           message: 'Failed to read L2 ERC-20 allowance.',
         },
-      );
+      )) as bigint;
 
       if (current < p.amount) {
         approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
@@ -56,7 +55,7 @@ export function routeErc20(): WithdrawRouteStrategy {
       // Compute assetId + assetData
       const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultABI, ctx.client.l2);
       const assetId = (await wrapAs(
-        'RPC',
+        'CONTRACT',
         OP_WITHDRAWALS.erc20.ensureRegistered,
         () => ntv.getFunction('ensureTokenIsRegistered').staticCall(p.token),
         {
@@ -65,7 +64,6 @@ export function routeErc20(): WithdrawRouteStrategy {
         },
       )) as `0x${string}`;
 
-      // DataEncoding.encodeBridgeBurnData(amount, l1Receiver, l2Token)
       const assetData = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.erc20.encodeAssetData,

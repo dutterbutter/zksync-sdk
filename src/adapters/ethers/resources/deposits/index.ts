@@ -17,7 +17,6 @@ import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'js
 
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';
-import { routeErc20Base } from './routes/erc20-base';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import type { DepositRouteStrategy } from './routes/types.ts';
 
@@ -30,10 +29,9 @@ const { wrap, toResult } = createErrorHandlers('deposits');
 // --------------------
 // Deposit Route map
 // --------------------
-// DepositRoute = 'eth' | 'erc20-base' | 'erc20-nonbase';
+// DepositRoute = 'eth' | 'erc20-nonbase';
 const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
   eth: routeEthDirect(),
-  'erc20-base': routeErc20Base(),
   'erc20-nonbase': routeErc20NonBase(),
 };
 
@@ -42,6 +40,8 @@ const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
 // --------------------
 export interface DepositsResource {
   // Get a quote for a deposit operation
+  // TODO: should we have a separate quote() method that doesn't require a wallet
+  // TODO: needs better gas response
   quote(p: DepositParams): Promise<DepositQuote>;
 
   // Try to get a quote for a deposit operation
@@ -91,12 +91,11 @@ export interface DepositsResource {
 export function DepositsResource(client: EthersClient): DepositsResource {
   // buildPlan constructs a DepositPlan for the given params
   // It does not execute any transactions
-  // It runs preflight checks and may throw if the deposit cannot be performed
+  // It can run preflight checks and may throw if the deposit cannot be performed
   async function buildPlan(p: DepositParams): Promise<DepositPlan<TransactionRequest>> {
     const ctx = await commonCtx(p, client);
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    const route = ctx.route as DepositRoute;
+    const route = ctx.route;
     await ROUTES[route].preflight?.(p, ctx);
 
     const { steps, approvals, quoteExtras } = await ROUTES[route].build(p, ctx);
@@ -116,7 +115,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
     };
   }
 
-  // quote prepares a deposit and returns its summary without executing it
+  // quote builds a deposit and returns its summary without executing it
   const quote = async (p: DepositParams): Promise<DepositQuote> =>
     wrap(
       OP_DEPOSITS.quote,
@@ -171,16 +170,15 @@ export function DepositsResource(client: EthersClient): DepositsResource {
               const [, token, router] = step.key.split(':');
               const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
               const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
-              // TODO: fix eslint
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              const current = await erc20.allowance(from, router as Address);
+
+              const current = (await erc20.allowance(from, router as Address)) as bigint;
               if (current >= target) {
                 // Skip redundant approve
                 continue;
               }
             } catch (e) {
               throw toZKsyncError(
-                'RPC',
+                'CONTRACT',
                 {
                   resource: 'deposits',
                   operation: 'deposits.create.erc20-allowance-recheck',
@@ -193,6 +191,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
           }
           step.tx.nonce = next++;
 
+          // TODO: fix gas estimation
           if (!step.tx.gasLimit) {
             try {
               const est = await client.l1.estimateGas(step.tx);
@@ -259,7 +258,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
           return { phase: 'UNKNOWN', l1TxHash: '0x' as Hex };
         }
 
-        // ---- L1 receipt ----
+        // L1 receipt
         let l1Rcpt;
         try {
           l1Rcpt = await client.l1.getTransactionReceipt(l1TxHash);
@@ -294,7 +293,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         }
         if (!l2TxHash) return { phase: 'L1_INCLUDED', l1TxHash };
 
-        // ---- L2 receipt ----
+        // L2 receipt
         let l2Rcpt;
         try {
           l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash);
@@ -312,7 +311,6 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         }
         if (!l2Rcpt) return { phase: 'L2_PENDING', l1TxHash, l2TxHash };
 
-        // ---- Execution outcome ----
         const ok = l2Rcpt.status === 1;
         return ok
           ? { phase: 'L2_EXECUTED', l1TxHash, l2TxHash }
@@ -340,7 +338,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
 
         if (!l1Hash) return null;
 
-        // ---- Wait for L1 inclusion ----
+        // Wait for L1 inclusion
         let l1Receipt: TransactionReceipt | null;
         try {
           l1Receipt = await client.l1.waitForTransaction(l1Hash);
@@ -360,7 +358,7 @@ export function DepositsResource(client: EthersClient): DepositsResource {
         if (!l1Receipt) return null;
         if (opts.for === 'l1') return l1Receipt;
 
-        // ---- Derive canonical L2 hash + wait for L2 execution ----
+        // Derive canonical L2 hash + wait for L2 execution
         try {
           const { l2Receipt } = await waitForL2ExecutionFromL1Tx(client.l1, client.l2, l1Hash);
           return l2Receipt ?? null;

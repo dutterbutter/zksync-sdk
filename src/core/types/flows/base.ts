@@ -10,11 +10,14 @@ export interface ApprovalNeed {
 }
 
 /** Generic step (adapter injects Tx type) */
-export interface PlanStep<Tx> {
+export interface PlanStep<Tx, Preview = undefined> {
   key: string;
   kind: string;
   description: string;
-  tx: Tx; // adapter-specific tx (e.g., ethers TransactionRequest)
+  /** Adapter-specific request (ethers TransactionRequest, viem WriteContractParameters, etc.) */
+  tx: Tx;
+  /** Optional compact, human-friendly view for logging/UI */
+  preview?: Preview;
 }
 
 /** Generic plan */

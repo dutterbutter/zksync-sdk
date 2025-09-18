@@ -76,6 +76,7 @@ type InitArgs = {
  * Create an EthersClient: a thin handle that carries providers/signer and
  * resolves the minimal addresses needed by resources.
  */
+// TODO: for withdrawals we should have l2wallet
 export function createEthersClient(args: InitArgs): EthersClient {
   const { l1, l2, signer } = args;
 

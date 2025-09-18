@@ -1,9 +1,9 @@
 // examples/deposit-eth.ts
 import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethers';
-import { createEthersClient } from '../src/adapters/ethers/client';
-import { createEthersSdk } from '../src/adapters/ethers/sdk';
-import { Address } from '../src/core/types/primitives';
-import MintableERC20ABI from '../src/internal/abis/IERC20.json' assert { type: 'json' };
+import { createEthersClient } from '../../src/adapters/ethers/client';
+import { createEthersSdk } from '../../src/adapters/ethers/sdk';
+import { Address } from '../../src/core/types/primitives';
+import MintableERC20ABI from '../../src/internal/abis/IERC20.json' assert { type: 'json' };
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
@@ -34,13 +34,11 @@ async function main() {
   const sdk = createEthersSdk(client);
   // // sepolia
   const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
-  // local
-  //const TOKEN = '0xbCF26943C0197d2eE0E5D05c716Be60cc2761508' as Address;
 
   const me = (await signer.getAddress()) as Address;
   const decimals = await erc20(l1, TOKEN).decimals();
   const amount = parseUnits('100000', decimals);
-  //await mintErc20({ signer, token: TOKEN, to: me, amount });
+  await mintErc20({ signer, token: TOKEN, to: me, amount });
 
   const depositAmount = parseUnits('250', decimals);
 

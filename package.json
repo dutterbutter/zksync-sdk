@@ -20,7 +20,8 @@
   },
   "peerDependencies": {
     "ethers": "^6.15.0",
-    "@typechain/ethers-v6": "^0.5.0"
+    "@typechain/ethers-v6": "^0.5.0",
+    "viem": ">=2.0.0 <3"
   },
   "exports": {
     ".": {
@@ -52,6 +53,21 @@
       "types": "./dist/adapters/ethers/sdk.d.ts",
       "import": "./dist/adapters/ethers/sdk.js",
       "require": "./dist/adapters/ethers/sdk.cjs"
+    },
+    "./viem/*": {
+      "types": "./dist/adapters/viem/*.d.ts",
+      "import": "./dist/adapters/viem/*.js",
+      "require": "./dist/adapters/viem/*.cjs"
+    },
+    "./viem/client": {
+      "types": "./dist/adapters/viem/client.d.ts",
+      "import": "./dist/adapters/viem/client.js",
+      "require": "./dist/adapters/viem/client.cjs"
+    },
+    "./viem/sdk": {
+      "types": "./dist/adapters/viem/sdk.d.ts",
+      "import": "./dist/adapters/viem/sdk.js",
+      "require": "./dist/adapters/viem/sdk.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -93,6 +109,9 @@
       ],
       "ethers/*": [
         "dist/adapters/ethers/*"
+      ],
+      "viem/*": [
+        "dist/adapters/viem/*"
       ],
       "*": [
         "dist/*"

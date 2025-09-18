@@ -1,10 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // src/adapters/ethers/resources/withdrawals/services/finalization.ts
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { AbiCoder, Contract, type TransactionReceipt } from 'ethers';
 
 import type { Address, Hex } from '../../../../../core/types/primitives';
@@ -29,6 +24,7 @@ import { toZKsyncError } from '../../../errors/error-ops';
 // error handling
 const { wrapAs } = createErrorHandlers('withdrawals');
 
+// TODO: remove later
 const IL1NullifierMini = [
   'function isWithdrawalFinalized(uint256,uint256,uint256) view returns (bool)',
 ] as const;
@@ -46,13 +42,16 @@ export interface FinalizationServices {
    */
   isWithdrawalFinalized(key: WithdrawalKey): Promise<boolean>;
 
+  /**
+   * Simulate finalizeDeposit on L1 Nullifier to check readiness.
+   */
   simulateFinalizeReadiness(
     params: FinalizeDepositParams,
     nullifier: Address,
   ): Promise<FinalizeReadiness>;
 
   /**
-   * Send finalizeDeposit on L1 Nullifier.
+   * Call finalizeDeposit on L1 Nullifier.
    */
   finalizeDeposit(
     params: FinalizeDepositParams,
@@ -65,7 +64,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
 
   return {
     async fetchFinalizeDepositParams(l2TxHash: Hex) {
-      // Parsed L2 receipt → find L1MessageSent(...) → decode message bytes
+      // Fetch parsed L2 receipt (with L2->L1 logs)
       const parsed = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.receipt,
@@ -88,6 +87,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
       const ev = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.findMessage,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
         () => Promise.resolve(findL1MessageSentLog(parsed as any, { index: 0 })),
         {
           ctx: { l2TxHash, index: 0 },
@@ -105,7 +105,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         },
       );
 
-      // Fetch raw receipt again (unparsed) to derive messenger index
+      // Fetch raw receipt again
       const raw = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.rawReceipt,
@@ -135,6 +135,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         },
       );
 
+      // Fetch L2->L1 log proof
       const proof = await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.fetchParams.proof,
@@ -155,6 +156,8 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         },
       );
 
+      // TODO: fix me
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       const txIndex = Number((parsed as any).transactionIndex ?? 0);
 
       const params: FinalizeDepositParams = {
@@ -180,7 +183,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     },
 
     async simulateFinalizeReadiness(params, nullifier) {
-      const done = await (async () => {
+      const done: boolean = (await (async () => {
         try {
           const { l1Nullifier } = await wrapAs(
             'INTERNAL',
@@ -192,7 +195,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
             },
           );
           const c = new Contract(l1Nullifier, IL1NullifierMini, l1);
-          return await wrapAs(
+          return (await wrapAs(
             'RPC',
             OP_WITHDRAWALS.finalize.readiness.isFinalized,
             () =>
@@ -201,17 +204,17 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
               ctx: { where: 'isWithdrawalFinalized', params },
               message: 'Failed to read finalization status.',
             },
-          );
+          )) as unknown; // TODO: fix typing
         } catch {
           return false;
         }
-      })();
+      })()) as boolean;
       if (done) return { kind: 'FINALIZED' };
 
-      // simulate the finalizeDeposit call on L1
-      const c = new Contract(nullifier, IL1NullifierABI as any, l1);
+      // Try simulating finalizeDeposit
+      const c = new Contract(nullifier, IL1NullifierABI, l1);
       try {
-        await (c as any).finalizeDeposit.staticCall(params);
+        await c.finalizeDeposit.staticCall(params);
         return { kind: 'READY' };
       } catch (e) {
         return classifyReadinessFromRevert(e);
@@ -229,6 +232,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         },
       );
       const c = new Contract(l1Nullifier, IL1NullifierMini, l1);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await wrapAs(
         'RPC',
         OP_WITHDRAWALS.finalize.isFinalized,
@@ -241,16 +245,20 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     },
 
     async finalizeDeposit(params: FinalizeDepositParams, nullifier: Address) {
-      const c = new Contract(nullifier, IL1NullifierABI as any, signer);
+      const c = new Contract(nullifier, IL1NullifierABI, signer);
       try {
-        const sent = await c.finalizeDeposit(params);
-        const hash = sent.hash as string;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const receipt = await c.finalizeDeposit(params);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        const hash = receipt.hash;
 
         return {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           hash,
           wait: async () => {
             try {
-              return await sent.wait();
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+              return await receipt.wait();
             } catch (e) {
               // Map wait() failures to EXECUTION with useful context
               throw toZKsyncError(

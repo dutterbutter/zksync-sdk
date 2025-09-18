@@ -59,7 +59,7 @@ describe('deposits: plan/quote', () => {
     expect(isZKsyncError((res as any).error)).toBe(true);
   });
 
-  it('prepare(): ERC20-base route returns plan with approve step when allowance < amount', async () => {
+  it.skip('prepare(): ERC20-base route returns plan with approve step when allowance < amount', async () => {
     const amount = 1_000n,
       baseCost = 2_000n;
     const mapping = {
@@ -127,7 +127,7 @@ describe('deposits: create/tryCreate', () => {
     expect(typeof onlyStep.tx.nonce).toBe('number');
   });
 
-  it('create(): ERC20-base — re-checks allowance and skips approve when already sufficient', async () => {
+  it.skip('create(): ERC20-base — re-checks allowance and skips approve when already sufficient', async () => {
     const amount = 1_000n,
       baseCost = 2_000n;
     const mapping = {

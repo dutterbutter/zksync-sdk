@@ -7,7 +7,7 @@ import { pickDepositRoute } from '../../../../core/resources/deposits/route';
 import type { DepositParams, DepositRoute } from '../../../../core/types/flows/deposits';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 
-// Common context for building deposit (L1-L2) transactions
+// Common context for building deposit (L1-L2) transactions (ethers)
 export interface BuildCtx extends CommonCtx {
   client: EthersClient;
 
@@ -27,12 +27,13 @@ export async function commonCtx(p: DepositParams, client: EthersClient) {
   const sender = (await client.signer.getAddress()) as Address;
   const fee = await getFeeOverrides(client);
 
+  // TODO: gas default values should be refactored
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasPerPubdata = p.gasPerPubdata ?? 800n;
   const operatorTip = p.operatorTip ?? 0n;
   const refundRecipient = p.refundRecipient ?? sender;
 
-  const route = await pickDepositRoute(client, BigInt(chainId), p.token);
+  const route = pickDepositRoute(client, BigInt(chainId), p.token);
 
   return {
     client,

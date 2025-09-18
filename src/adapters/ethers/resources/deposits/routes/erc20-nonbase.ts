@@ -17,22 +17,17 @@ const { wrapAs } = createErrorHandlers('deposits');
 // ERC20 is non-base token
 export function routeErc20NonBase(): DepositRouteStrategy {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async preflight(p, ctx) {
-      // TODO: do I need this?
-      // validate token is not the base token for this L2
-      // const baseToken = await resolveBaseToken(ctx.client, ctx.bridgehub, ctx.chainIdL2);
-      // if (eqAddr(baseToken, p.token)) throw new Error('non-base route requires a non-base token');
+    async preflight() {
+      // TODO: should move validation stuff here
     },
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const assetRouter = ctx.l1AssetRouter;
-    
+
       const l1Signer = ctx.client.signer.connect(ctx.client.l1);
       const erc20 = new Contract(p.token, IERC20ABI, l1Signer);
-      // TODO: fix eslint
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const allowance: bigint = await wrapAs(
+      // check allowance
+      const allowance: bigint = (await wrapAs(
         'RPC',
         OP_DEPOSITS.nonbase.allowance,
         () => erc20.allowance(ctx.sender, assetRouter),
@@ -40,7 +35,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           ctx: { where: 'erc20.allowance', token: p.token, spender: assetRouter },
           message: 'Failed to read ERC-20 allowance.',
         },
-      );
+      )) as bigint;
       const needsApprove = allowance < p.amount;
 
       // TODO: clean up gas estimation
@@ -53,9 +48,8 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             : ctx.l2GasLimit
           : MIN_L2_GAS_FOR_ERC20;
 
-      // TODO: fix eslint
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const rawBaseCost: bigint = await wrapAs(
+      // base cost
+      const rawBaseCost: bigint = (await wrapAs(
         'RPC',
         OP_DEPOSITS.nonbase.baseCost,
         () =>
@@ -69,13 +63,14 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
           message: 'Could not fetch L2 base cost from Bridgehub.',
         },
-      );
+      )) as bigint;
       const baseCost = BigInt(rawBaseCost);
       const mintValue = baseCost + ctx.operatorTip;
 
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
 
+      // approvals
       if (needsApprove) {
         approvals.push({ token: p.token, spender: assetRouter, amount: p.amount });
         const data = erc20.interface.encodeFunctionData('approve', [assetRouter, p.amount]);
@@ -87,7 +82,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         });
       }
 
-      // TODO: update calldata encoding if non-base requires different
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,

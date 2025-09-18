@@ -14,9 +14,9 @@ This SDK extends existing Ethereum libraries. Pick the Quickstart that matches y
 
 Each Quickstart walks you through:
 
-1. **Install** the adapter package.  
-2. **Configure** a client or signer.  
-3. **Run** a deposit (L1 → L2) as a working example.  
-4. **Track** the status until it’s complete.  
+1. **Install** the adapter package.
+2. **Configure** a client or signer.
+3. **Run** a deposit (L1 → L2) as a working example.
+4. **Track** the status until it’s complete.
 
 👉 Once you’re set up, continue to the [How-to Guides](../guides/index.md) for more detailed usage.

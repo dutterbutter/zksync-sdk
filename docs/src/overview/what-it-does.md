@@ -29,7 +29,7 @@ The SDK currently supports ZKsync specific actions, primarily L1-L2, and L2-L1 t
     Resolve the canonical Bridgehub contract address.
   - **`getL2ToL1LogProof`** (`zks_getL2ToL1LogProof`)  
     Retrieves the log proof for an L2 to L1 transaction.
-  - **`getReceiptWithL2ToL1`** *(receipt extension)*  
+  - **`getReceiptWithL2ToL1`** _(receipt extension)_  
     Returns an Ethereum `TransactionReceipt` **augmented** with `l2ToL1Logs`.
 
 ## Non-Goals

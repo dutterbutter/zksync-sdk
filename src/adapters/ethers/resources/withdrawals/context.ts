@@ -7,6 +7,7 @@ import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route'
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 
+// Common context for building withdrawal (L2 -> L1) transactions
 export interface BuildCtx extends CommonCtx {
   client: EthersClient;
 
@@ -17,7 +18,7 @@ export interface BuildCtx extends CommonCtx {
   l2NativeTokenVault: Address;
   l2BaseTokenSystem: Address;
 
-  // L2 gas knobs for the withdraw tx
+  // L2 gas
   l2GasLimit: bigint;
   gasBufferPct: number;
 
