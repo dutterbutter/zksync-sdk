@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect } from 'bun:test';
 import { messengerLogIndex } from '../logs';
-import { L1_MESSENGER_ADDRESS } from '../../constants';
-import type { ReceiptWithL2ToL1 } from '../../rpc/types';
+import { L1_MESSENGER_ADDRESS } from '../../../constants';
+import type { ReceiptWithL2ToL1 } from '../../../rpc/types';
 
 const rcpt = (logs: Array<{ sender: string }>): ReceiptWithL2ToL1 =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

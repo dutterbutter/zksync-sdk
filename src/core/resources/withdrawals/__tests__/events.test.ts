@@ -8,8 +8,8 @@ import {
   L2_ASSET_ROUTER_ADDR,
   TOPIC_L1_MESSAGE_SENT_NEW,
   TOPIC_L1_MESSAGE_SENT_LEG,
-} from '../../constants';
-import { ParsedReceipt } from '../../types/flows/withdrawals';
+} from '../../../constants';
+import { ParsedReceipt } from '../../../types/flows/withdrawals';
 
 type LogLike = { address?: string; topics?: string[] };
 

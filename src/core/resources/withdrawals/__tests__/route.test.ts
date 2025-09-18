@@ -4,7 +4,7 @@ import {
   LEGACY_ETH_ADDRESS,
   ETH_ADDRESS_IN_CONTRACTS,
   L2_BASE_TOKEN_ADDRESS,
-} from '../../constants';
+} from '../../../constants';
 
 describe('withdrawals/pickWithdrawRoute', () => {
   it("returns 'eth' for ETH token aliases", () => {

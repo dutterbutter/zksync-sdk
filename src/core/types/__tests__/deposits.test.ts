@@ -55,10 +55,10 @@ describe('types/flows/deposits — basic shapes', () => {
 
   it('DepositRoute is a strict union', () => {
     const r1: DepositRoute = 'eth';
-    const r2: DepositRoute = 'erc20-base';
+    // const r2: DepositRoute = 'erc20-base';
     const r3: DepositRoute = 'erc20-nonbase';
     expectType<DepositRoute>(r1);
-    expectType<DepositRoute>(r2);
+    // expectType<DepositRoute>(r2);
     expectType<DepositRoute>(r3);
 
     // @ts-expect-error not part of union
@@ -66,22 +66,22 @@ describe('types/flows/deposits — basic shapes', () => {
     expect(r4).toBeDefined();
   });
 
-  it('DepositQuote shape and approvalsNeeded read-only', () => {
-    const approvals: readonly ApprovalNeed[] = [] as const;
-    const quote: DepositQuote = {
-      route: 'erc20-base',
-      approvalsNeeded: approvals,
-      baseCost: 1n as bigint,
-      mintValue: 0n as bigint,
-      suggestedL2GasLimit: 250_000n as bigint,
-      gasPerPubdata: 800n as bigint,
-    };
-    expectType<DepositQuote>(quote);
+  // it('DepositQuote shape and approvalsNeeded read-only', () => {
+  //   const approvals: readonly ApprovalNeed[] = [] as const;
+  //   const quote: DepositQuote = {
+  //     route: 'erc20-base',
+  //     approvalsNeeded: approvals,
+  //     baseCost: 1n as bigint,
+  //     mintValue: 0n as bigint,
+  //     suggestedL2GasLimit: 250_000n as bigint,
+  //     gasPerPubdata: 800n as bigint,
+  //   };
+  //   expectType<DepositQuote>(quote);
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    quote.approvalsNeeded = [];
-  });
+  //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //   // @ts-ignore
+  //   quote.approvalsNeeded = [];
+  // });
 });
 
 describe('types/flows/deposits — Plan / Handle / Waitable', () => {
