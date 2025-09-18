@@ -5,17 +5,12 @@ import { createEthersSdk } from '../../src/adapters/ethers/sdk';
 import { Address } from '../../src/core/types/primitives';
 import { ETH_ADDRESS_IN_CONTRACTS } from '../../src/core/constants';
 
-// const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
-// const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-// const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
-
-const L1_RPC =
-  'https://rpc.ankr.com/eth_sepolia/070715f5f3878124fc8e3b05fa7e5f8ec165ffc887f2ffd3a51c9e906681492c'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/'; // your L2 RPC
-const PRIVATE_KEY = '0x3a86a76b2aee7d0742f2da930b3289cfcff31f57ffc923c672715ead32dc01a0';
+const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
-  if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
+  if (!PRIVATE_KEY) {
     throw new Error('Set your PRIVATE_KEY in the .env file');
   }
   const l1 = new JsonRpcProvider(L1_RPC);

@@ -34,9 +34,9 @@ export function routeEth(): WithdrawRouteStrategy {
             abi: L2BaseTokenABI,
             functionName: 'withdraw',
             args: [toL1] as const,
-            value: p.amount,                 // payable: amount to withdraw
-            account: ctx.client.account,     // signer/account
-            ...feeOverrides,                 // 1559 overrides if provided
+            value: p.amount, // payable: amount to withdraw
+            account: ctx.client.account, // signer/account
+            ...feeOverrides, // 1559 overrides if provided
           }),
         {
           ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR },

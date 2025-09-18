@@ -21,7 +21,11 @@ import type {
 import { commonCtx } from './context';
 import { toZKsyncError, createErrorHandlers } from '../../errors/error-ops';
 import { createError } from '../../../../core/errors/factory';
-import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS, ViemPlanWriteRequest } from './routes/types';
+import type {
+  WithdrawRouteStrategy,
+  TransactionReceiptZKsyncOS,
+  ViemPlanWriteRequest,
+} from './routes/types';
 import { routeEth } from './routes/eth';
 import { routeErc20 } from './routes/erc20';
 import { createFinalizationServices, type FinalizationServices } from './services/finalization';
@@ -45,12 +49,16 @@ export interface WithdrawalsResource {
   prepare(p: WithdrawParams): Promise<WithdrawPlan<ViemPlanWriteRequest>>;
   tryPrepare(
     p: WithdrawParams,
-  ): Promise<{ ok: true; value: WithdrawPlan<ViemPlanWriteRequest> } | { ok: false; error: unknown }>;
+  ): Promise<
+    { ok: true; value: WithdrawPlan<ViemPlanWriteRequest> } | { ok: false; error: unknown }
+  >;
 
   create(p: WithdrawParams): Promise<WithdrawHandle<ViemPlanWriteRequest>>;
   tryCreate(
     p: WithdrawParams,
-  ): Promise<{ ok: true; value: WithdrawHandle<ViemPlanWriteRequest> } | { ok: false; error: unknown }>;
+  ): Promise<
+    { ok: true; value: WithdrawHandle<ViemPlanWriteRequest> } | { ok: false; error: unknown }
+  >;
 
   status(h: WithdrawalWaitable | Hex): Promise<WithdrawalStatus>;
 
@@ -91,11 +99,10 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
 
   // ---- Quote / Prepare ----
   const quote = (p: WithdrawParams): Promise<WithdrawQuote> =>
-    wrap(
-      OP_WITHDRAWALS.quote,
-      async () => (await buildPlan(p)).summary,
-      { message: 'Internal error while preparing a withdrawal quote.', ctx: { token: p.token, where: 'withdrawals.quote' } },
-    );
+    wrap(OP_WITHDRAWALS.quote, async () => (await buildPlan(p)).summary, {
+      message: 'Internal error while preparing a withdrawal quote.',
+      ctx: { token: p.token, where: 'withdrawals.quote' },
+    });
 
   const tryQuote = (p: WithdrawParams) =>
     toResult(OP_WITHDRAWALS.tryQuote, () => quote(p), {
@@ -123,11 +130,9 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
         const plan = await prepare(p);
         const stepHashes: Record<string, Hex> = {};
 
-        const from = client.account.address;
-        let next = await client.l2.getTransactionCount({ address: from, blockTag: 'pending' });
+        const l2Wallet = client.getL2Wallet();
 
         for (const step of plan.steps) {
-          // Ensure gas present (simulate often sets it; if not, estimate + pad)
           if (step.tx.gas == null) {
             try {
               const feePart =
@@ -143,7 +148,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
                 abi: step.tx.abi as Abi,
                 functionName: step.tx.functionName,
                 args: step.tx.args ?? [],
-                account: step.tx.account ?? client.account,
+                account: step.tx.account ?? l2Wallet.account ?? client.account,
                 ...(step.tx.value != null ? { value: step.tx.value } : {}),
                 ...feePart,
               };
@@ -153,8 +158,6 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
               /* ignore */
             }
           }
-
-          const nonce = next++;
 
           // Prefer 1559 only; never include gasPrice
           const fee1559 =
@@ -171,9 +174,8 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
             abi: step.tx.abi as Abi,
             functionName: step.tx.functionName,
             args: step.tx.args ?? [],
-            account: step.tx.account ?? client.account,
+            account: step.tx.account ?? l2Wallet.account ?? client.account,
             gas: step.tx.gas,
-            nonce,
             ...fee1559,
             ...(step.tx.dataSuffix ? { dataSuffix: step.tx.dataSuffix } : {}),
             ...(step.tx.chain ? { chain: step.tx.chain } : {}),
@@ -181,14 +183,24 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
 
           // Add `value` only if present (payable)
           const execReq: WriteContractParameters =
-            step.tx.value != null ? ({ ...baseReq, value: step.tx.value } as WriteContractParameters) : (baseReq as WriteContractParameters);
+            step.tx.value != null
+              ? ({ ...baseReq, value: step.tx.value } as WriteContractParameters)
+              : (baseReq as WriteContractParameters);
 
           // Send via the wallet (must be connected to L2 or `chain` asserted)
           let hash: Hex | undefined;
           try {
-            // TODO: investigate l1wallet usage here? 
+            // TODO: investigate l1wallet usage here?
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            hash = await client.l1Wallet.writeContract(execReq);
+            if (!client.l2Wallet) {
+              throw createError('EXECUTION', {
+                resource: 'withdrawals',
+                operation: 'withdrawals.create.getL2Wallet',
+                message: 'No L2 wallet available to send withdrawal transaction step.',
+                context: { step: step.key, l2Wallet: l2Wallet },
+              });
+            }
+            hash = await l2Wallet.writeContract(execReq);
             stepHashes[step.key] = hash;
 
             const rcpt = await client.l2.waitForTransactionReceipt({ hash });
@@ -207,7 +219,7 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
                 resource: 'withdrawals',
                 operation: 'withdrawals.create.writeContract',
                 message: 'Failed to send or confirm a withdrawal transaction step.',
-                context: { step: step.key, txHash: hash, nonce },
+                context: { step: step.key, txHash: hash, l2Wallet: l2Wallet },
               },
               e,
             );
@@ -329,7 +341,10 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
           // Attach L2→L1 logs (best-effort)
           try {
             const raw = (await client.zks.getReceiptWithL2ToL1(l2Hash)) as ReceiptWithL2ToL1;
-            const zkRcpt: TransactionReceiptZKsyncOS = { ...rcpt, l2ToL1Logs: raw?.l2ToL1Logs ?? [] };
+            const zkRcpt: TransactionReceiptZKsyncOS = {
+              ...rcpt,
+              l2ToL1Logs: raw?.l2ToL1Logs ?? [],
+            };
             return zkRcpt;
           } catch {
             const zkRcpt: TransactionReceiptZKsyncOS = { ...rcpt, l2ToL1Logs: [] };
@@ -370,12 +385,18 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
       },
       {
         message: 'Internal error while waiting for withdrawal.',
-        ctx: { where: 'withdrawals.wait', l2TxHash: typeof h === 'string' ? h : h.l2TxHash, for: opts.for },
+        ctx: {
+          where: 'withdrawals.wait',
+          l2TxHash: typeof h === 'string' ? h : h.l2TxHash,
+          for: opts.for,
+        },
       },
     );
 
   // ---- Finalize (L1) ----
-  const finalize = (l2TxHash: Hex): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }> =>
+  const finalize = (
+    l2TxHash: Hex,
+  ): Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }> =>
     wrap(
       OP_WITHDRAWALS.finalize.send,
       async () => {
@@ -463,5 +484,16 @@ export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
       ctx: { l2TxHash, where: 'withdrawals.tryFinalize' },
     });
 
-  return { quote, tryQuote, prepare, tryPrepare, create, tryCreate, status, wait, finalize, tryFinalize };
+  return {
+    quote,
+    tryQuote,
+    prepare,
+    tryPrepare,
+    create,
+    tryCreate,
+    status,
+    wait,
+    finalize,
+    tryFinalize,
+  };
 }

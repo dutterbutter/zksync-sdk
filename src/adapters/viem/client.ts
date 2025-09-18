@@ -10,7 +10,7 @@ import type {
   Transport,
   GetContractReturnType,
 } from 'viem';
-import { getContract } from 'viem';
+import { getContract, createWalletClient } from 'viem';
 import type { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromViem } from './rpc';
 
@@ -45,10 +45,12 @@ export interface ViemClient {
   readonly l1: PublicClient;
   readonly l2: PublicClient;
   readonly l1Wallet: WalletClient<Transport, Chain, Account>;
+  readonly l2Wallet?: WalletClient<Transport, Chain, Account>;
   readonly account: Account;
   readonly zks: ZksRpc;
 
   ensureAddresses(): Promise<ResolvedAddresses>;
+  getL2Wallet(): WalletClient<Transport, Chain, Account>;
   contracts(): Promise<{
     bridgehub: GetContractReturnType<typeof IBridgehubABI, PublicClient>;
     l1AssetRouter: GetContractReturnType<typeof IL1AssetRouterABI, PublicClient>;
@@ -66,14 +68,16 @@ type InitArgs = {
   l1: PublicClient;
   l2: PublicClient;
   l1Wallet: WalletClient<Transport, Chain, Account>;
+  l2Wallet?: WalletClient<Transport, Chain, Account>;
   overrides?: Partial<ResolvedAddresses>;
 };
 // TODO: for withdrawals we should have l2wallet
 export function createViemClient(args: InitArgs): ViemClient {
-  const { l1, l2, l1Wallet } = args;
+  const { l1, l2, l1Wallet, l2Wallet } = args;
   if (!l1Wallet.account) {
     throw new Error('WalletClient must have an account configured.');
   }
+  if (l2Wallet && !l2Wallet.account) throw new Error('l2Wallet provided without an account.');
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const zks = zksRpcFromViem(l2);
@@ -185,17 +189,31 @@ export function createViemClient(args: InitArgs): ViemClient {
     return token;
   }
 
+  let lazyL2: WalletClient<Transport, Chain, Account> | undefined;
+  function getL2Wallet(): WalletClient<Transport, Chain, Account> {
+    if (l2Wallet) return l2Wallet;
+    if (!lazyL2) {
+      lazyL2 = createWalletClient({
+        account: l1Wallet.account,
+        transport: l2.transport as unknown as Transport,
+      });
+    }
+    return lazyL2;
+  }
+
   return {
     kind: 'viem',
     l1,
     l2,
     l1Wallet,
+    l2Wallet,
     account: l1Wallet.account,
     zks,
     ensureAddresses,
     contracts,
     refresh,
     baseToken,
+    getL2Wallet,
   };
 }
 

@@ -7,8 +7,9 @@ import type { BuildCtx as WithdrawBuildCtx } from '../context';
 import type { Address, Hex } from '../../../../../core/types';
 
 // viem writeContract() parameter type (same approach as deposits)
-export type ViemPlanWriteRequest =
-  Parameters<WalletClient<Transport, Chain, Account>['writeContract']>[0];
+export type ViemPlanWriteRequest = Parameters<
+  WalletClient<Transport, Chain, Account>['writeContract']
+>[0];
 
 export type WithdrawQuoteExtras = Record<string, never>;
 

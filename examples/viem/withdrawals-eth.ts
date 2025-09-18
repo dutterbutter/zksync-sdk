@@ -1,5 +1,13 @@
 // examples/viem/withdraw-eth.ts
-import { createPublicClient, createWalletClient, http, parseEther, type Account, type Chain, type Transport } from 'viem';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  type Account,
+  type Chain,
+  type Transport,
+} from 'viem';
 import { privateKeyToAccount, nonceManager } from 'viem/accounts';
 
 import { createViemClient } from '../../src/adapters/viem/client';
@@ -7,13 +15,12 @@ import { createViemSdk } from '../../src/adapters/viem/sdk';
 import type { Address } from '../../src/core/types/primitives';
 import { ETH_ADDRESS } from '../../src/core/constants';
 
-const L1_RPC =
-  'https://rpc.ankr.com/eth_sepolia/070715f5f3878124fc8e3b05fa7e5f8ec165ffc887f2ffd3a51c9e906681492c'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/'; // your L2 RPC
-const PRIVATE_KEY = '0x3a86a76b2aee7d0742f2da930b3289cfcff31f57ffc923c672715ead32dc01a0';
+const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
-  if (!PRIVATE_KEY || !PRIVATE_KEY.startsWith('0x') || PRIVATE_KEY.length !== 66) {
+  if (!PRIVATE_KEY) {
     throw new Error('Set your PRIVATE_KEY (0x-prefixed 32-byte) in env');
   }
 
@@ -23,12 +30,18 @@ async function main() {
   const l1 = createPublicClient({ transport: http(L1_RPC) });
   const l2 = createPublicClient({ transport: http(L2_RPC) });
 
-  const l1Wallet = createWalletClient<Transport, Chain, Account>({ account, transport: http(L1_RPC) });
-  //const l2Wallet = createWalletClient<Transport, Chain, Account>({ account, transport: http(L2_RPC) });
+  const l1Wallet = createWalletClient<Transport, Chain, Account>({
+    account,
+    transport: http(L1_RPC),
+  });
+  const l2Wallet = createWalletClient<Transport, Chain, Account>({
+    account,
+    transport: http(L2_RPC),
+  });
 
   // --- SDK client: pass explicit clients + wallets ---
   // (ensure your createViemClient supports { l1, l2, l1Wallet, l2Wallet })
-  const client = createViemClient({ l1, l2, l1Wallet });
+  const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
   const sdk = createViemSdk(client);
 
   const me = account.address as Address;

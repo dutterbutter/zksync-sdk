@@ -34,13 +34,11 @@ async function main() {
   const sdk = createEthersSdk(client);
   // // sepolia
   const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
-  // local
-  //const TOKEN = '0xbCF26943C0197d2eE0E5D05c716Be60cc2761508' as Address;
 
   const me = (await signer.getAddress()) as Address;
   const decimals = await erc20(l1, TOKEN).decimals();
   const amount = parseUnits('100000', decimals);
-  //await mintErc20({ signer, token: TOKEN, to: me, amount });
+  await mintErc20({ signer, token: TOKEN, to: me, amount });
 
   const depositAmount = parseUnits('250', decimals);
 

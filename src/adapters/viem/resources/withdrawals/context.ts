@@ -30,7 +30,7 @@ export interface BuildCtx extends CommonCtx {
   sender: Address;
 
   // L2 gas knobs for the withdraw tx
-  l2GasLimit: bigint;   // default 300_000n
+  l2GasLimit: bigint; // default 300_000n
   gasBufferPct: number; // default 15 (%)
 
   // Optional fee overrides for L2 send (viem 1559 fields)
