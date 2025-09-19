@@ -1,6 +1,6 @@
 {
   "name": "@dutterbutter/zksync-sdk",
-  "version": "0.0.3-alpha",
+  "version": "0.0.4-alpha",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "devDependencies": {
