@@ -1,10 +1,9 @@
 ---
 name: Feature request
 about: Use this template for requesting features
-title: ""
+title: ''
 labels: feat
 assignees: ''
-
 ---
 
 ### 🌟 Feature Request

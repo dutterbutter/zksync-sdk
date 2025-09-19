@@ -1,10 +1,9 @@
 ---
 name: Bug report
 about: Use this template for reporting issues
-title: ""
+title: ''
 labels: bug
 assignees: ''
-
 ---
 
 ### 🐛 Bug Report for zksync-sdk
@@ -29,7 +28,7 @@ Describe what actually happened.
 
 #### 🖥️ Environment
 
-- **Version**: 
+- **Version**:
 - **Operating System & Version**: [e.g., Ubuntu 20.04]
 - **Other relevant environment details**:
 
