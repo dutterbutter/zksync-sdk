@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.3-alpha...v0.0.4-alpha) (2025-09-19)
+
+
+### Bug Fixes
+
+* remove json in favour of ts ([#23](https://github.com/dutterbutter/zksync-sdk/issues/23)) ([dca83b6](https://github.com/dutterbutter/zksync-sdk/commit/dca83b6e34c7dbf0d866e27dc9c7fa4f58bc5656))
+
 ## [0.0.3-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.2-alpha...v0.0.3-alpha) (2025-09-19)
 
 
