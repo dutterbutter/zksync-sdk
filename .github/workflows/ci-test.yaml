@@ -99,13 +99,33 @@ jobs:
               nohup cargo run --release > l2.log 2>&1 &
             fi
 
-      - name: Wait for zksync OS to start
-        run: |
-          while ! nc -z localhost 3050; do
-            echo "Waiting for zksync OS to start..."
-            sleep 3
-          done
-          echo "Sequencer is up and running."
+            # Wait up to 10 minutes for RPC (port 3050) to respond
+            for i in {1..600}; do
+              if curl -sS -X POST http://127.0.0.1:3050 \
+                  -H 'content-type: application/json' \
+                  --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+                  | grep -q '"result"'; then
+                echo "L2 JSON-RPC is up"
+                break
+              fi
+              # show progress logs every 30s
+              if [ $((i % 30)) -eq 0 ]; then
+                echo "--- l2.log (last 50 lines) ---"
+                tail -n 50 l2.log || true
+              fi
+              sleep 1
+            done
+
+            # Final check: fail fast if still not up
+            if ! curl -sS -X POST http://127.0.0.1:3050 \
+                -H 'content-type: application/json' \
+                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+                | grep -q '"result"'; then
+              echo "L2 JSON-RPC failed to start."
+              echo "--- l2.log (last 200 lines) ---"
+              tail -n 200 l2.log || true
+              exit 1
+            fi
 
       - name: Run ethers e2e tests
         run: bun run test:e2e:ethers
