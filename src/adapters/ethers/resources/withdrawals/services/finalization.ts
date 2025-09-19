@@ -12,7 +12,7 @@ import {
 
 import { IL1NullifierABI } from '../../../../../core/internal/abi-registry.ts';
 
-import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
+import { L2_ASSET_ROUTER_ADDRESS, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
 import { findL1MessageSentLog } from '../../../../../core/resources/withdrawals/events';
 import { messengerLogIndex } from '../../../../../core/resources/withdrawals/logs';
 import { createErrorHandlers } from '../../../errors/error-ops';
@@ -164,7 +164,7 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         chainId: BigInt(chainId),
         l2BatchNumber: proof.batchNumber,
         l2MessageIndex: proof.id,
-        l2Sender: L2_ASSET_ROUTER_ADDR,
+        l2Sender: L2_ASSET_ROUTER_ADDRESS,
         l2TxNumberInBatch: txIndex,
         message,
         merkleProof: proof.proof,

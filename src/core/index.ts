@@ -1,5 +1,12 @@
 // src/core/index.ts
-export * as constants from './constants';
+export {
+  ETH_ADDRESS,
+  FORMAL_ETH_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
+  L1_MESSENGER_ADDRESS,
+  L2_ASSET_ROUTER_ADDRESS,
+  L2_NATIVE_TOKEN_VAULT_ADDRESS,
+} from './constants';
 
 export * as errors from './errors/factory';
 export { formatEnvelopePretty } from './errors/formatter';

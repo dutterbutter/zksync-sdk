@@ -18,7 +18,7 @@ The only difference in your code is the initial setup. **All subsequent SDK call
 ```ts
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createViemClient, createViemSdk } from '@zksync-sdk/viem';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
 
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
@@ -34,7 +34,7 @@ const sdk = createViemSdk(client);
 
 ```ts
 import { JsonRpcProvider, Wallet } from 'ethers';
-import { createEthersClient, createEthersSdk } from '@zksync-sdk/ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
 
 const l1 = new JsonRpcProvider(process.env.L1_RPC!);
 const l2 = new JsonRpcProvider(process.env.L2_RPC!);

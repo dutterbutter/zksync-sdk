@@ -1,7 +1,7 @@
 // src/core/withdrawals/events.ts
 import {
   L1_MESSENGER_ADDRESS,
-  L2_ASSET_ROUTER_ADDR,
+  L2_ASSET_ROUTER_ADDRESS,
   TOPIC_L1_MESSAGE_SENT_NEW,
   TOPIC_L1_MESSAGE_SENT_LEG,
 } from '../../constants';
@@ -23,7 +23,7 @@ export function findL1MessageSentLog(
     typeof opts?.prefer === 'object'
       ? opts?.prefer.address
       : opts?.prefer === 'assetRouter'
-        ? L2_ASSET_ROUTER_ADDR
+        ? L2_ASSET_ROUTER_ADDRESS
         : L1_MESSENGER_ADDRESS;
 
   const prefer = (preferAddr ?? L1_MESSENGER_ADDRESS).toLowerCase();

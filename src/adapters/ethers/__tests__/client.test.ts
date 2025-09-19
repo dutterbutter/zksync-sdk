@@ -7,8 +7,8 @@ import {
   IL1NullifierABI,
 } from '../../../core/internal/abi-registry';
 import {
-  L2_ASSET_ROUTER_ADDR,
-  L2_NATIVE_TOKEN_VAULT_ADDR,
+  L2_ASSET_ROUTER_ADDRESS,
+  L2_NATIVE_TOKEN_VAULT_ADDRESS,
   L2_BASE_TOKEN_ADDRESS,
 } from '../../../core/constants';
 
@@ -128,9 +128,9 @@ describe('adapters/ethers/createEthersClient', () => {
     expect(resolved.l1Nullifier.toLowerCase()).toBe(ADDR.l1Nullifier.toLowerCase());
     expect(resolved.l1NativeTokenVault.toLowerCase()).toBe(ADDR.l1NativeTokenVault.toLowerCase());
     // L2 constants are passed through
-    expect(resolved.l2AssetRouter.toLowerCase()).toBe(L2_ASSET_ROUTER_ADDR.toLowerCase());
+    expect(resolved.l2AssetRouter.toLowerCase()).toBe(L2_ASSET_ROUTER_ADDRESS.toLowerCase());
     expect(resolved.l2NativeTokenVault.toLowerCase()).toBe(
-      L2_NATIVE_TOKEN_VAULT_ADDR.toLowerCase(),
+      L2_NATIVE_TOKEN_VAULT_ADDRESS.toLowerCase(),
     );
     expect(resolved.l2BaseTokenSystem.toLowerCase()).toBe(L2_BASE_TOKEN_ADDRESS.toLowerCase());
 

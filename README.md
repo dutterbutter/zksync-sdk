@@ -37,7 +37,7 @@ Install the adapter you need:
 <summary><strong>viem adapter</strong></summary>
 
 ```bash
-npm install @zksync-sdk viem
+npm install @dutterbutter/zksync-sdk viem
 ```
 
 </details>
@@ -46,7 +46,7 @@ npm install @zksync-sdk viem
 <summary><strong>ethers adapter</strong></summary>
 
 ```bash
-npm install @zksync-sdk ethers
+npm install @dutterbutter/zksync-sdk ethers
 ```
 
 </details>
@@ -57,8 +57,8 @@ npm install @zksync-sdk ethers
 
 ```ts
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
-import { createEthersClient } from '@zksync-sdk/ethers';
-import { ETH_ADDRESS } from '@zksync-sdk/core';
+import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const l1Provider = new JsonRpcProvider('https://sepolia.infura.io/v3/...');
 const l2Provider = new JsonRpcProvider('https://zksync-testnet.rpc');
@@ -80,8 +80,8 @@ console.log('Deposit complete ✅');
 
 ```ts
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
-import { createViemSdk } from '@zksync-sdk/viem';
-import { ETH_ADDRESS } from '@zksync-sdk/core';
+import { createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const l1 = createPublicClient({ transport: http('https://sepolia.infura.io/v3/...') });
 const l2 = createPublicClient({ transport: http('https://zksync-testnet.rpc') });
