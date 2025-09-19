@@ -13,10 +13,10 @@ Each guide shows the minimal steps to accomplish a task using the SDK, with real
 
 ### Deposits
 
-- [Deposits with viem](./deposits/viem.md)  
+- [Deposits with viem](./deposits/viem.md)
 - [Deposits with ethers](./deposits/ethers.md)
 
 ### Withdrawals
 
-- [Withdrawals with viem](./withdrawals/viem.md)  
+- [Withdrawals with viem](./withdrawals/viem.md)
 - [Withdrawals with ethers](./withdrawals/ethers.md)

@@ -16,7 +16,7 @@ Install packages:
 ```bash
 bun install @zksync-sdk/viem viem dotenv
 # or: npm i @zksync-sdk/viem viem dotenv
-````
+```
 
 Create an `.env` in your project root (never commit this):
 
@@ -97,7 +97,7 @@ async function main() {
 
   console.log('Wallet balance on L1 after:', L1balanceAfter);
   console.log('Wallet balance on L2 after:', L2balanceAfter);
-  
+
   /*
     // OPTIONAL: ADVANCED CONTROL
     // The SDK also lets you inspect a transaction before sending it.
@@ -138,7 +138,7 @@ You’ll see logs for the L1 transaction, then L2 execution, and a final status 
 
 ## 5. Troubleshooting
 
-* **Insufficient funds on L1:** Ensure enough ETH for the deposit **and** L1 gas.
-* **Invalid `PRIVATE_KEY`:** Must be `0x` + 64 hex chars.
-* **Stuck at `wait(..., { for: 'l2' })`:** Verify `L2_RPC_URL` and network health; check `sdk.deposits.status(handle)` to see the current phase.
-* **ERC-20 deposits:** May require an L1 `approve()`; `quote()` will surface required steps.
+- **Insufficient funds on L1:** Ensure enough ETH for the deposit **and** L1 gas.
+- **Invalid `PRIVATE_KEY`:** Must be `0x` + 64 hex chars.
+- **Stuck at `wait(..., { for: 'l2' })`:** Verify `L2_RPC_URL` and network health; check `sdk.deposits.status(handle)` to see the current phase.
+- **ERC-20 deposits:** May require an L1 `approve()`; `quote()` will surface required steps.

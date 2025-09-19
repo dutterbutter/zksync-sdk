@@ -4,7 +4,7 @@ A fast path to withdraw **ETH / ERC-20** from ZKsync (L2) → Ethereum (L1) usin
 
 Withdrawals are a **two-step process**:
 
-1. **Initiate** on L2.  
+1. **Initiate** on L2.
 2. **Finalize** on L1 to release funds.
 
 ## Prerequisites
@@ -18,23 +18,23 @@ Withdrawals are a **two-step process**:
 
 ## Parameters (quick reference)
 
-| Param | Required | Meaning |
-|---|---|---|
-| `token` | Yes | `ETH_ADDRESS` or ERC-20 address |
-| `amount` | Yes | BigInt/wei (e.g. `parseEther('0.01')`) |
-| `to` | Yes | L1 recipient address |
-| `refundRecipient` | No | L2 address to receive fee refunds (if applicable) |
+| Param             | Required | Meaning                                           |
+| ----------------- | -------- | ------------------------------------------------- |
+| `token`           | Yes      | `ETH_ADDRESS` or ERC-20 address                   |
+| `amount`          | Yes      | BigInt/wei (e.g. `parseEther('0.01')`)            |
+| `to`              | Yes      | L1 recipient address                              |
+| `refundRecipient` | No       | L2 address to receive fee refunds (if applicable) |
 
 ## Fast path (one-shot)
 
 ```ts
 {{#include ../../../../examples/viem/withdrawals-eth.ts}}
-````
+```
 
-* `create()` prepares **and** sends the L2 withdrawal.
-* `wait(..., { for: 'l2' })` ⇒ included on L2.
-* `wait(..., { for: 'ready' })` ⇒ ready for finalization.
-* `finalize(l2TxHash)` ⇒ required to release funds on L1.
+- `create()` prepares **and** sends the L2 withdrawal.
+- `wait(..., { for: 'l2' })` ⇒ included on L2.
+- `wait(..., { for: 'ready' })` ⇒ ready for finalization.
+- `finalize(l2TxHash)` ⇒ required to release funds on L1.
 
 ## Inspect & customize (quote → prepare → create)
 
@@ -105,8 +105,8 @@ try {
 Every method has a `try*` variant (e.g. `tryQuote`, `tryPrepare`, `tryCreate`, `tryFinalize`).
 These never throw—so you don’t need `try/catch`. Instead they return:
 
-* `{ ok: true, value: ... }` on success
-* `{ ok: false, error: ... }` on failure
+- `{ ok: true, value: ... }` on success
+- `{ ok: false, error: ... }` on failure
 
 This is useful for **UI flows** or **services** where you want explicit control over errors.
 
@@ -128,11 +128,11 @@ if (!r.ok) {
 
 ## Troubleshooting
 
-* **Never reaches READY\_TO\_FINALIZE:** proofs may not be available yet; poll `status()` or `wait(..., { for: 'ready' })`.
-* **Finalize fails:** ensure you have L1 gas and check revert info in the error envelope.
+- **Never reaches READY_TO_FINALIZE:** proofs may not be available yet; poll `status()` or `wait(..., { for: 'ready' })`.
+- **Finalize fails:** ensure you have L1 gas and check revert info in the error envelope.
 
 ## See also
 
-* [Status vs Wait](../../concepts/status-vs-wait.md)
-* [Finalization](../../concepts/finalization.md)
-* [ZKsync RPC Helpers](../../zks/methods.md)
+- [Status vs Wait](../../concepts/status-vs-wait.md)
+- [Finalization](../../concepts/finalization.md)
+- [ZKsync RPC Helpers](../../zks/methods.md)

@@ -37,7 +37,7 @@ async function main() {
     account,
     transport: http(L1_RPC),
   });
-  // Need to provide an L2 wallet client for sending L2 tx 
+  // Need to provide an L2 wallet client for sending L2 tx
   const l2Wallet = createWalletClient<Transport, Chain, Account>({
     account,
     transport: http(L2_RPC),
