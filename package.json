@@ -1,5 +1,5 @@
 {
-  "name": "@zksync-sdk",
+  "name": "@dutterbutter/zksync-sdk",
   "version": "0.0.1-alpha.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -96,6 +96,16 @@
       "import": "./dist/adapters/viem/sdk.js",
       "require": "./dist/adapters/viem/sdk.cjs"
     },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.cjs"
+    },
+    "./core/*": {
+      "types": "./dist/core/*.d.ts",
+      "import": "./dist/core/*.js",
+      "require": "./dist/core/*.cjs"
+    },
     "./package.json": "./package.json"
   },
   "description": "SDK for ZKsync OS.",
@@ -110,7 +120,8 @@
     "clean": "rimraf dist",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:js": "tsup --config tsup.config.ts",
-    "build": "bun run clean && bun run build:types && bun run build:js",
+    "build:abis": "ncp src/internal/abis dist/internal/abis",
+    "build": "bun run clean && bun run build:types && bun run build:js && bun run build:abis",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "types": "typechain --target ethers-v6 --out-dir src/adapters/ethers/typechain src/internal/abis/json/*.json && ncp src/adapters/ethers/typechain typechain",
     "prepublishOnly": "bun run clean && bun run build",
@@ -147,6 +158,12 @@
       ],
       "viem/*": [
         "dist/adapters/viem/*"
+      ],
+      "core/*": [
+        "dist/core/*"
+      ],
+      "core": [
+        "dist/core/index.d.ts"
       ],
       "*": [
         "dist/*"
