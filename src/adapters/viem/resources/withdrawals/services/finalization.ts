@@ -8,7 +8,7 @@ import {
   type WithdrawalKey,
 } from '../../../../../core/types/flows/withdrawals';
 
-import IL1NullifierABI from '../../../../../core/internal/abis/IL1Nullifier.json' assert { type: 'json' };
+import { IL1NullifierABI } from '../../../../../core/internal/abi-registry.ts';
 import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
 import { findL1MessageSentLog } from '../../../../../core/resources/withdrawals/events';
 import { messengerLogIndex } from '../../../../../core/resources/withdrawals/logs';
@@ -18,7 +18,7 @@ import { OP_WITHDRAWALS } from '../../../../../core/types';
 import { createError } from '../../../../../core/errors/factory';
 import { toZKsyncError } from '../../../errors/error-ops';
 
-import type { TransactionReceipt } from 'viem';
+import type { Abi, TransactionReceipt } from 'viem';
 import { decodeAbiParameters } from 'viem';
 
 // error handling
@@ -230,7 +230,7 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
       try {
         await client.l1.simulateContract({
           address: nullifier,
-          abi: IL1NullifierABI,
+          abi: IL1NullifierABI as Abi,
           functionName: 'finalizeDeposit',
           args: [params],
           account: client.account,
@@ -273,7 +273,7 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
       try {
         const hash = await client.l1Wallet.writeContract({
           address: nullifier,
-          abi: IL1NullifierABI,
+          abi: IL1NullifierABI as Abi,
           functionName: 'finalizeDeposit',
           args: [params],
           account: client.account,

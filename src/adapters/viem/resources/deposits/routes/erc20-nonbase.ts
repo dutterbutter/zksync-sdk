@@ -2,10 +2,10 @@
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
 import { encodeSecondBridgeErc20Args } from '../../utils';
-import IERC20ABI from '../../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
-import IBridgehubABI from '../../../../../core/internal/abis/IBridgehub.json' assert { type: 'json' };
+import { IERC20ABI, IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
+import type { Abi } from 'viem';
 
 const { wrapAs } = createErrorHandlers('deposits');
 
@@ -24,7 +24,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         () =>
           ctx.client.l1.readContract({
             address: p.token,
-            abi: IERC20ABI,
+            abi: IERC20ABI as Abi,
             functionName: 'allowance',
             args: [ctx.sender, assetRouter],
           }),
@@ -53,7 +53,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         () =>
           ctx.client.l1.readContract({
             address: ctx.bridgehub,
-            abi: IBridgehubABI,
+            abi: IBridgehubABI as Abi,
             functionName: 'l2TransactionBaseCost',
             args: [ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, l2GasLimitUsed, ctx.gasPerPubdata],
           }),

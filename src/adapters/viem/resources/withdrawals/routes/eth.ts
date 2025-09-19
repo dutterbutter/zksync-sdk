@@ -3,8 +3,8 @@
 import type { WithdrawRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
 
-import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../../../../core/constants';
-import L2BaseTokenABI from '../../../../../core/internal/abis/IBaseToken.json' assert { type: 'json' };
+import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
+import { IBaseTokenABI } from '../../../../../core/internal/abi-registry.ts';
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
@@ -29,8 +29,8 @@ export function routeEth(): WithdrawRouteStrategy {
         OP_WITHDRAWALS.eth.estGas,
         () =>
           ctx.client.l2.simulateContract({
-            address: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
-            abi: L2BaseTokenABI,
+            address: L2_BASE_TOKEN_ADDRESS,
+            abi: IBaseTokenABI,
             functionName: 'withdraw',
             args: [toL1] as const,
             value: p.amount,
@@ -38,7 +38,7 @@ export function routeEth(): WithdrawRouteStrategy {
             ...feeOverrides,
           }),
         {
-          ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR },
+          ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_ADDRESS },
           message: 'Failed to simulate L2 ETH withdraw.',
         },
       );

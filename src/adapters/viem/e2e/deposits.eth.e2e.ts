@@ -8,7 +8,7 @@
 // tests/e2e/viem/deposits.eth.test.ts
 import { describe, it, expect, beforeAll } from 'bun:test';
 import type { Address } from '../../../core/types/primitives.ts';
-import { ETH_ADDRESS_IN_CONTRACTS } from '../../../core/constants.ts';
+import { ETH_ADDRESS } from '../../../core/constants.ts';
 import {
   createTestClientAndSdkViem,
   waitForL1InclusionViem,
@@ -37,7 +37,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
 
   it('should get a valid quote for the deposit', async () => {
     quoteResult = await sdk.deposits.quote({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: DEPOSIT_WEI,
       to: me,
     });
@@ -49,7 +49,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
 
   it('should prepare the deposit transaction steps', async () => {
     const plan = await sdk.deposits.prepare({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: DEPOSIT_WEI,
       to: me,
     });
@@ -59,7 +59,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
 
   it('should create the deposit and get a handle', async () => {
     handle = await sdk.deposits.create({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: DEPOSIT_WEI,
       to: me,
     });

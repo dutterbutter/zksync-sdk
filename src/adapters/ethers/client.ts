@@ -7,16 +7,18 @@ import { zksRpcFromEthers } from './rpc';
 import {
   L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
-  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
 } from '../../core/constants';
 
-import IBridgehubABI from '../../core/internal/abis/IBridgehub.json';
-import IL1AssetRouterABI from '../../core/internal/abis/IL1AssetRouter.json';
-import IL1NullifierABI from '../../core/internal/abis/IL1Nullifier.json';
-import IL2AssetRouterABI from '../../core/internal/abis/IL2AssetRouter.json';
-import L2NativeTokenVaultABI from '../../core/internal/abis/L2NativeTokenVault.json';
-import L1NativeTokenVaultABI from '../../core/internal/abis/L1NativeTokenVault.json';
-import IBaseTokenABI from '../../core/internal/abis/IBaseToken.json';
+import {
+  IBridgehubABI,
+  IL1AssetRouterABI,
+  IL1NullifierABI,
+  IL2AssetRouterABI,
+  L2NativeTokenVaultABI,
+  L1NativeTokenVaultABI,
+  IBaseTokenABI,
+} from '../../core/internal/abi-registry';
 
 export interface ResolvedAddresses {
   bridgehub: Address;

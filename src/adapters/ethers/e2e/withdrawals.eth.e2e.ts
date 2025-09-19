@@ -7,7 +7,7 @@
 // tests/e2e/withdrawals.eth.test.ts
 import { describe, it, expect, beforeAll } from 'bun:test';
 import type { Address, Hex } from '../../../core/types/primitives.ts';
-import { ETH_ADDRESS_IN_CONTRACTS } from '../../../core/constants.ts';
+import { ETH_ADDRESS } from '../../../core/constants.ts';
 import {
   createTestClientAndSdk,
   waitUntilReadyToFinalize,
@@ -44,7 +44,7 @@ describe('withdrawals.e2e (ethers): ETH withdrawal', () => {
 
   it('should quote a withdrawal', async () => {
     const q = await sdk.withdrawals.quote({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: WITHDRAW_WEI,
       to: me,
     });
@@ -54,7 +54,7 @@ describe('withdrawals.e2e (ethers): ETH withdrawal', () => {
 
   it('should prepare the withdrawal plan', async () => {
     const plan = await sdk.withdrawals.prepare({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: WITHDRAW_WEI,
       to: me,
     });
@@ -64,7 +64,7 @@ describe('withdrawals.e2e (ethers): ETH withdrawal', () => {
 
   it('should create the withdrawal and return a handle', async () => {
     handle = await sdk.withdrawals.create({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: WITHDRAW_WEI,
       to: me,
     });

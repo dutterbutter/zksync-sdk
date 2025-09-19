@@ -122,7 +122,7 @@
     "build:js": "tsup --config tsup.config.ts",
     "build": "bun run clean && bun run build:types && bun run build:js",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "types": "typechain --target ethers-v6 --out-dir src/adapters/ethers/typechain src/core/internal/abis/*.json && ncp src/adapters/ethers/typechain typechain",
+    "types": "typechain --target ethers-v6 --out-dir src/adapters/ethers/typechain src/core/internal/abis/ && ncp src/adapters/ethers/typechain typechain",
     "prepublishOnly": "bun run clean && bun run build",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",

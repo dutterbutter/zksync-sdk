@@ -2,9 +2,11 @@
 import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import IERC20ABI from '../../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
-import L2NativeTokenVaultABI from '../../../../../core/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
-import L2AssetRouterABI from '../../../../../core/internal/abis/IL2AssetRouter.json' assert { type: 'json' };
+import {
+  IL2AssetRouterABI,
+  L2NativeTokenVaultABI,
+  IERC20ABI,
+} from '../../../../../core/internal/abi-registry';
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
@@ -81,7 +83,7 @@ export function routeErc20(): WithdrawRouteStrategy {
       );
 
       // L2AssetRouter.withdraw(assetId, assetData)
-      const l2ar = new Contract(ctx.l2AssetRouter, L2AssetRouterABI, ctx.client.l2);
+      const l2ar = new Contract(ctx.l2AssetRouter, IL2AssetRouterABI, ctx.client.l2);
       const dataWithdraw = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.erc20.encodeWithdraw,
