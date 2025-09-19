@@ -25,7 +25,7 @@ _TypeScript SDK for deposits, withdrawals, and RPC access across the Elastic Net
 - **Adapters for both worlds** – choose [`viem`](https://viem.sh) or [`ethers`](https://docs.ethers.io)
 - **Deposits (L1 → L2)** – ETH and ERC-20 transfers
 - **Withdrawals (L2 → L1)** – full two-step flows with status tracking + finalization
-- **zks_ RPC methods** – typed helpers for logProofs, receipts, and bridgehub access
+- **zks\_ RPC methods** – typed helpers for logProofs, receipts, and bridgehub access
 - **Helper methods** – helpers for l1-l2 token address mapping, contract address fetching
 - **Try-methods** – no-throw style (`tryCreate`, `tryWait`) for UI / services
 
