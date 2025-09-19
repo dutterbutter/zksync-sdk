@@ -88,7 +88,7 @@ export interface DepositsResource {
 // --------------------
 // Resource factory
 // --------------------
-export function DepositsResource(client: EthersClient): DepositsResource {
+export function createDepositsResource(client: EthersClient): DepositsResource {
   // buildPlan constructs a DepositPlan for the given params
   // It does not execute any transactions
   // It can run preflight checks and may throw if the deposit cannot be performed

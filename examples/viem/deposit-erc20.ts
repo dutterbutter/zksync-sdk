@@ -1,4 +1,4 @@
-// examples/deposit-erc20-viem.ts
+// examples/deposit-erc20.ts
 import {
   Account,
   Chain,
@@ -41,12 +41,9 @@ async function main() {
 
   // sepolia example
   const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
-  // local
-  // const TOKEN = '0xbCF26943C0197d2eE0E5D05c716Be60cc2761508' as Address;
 
   const me = account.address as Address;
 
-  // Read ERC-20 decimals + prepare amounts
   const decimals = (await l1.readContract({
     address: TOKEN,
     abi: IERC20ABI,

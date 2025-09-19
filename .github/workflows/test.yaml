@@ -72,7 +72,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Start Anvil (L1) with saved state
+      - name: Build L2 server (release)
+        working-directory: zksync-os-server
+        env:
+          CARGO_TERM_COLOR: always
+          CARGO_INCREMENTAL: 0
+        run: cargo build --release
+
+      - name: Start Anvil (L1)
         working-directory: zksync-os-server
         run: |
           nohup anvil --load-state zkos-l1-state.json --host 0.0.0.0 --port 8545 > anvil.log 2>&1 &
@@ -83,13 +90,6 @@ jobs:
             fi
             sleep 1
           done
-
-      - name: Build L2 server (release)
-        working-directory: zksync-os-server
-        env:
-          CARGO_TERM_COLOR: always
-          CARGO_INCREMENTAL: 0
-        run: cargo build --release
 
       - name: Run L2 server (background) and wait for JSON-RPC
         working-directory: zksync-os-server

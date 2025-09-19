@@ -105,7 +105,7 @@ export interface WithdrawalsResource {
   >;
 }
 
-export function WithdrawalsResource(client: ViemClient): WithdrawalsResource {
+export function createWithdrawalsResource(client: ViemClient): WithdrawalsResource {
   // Finalization services
   const svc: FinalizationServices = createFinalizationServices(client);
   // error handlers

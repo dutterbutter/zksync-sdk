@@ -46,6 +46,16 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./ethers": {
+      "types": "./dist/adapters/ethers/index.d.ts",
+      "import": "./dist/adapters/ethers/index.js",
+      "require": "./dist/adapters/ethers/index.cjs"
+    },
+    "./viem": {
+      "types": "./dist/adapters/viem/index.d.ts",
+      "import": "./dist/adapters/viem/index.js",
+      "require": "./dist/adapters/viem/index.cjs"
+    },
     "./types": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.js",
@@ -123,6 +133,8 @@
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
+      "ethers": ["dist/adapters/ethers/index.d.ts"],
+      "viem":   ["dist/adapters/viem/index.d.ts"],
       "types/*": [
         "dist/types/*"
       ],

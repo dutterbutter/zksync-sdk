@@ -94,7 +94,7 @@ export interface WithdrawalsResource {
   >;
 }
 
-export function WithdrawalsResource(client: EthersClient): WithdrawalsResource {
+export function createWithdrawalsResource(client: EthersClient): WithdrawalsResource {
   // Finalization services
   const svc: FinalizationServices = createFinalizationServices(client);
   // error handling
