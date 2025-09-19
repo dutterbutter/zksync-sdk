@@ -5,7 +5,7 @@ import { describe, it, expect } from 'bun:test';
 import { findL1MessageSentLog } from '../events';
 import {
   L1_MESSENGER_ADDRESS,
-  L2_ASSET_ROUTER_ADDR,
+  L2_ASSET_ROUTER_ADDRESS,
   TOPIC_L1_MESSAGE_SENT_NEW,
   TOPIC_L1_MESSAGE_SENT_LEG,
 } from '../../../constants';
@@ -24,7 +24,7 @@ const receipt = (logs: LogLike[]) => ({ logs }) as any;
 describe('withdrawals/findL1MessageSentLog', () => {
   it('picks the messenger log by default when multiple logs match', () => {
     const r = receipt([
-      log(L2_ASSET_ROUTER_ADDR, TOPIC_L1_MESSAGE_SENT_NEW),
+      log(L2_ASSET_ROUTER_ADDRESS, TOPIC_L1_MESSAGE_SENT_NEW),
       log(L1_MESSENGER_ADDRESS, TOPIC_L1_MESSAGE_SENT_NEW),
     ]);
     const chosen = findL1MessageSentLog(r as ParsedReceipt);
@@ -40,10 +40,10 @@ describe('withdrawals/findL1MessageSentLog', () => {
   it("respects prefer='assetRouter'", () => {
     const r = receipt([
       log(L1_MESSENGER_ADDRESS, TOPIC_L1_MESSAGE_SENT_NEW),
-      log(L2_ASSET_ROUTER_ADDR, TOPIC_L1_MESSAGE_SENT_NEW),
+      log(L2_ASSET_ROUTER_ADDRESS, TOPIC_L1_MESSAGE_SENT_NEW),
     ]);
     const chosen = findL1MessageSentLog(r as ParsedReceipt, { prefer: 'assetRouter' });
-    expect(chosen.address?.toLowerCase()).toBe(L2_ASSET_ROUTER_ADDR.toLowerCase());
+    expect(chosen.address?.toLowerCase()).toBe(L2_ASSET_ROUTER_ADDRESS.toLowerCase());
   });
 
   it('respects prefer={ address } with mixed-case & 0X prefix', () => {
@@ -68,7 +68,7 @@ describe('withdrawals/findL1MessageSentLog', () => {
   it('throws when no matching topics are present', () => {
     const r = receipt([
       { address: L1_MESSENGER_ADDRESS, topics: ['0xdeadbeef'] },
-      { address: L2_ASSET_ROUTER_ADDR, topics: ['0xfeedface'] },
+      { address: L2_ASSET_ROUTER_ADDRESS, topics: ['0xfeedface'] },
     ]);
     expect(() => findL1MessageSentLog(r as ParsedReceipt)).toThrow(
       /No L1MessageSent event found in L2 receipt logs/,
