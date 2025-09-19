@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.2-alpha...v0.0.3-alpha) (2025-09-19)
+
+
+### Bug Fixes
+
+* address additional build issues ([#21](https://github.com/dutterbutter/zksync-sdk/issues/21)) ([65475b2](https://github.com/dutterbutter/zksync-sdk/commit/65475b23b0acf8bbf8454e1ff39f59a09fd68aa9))
+
 ## [0.0.2-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.1-alpha...v0.0.2-alpha) (2025-09-19)
 
 
