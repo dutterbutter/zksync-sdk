@@ -2,7 +2,7 @@
 
 # ⚡️ zksync-sdk ⚡️
 
-*TypeScript SDK for deposits, withdrawals, and RPC access across the Elastic Network*
+_TypeScript SDK for deposits, withdrawals, and RPC access across the Elastic Network_
 
 [![CI Status](https://github.com/dutterbutter/zksync-sdk/actions/workflows/checks.yaml/badge.svg)](https://github.com/dutterbutter/zksync-sdk/actions/workflows/checks.yaml)
 [![Release](https://img.shields.io/github/v/release/dutterbutter/zksync-sdk?label=version)](https://github.com/dutterbutter/zksync-sdk/releases/latest)
@@ -22,12 +22,12 @@
 
 ## ✨ Features
 
-- **Adapters for both worlds** – choose [`viem`](https://viem.sh) or [`ethers`](https://docs.ethers.io)  
-- **Deposits (L1 → L2)** – seamless ETH and ERC-20 transfers into zkSync  
-- **Withdrawals (L2 → L1)** – full two-step flows with status tracking + finalization  
-- **ZKsync RPC methods** – typed helpers for proofs, receipts, and bridgehub access  
-- **Helper methods** – helpers for l1-l2 token address mapping, contract address fetching 
-- **Try-methods** – no-throw style (`tryCreate`, `tryWait`) for UI / services  
+- **Adapters for both worlds** – choose [`viem`](https://viem.sh) or [`ethers`](https://docs.ethers.io)
+- **Deposits (L1 → L2)** – seamless ETH and ERC-20 transfers into zkSync
+- **Withdrawals (L2 → L1)** – full two-step flows with status tracking + finalization
+- **ZKsync RPC methods** – typed helpers for proofs, receipts, and bridgehub access
+- **Helper methods** – helpers for l1-l2 token address mapping, contract address fetching
+- **Try-methods** – no-throw style (`tryCreate`, `tryWait`) for UI / services
 
 ## 📦 Installation
 
@@ -38,7 +38,7 @@ Install the adapter you need:
 
 ```bash
 npm install @zksync-sdk viem
-````
+```
 
 </details>
 
@@ -85,7 +85,10 @@ import { ETH_ADDRESS } from '@zksync-sdk/core';
 
 const l1 = createPublicClient({ transport: http('https://sepolia.infura.io/v3/...') });
 const l2 = createPublicClient({ transport: http('https://zksync-testnet.rpc') });
-const l1Wallet = createWalletClient({ account, transport: http('https://sepolia.infura.io/v3/...') });
+const l1Wallet = createWalletClient({
+  account,
+  transport: http('https://sepolia.infura.io/v3/...'),
+});
 
 const sdk = createViemSdk({ l1, l2, l1Wallet });
 
@@ -103,9 +106,9 @@ console.log('Deposit complete ✅');
 
 ## 📚 Documentation
 
-* [User Book](https://dutterbutter.github.io/zksync-sdk/latest/) – guides, concepts, API docs
-* [How-to Guides](https://dutterbutter.github.io/zksync-sdk/latest/guides/) – deposits, withdrawals, RPC helpers
-* [Concepts](https://dutterbutter.github.io/zksync-sdk/latest/concepts/) – mental model, status vs wait, finalization
+- [User Book](https://dutterbutter.github.io/zksync-sdk/latest/) – guides, concepts, API docs
+- [How-to Guides](https://dutterbutter.github.io/zksync-sdk/latest/guides/) – deposits, withdrawals, RPC helpers
+- [Concepts](https://dutterbutter.github.io/zksync-sdk/latest/concepts/) – mental model, status vs wait, finalization
 
 ## 🤝 Contributing
 

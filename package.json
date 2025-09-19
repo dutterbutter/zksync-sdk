@@ -133,8 +133,12 @@
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
-      "ethers": ["dist/adapters/ethers/index.d.ts"],
-      "viem":   ["dist/adapters/viem/index.d.ts"],
+      "ethers": [
+        "dist/adapters/ethers/index.d.ts"
+      ],
+      "viem": [
+        "dist/adapters/viem/index.d.ts"
+      ],
       "types/*": [
         "dist/types/*"
       ],

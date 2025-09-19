@@ -7,8 +7,8 @@ export default defineConfig({
     'src/**/*.ts',
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**',
-    '!src/**/e2e/**',          // don't ship e2e helpers
-    '!test/**'
+    '!src/**/e2e/**', // don't ship e2e helpers
+    '!test/**',
   ],
   outDir: 'dist',
 

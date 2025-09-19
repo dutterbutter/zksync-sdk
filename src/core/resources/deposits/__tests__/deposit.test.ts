@@ -25,9 +25,9 @@ describe('deposit/pickRouteSmart', () => {
     expect(await pickDepositRoute(client, 324n, ETH_ADDRESS_IN_CONTRACTS)).toBe('eth');
 
     // Casing differences should still be treated as ETH (isETH uses isAddressEq)
-    expect(
-      await pickDepositRoute(client, 324n, ETH_ADDRESS.toLowerCase() as `0x${string}`),
-    ).toBe('eth');
+    expect(await pickDepositRoute(client, 324n, ETH_ADDRESS.toLowerCase() as `0x${string}`)).toBe(
+      'eth',
+    );
   });
 
   // it.skip("returns 'erc20-base' when token equals the L2 base token (case/prefix agnostic)", async () => {

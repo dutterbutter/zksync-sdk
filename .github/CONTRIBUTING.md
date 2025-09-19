@@ -26,30 +26,30 @@ This project is open to bug fixes, features, documentation, and examples.
 
 ## 📖 Contribution Types
 
-* **Bug reports** – open a GitHub issue with clear steps to reproduce.
-* **Fixes / features** – open a pull request. Keep changes focused.
-* **Docs / examples** – improvements are always welcome!
+- **Bug reports** – open a GitHub issue with clear steps to reproduce.
+- **Fixes / features** – open a pull request. Keep changes focused.
+- **Docs / examples** – improvements are always welcome!
 
 ## ✅ Pull Request Checklist
 
 Before submitting a PR, please make sure:
 
-* Commits are small and meaningful.
-* `bun run test` passes locally.
-* **Run code checks** to ensure style and types are correct:
+- Commits are small and meaningful.
+- `bun run test` passes locally.
+- **Run code checks** to ensure style and types are correct:
 
   ```bash
   bun run lint
   bun run format:check
   bun run typecheck
   ```
-  
-* Update or add docs/examples if needed.
-* Link the related issue (if any).
+
+- Update or add docs/examples if needed.
+- Link the related issue (if any).
 
 ## 💬 Questions?
 
-* Open a [GitHub Discussion](https://github.com/dutterbutter/zksync-sdk/discussions)
-* Or join the [zkSync community](https://x.com/zksync) for general questions.
+- Open a [GitHub Discussion](https://github.com/dutterbutter/zksync-sdk/discussions)
+- Or join the [zkSync community](https://x.com/zksync) for general questions.
 
 Thanks again for helping improve `zksync-sdk`! 🚀
