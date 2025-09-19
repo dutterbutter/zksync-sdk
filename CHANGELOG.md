@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.4-alpha...v0.0.5-alpha) (2025-09-19)
+
+
+### Bug Fixes
+
+* adjust readmes ([#25](https://github.com/dutterbutter/zksync-sdk/issues/25)) ([eacd5ae](https://github.com/dutterbutter/zksync-sdk/commit/eacd5ae6f27332ad8c756d67276e24fbdd3187df))
+
 ## [0.0.4-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.3-alpha...v0.0.4-alpha) (2025-09-19)
 
 
