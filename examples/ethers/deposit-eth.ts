@@ -3,7 +3,7 @@ import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient } from '../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../src/adapters/ethers/sdk';
 import { Address } from '../../src/core/types/primitives';
-import { ETH_ADDRESS_IN_CONTRACTS } from '../../src/core/constants';
+import { ETH_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
@@ -30,7 +30,7 @@ async function main() {
   const params = {
     amount: parseEther('.01'), // 0.01 ETH
     to: me,
-    token: ETH_ADDRESS_IN_CONTRACTS,
+    token: ETH_ADDRESS,
     // optional:
     // l2GasLimit: 300_000n,
     // gasPerPubdata: 800n,

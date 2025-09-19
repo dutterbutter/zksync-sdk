@@ -2,11 +2,13 @@
 import type { Abi } from 'viem';
 import { decodeErrorResult } from 'viem';
 
-import IL1NullifierABI from '../../../core/internal/abis/IL1Nullifier.json' assert { type: 'json' };
-import IL1NativeTokenVaultABI from '../../../core/internal/abis/L1NativeTokenVault.json' assert { type: 'json' };
-import IL2NativeTokenVaultABI from '../../../core/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
-import IERC20ABI from '../../../core/internal/abis/IERC20.json' assert { type: 'json' };
-import MailboxABI from '../../../core/internal/abis/Mailbox.json' assert { type: 'json' };
+import {
+  IL1NullifierABI,
+  L2NativeTokenVaultABI,
+  L1NativeTokenVaultABI,
+  MailboxABI,
+  IERC20ABI,
+} from '../../../core/internal/abi-registry';
 
 import { REVERT_TO_READINESS } from '../../../core/errors/withdrawal-revert-map';
 import type { FinalizeReadiness } from '../../../core/types/flows/withdrawals';
@@ -50,12 +52,12 @@ const ABI_PANIC: Abi = [
     // ignore
   }
   try {
-    ERROR_ABIS.push({ name: 'IL1NativeTokenVault', abi: IL1NativeTokenVaultABI as unknown as Abi });
+    ERROR_ABIS.push({ name: 'IL1NativeTokenVault', abi: L1NativeTokenVaultABI as unknown as Abi });
   } catch {
     // ignore
   }
   try {
-    ERROR_ABIS.push({ name: 'IL2NativeTokenVault', abi: IL2NativeTokenVaultABI as unknown as Abi });
+    ERROR_ABIS.push({ name: 'IL2NativeTokenVault', abi: L2NativeTokenVaultABI as unknown as Abi });
   } catch {
     // ignore
   }

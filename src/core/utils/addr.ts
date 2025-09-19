@@ -1,9 +1,5 @@
 import type { Address, Hex } from '../types/primitives.ts';
-import {
-  ETH_ADDRESS_IN_CONTRACTS,
-  ETH_ADDRESS,
-  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
-} from '../constants.ts';
+import { FORMAL_ETH_ADDRESS, ETH_ADDRESS, L2_BASE_TOKEN_ADDRESS } from '../constants.ts';
 
 // Returns true if the string is a 0x-prefixed hex of length 66 (32 bytes + '0x')
 export const isHash66 = (x?: string): x is Hex => !!x && x.startsWith('0x') && x.length === 66;
@@ -16,9 +12,9 @@ export function isAddressEq(a: Address, b: Address): boolean {
 // Returns true if the address is any of the known ETH aliases
 export function isETH(token: Address) {
   return (
-    isAddressEq(token, ETH_ADDRESS) ||
+    isAddressEq(token, FORMAL_ETH_ADDRESS) ||
     isAddressEq(token, L2_BASE_TOKEN_ADDRESS) ||
-    isAddressEq(token, ETH_ADDRESS_IN_CONTRACTS)
+    isAddressEq(token, ETH_ADDRESS)
   );
 }
 

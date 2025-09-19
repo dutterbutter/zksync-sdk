@@ -7,7 +7,7 @@
 // tests/e2e/deposits.eth.test.ts
 import { describe, it, expect, beforeAll } from 'bun:test';
 import type { Address, Hex } from '../../../core/types/primitives.ts';
-import { ETH_ADDRESS_IN_CONTRACTS } from '../../../core/constants.ts';
+import { ETH_ADDRESS } from '../../../core/constants.ts';
 import { createTestClientAndSdk, waitForL1Inclusion, verifyDepositBalances } from './helpers.ts';
 
 const DEPOSIT_WEI = 1_000_000_000_000_000n; // 0.001 ETH
@@ -29,7 +29,7 @@ describe('deposits.e2e (ethers): ETH deposit', () => {
 
   it('should get a valid quote for the deposit', async () => {
     quoteResult = await sdk.deposits.quote({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: DEPOSIT_WEI,
       to: me,
     });
@@ -41,7 +41,7 @@ describe('deposits.e2e (ethers): ETH deposit', () => {
 
   it('should prepare the deposit transaction steps', async () => {
     const plan = await sdk.deposits.prepare({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: DEPOSIT_WEI,
       to: me,
     });
@@ -51,7 +51,7 @@ describe('deposits.e2e (ethers): ETH deposit', () => {
 
   it('should create the deposit and get a handle', async () => {
     depositHandle = await sdk.deposits.create({
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: DEPOSIT_WEI,
       to: me,
     });

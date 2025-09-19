@@ -10,7 +10,7 @@ import {
   type WithdrawalKey,
 } from '../../../../../core/types/flows/withdrawals';
 
-import IL1NullifierABI from '../../../../../core/internal/abis/IL1Nullifier.json' assert { type: 'json' };
+import { IL1NullifierABI } from '../../../../../core/internal/abi-registry.ts';
 
 import { L2_ASSET_ROUTER_ADDR, L1_MESSENGER_ADDRESS } from '../../../../../core/constants';
 import { findL1MessageSentLog } from '../../../../../core/resources/withdrawals/events';

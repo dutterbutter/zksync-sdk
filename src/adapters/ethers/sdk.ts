@@ -11,11 +11,7 @@ import {
 } from './resources/withdrawals/index';
 import { type Address, type Hex } from '../../core/types';
 import { isAddressEq } from '../../core/utils/addr';
-import {
-  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
-  ETH_ADDRESS,
-  ETH_ADDRESS_IN_CONTRACTS,
-} from '../../core/constants';
+import { L2_BASE_TOKEN_ADDRESS, ETH_ADDRESS, FORMAL_ETH_ADDRESS } from '../../core/constants';
 
 // SDK interface, combining deposits, withdrawals, and helpers
 export interface EthersSdk {
@@ -75,8 +71,8 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
 
       async l2TokenAddress(l1Token: Address): Promise<Address> {
         // ETH on L1 → contracts’ ETH placeholder on L2
-        if (isAddressEq(l1Token, ETH_ADDRESS)) {
-          return ETH_ADDRESS_IN_CONTRACTS;
+        if (isAddressEq(l1Token, FORMAL_ETH_ADDRESS)) {
+          return ETH_ADDRESS;
         }
 
         // Base token → L2 base-token system address
@@ -104,7 +100,7 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
       },
 
       async assetId(l1Token: Address): Promise<Hex> {
-        const norm = isAddressEq(l1Token, ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
+        const norm = isAddressEq(l1Token, FORMAL_ETH_ADDRESS) ? ETH_ADDRESS : l1Token;
 
         const { l1NativeTokenVault } = await client.contracts();
         // IL1NativeTokenVault.assetId(address) → bytes32

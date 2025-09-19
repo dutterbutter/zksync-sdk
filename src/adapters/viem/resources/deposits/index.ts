@@ -17,7 +17,7 @@ import type {
   TransactionReceipt,
   WriteContractParameters,
 } from 'viem';
-import IERC20ABI from '../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
+import { IERC20ABI } from '../../../../core/internal/abi-registry.ts';
 
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';
@@ -177,7 +177,7 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
               const [, token, router] = step.key.split(':');
               const current = (await client.l1.readContract({
                 address: token as Address,
-                abi: IERC20ABI,
+                abi: IERC20ABI as Abi,
                 functionName: 'allowance',
                 args: [from, router as Address],
               })) as bigint;

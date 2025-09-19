@@ -1,12 +1,15 @@
 import { Interface, type JsonFragment } from 'ethers';
-import IL1NullifierABI from '../../../core/internal/abis/IL1Nullifier.json' assert { type: 'json' };
-import IL1NativeTokenVaultABI from '../../../core/internal/abis/L1NativeTokenVault.json' assert { type: 'json' };
-import IL2NativeTokenVaultABI from '../../../core/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
-import IERC20ABI from '../../../core/internal/abis/IERC20.json' assert { type: 'json' };
-import MailboxABI from '../../../core/internal/abis/Mailbox.json' assert { type: 'json' };
 import { REVERT_TO_READINESS } from '../../../core/errors/withdrawal-revert-map';
 import type { FinalizeReadiness } from '../../../core/types/flows/withdrawals';
 import type { Address } from '../../../core/types';
+
+import {
+  IL1NullifierABI,
+  L2NativeTokenVaultABI,
+  L1NativeTokenVaultABI,
+  MailboxABI,
+  IERC20ABI,
+} from '../../../core/internal/abi-registry';
 
 // TODO: refactor as lots of duplication here
 export interface DecodedRevert {
@@ -33,20 +36,20 @@ const IFACE_PANIC = new Interface(['error Panic(uint256)']);
   try {
     ERROR_IFACES.push({
       name: 'IL1Nullifier',
-      iface: new Interface(IL1NullifierABI as JsonFragment[]),
+      iface: new Interface(IL1NullifierABI),
     });
   } catch {
     // ignore
   }
   try {
-    ERROR_IFACES.push({ name: 'IERC20', iface: new Interface(IERC20ABI as JsonFragment[]) });
+    ERROR_IFACES.push({ name: 'IERC20', iface: new Interface(IERC20ABI) });
   } catch {
     // ignore
   }
   try {
     ERROR_IFACES.push({
       name: 'IL1NativeTokenVault',
-      iface: new Interface(IL1NativeTokenVaultABI as JsonFragment[]),
+      iface: new Interface(L1NativeTokenVaultABI),
     });
   } catch {
     // ignore
@@ -54,13 +57,13 @@ const IFACE_PANIC = new Interface(['error Panic(uint256)']);
   try {
     ERROR_IFACES.push({
       name: 'IL2NativeTokenVault',
-      iface: new Interface(IL2NativeTokenVaultABI as JsonFragment[]),
+      iface: new Interface(L2NativeTokenVaultABI),
     });
   } catch {
     // ignore
   }
   try {
-    ERROR_IFACES.push({ name: 'Mailbox', iface: new Interface(MailboxABI as JsonFragment[]) });
+    ERROR_IFACES.push({ name: 'Mailbox', iface: new Interface(MailboxABI) });
   } catch {
     // ignore
   }

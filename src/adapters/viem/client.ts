@@ -6,6 +6,7 @@ import type {
   Chain,
   Transport,
   GetContractReturnType,
+  Abi,
 } from 'viem';
 import { getContract, createWalletClient } from 'viem';
 import type { ZksRpc } from '../../core/rpc/zks';
@@ -15,17 +16,19 @@ import type { Address } from '../../core/types/primitives'; // ← use your core
 import {
   L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
-  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
 } from '../../core/constants';
 
 // ABIs from internal snapshot (same as ethers adapter)
-import IBridgehubABI from '../../core/internal/abis/IBridgehub.json';
-import IL1AssetRouterABI from '../../core/internal/abis/IL1AssetRouter.json';
-import IL1NullifierABI from '../../core/internal/abis/IL1Nullifier.json';
-import IL2AssetRouterABI from '../../core/internal/abis/IL2AssetRouter.json';
-import L2NativeTokenVaultABI from '../../core/internal/abis/L2NativeTokenVault.json';
-import L1NativeTokenVaultABI from '../../core/internal/abis/L1NativeTokenVault.json';
-import IBaseTokenABI from '../../core/internal/abis/IBaseToken.json';
+import {
+  IBridgehubABI,
+  IL1AssetRouterABI,
+  IL1NullifierABI,
+  IL2AssetRouterABI,
+  L2NativeTokenVaultABI,
+  L1NativeTokenVaultABI,
+  IBaseTokenABI,
+} from '../../core/internal/abi-registry';
 
 export interface ResolvedAddresses {
   bridgehub: Address;
@@ -102,7 +105,7 @@ export function createViemClient(args: InitArgs): ViemClient {
       args.overrides?.l1AssetRouter ??
       ((await l1.readContract({
         address: bridgehub,
-        abi: IBridgehubABI,
+        abi: IBridgehubABI as Abi,
         functionName: 'assetRouter',
       })) as Address);
 
@@ -111,7 +114,7 @@ export function createViemClient(args: InitArgs): ViemClient {
       args.overrides?.l1Nullifier ??
       ((await l1.readContract({
         address: l1AssetRouter,
-        abi: IL1AssetRouterABI,
+        abi: IL1AssetRouterABI as Abi,
         functionName: 'L1_NULLIFIER',
       })) as Address);
 
@@ -120,7 +123,7 @@ export function createViemClient(args: InitArgs): ViemClient {
       args.overrides?.l1NativeTokenVault ??
       ((await l1.readContract({
         address: l1Nullifier,
-        abi: IL1NullifierABI,
+        abi: IL1NullifierABI as Abi,
         functionName: 'l1NativeTokenVault',
       })) as Address);
 
@@ -178,7 +181,7 @@ export function createViemClient(args: InitArgs): ViemClient {
     const { bridgehub } = await ensureAddresses();
     const token = (await l1.readContract({
       address: bridgehub,
-      abi: IBridgehubABI,
+      abi: IBridgehubABI as Abi,
       functionName: 'baseToken',
       args: [chainId],
     })) as Address;

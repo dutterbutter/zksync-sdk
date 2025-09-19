@@ -2,8 +2,8 @@
 import { Contract, Interface, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
-import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../../../../core/constants';
-import L2BaseTokenABI from '../../../../../core/internal/abis/IBaseToken.json' assert { type: 'json' };
+import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
+import { IBaseTokenABI } from '../../../../../core/internal/abi-registry.ts';
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
@@ -17,9 +17,9 @@ export function routeEth(): WithdrawRouteStrategy {
       const steps: Array<PlanStep<TransactionRequest>> = [];
 
       const base = new Contract(
-        L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
+        L2_BASE_TOKEN_ADDRESS,
 
-        new Interface(L2BaseTokenABI),
+        new Interface(IBaseTokenABI),
         ctx.client.l2,
       );
 
@@ -35,7 +35,7 @@ export function routeEth(): WithdrawRouteStrategy {
       );
 
       const tx: TransactionRequest = {
-        to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR,
+        to: L2_BASE_TOKEN_ADDRESS,
         data,
         from: ctx.sender,
         value: p.amount,
@@ -48,7 +48,7 @@ export function routeEth(): WithdrawRouteStrategy {
           OP_WITHDRAWALS.eth.estGas,
           () => ctx.client.l2.estimateGas(tx),
           {
-            ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR },
+            ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
             message: 'Failed to estimate gas for L2 ETH withdraw.',
           },
         );

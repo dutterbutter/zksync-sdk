@@ -7,13 +7,13 @@ import type { Address } from './types/primitives';
  * The address of the L1 `ETH` token.
  * @readonly
  */
-export const ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
+export const FORMAL_ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
 
 /**
  * In the contracts the zero address can not be used, use one instead
  * @readonly
  */
-export const ETH_ADDRESS_IN_CONTRACTS: Address = '0x0000000000000000000000000000000000000001';
+export const ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000001';
 
 /**
  * The address of the L1 messenger contract.
@@ -35,8 +35,7 @@ export const L1_MESSENGER_ADDRESS = '0x0000000000000000000000000000000000008008'
 /** The address of the L2 Base Token System contract.
  * @readonly
  */
-export const L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR =
-  '0x000000000000000000000000000000000000800A' as const;
+export const L2_BASE_TOKEN_ADDRESS = '0x000000000000000000000000000000000000800A' as const;
 
 /**
  * The address of the L2 Asset Router contract.

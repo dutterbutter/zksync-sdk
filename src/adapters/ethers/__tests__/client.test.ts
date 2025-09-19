@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'bun:test';
 import { Interface } from 'ethers';
 import { createEthersClient, type EthersClient } from '../client';
-import IBridgehubABI from '../../../core/internal/abis/IBridgehub.json';
-import IL1AssetRouterABI from '../../../core/internal/abis/IL1AssetRouter.json';
-import IL1NullifierABI from '../../../core/internal/abis/IL1Nullifier.json';
+import {
+  IBridgehubABI,
+  IL1AssetRouterABI,
+  IL1NullifierABI,
+} from '../../../core/internal/abi-registry';
 import {
   L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
-  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
 } from '../../../core/constants';
 
 // TODO: refactor this to be shared and use bun mocks

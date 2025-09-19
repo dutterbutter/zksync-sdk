@@ -3,7 +3,7 @@
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
 import { buildDirectRequestStruct } from '../../utils';
-import IBridgehubABI from '../../../../../core/internal/abis/IBridgehub.json' assert { type: 'json' };
+import { IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 
@@ -31,7 +31,7 @@ export function routeEthDirect(): DepositRouteStrategy {
           message: 'Could not fetch L2 base cost from Bridgehub.',
         },
       );
-      const baseCost = BigInt(rawBaseCost as bigint);
+      const baseCost = rawBaseCost;
 
       const l2Contract = p.to ?? ctx.sender;
       const l2Value = p.amount;

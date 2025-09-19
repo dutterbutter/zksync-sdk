@@ -1,6 +1,5 @@
 import { Interface } from 'ethers';
-import IERC20ABI from '../../../../core/internal/abis/IERC20.json';
-import IBridgehubABI from '../../../../core/internal/abis/IBridgehub.json';
+import { IBridgehubABI, IERC20ABI } from '../../../../core/internal/abi-registry';
 
 export const IERC20 = new Interface(IERC20ABI as any);
 export const IBridgehub = new Interface(IBridgehubABI as any);

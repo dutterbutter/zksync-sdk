@@ -1,11 +1,13 @@
 // src/adapters/viem/resources/withdrawals/routes/erc20.ts
 import type { WithdrawRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import IERC20ABI from '../../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
-import L2NativeTokenVaultABI from '../../../../../core/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
-import IL2AssetRouterABI from '../../../../../core/internal/abis/IL2AssetRouter.json' assert { type: 'json' };
+import {
+  IERC20ABI,
+  L2NativeTokenVaultABI,
+  IL2AssetRouterABI,
+} from '../../../../../core/internal/abi-registry.ts';
 
-import { encodeAbiParameters, type Hex } from 'viem';
+import { type Abi, encodeAbiParameters } from 'viem';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
 
@@ -24,7 +26,7 @@ export function routeErc20(): WithdrawRouteStrategy {
         () =>
           ctx.client.l2.readContract({
             address: p.token,
-            abi: IERC20ABI,
+            abi: IERC20ABI as Abi,
             functionName: 'allowance',
             args: [ctx.sender, ctx.l2NativeTokenVault],
             account: ctx.client.account,
@@ -96,7 +98,7 @@ export function routeErc20(): WithdrawRouteStrategy {
           message: 'Failed to ensure token is registered in L2NativeTokenVault.',
         },
       );
-      const assetId = ensure.result as Hex;
+      const assetId = ensure.result;
       const assetData = encodeAbiParameters(
         [
           { type: 'uint256', name: 'amount' },
