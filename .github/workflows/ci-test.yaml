@@ -92,7 +92,12 @@ jobs:
           done
 
       - name: Run server
-        run: cargo run --release --bin zksync_os_bin
+        run: |
+            if [ -x ./target/release/zksync_os_bin ]; then
+              nohup ./target/release/zksync_os_bin > l2.log 2>&1 &
+            else
+              nohup cargo run --release > l2.log 2>&1 &
+            fi
 
       - name: Wait for zksync OS to start
         run: |
