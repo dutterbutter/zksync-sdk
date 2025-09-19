@@ -1,9 +1,9 @@
 // src/adapters/viem/resources/withdrawals/routes/erc20.ts
 import type { WithdrawRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
-import L2NativeTokenVaultABI from '../../../../../internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
-import IL2AssetRouterABI from '../../../../../internal/abis/IL2AssetRouter.json' assert { type: 'json' };
+import IERC20ABI from '../../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
+import L2NativeTokenVaultABI from '../../../../../core/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
+import IL2AssetRouterABI from '../../../../../core/internal/abis/IL2AssetRouter.json' assert { type: 'json' };
 
 import { encodeAbiParameters, type Hex } from 'viem';
 import { createErrorHandlers } from '../../../errors/error-ops';

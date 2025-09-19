@@ -2,9 +2,9 @@
 import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
-import L2NativeTokenVaultABI from '../../../../../internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
-import L2AssetRouterABI from '../../../../../internal/abis/IL2AssetRouter.json' assert { type: 'json' };
+import IERC20ABI from '../../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
+import L2NativeTokenVaultABI from '../../../../../core/internal/abis/L2NativeTokenVault.json' assert { type: 'json' };
+import L2AssetRouterABI from '../../../../../core/internal/abis/IL2AssetRouter.json' assert { type: 'json' };
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';

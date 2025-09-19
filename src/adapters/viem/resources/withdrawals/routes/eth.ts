@@ -4,7 +4,7 @@ import type { WithdrawRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
 
 import { L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR } from '../../../../../core/constants';
-import L2BaseTokenABI from '../../../../../internal/abis/IBaseToken.json' assert { type: 'json' };
+import L2BaseTokenABI from '../../../../../core/internal/abis/IBaseToken.json' assert { type: 'json' };
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
