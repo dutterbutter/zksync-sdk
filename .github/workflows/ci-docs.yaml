@@ -1,4 +1,4 @@
-name: docs
+name: ci-run-docs
 
 on:
   push:
@@ -20,8 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build mdBook
+  build-docs:
+    name: build-docs 📘
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,10 +56,10 @@ jobs:
         with:
           path: docs/book
 
-  deploy:
-    name: Deploy to GitHub Pages
+  deploy-docs:
+    name: deploy-docs 📘
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-docs
     steps:
       - name: Configure Pages
         uses: actions/configure-pages@v5

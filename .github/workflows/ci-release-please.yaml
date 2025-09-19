@@ -1,4 +1,4 @@
-name: Release-please
+name: ci-run-release-please
 
 # Give permissions to the release-please bot to open and update PRs
 # and commit to PRs the repository to update package.json

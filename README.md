@@ -4,7 +4,7 @@
 
 _TypeScript SDK for deposits, withdrawals, and RPC access across the Elastic Network_
 
-[![CI Status](https://github.com/dutterbutter/zksync-sdk/actions/workflows/checks.yaml/badge.svg)](https://github.com/dutterbutter/zksync-sdk/actions/workflows/checks.yaml)
+[![CI Status](https://github.com/dutterbutter/zksync-sdk/actions/workflows/ci-check.yaml/badge.svg)](https://github.com/dutterbutter/zksync-sdk/actions/workflows/ci-check.yaml)
 [![Release](https://img.shields.io/github/v/release/dutterbutter/zksync-sdk?label=version)](https://github.com/dutterbutter/zksync-sdk/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![X: @zksync](https://img.shields.io/badge/follow-@zksync-1DA1F2?logo=x)](https://x.com/zksync)
