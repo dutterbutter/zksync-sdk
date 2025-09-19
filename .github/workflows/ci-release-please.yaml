@@ -18,7 +18,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   # Prepare the release PR with changelog updates and create github releases
   # Do not publish to crates.io or upgrade dependencies
   release-please:
@@ -26,10 +25,10 @@ jobs:
     secrets:
       gh_token: ${{ secrets.RELEASE_TOKEN }}
     with:
-      config: '.github/release-please/config.json'     # Specify the path to the configuration file
+      config: '.github/release-please/config.json' # Specify the path to the configuration file
       manifest: '.github/release-please/manifest.json' # Specify the path to the manifest file
-      upgrade-dependencies: false                      # Do not upgrade workspace dependencies
-      update-cargo-lock : false
+      upgrade-dependencies: false # Do not upgrade workspace dependencies
+      update-cargo-lock: false
       publish-to-crates-io: false
       notify-slack: false
 

@@ -5,21 +5,21 @@ on:
     inputs:
       tag:
         type: string
-        description: "Exact git tag to release (omit to use HEAD)"
+        description: 'Exact git tag to release (omit to use HEAD)'
         required: false
   workflow_dispatch:
     inputs:
       tag:
-        description: "Git tag to release (leave blank for HEAD)"
+        description: 'Git tag to release (leave blank for HEAD)'
         required: false
         type: string
       prerelease_name:
-        description: "Suffix for a manual pre-release (blank = full release)"
+        description: 'Suffix for a manual pre-release (blank = full release)'
         required: false
         type: string
-        default: ""
+        default: ''
       skip_publish:
-        description: "Skip publishing to npm"
+        description: 'Skip publishing to npm'
         required: false
         type: boolean
         default: true
@@ -33,7 +33,7 @@ jobs:
       id-token: write
 
     env:
-      COMPILE_ARTIFACTS: "false"
+      COMPILE_ARTIFACTS: 'false'
 
     steps:
       - name: Checkout sources
@@ -72,17 +72,17 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.skip_publish != 'true' }}
     env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPMJS_NPM_DUTTERBUTTER_AUTOMATION_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPMJS_NPM_DUTTERBUTTER_AUTOMATION_TOKEN }}
 
     steps:
-        - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-        - uses: actions/setup-node@v4
-          with:
-            node-version: 22.x
-            registry-url: "https://registry.npmjs.org"
-            scope: "@dutterbutter"
-        - run: yarn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@dutterbutter'
+      - run: yarn
 
-        - name: Publish to npm
-          run: yarn publish --tag latest --access public
+      - name: Publish to npm
+        run: yarn publish --tag latest --access public
