@@ -37,18 +37,6 @@ export const L1_MESSENGER_ADDRESS = '0x0000000000000000000000000000000000008008'
  */
 export const L2_BASE_TOKEN_ADDRESS = '0x000000000000000000000000000000000000800A' as const;
 
-/**
- * The address of the L2 Asset Router contract.
- * @readonly
- */
-export const L2_ASSET_ROUTER_ADDR = '0x0000000000000000000000000000000000010003' as const;
-
-/**
- * The address of the L2 Native Token Vault contract.
- * @readonly
- */
-export const L2_NATIVE_TOKEN_VAULT_ADDR = '0x0000000000000000000000000000000000010004' as const;
-
 // topic0 for L1MessageSent(address,bytes32,bytes)
 export const TOPIC_L1_MESSAGE_SENT =
   '0x2632cc0d58b0cb1017b99cc0b6cc66ad86440cc0dd923bfdaa294f95ba1b0201' as const;

@@ -43,7 +43,7 @@ Reads the **base token** for the current L2 network, or a specific chain id.
 **L1 → L2**
 
 ```ts
-import { ETH_ADDRESS } from '@zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const l2Eth = await sdk.helpers.l2TokenAddress(ETH_ADDRESS);
 const l2Usdc = await sdk.helpers.l2TokenAddress('0x...');
@@ -63,7 +63,7 @@ Maps an L2 token back to its L1 token.
 ## Asset ID
 
 ```ts
-import { ETH_ADDRESS } from '@zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const ethId = await sdk.helpers.assetId(ETH_ADDRESS);
 const tokenId = await sdk.helpers.assetId('0x...');

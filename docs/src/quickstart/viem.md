@@ -14,8 +14,8 @@ You’ll set up your environment, write a short script, and run it.
 Install packages:
 
 ```bash
-bun install @zksync-sdk/viem viem dotenv
-# or: npm i @zksync-sdk/viem viem dotenv
+bun install @dutterbutter/zksync-sdk viem dotenv
+# or: npm i @dutterbutter/zksync-sdk viem dotenv
 ```
 
 Create an `.env` in your project root (never commit this):
@@ -37,8 +37,8 @@ Save as `deposit-viem.ts`:
 import 'dotenv/config'; // Load environment variables from .env
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createViemClient, createViemSdk } from '@zksync-sdk/viem';
-import { ETH_ADDRESS } from '@zksync-sdk/core';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const L1_RPC_URL = process.env.L1_RPC_URL;

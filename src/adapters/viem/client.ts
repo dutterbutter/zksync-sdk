@@ -14,8 +14,8 @@ import { zksRpcFromViem } from './rpc';
 
 import type { Address } from '../../core/types/primitives'; // ← use your core Address type
 import {
-  L2_ASSET_ROUTER_ADDR,
-  L2_NATIVE_TOKEN_VAULT_ADDR,
+  L2_ASSET_ROUTER_ADDRESS,
+  L2_NATIVE_TOKEN_VAULT_ADDRESS,
   L2_BASE_TOKEN_ADDRESS,
 } from '../../core/constants';
 
@@ -128,8 +128,8 @@ export function createViemClient(args: InitArgs): ViemClient {
       })) as Address);
 
     // L2 addresses from constants (overridable)
-    const l2AssetRouter = args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDR;
-    const l2NativeTokenVault = args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDR;
+    const l2AssetRouter = args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDRESS;
+    const l2NativeTokenVault = args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDRESS;
     const l2BaseTokenSystem = args.overrides?.l2BaseTokenSystem ?? L2_BASE_TOKEN_ADDRESS;
 
     addrCache = {

@@ -5,8 +5,8 @@ import type { Address } from '../../core/types/primitives';
 import type { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromEthers } from './rpc';
 import {
-  L2_ASSET_ROUTER_ADDR,
-  L2_NATIVE_TOKEN_VAULT_ADDR,
+  L2_ASSET_ROUTER_ADDRESS,
+  L2_NATIVE_TOKEN_VAULT_ADDRESS,
   L2_BASE_TOKEN_ADDRESS,
 } from '../../core/constants';
 
@@ -127,10 +127,10 @@ export function createEthersClient(args: InitArgs): EthersClient {
       args.overrides?.l1NativeTokenVault ?? ((await nf.l1NativeTokenVault()) as Address);
 
     // L2AssetRouter
-    const l2AssetRouter = args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDR;
+    const l2AssetRouter = args.overrides?.l2AssetRouter ?? L2_ASSET_ROUTER_ADDRESS;
 
     // L2NativeTokenVault
-    const l2NativeTokenVault = args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDR;
+    const l2NativeTokenVault = args.overrides?.l2NativeTokenVault ?? L2_NATIVE_TOKEN_VAULT_ADDRESS;
 
     // L2BaseToken
     const l2BaseTokenSystem = args.overrides?.l2BaseTokenSystem ?? L2_BASE_TOKEN_ADDRESS;

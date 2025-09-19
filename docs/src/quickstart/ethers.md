@@ -14,7 +14,7 @@ You'll set up your environment, write a short script to make a deposit, and run 
 First, install the necessary packages.
 
 ```bash
-bun install @zksync-sdk/ethers ethers dotenv
+bun install @dutterbutter/zksync-sdk ethers dotenv
 ```
 
 Next, create a `.env` file in your project's root directory to store your private key and RPC endpoints. **Never commit this file to Git.**
@@ -39,8 +39,8 @@ Save this code as `deposit-ethers.ts`:
 ```ts
 import 'dotenv/config'; // Load environment variables from .env
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
-import { createEthersClient } from '@zksync-sdk/ethers';
-import { ETH_ADDRESS } from '@zksync-sdk/core';
+import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const L1_RPC_URL = process.env.L1_RPC_URL;
