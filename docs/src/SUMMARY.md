@@ -11,17 +11,16 @@
   - [Quickstart (ethers)](quickstart/ethers.md)
 
 - [How-to Guides](guides/index.md)
-  - [Deposits](guides/deposits/index.md)
+  - [Deposits]()
     - [viem](guides/deposits/viem.md)
     - [ethers](guides/deposits/ethers.md)
-  - [Withdrawals](guides/withdrawals/index.md)
+  - [Withdrawals]()
     - [viem](guides/withdrawals/viem.md)
     - [ethers](guides/withdrawals/ethers.md)
 
 - [Concepts](concepts/index.md)
-  - [Finalization](concepts/finalization.md)
   - [Status vs Wait](concepts/status-vs-wait.md)
-  - [Error envelope](concepts/errors.md)
+  - [Finalization](concepts/finalization.md)
 
 - [ZKS Methods](zks/methods.md)
 

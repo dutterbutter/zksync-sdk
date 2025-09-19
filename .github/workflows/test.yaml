@@ -1,0 +1,129 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Build (for TS outputs/typegen)
+        run: bun run build
+
+      - name: Run unit tests
+        run: bun run test
+
+  e2e:
+    name: E2E tests (local L1+L2)
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Install build deps
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Foundry (anvil)
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+          cache: true
+
+      - name: Clone zksync-os-server
+        run: git clone https://github.com/matter-labs/zksync-os-server.git
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            zksync-os-server/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('zksync-os-server/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Start Anvil (L1) with saved state
+        working-directory: zksync-os-server
+        run: |
+          nohup anvil --load-state zkos-l1-state.json --host 0.0.0.0 --port 8545 > anvil.log 2>&1 &
+          for i in {1..60}; do
+            if curl -s http://127.0.0.1:8545 > /dev/null; then
+              echo "Anvil is up"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Build L2 server (release)
+        working-directory: zksync-os-server
+        env:
+          CARGO_TERM_COLOR: always
+          CARGO_INCREMENTAL: 0
+        run: cargo build --release
+
+      - name: Run L2 server (background) and wait for JSON-RPC
+        working-directory: zksync-os-server
+        run: |
+          if [ -x ./target/release/zksync-os-server ]; then
+            nohup ./target/release/zksync-os-server > l2.log 2>&1 &
+          else
+            nohup cargo run --release > l2.log 2>&1 &
+          fi
+
+          for i in {1..600}; do
+            if curl -sS -X POST http://127.0.0.1:3050 \
+                -H 'content-type: application/json' \
+                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+                | grep -q '"result"'; then
+              echo "L2 JSON-RPC is up"
+              break
+            fi
+            if [ $((i % 30)) -eq 0 ]; then
+              echo "--- l2.log (last 50 lines) ---"
+              tail -n 50 l2.log || true
+            fi
+            sleep 1
+          done
+
+          if ! curl -sS -X POST http://127.0.0.1:3050 \
+              -H 'content-type: application/json' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
+              | grep -q '"result"'; then
+            echo "L2 JSON-RPC failed to start."
+            echo "--- l2.log (last 200 lines) ---"
+            tail -n 200 l2.log || true
+            exit 1
+          fi
+
+      - name: Run e2e tests
+        run: bun run test:cov 

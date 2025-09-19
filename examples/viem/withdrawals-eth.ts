@@ -24,7 +24,7 @@ async function main() {
     throw new Error('Set your PRIVATE_KEY (0x-prefixed 32-byte) in env');
   }
 
-  // --- Viem clients (explicit, same style as your deposit-eth-viem.ts) ---
+  // --- Viem clients  ---
   const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
 
   const l1 = createPublicClient({ transport: http(L1_RPC) });
@@ -40,7 +40,6 @@ async function main() {
   });
 
   // --- SDK client: pass explicit clients + wallets ---
-  // (ensure your createViemClient supports { l1, l2, l1Wallet, l2Wallet })
   const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
   const sdk = createViemSdk(client);
 

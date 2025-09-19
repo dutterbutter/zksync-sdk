@@ -1,4 +1,4 @@
-# zkSync SDK
+# ZKsync SDK
 
 Welcome! Use the sidebar for API reference.
 

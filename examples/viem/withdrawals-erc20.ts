@@ -33,11 +33,11 @@ async function main() {
   const l1 = createPublicClient({ transport: http(L1_RPC) });
   const l2 = createPublicClient({ transport: http(L2_RPC) });
 
-  // Only an L1 wallet is required up front; the SDK will derive an L2 wallet from the same account.
   const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
     account,
     transport: http(L1_RPC),
   });
+  // Need to provide an L2 wallet client for sending L2 tx 
   const l2Wallet = createWalletClient<Transport, Chain, Account>({
     account,
     transport: http(L2_RPC),
@@ -50,7 +50,6 @@ async function main() {
   // Resolve the L2-mapped token for an L1 ERC-20
   const l2Token = await sdk.helpers.l2TokenAddress(L1_ERC20_TOKEN);
 
-  // Token metadata (from L2)
   const [sym, dec] = await Promise.all([
     l2.readContract({
       address: l2Token,
@@ -81,7 +80,7 @@ async function main() {
   ]);
   console.log(`[${sym}] balances before  L1=${balL1Before}  L2=${balL2Before}`);
 
-  // Withdraw params (ERC-20 route uses the **L2 token address**)
+  // Withdraw params
   const params = {
     token: l2Token,
     amount: parseUnits('25', dec), // withdraw 25 tokens

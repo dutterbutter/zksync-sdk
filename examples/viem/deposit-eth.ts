@@ -26,8 +26,7 @@ async function main() {
     account,
     transport: http(L1_RPC),
   });
-  //const l1Wallet: WalletClient = createWalletClient({ account, transport: http(L1_RPC) });
-
+  
   // Check balances
   const [balL1, balL2] = await Promise.all([
     l1.getBalance({ address: account.address }),

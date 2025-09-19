@@ -24,61 +24,59 @@ npm install @zksync-sdk/viem viem
 npm install @zksync-sdk/ethers ethers
 ```
 
----
-
 ## How to Use
 
-The setup is minimal. You create your `viem` client or `ethers` provider/signer as usual and pass it to the SDK's `createZksyncClient` function.
+The SDK extends your existing client. Configure **viem** or **ethers** as you normally would, then pass them into the adapter’s client factory and create the SDK surface.
 
-#### **viem Example**
-
-Notice how you configure a standard `viem` client first, then pass it to the SDK.
+### viem (public + wallet client)
 
 ```ts
-import { createPublicClient, http } from 'viem';
-import { zkSync } from 'viem/chains';
-import { createZksyncClient } from '@zksync-sdk/viem';
+import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { createViemClient, createViemSdk } from '@zksync-sdk/viem';
+import { ETH_ADDRESS } from '@zksync-sdk/core';
 
-// 1. Create a standard viem client
-const viemClient = createPublicClient({
-  chain: zkSync,
-  transport: http(),
-});
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
-// 2. Pass it to the SDK to create a zkSync client
-const client = createZksyncClient({
-  client: viemClient,
-});
+const l1 = createPublicClient({ transport: http(process.env.L1_RPC!) });
+const l2 = createPublicClient({ transport: http(process.env.L2_RPC!) });
+const l1Wallet = createWalletClient({ account, transport: http(process.env.L1_RPC!) });
 
-// 3. You can now access zkSync features
-const quote = await client.deposits.quote({
-  /* ... params ... */
-});
-console.log('Total fee:', quote.totalFee.toString());
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
+
+const params = {
+  amount: parseEther('0.01'),
+  to: account.address,
+  token: ETH_ADDRESS,
+} as const;
+
+const handle = await sdk.deposits.create(params);
+await sdk.deposits.wait(handle, { for: 'l2' }); // funds available on L2
 ```
 
-#### **ethers.js Example**
-
-The pattern is the same for `ethers`. Create your provider or signer, then give it to the SDK.
+### ethers (providers + signer)
 
 ```ts
-import { JsonRpcProvider, Wallet } from 'ethers';
-import { createZksyncClient } from '@zksync-sdk/ethers';
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@zksync-sdk/ethers';
+import { ETH_ADDRESS } from '@zksync-sdk/core';
 
-// 1. Create a standard ethers provider or signer
-const provider = new JsonRpcProvider('https://mainnet.era.zksync.io');
-// const signer = new Wallet(PRIVATE_KEY, provider); // For write operations
+const l1 = new JsonRpcProvider(process.env.L1_RPC!);
+const l2 = new JsonRpcProvider(process.env.L2_RPC!);
+const signer = new Wallet(process.env.PRIVATE_KEY!, l1);
 
-// 2. Pass it to the SDK to create a zkSync client
-const client = createZksyncClient({
-  provider, // or signer
-});
+const client = await createEthersClient({ l1, l2, signer });
+const sdk = createEthersSdk(client);
 
-// 3. Your code for using the SDK is the same!
-const quote = await client.deposits.quote({
-  /* ... params ... */
-});
-console.log('Total fee:', quote.totalFee.toString());
+const params = {
+  amount: parseEther('0.01'),
+  to: await signer.getAddress(),
+  token: ETH_ADDRESS,
+} as const;
+
+const handle = await sdk.deposits.create(params);
+await sdk.deposits.wait(handle, { for: 'l2' }); // funds available on L2
 ```
 
 ---

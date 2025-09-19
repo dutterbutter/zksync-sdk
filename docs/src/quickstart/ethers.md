@@ -34,13 +34,13 @@ L2_RPC_URL="ZKSYNC-OS-TESTNET-RPC"
 
 The following script will connect to the networks, create a deposit transaction, send it, and wait for it to be confirmed on both L1 and L2.
 
-Save this code as `deposit.ts`:
+Save this code as `deposit-ethers.ts`:
 
 ```ts
 import 'dotenv/config'; // Load environment variables from .env
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient } from '@zksync-sdk/ethers';
-import { ETH_ADDRESS_IN_CONTRACTS } from '@zksync-sdk/core';
+import { ETH_ADDRESS } from '@zksync-sdk/core';
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const L1_RPC_URL = process.env.L1_RPC_URL;
@@ -65,32 +65,42 @@ async function main() {
     signer,
   });
 
-  console.log(`Wallet balance on L1: ${await client.l1.getBalance(signer.address)}`);
-  console.log(`Wallet balance on L2: ${await client.l2.getBalance(signer.address)}`);
+   const L1balance = await l1.getBalance({ address: signer.address });
+  const L2balance = await l2.getBalance({ address: signer.address });
+
+  console.log('Wallet balance on L1:', L1balance);
+  console.log('Wallet balance on L2:', L2balance);
 
   // 3. PERFORM THE DEPOSIT
   // The create() method prepares and sends the transaction.
   // The wait() method polls until the transaction is complete.
   console.log('Sending deposit transaction...');
-  const depositHandle = await client.deposits.create({
-    token: ETH_ADDRESS_IN_CONTRACTS,
+  const depositHandle = await sdk.deposits.create({
+    token: ETH_ADDRESS,
     amount: parseEther('0.001'), // 0.001 ETH
-    to: signer.address,
+    to: account.address,
   });
 
   console.log(`L1 transaction hash: ${depositHandle.l1TxHash}`);
   console.log('Waiting for the deposit to be confirmed on L1...');
 
-  const l1Receipt = await depositHandle.waitL1();
-  console.log(`Deposit confirmed on L1 in block ${l1Receipt.blockNumber}`);
-  console.log('Waiting for the deposit to be finalized on L2...');
+  // Wait for L1 inclusion
+  const l1Receipt = await sdk.deposits.wait(depositHandle, { for: 'l1' });
+  console.log(`Deposit confirmed on L1 in block ${l1Receipt?.blockNumber}`);
 
-  const l2Receipt = await depositHandle.waitL2();
-  console.log(`Deposit finalized on L2 in block ${l2Receipt.blockNumber}`);
+  console.log('Waiting for the deposit to be executed on L2...');
+
+  // Wait for L2 execution
+  const l2Receipt = await sdk.deposits.wait(depositHandle, { for: 'l2' });
+  console.log(`Deposit executed on L2 in block ${l2Receipt?.blockNumber}`);
   console.log('Deposit complete! ✅');
 
-  console.log(`New wallet balance on L2: ${await client.l2.getBalance(signer.address)}`);
+  const L1balanceAfter = await l1.getBalance({ address: signer.address });
+  const L2balanceAfter = await l2.getBalance({ address: signer.address });
 
+  console.log('Wallet balance on L1 after:', L1balanceAfter);
+  console.log('Wallet balance on L2 after:', L2balanceAfter);
+  
   /*
     // OPTIONAL: ADVANCED CONTROL
     // The SDK also lets you inspect a transaction before sending it.
@@ -98,17 +108,17 @@ async function main() {
     // Uncomment the code below to see it in action.
 
     const params = {
-      token: ETH_ADDRESS_IN_CONTRACTS,
+      token: ETH_ADDRESS,
       amount: parseEther('0.001'),
-      to: signer.address,
+      to: account.address,
     };
-    
+
     // Get a quote for the fees
-    const quote = await client.deposits.quote(params);
+    const quote = await sdk.deposits.quote(params);
     console.log('Fee quote:', quote);
 
     // Prepare the transaction without sending
-    const plan = await client.deposits.prepare(params);
+    const plan = await sdk.deposits.prepare(params);
     console.log('Transaction plan:', plan);
   */
 }
@@ -124,7 +134,7 @@ main().catch((error) => {
 Execute the script using `bun`.
 
 ```bash
-bun run deposit.ts
+bun run deposit-ethers.ts
 ```
 
 You should see output confirming the L1 transaction, the wait periods, and finally the successful L2 verification.
@@ -134,13 +144,3 @@ You should see output confirming the L1 transaction, the wait periods, and final
 - **Insufficient funds on L1:** Make sure your wallet has enough ETH on L1 to cover both the deposit amount (`0.001` ETH) and the L1 gas fees.
 - **Invalid `PRIVATE_KEY`:** Ensure it’s a 64-character hex string, prefixed with `0x`.
 - **Stuck waiting for L2:** This can take a few minutes. If it takes too long, check that your `L2_RPC_URL` is correct and the network is operational.
-
----
-
-## Next Steps
-
-Now that you've completed a deposit, you can:
-
-- **Try an ERC20 Deposit:** This involves an additional `approve` step. The `quote()` method will tell you if an approval is needed.
-- **Explore Withdrawals:** Check out the guides for withdrawing funds from L2 back to L1.
-- **See the API Reference:** Dive deeper into the full capabilities of the SDK.

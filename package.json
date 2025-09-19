@@ -23,6 +23,12 @@
     "@typechain/ethers-v6": "^0.5.0",
     "viem": ">=2.0.0 <3"
   },
+    "peerDependenciesMeta": {
+    "ethers": { "optional": true },
+    "viem":   { "optional": true },
+    "@typechain/ethers-v6": { "optional": true }
+  },
+  "publishConfig": { "access": "public" },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

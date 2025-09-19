@@ -117,5 +117,5 @@ const depositHandle = await sdk.deposits.create(params);
 // 2. Wait for it to be finalized on L2
 const receipt = await sdk.deposits.wait(depositHandle, { for: 'l2' });
 
-console.log('Deposit complete!', receipt.transactionHash);
+console.log('Deposit complete!');
 ```
