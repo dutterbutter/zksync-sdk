@@ -15,7 +15,7 @@ import type { Address } from '../../core/types/primitives'; // ← use your core
 import {
   L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
-  L2_BASE_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
 } from '../../core/constants';
 
 // ABIs from internal snapshot (same as ethers adapter)
@@ -68,7 +68,7 @@ type InitArgs = {
   l2Wallet?: WalletClient<Transport, Chain, Account>;
   overrides?: Partial<ResolvedAddresses>;
 };
-// TODO: for withdrawals we should have l2wallet
+
 export function createViemClient(args: InitArgs): ViemClient {
   const { l1, l2, l1Wallet, l2Wallet } = args;
   if (!l1Wallet.account) {

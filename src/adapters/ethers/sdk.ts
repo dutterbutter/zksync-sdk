@@ -2,18 +2,18 @@
 import type { Contract } from 'ethers';
 import type { EthersClient, ResolvedAddresses } from './client';
 import {
-  DepositsResource,
+  createDepositsResource,
   type DepositsResource as DepositsResourceType,
 } from './resources/deposits/index';
 import {
-  WithdrawalsResource,
+  createWithdrawalsResource,
   type WithdrawalsResource as WithdrawalsResourceType,
 } from './resources/withdrawals/index';
 import { type Address, type Hex } from '../../core/types';
 import { isAddressEq } from '../../core/utils/addr';
 import {
-  L2_BASE_TOKEN_ADDRESS,
-  LEGACY_ETH_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
+  ETH_ADDRESS,
   ETH_ADDRESS_IN_CONTRACTS,
 } from '../../core/constants';
 
@@ -47,8 +47,8 @@ export interface EthersSdk {
 
 export function createEthersSdk(client: EthersClient): EthersSdk {
   return {
-    deposits: DepositsResource(client),
-    withdrawals: WithdrawalsResource(client),
+    deposits: createDepositsResource(client),
+    withdrawals: createWithdrawalsResource(client),
 
     // TODO: might update to create dedicated resources for these
     helpers: {
@@ -75,7 +75,7 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
 
       async l2TokenAddress(l1Token: Address): Promise<Address> {
         // ETH on L1 → contracts’ ETH placeholder on L2
-        if (isAddressEq(l1Token, LEGACY_ETH_ADDRESS)) {
+        if (isAddressEq(l1Token, ETH_ADDRESS)) {
           return ETH_ADDRESS_IN_CONTRACTS;
         }
 
@@ -93,8 +93,8 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
       },
 
       async l1TokenAddress(l2Token: Address): Promise<Address> {
-        if (isAddressEq(l2Token, LEGACY_ETH_ADDRESS)) {
-          return LEGACY_ETH_ADDRESS;
+        if (isAddressEq(l2Token, ETH_ADDRESS)) {
+          return ETH_ADDRESS;
         }
 
         const { l2AssetRouter } = await client.contracts();
@@ -104,7 +104,7 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
       },
 
       async assetId(l1Token: Address): Promise<Hex> {
-        const norm = isAddressEq(l1Token, LEGACY_ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
+        const norm = isAddressEq(l1Token, ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
 
         const { l1NativeTokenVault } = await client.contracts();
         // IL1NativeTokenVault.assetId(address) → bytes32

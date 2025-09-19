@@ -7,7 +7,7 @@ import { zksRpcFromEthers } from './rpc';
 import {
   L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
-  L2_BASE_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
 } from '../../core/constants';
 
 import IBridgehubABI from '../../internal/abis/IBridgehub.json';
@@ -76,7 +76,6 @@ type InitArgs = {
  * Create an EthersClient: a thin handle that carries providers/signer and
  * resolves the minimal addresses needed by resources.
  */
-// TODO: for withdrawals we should have l2wallet
 export function createEthersClient(args: InitArgs): EthersClient {
   const { l1, l2, signer } = args;
 

@@ -3,20 +3,20 @@ import type { PublicClient, GetContractReturnType } from 'viem';
 import type { ViemClient, ResolvedAddresses } from './client';
 
 import {
-  DepositsResource,
+  createDepositsResource,
   type DepositsResource as DepositsResourceType,
 } from './resources/deposits/index';
 
 import {
-  WithdrawalsResource,
+  createWithdrawalsResource,
   type WithdrawalsResource as WithdrawalsResourceType,
 } from './resources/withdrawals/index';
 
 import type { Address, Hex } from '../../core/types';
 import { isAddressEq } from '../../core/utils/addr';
 import {
-  L2_BASE_TOKEN_ADDRESS,
-  LEGACY_ETH_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
+  ETH_ADDRESS,
   ETH_ADDRESS_IN_CONTRACTS,
 } from '../../core/constants';
 
@@ -63,8 +63,8 @@ export interface ViemSdk {
 
 export function createViemSdk(client: ViemClient): ViemSdk {
   return {
-    deposits: DepositsResource(client),
-    withdrawals: WithdrawalsResource(client),
+    deposits: createDepositsResource(client),
+    withdrawals: createWithdrawalsResource(client),
 
     helpers: {
       addresses: () => client.ensureAddresses(),
@@ -90,7 +90,7 @@ export function createViemSdk(client: ViemClient): ViemSdk {
 
       async l2TokenAddress(l1Token: Address): Promise<Address> {
         // ETH on L1 → contracts’ ETH placeholder on L2
-        if (isAddressEq(l1Token, LEGACY_ETH_ADDRESS)) {
+        if (isAddressEq(l1Token, ETH_ADDRESS)) {
           return ETH_ADDRESS_IN_CONTRACTS;
         }
 
@@ -107,8 +107,8 @@ export function createViemSdk(client: ViemClient): ViemSdk {
       },
 
       async l1TokenAddress(l2Token: Address): Promise<Address> {
-        if (isAddressEq(l2Token, LEGACY_ETH_ADDRESS)) {
-          return LEGACY_ETH_ADDRESS;
+        if (isAddressEq(l2Token, ETH_ADDRESS)) {
+          return ETH_ADDRESS;
         }
 
         const { l2AssetRouter } = await client.contracts();
@@ -118,7 +118,7 @@ export function createViemSdk(client: ViemClient): ViemSdk {
 
       async assetId(l1Token: Address): Promise<Hex> {
         // Normalize ETH → contracts placeholder
-        const norm = isAddressEq(l1Token, LEGACY_ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
+        const norm = isAddressEq(l1Token, ETH_ADDRESS) ? ETH_ADDRESS_IN_CONTRACTS : l1Token;
 
         const { l1NativeTokenVault } = await client.contracts();
         const id = (await l1NativeTokenVault.read.assetId([norm])) as Hex;

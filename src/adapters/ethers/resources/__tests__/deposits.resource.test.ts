@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 import { describe, it, expect } from 'bun:test';
-import { DepositsResource } from '../deposits/index';
+import { createDepositsResource } from '../deposits/index';
 import {
   IERC20,
   IBridgehub,
@@ -14,7 +14,7 @@ import {
   makeClient,
 } from './deposits.testkit.ts';
 import { isZKsyncError } from '../../../../core/types/errors.ts';
-import { LEGACY_ETH_ADDRESS } from '../../../../core/constants.ts';
+import { ETH_ADDRESS } from '../../../../core/constants.ts';
 import { makeNprLog as nprLog } from '../deposits/services/__tests__/verification.test.ts';
 
 describe('deposits: plan/quote', () => {
@@ -32,9 +32,9 @@ describe('deposits: plan/quote', () => {
     const signer = makeSigner(l1);
     const client = makeClient({ l1, l2, signer });
 
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const summary = await deposits.quote({
-      token: LEGACY_ETH_ADDRESS,
+      token: ETH_ADDRESS,
       amount: 123n,
       to: undefined,
     } as any);
@@ -52,7 +52,7 @@ describe('deposits: plan/quote', () => {
     const signer = makeSigner(l1);
     const client = makeClient({ l1, l2, signer });
 
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const res = await deposits.tryQuote({ token: ADDR.sender as any, amount: 1n } as any);
     expect(res.ok).toBe(false);
     // Unknown error is shaped by toResult() as ZKsyncError
@@ -76,7 +76,7 @@ describe('deposits: plan/quote', () => {
     // Make baseToken() return ADDR.token so commonCtx picks 'erc20-base'
     const client = makeClient({ l1, l2, signer, baseToken: async () => ADDR.token as any });
 
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const plan = await deposits.prepare({ token: ADDR.token as any, amount } as any);
     expect(plan.route).toBe('erc20-base');
     expect(plan.summary.approvalsNeeded.length).toBe(1);
@@ -91,7 +91,7 @@ describe('deposits: plan/quote', () => {
     const signer = makeSigner(l1);
     const client = makeClient({ l1, l2, signer });
 
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const res = await deposits.tryPrepare({ token: ADDR.sender as any, amount: 1n } as any);
     expect(res.ok).toBe(false);
     // Unknown error is shaped by toResult() as ZKsyncError
@@ -116,8 +116,8 @@ describe('deposits: create/tryCreate', () => {
     const signer = makeSigner(l1);
     const client = makeClient({ l1, l2, signer });
 
-    const deposits = DepositsResource(client);
-    const handle = await deposits.create({ token: LEGACY_ETH_ADDRESS as any, amount: 123n } as any);
+    const deposits = createDepositsResource(client);
+    const handle = await deposits.create({ token: ETH_ADDRESS as any, amount: 123n } as any);
 
     expect(handle.kind).toBe('deposit');
     expect(typeof handle.l1TxHash).toBe('string');
@@ -149,7 +149,7 @@ describe('deposits: create/tryCreate', () => {
     const signer = makeSigner(l1);
     const client = makeClient({ l1, l2, signer, baseToken: async () => ADDR.token as any });
 
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const handle = await deposits.create({ token: ADDR.token as any, amount } as any);
 
     // Since re-check shows allowance already sufficient, only the bridge step is sent
@@ -188,7 +188,7 @@ describe('deposits: create/tryCreate', () => {
     } as any;
     const client = makeClient({ l1, l2, signer });
 
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const res = await deposits.tryCreate({ token: ADDR.sender as any, amount: 1n } as any);
     expect(res.ok).toBe(false);
   });
@@ -199,7 +199,7 @@ describe('deposits: status/wait', () => {
     const l1 = makeL1Provider({});
     const l2 = makeL2Provider();
     const client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    const deposits = DepositsResource(client);
+    const deposits = createDepositsResource(client);
     const s = await deposits.status({} as any);
     expect(s.phase).toBe('UNKNOWN');
   });
@@ -210,26 +210,26 @@ describe('deposits: status/wait', () => {
     let l1 = makeL1Provider({}, { getTransactionReceipt: null });
     let l2 = makeL2Provider({ getTransactionReceipt: null });
     let client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    let s = await DepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
+    let s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L1_PENDING');
 
     // 2) L1 present, NPR log but no L2 receipt yet
     l1 = makeL1Provider({}, { getTransactionReceipt: { logs: [nprLog(l2tx)], status: 1 } });
     l2 = makeL2Provider({ getTransactionReceipt: null });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    s = await DepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
+    s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L2_PENDING');
 
     // 3) L2 pending
     l2 = makeL2Provider({ getTransactionReceipt: null });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    s = await DepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
+    s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L2_PENDING');
 
     // 4) L2 executed
     l2 = makeL2Provider({ getTransactionReceipt: { status: 1 } });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    s = await DepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
+    s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L2_EXECUTED');
   });
 
@@ -240,13 +240,13 @@ describe('deposits: status/wait', () => {
     let l1 = makeL1Provider({}, { waitForTransaction: null });
     let l2 = makeL2Provider();
     let client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    let v = await DepositsResource(client).wait(l1hash, { for: 'l1' });
+    let v = await createDepositsResource(client).wait(l1hash, { for: 'l1' });
     expect(v).toBeNull();
 
     // included
     l1 = makeL1Provider({}, { waitForTransaction: { status: 1 } });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    v = await DepositsResource(client).wait(l1hash, { for: 'l1' });
+    v = await createDepositsResource(client).wait(l1hash, { for: 'l1' });
     expect((v as any).status).toBe(1);
   });
 
@@ -255,7 +255,7 @@ describe('deposits: status/wait', () => {
     const l1 = makeL1Provider({}, { waitForTransaction: null });
     const l2 = makeL2Provider();
     const client = makeClient({ l1, l2, signer: makeSigner(l1) });
-    const res = await DepositsResource(client).tryWait(l1hash, { for: 'l1' });
+    const res = await createDepositsResource(client).tryWait(l1hash, { for: 'l1' });
     expect(res.ok).toBe(false);
     expect(isZKsyncError((res as any).error)).toBe(true);
     expect(String((res as any).error)).toMatch(/No L1 receipt yet/);

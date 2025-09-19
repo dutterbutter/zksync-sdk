@@ -65,7 +65,7 @@ async function main() {
     signer,
   });
 
-   const L1balance = await l1.getBalance({ address: signer.address });
+  const L1balance = await l1.getBalance({ address: signer.address });
   const L2balance = await l2.getBalance({ address: signer.address });
 
   console.log('Wallet balance on L1:', L1balance);
@@ -100,7 +100,7 @@ async function main() {
 
   console.log('Wallet balance on L1 after:', L1balanceAfter);
   console.log('Wallet balance on L2 after:', L2balanceAfter);
-  
+
   /*
     // OPTIONAL: ADVANCED CONTROL
     // The SDK also lets you inspect a transaction before sending it.

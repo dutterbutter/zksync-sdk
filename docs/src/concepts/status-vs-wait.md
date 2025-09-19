@@ -12,6 +12,7 @@ Both methods work for **Deposits** and **Withdrawals**, but Withdrawals add fina
 ### `withdrawals.status(h | l2TxHash) → Promise<WithdrawalStatus>`
 
 **Input**
+
 - `h`: a `WithdrawalWaitable` (e.g., from `create`) **or** the L2 tx hash `Hex`.
 
 **Phases returned**
@@ -33,21 +34,21 @@ Both methods work for **Deposits** and **Withdrawals**, but Withdrawals add fina
 ```ts
 const s = await sdk.withdrawals.status(handleOrHash);
 // s.phase in: 'UNKNOWN' | 'L2_PENDING' | 'PENDING' | 'READY_TO_FINALIZE' | 'FINALIZED'
-````
+```
 
 ### `withdrawals.wait(h | l2TxHash, { for, pollMs?, timeoutMs? })`
 
 **Targets**
 
-* `{ for: 'l2' }` → resolves with **L2 receipt** (`TransactionReceiptZKsyncOS | null`)
-* `{ for: 'ready' }` → resolves **`null`** when finalization becomes possible
-* `{ for: 'finalized' }` → resolves **L1 receipt** when finalized, or `null` if finalized but receipt not found
+- `{ for: 'l2' }` → resolves with **L2 receipt** (`TransactionReceiptZKsyncOS | null`)
+- `{ for: 'ready' }` → resolves **`null`** when finalization becomes possible
+- `{ for: 'finalized' }` → resolves **L1 receipt** when finalized, or `null` if finalized but receipt not found
 
 **Behavior**
 
-* If the handle has **no L2 tx hash**, returns `null` immediately.
-* Default polling interval:  5500ms default or set explicitly if you want.
-* Optional `timeoutMs` returns `null` on deadline.
+- If the handle has **no L2 tx hash**, returns `null` immediately.
+- Default polling interval: 5500ms default or set explicitly if you want.
+- Optional `timeoutMs` returns `null` on deadline.
 
 **Example**
 
@@ -64,8 +65,8 @@ const l1Rcpt = await sdk.withdrawals.wait(handle, { for: 'finalized' });
 
 **Common Troubleshooting**
 
-* Network hiccup while fetching receipts → thrown `ZKsyncError` (`RPC` kind).
-* Internal decode issue → thrown `ZKsyncError` (`INTERNAL` kind).
+- Network hiccup while fetching receipts → thrown `ZKsyncError` (`RPC` kind).
+- Internal decode issue → thrown `ZKsyncError` (`INTERNAL` kind).
 
 ---
 
@@ -75,16 +76,16 @@ const l1Rcpt = await sdk.withdrawals.wait(handle, { for: 'finalized' });
 
 **Input**
 
-* `h`: `DepositWaitable` (from `create`) **or** L1 tx hash `Hex`.
+- `h`: `DepositWaitable` (from `create`) **or** L1 tx hash `Hex`.
 
 **Phases returned**
 
-* `UNKNOWN` — no L1 hash.
-* `L1_PENDING` — L1 receipt missing.
-* `L1_INCLUDED` — L1 included, but L2 hash not yet derivable from logs.
-* `L2_PENDING` — L2 hash known but receipt missing.
-* `L2_EXECUTED` — L2 receipt present with `status === 1`.
-* `L2_FAILED` — L2 receipt present with `status !== 1`.
+- `UNKNOWN` — no L1 hash.
+- `L1_PENDING` — L1 receipt missing.
+- `L1_INCLUDED` — L1 included, but L2 hash not yet derivable from logs.
+- `L2_PENDING` — L2 hash known but receipt missing.
+- `L2_EXECUTED` — L2 receipt present with `status === 1`.
+- `L2_FAILED` — L2 receipt present with `status !== 1`.
 
 **Example**
 
@@ -97,8 +98,8 @@ const s = await sdk.deposits.status(handleOrL1Hash);
 
 **Targets**
 
-* `{ for: 'l1' }` → waits for L1 inclusion → **L1 receipt** or `null`
-* `{ for: 'l2' }` → waits L1 inclusion **and** canonical L2 execution → **L2 receipt** or `null`
+- `{ for: 'l1' }` → waits for L1 inclusion → **L1 receipt** or `null`
+- `{ for: 'l2' }` → waits L1 inclusion **and** canonical L2 execution → **L2 receipt** or `null`
 
 **Example**
 
@@ -111,6 +112,6 @@ const l2Rcpt = await sdk.deposits.wait(handle, { for: 'l2' });
 
 ## Tips & edge cases
 
-* **Handles vs hashes:** Both methods accept either a handle (from `create`) or a raw tx hash (`Hex`). If you pass a handle without the relevant hash, you’ll get `UNKNOWN`/`null`.
-* **Polling:** For withdrawals, set `pollMs` explicitly if you want tighter/looser polling; minimum enforced is **5500ms**.
-* **Timeouts:** Use `timeoutMs` for long waits (e.g., finalization windows) to avoid hanging scripts.
+- **Handles vs hashes:** Both methods accept either a handle (from `create`) or a raw tx hash (`Hex`). If you pass a handle without the relevant hash, you’ll get `UNKNOWN`/`null`.
+- **Polling:** For withdrawals, set `pollMs` explicitly if you want tighter/looser polling; minimum enforced is **5500ms**.
+- **Timeouts:** Use `timeoutMs` for long waits (e.g., finalization windows) to avoid hanging scripts.

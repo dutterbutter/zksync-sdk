@@ -1,3 +1,4 @@
+// examples/withdrawals-erc20.ts
 import { JsonRpcProvider, Wallet, parseUnits } from 'ethers';
 import { createEthersClient } from '../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../src/adapters/ethers/sdk';
@@ -35,7 +36,7 @@ async function main() {
   ]);
   console.log(`[${sym}] balances before  L1=${balL1Before}  L2=${balL2Before}`);
 
-  // Prepare withdraw params (ERC-20 route uses L2 token address)
+  // Prepare withdraw params
   const params = {
     token: l2Token, // L2 ERC-20
     amount: parseUnits('25', dec), // withdraw 25 tokens
@@ -66,10 +67,10 @@ async function main() {
 
   console.log('STATUS (ready):', await sdk.withdrawals.status(created.l2TxHash));
 
-  // Wait until the withdrawal is ready to finalize (no side-effects)
+  // Wait until the withdrawal is ready to finalize
   await sdk.withdrawals.wait(created.l2TxHash, { for: 'ready' });
 
-  // Finalize on L1 (idempotent)
+  // Finalize on L1
   const fin = await sdk.withdrawals.tryFinalize(created.l2TxHash);
   if (!fin.ok) {
     console.error('FINALIZE failed:', fin.error);
@@ -81,7 +82,6 @@ async function main() {
     fin.value.receipt?.hash ?? '(already finalized)',
   );
 
-  // Optionally: wait until finalized mapping is true and fetch our L1 receipt if we sent it
   const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });
   if (l1Receipt) {
     console.log('L1 finalize receipt:', l1Receipt.hash);
@@ -89,7 +89,7 @@ async function main() {
     console.log('Finalized (no local L1 receipt available, possibly finalized by another actor).');
   }
 
-  // Balances after (useful when finalize just happened)
+  // Balances after
   const [balL1After, balL2After] = await Promise.all([
     erc20L1.balanceOf(me),
     erc20L2.balanceOf(me),

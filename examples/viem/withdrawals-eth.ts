@@ -1,4 +1,4 @@
-// examples/viem/withdraw-eth.ts
+// examples/viem/withdrawals-eth.ts
 import {
   createPublicClient,
   createWalletClient,
@@ -39,13 +39,12 @@ async function main() {
     transport: http(L2_RPC),
   });
 
-  // --- SDK client: pass explicit clients + wallets ---
   const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
   const sdk = createViemSdk(client);
 
   const me = account.address as Address;
 
-  // Withdraw ETH (base token on L2)
+  // Withdraw ETH
   const params = {
     token: ETH_ADDRESS,
     amount: parseEther('0.01'),
@@ -79,15 +78,14 @@ async function main() {
     l2Receipt?.transactionHash,
   );
 
-  // Wait until ready to finalize (no side-effects)
+  // Wait until ready to finalize
   await sdk.withdrawals.wait(created.l2TxHash, { for: 'ready' });
   console.log('STATUS (ready):', await sdk.withdrawals.status(created.l2TxHash));
 
-  // Try to finalize on L1 (idempotent)
+  // Try to finalize on L1
   const fin = await sdk.withdrawals.tryFinalize(created.l2TxHash);
   console.log('TRY FINALIZE:', fin);
 
-  // Optionally wait until finalized mapping is true (may return L1 receipt if we submitted it)
   const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });
   if (l1Receipt) {
     console.log('L1 finalize receipt:', l1Receipt.transactionHash);

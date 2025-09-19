@@ -14,6 +14,7 @@ They work the same whether you’re using the **viem** or **ethers** adapter.
 Returns the canonical **Bridgehub** contract address.
 
 **Example**
+
 ```ts
 const bridgehub = await client.zks.getBridgehubAddress();
 console.log('Bridgehub:', bridgehub); // 0x...
@@ -45,8 +46,8 @@ if (!receipt) {
 **Returns**
 `ReceiptWithL2ToL1 | null`
 
-* Same fields as a normal receipt, plus **`l2ToL1Logs: any[]`** (always present; empty if none).
-* `null` when the node does not yet have the receipt.
+- Same fields as a normal receipt, plus **`l2ToL1Logs: any[]`** (always present; empty if none).
+- `null` when the node does not yet have the receipt.
 
 ## `getL2ToL1LogProof(txHash, index)`
 
@@ -79,5 +80,5 @@ type ProofNormalized = {
   id: bigint;
   batchNumber: bigint;
   proof: `0x${string}`[];
-}
+};
 ```
