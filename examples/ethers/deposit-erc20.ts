@@ -1,4 +1,4 @@
-// examples/deposit-eth.ts
+// examples/deposit-erc20.ts
 import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethers';
 import { createEthersClient } from '../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../src/adapters/ethers/sdk';

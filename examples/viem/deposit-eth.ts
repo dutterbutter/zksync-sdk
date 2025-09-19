@@ -1,4 +1,4 @@
-// examples/deposit-eth-viem.ts
+// examples/deposit-eth.ts
 import { createPublicClient, createWalletClient, http, parseEther, WalletClient } from 'viem';
 import type { Account, Chain, Transport } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -26,7 +26,7 @@ async function main() {
     account,
     transport: http(L1_RPC),
   });
-  
+
   // Check balances
   const [balL1, balL2] = await Promise.all([
     l1.getBalance({ address: account.address }),
@@ -35,7 +35,7 @@ async function main() {
   console.log('L1 balance:', balL1.toString());
   console.log('L2 balance:', balL2.toString());
 
-  // --- SDK ---
+  // client + sdk
   const client = createViemClient({ l1, l2, l1Wallet });
   const sdk = createViemSdk(client);
 

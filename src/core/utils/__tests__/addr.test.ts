@@ -2,8 +2,8 @@ import { describe, it, expect } from 'bun:test';
 import { isHash66, isAddressEq, isETH, normalizeAddrEq } from '../addr';
 import {
   ETH_ADDRESS_IN_CONTRACTS,
-  LEGACY_ETH_ADDRESS,
-  L2_BASE_TOKEN_ADDRESS,
+  ETH_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
 } from '../../constants';
 
 // Helpers
@@ -41,11 +41,11 @@ describe('utils/addr.isAddressEq', () => {
 describe('utils/addr.isETH', () => {
   it('returns true for all ETH alias addresses', () => {
     // Casing-insensitivity check
-    expect(isETH(LEGACY_ETH_ADDRESS)).toBe(true);
+    expect(isETH(ETH_ADDRESS)).toBe(true);
     expect(isETH(L2_BASE_TOKEN_ADDRESS)).toBe(true);
     expect(isETH(ETH_ADDRESS_IN_CONTRACTS)).toBe(true);
     // Also ensure lower/upper variants pass through isAddressEq logic
-    expect(isETH(LEGACY_ETH_ADDRESS.toLowerCase() as `0x${string}`)).toBe(true);
+    expect(isETH(ETH_ADDRESS.toLowerCase() as `0x${string}`)).toBe(true);
   });
 
   it('returns false for non-ETH addresses', () => {

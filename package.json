@@ -16,24 +16,45 @@
     "typedoc": "0.28.9",
     "typedoc-plugin-markdown": "4.8.1",
     "typescript": "^5.5.0",
-    "typescript-eslint": "^8.0.1"
+    "typescript-eslint": "^8.0.1",
+    "ethers": "^6.15.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "viem": "^2.0.0"
   },
   "peerDependencies": {
     "ethers": "^6.15.0",
     "@typechain/ethers-v6": "^0.5.0",
     "viem": ">=2.0.0 <3"
   },
-    "peerDependenciesMeta": {
-    "ethers": { "optional": true },
-    "viem":   { "optional": true },
-    "@typechain/ethers-v6": { "optional": true }
+  "peerDependenciesMeta": {
+    "ethers": {
+      "optional": true
+    },
+    "viem": {
+      "optional": true
+    },
+    "@typechain/ethers-v6": {
+      "optional": true
+    }
   },
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./ethers": {
+      "types": "./dist/adapters/ethers/index.d.ts",
+      "import": "./dist/adapters/ethers/index.js",
+      "require": "./dist/adapters/ethers/index.cjs"
+    },
+    "./viem": {
+      "types": "./dist/adapters/viem/index.d.ts",
+      "import": "./dist/adapters/viem/index.js",
+      "require": "./dist/adapters/viem/index.cjs"
     },
     "./types": {
       "types": "./dist/types/index.d.ts",
@@ -101,6 +122,8 @@
     "docs:serve": "mdbook serve docs -p 3000",
     "docs:build": "mdbook build docs",
     "test": "bun test",
+    "test:e2e:ethers": "bun test ./src/adapters/ethers/e2e/*.e2e.ts",
+    "test:e2e:viem": "bun test ./src/adapters/viem/e2e/*.e2e.ts",
     "test:watch": "bun test --watch",
     "test:cov": "bun test --coverage",
     "test:core": "bun test src/core"
@@ -110,6 +133,12 @@
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
+      "ethers": [
+        "dist/adapters/ethers/index.d.ts"
+      ],
+      "viem": [
+        "dist/adapters/viem/index.d.ts"
+      ],
       "types/*": [
         "dist/types/*"
       ],

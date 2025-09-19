@@ -7,7 +7,7 @@ import IL1NullifierABI from '../../../internal/abis/IL1Nullifier.json';
 import {
   L2_ASSET_ROUTER_ADDR,
   L2_NATIVE_TOKEN_VAULT_ADDR,
-  L2_BASE_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
 } from '../../../core/constants';
 
 // ---------- tiny helpers ----------

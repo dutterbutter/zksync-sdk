@@ -27,7 +27,7 @@ export default [
       parserOptions: {
         ...(cfg.languageOptions?.parserOptions ?? {}),
         project: ['./tsconfig.eslint.json'],
-        tsconfigRootDir: new URL('.', import.meta.url),
+        tsconfigRootDir: process.cwd(),
       },
     },
   })),

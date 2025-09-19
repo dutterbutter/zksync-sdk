@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'bun:test';
 import { pickDepositRoute, type BaseTokenLookup } from '../route';
 import {
-  LEGACY_ETH_ADDRESS,
-  L2_BASE_TOKEN_ADDRESS,
+  ETH_ADDRESS,
+  L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
   ETH_ADDRESS_IN_CONTRACTS,
 } from '../../../constants';
 
@@ -20,14 +20,14 @@ describe('deposit/pickRouteSmart', () => {
   it("returns 'eth' for any ETH alias (L1 legacy / L2 base / in-contracts)", async () => {
     const client = fakeClient('0x0000000000000000000000000000000000000000'); // irrelevant for ETH
 
-    expect(await pickDepositRoute(client, 324n, LEGACY_ETH_ADDRESS)).toBe('eth');
+    expect(await pickDepositRoute(client, 324n, ETH_ADDRESS)).toBe('eth');
     expect(await pickDepositRoute(client, 324n, L2_BASE_TOKEN_ADDRESS)).toBe('eth');
     expect(await pickDepositRoute(client, 324n, ETH_ADDRESS_IN_CONTRACTS)).toBe('eth');
 
     // Casing differences should still be treated as ETH (isETH uses isAddressEq)
-    expect(
-      await pickDepositRoute(client, 324n, LEGACY_ETH_ADDRESS.toLowerCase() as `0x${string}`),
-    ).toBe('eth');
+    expect(await pickDepositRoute(client, 324n, ETH_ADDRESS.toLowerCase() as `0x${string}`)).toBe(
+      'eth',
+    );
   });
 
   // it.skip("returns 'erc20-base' when token equals the L2 base token (case/prefix agnostic)", async () => {

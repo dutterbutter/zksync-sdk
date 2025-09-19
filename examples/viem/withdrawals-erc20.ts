@@ -1,4 +1,4 @@
-// examples/withdraw-erc20-viem.ts
+// examples/withdraw-erc20.ts
 import {
   createPublicClient,
   createWalletClient,
@@ -37,7 +37,7 @@ async function main() {
     account,
     transport: http(L1_RPC),
   });
-  // Need to provide an L2 wallet client for sending L2 tx 
+  // Need to provide an L2 wallet client for sending L2 tx
   const l2Wallet = createWalletClient<Transport, Chain, Account>({
     account,
     transport: http(L2_RPC),
@@ -111,11 +111,11 @@ async function main() {
 
   console.log('STATUS (post-L2):', await sdk.withdrawals.status(created.l2TxHash));
 
-  // Wait until the withdrawal is ready to finalize (no side-effects)
+  // Wait until the withdrawal is ready to finalize
   await sdk.withdrawals.wait(created.l2TxHash, { for: 'ready' });
   console.log('STATUS (ready):', await sdk.withdrawals.status(created.l2TxHash));
 
-  // Finalize on L1 (idempotent; may be already finalized)
+  // Finalize on L1
   const fin = await sdk.withdrawals.tryFinalize(created.l2TxHash);
   console.log(
     'FINALIZE:',
@@ -123,7 +123,6 @@ async function main() {
     fin.ok ? (fin.value.receipt?.transactionHash ?? '(already finalized)') : '',
   );
 
-  // Optionally wait until finalized mapping is true (returns our L1 receipt if we sent it here)
   const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });
   if (l1Receipt) {
     console.log('L1 finalize receipt:', l1Receipt.transactionHash);
