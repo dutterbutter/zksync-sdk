@@ -1,4 +1,4 @@
-// Main “SDK” surface for ethers users
+// index.ts
 export { createEthersClient as createClient } from './client';
 export * from './client';
 export * from './sdk';
@@ -14,5 +14,5 @@ export type { WithdrawalsResource } from './resources/withdrawals';
 export * from './errors/error-ops';
 export * from './errors/revert';
 
-// Types (type-only to avoid transitive runtime)
+// Types
 export type * from './typechain';

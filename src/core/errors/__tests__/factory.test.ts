@@ -15,7 +15,6 @@ describe('errors/factory.createError', () => {
     });
 
     expect(isZKsyncError(err)).toBe(true);
-    // Access the raw envelope (public in your class)
     const env = (err as any).envelope;
     expect(env.type).toBe('RPC');
     expect(env.message).toBe('boom');
@@ -31,13 +30,12 @@ describe('errors/factory.shapeCause', () => {
       name: 'ProviderError',
       message: 'call reverted',
       code: -32000,
-      data: '0xabcdef0123456789abcdef', // expect trimmed
+      data: '0xabcdef0123456789abcdef',
     };
     const shaped = shapeCause(input);
     expect(shaped.name).toBe('ProviderError');
     expect(shaped.message).toBe('call reverted');
     expect(shaped.code).toBe(-32000);
-    // data should be shortened to prefix + ellipsis
     expect(shaped.data).toMatch(/^0x[0-9a-fA-F]{8}…$/);
   });
 

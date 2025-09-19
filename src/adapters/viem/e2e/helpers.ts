@@ -10,7 +10,6 @@
 import type { Address, Hex } from '../../../core/types/primitives.ts';
 import { expect } from 'bun:test';
 
-// viem
 import {
   createPublicClient,
   createWalletClient,
@@ -20,18 +19,13 @@ import {
   type Account,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-
-// ⬇️ Adjust these to your actual factories
 import { createViemClient } from '../client.ts';
 import { createViemSdk } from '../sdk.ts';
 
-// ------- Env (with sensible defaults for your local stack) -------
+// TODO: refactor with shared mocks
 const L1_RPC = 'http://127.0.0.1:8545';
 const L2_RPC = 'http://127.0.0.1:3050';
 const PRIVATE_KEY = '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6';
-
-// If you have Chain objects for L1/L2, you can pass them to the client/wallet.
-// For plain local RPCs, omitting `chain` is fine and viem will infer by RPC.
 const L1_CHAIN: Chain | undefined = undefined;
 const L2_CHAIN: Chain | undefined = undefined;
 
@@ -135,7 +129,6 @@ export async function waitForL2InclusionWithdrawViem(sdk: any, handle: any, time
       if (s.phase !== 'L2_PENDING' && s.phase !== 'UNKNOWN') return s;
     } catch (e: any) {
       const msg = String(e?.message ?? '');
-      // Swallow transient "receipt not found" during indexing
       if (!msg.includes('TransactionReceiptNotFoundError')) throw e;
     }
     await sleep(1500);
@@ -189,7 +182,7 @@ export async function verifyWithdrawalBalancesAfterFinalizeViem(args: {
   ]);
 
   // ---------- L2 checks ----------
-  const l2Delta = balancesBefore.l2 - l2After; // decrease
+  const l2Delta = balancesBefore.l2 - l2After;
   expect(l2Delta >= amount).toBeTrue();
 
   try {
@@ -204,7 +197,7 @@ export async function verifyWithdrawalBalancesAfterFinalizeViem(args: {
   }
 
   // ---------- L1 checks ----------
-  const l1Delta = l1After - balancesBefore.l1; // net increase after finalization
+  const l1Delta = l1After - balancesBefore.l1;
 
   if (l1FinalizeRcpt) {
     const gasUsed = BigInt(l1FinalizeRcpt.gasUsed ?? 0n);

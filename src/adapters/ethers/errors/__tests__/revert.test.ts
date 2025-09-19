@@ -38,13 +38,14 @@ describe('adapters/ethers/errors/revert.decodeRevert', () => {
 
   it('decodes Panic(uint256)', () => {
     const data = panicData(0x12);
-    const e = { error: { data } }; // nested at error.data
+    const e = { error: { data } };
     const out = decodeRevert(e)!;
     expect(out.selector.toLowerCase()).toBe('0x4e487b71');
     expect(out.name).toBe('Panic');
     expect(out.args?.[0]).toBe(0x12n);
   });
 
+  // TODO: fixme
   it('tries all supported nested error-data locations', () => {
     const data = errorStringData('nested!');
     const samples = [
@@ -62,7 +63,7 @@ describe('adapters/ethers/errors/revert.decodeRevert', () => {
   });
 
   it('falls back to selector when unable to decode with any ABI', () => {
-    const data = '0xdeadbeef'; // minimal hex w/ selector only
+    const data = '0xdeadbeef';
     const out = decodeRevert({ data })!;
     expect(out.name).toBeUndefined();
     expect(out.selector.toLowerCase()).toBe('0xdeadbeef');
@@ -89,27 +90,25 @@ describe('adapters/ethers/errors/revert.classifyReadinessFromRevert', () => {
   });
 
   it('classifies UNFINALIZABLE:unsupported with name when mapping has no override', () => {
-    // pick a name unlikely to be in REVERT_TO_READINESS
     registerErrorAbi('X', [{ type: 'error', name: 'TotallyUnknown', inputs: [] }]);
     const data = customErrorData('TotallyUnknown()');
     const res = classifyReadinessFromRevert({ data });
     expect(res.kind).toBe('UNFINALIZABLE');
-    // detail prefers name when present
-    // @ts-expect-error narrowed by assertion above
+    // @ts-expect-error
     expect(res.detail).toBe('TotallyUnknown');
   });
 
   it('classifies UNFINALIZABLE:unsupported with selector when no name is parsed', () => {
     const res = classifyReadinessFromRevert({ data: '0xdeadbeef' });
     expect(res.kind).toBe('UNFINALIZABLE');
-    // @ts-expect-error narrowed by assertion above
+    // @ts-expect-error
     expect(res.detail?.toLowerCase()).toBe('0xdeadbeef');
   });
 
   it('falls back to NOT_READY:unknown with lowercased message when no revert data', () => {
     const res = classifyReadinessFromRevert({ shortMessage: 'Something Else' });
     expect(res.kind).toBe('NOT_READY');
-    // @ts-expect-error narrowed by assertion above
+    // @ts-expect-error
     expect(res.detail).toBe('something else');
   });
 });

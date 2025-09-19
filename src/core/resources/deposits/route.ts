@@ -2,7 +2,6 @@ import type { Address } from '../../types/primitives';
 import type { DepositRoute } from '../../types/flows/deposits';
 import { isETH } from '../../utils/addr';
 
-// Minimal interface the helper needs from any client
 export interface BaseTokenLookup {
   baseToken(chainId: bigint): Promise<Address>;
 }

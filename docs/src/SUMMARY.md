@@ -22,7 +22,9 @@
   - [Status vs Wait](concepts/status-vs-wait.md)
   - [Finalization](concepts/finalization.md)
 
-- [ZKS Methods](zks/methods.md)
+- [Reference](reference/index.md)
+  - [ZKsync RPC Helpers](reference/methods.md)
+  - [Common Helpers](reference/helpers.md)
 
 <!-- - [API Reference](api/README.md)
   - [Viem SDK (@zksync-sdk/viem)](api/viem/README.md)

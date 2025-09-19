@@ -44,7 +44,6 @@ describe('utils/addr.isETH', () => {
     expect(isETH(ETH_ADDRESS)).toBe(true);
     expect(isETH(L2_BASE_TOKEN_ADDRESS)).toBe(true);
     expect(isETH(ETH_ADDRESS_IN_CONTRACTS)).toBe(true);
-    // Also ensure lower/upper variants pass through isAddressEq logic
     expect(isETH(ETH_ADDRESS.toLowerCase() as `0x${string}`)).toBe(true);
   });
 
@@ -57,7 +56,7 @@ describe('utils/addr.isETH', () => {
 describe('utils/addr.normalizeAddrEq', () => {
   it('normalizes and compares addresses irrespective of 0x prefix and case', () => {
     // Same address, different case + missing 0x on one side
-    const noPrefix = aLower.slice(2); // remove 0x
+    const noPrefix = aLower.slice(2);
     expect(normalizeAddrEq(aChecksummed, noPrefix)).toBe(true);
     expect(normalizeAddrEq(aLower, aChecksummed)).toBe(true);
     expect(normalizeAddrEq(noPrefix, aLower)).toBe(true);

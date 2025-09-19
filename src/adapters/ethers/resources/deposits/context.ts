@@ -7,7 +7,7 @@ import { pickDepositRoute } from '../../../../core/resources/deposits/route';
 import type { DepositParams, DepositRoute } from '../../../../core/types/flows/deposits';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 
-// Common context for building deposit (L1-L2) transactions (ethers)
+// Common context for building deposit (L1-L2) transactions
 export interface BuildCtx extends CommonCtx {
   client: EthersClient;
 

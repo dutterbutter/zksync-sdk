@@ -13,9 +13,9 @@ describe('adapters/ethers/errors/error-ops', () => {
         context: { foo: 1 },
       };
       const plain = new Error('boom');
-      // @ts-expect-error optional fields on Error are fine in practice
+      // @ts-expect-error
       plain.code = -32000;
-      // @ts-expect-error ditto
+      // @ts-expect-error
       plain.data = '0xdeadbeef';
 
       const err = toZKsyncError('EXECUTION', base, plain);
@@ -27,7 +27,6 @@ describe('adapters/ethers/errors/error-ops', () => {
       expect(env.operation).toBe('adapters.ethers.test');
       expect(env.message).toBe('Custom message');
       expect(env.context).toEqual({ foo: 1 });
-      // shaped cause keeps message & code; data may be shortened by shapeCause
       expect(env.cause?.message).toBe('boom');
       expect(env.cause?.code).toBe(-32000);
     });

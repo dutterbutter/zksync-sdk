@@ -57,10 +57,10 @@ describe('errors/rpc.withRpcOp', () => {
       err = e;
     }
 
-    expect(err).toBe(original); // identity check
+    expect(err).toBe(original);
     const env = (err as any).envelope;
     expect(env.type).toBe('STATE');
-    expect(env.operation).toBe('op.inner'); // unchanged
+    expect(env.operation).toBe('op.inner');
     expect(env.message).toBe('not ready');
   });
 });

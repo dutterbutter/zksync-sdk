@@ -41,7 +41,6 @@ describe('adapters/ethers/utils — NTV asset & transfer encoding', () => {
     const out = encodeNativeTokenVaultAssetId(chainId, assetAddr);
     expect(out.toLowerCase()).toBe(expectedHash.toLowerCase());
 
-    // alias function stays equivalent
     const outAlias = encodeNTVAssetId(chainId, assetAddr);
     expect(outAlias.toLowerCase()).toBe(expectedHash.toLowerCase());
   });
@@ -69,10 +68,8 @@ describe('adapters/ethers/utils — NTV asset & transfer encoding', () => {
 
     const out = encodeSecondBridgeDataV1(assetId, transferData);
 
-    // first byte is version 0x01
     expect(out.startsWith('0x01')).toBe(true);
 
-    // strip first byte and decode
     const payload = ('0x' + out.slice(4)) as `0x${string}`;
     const [decAssetId, decTransferData] = coder.decode(['bytes32', 'bytes'], payload);
 

@@ -1,3 +1,5 @@
+// index.ts
+
 export * as constants from './core/constants';
 
 export * as errors from './core/errors/factory';

@@ -42,7 +42,6 @@ export function makeNprLog(args: {
     data,
   ]);
   return {
-    // minimal Log shape; only topics/data are used by the code
     address: '0x' + '00'.repeat(20),
     data: enc.data,
     topics: enc.topics,
@@ -78,21 +77,18 @@ describe('services/verification.extractL2TxHashFromL1Logs', () => {
   });
 
   it('falls back to TOPIC_CANONICAL_ASSIGNED (hash at topic[2])', () => {
-    // topics: [assigned, <something>, txHash, ...]
     const assigned = makeTopicOnlyLog(TOPIC_CANONICAL_ASSIGNED, ['0x', H.l2tx, '0xdead']);
     const out = extractL2TxHashFromL1Logs([assigned]);
     expect(out).toBe(H.l2tx);
   });
 
   it('falls back to TOPIC_CANONICAL_SUCCESS (hash at topic[3])', () => {
-    // topics: [success, <a>, <b>, txHash]
     const success = makeTopicOnlyLog(TOPIC_CANONICAL_SUCCESS, ['0x1', '0x2', H.l2tx]);
     const out = extractL2TxHashFromL1Logs([success]);
     expect(out).toBe(H.l2tx);
   });
 
   it('ignores decode errors for NPR and still finds canonical topics', () => {
-    // Corrupt NPR: correct topic0 but invalid data → decodeEventLog throws
     const badNpr = {
       ...makeNprLog({}),
       data: '0x1234',
@@ -108,7 +104,7 @@ describe('services/verification.extractL2TxHashFromL1Logs', () => {
   });
 });
 
-// Minimal fake providers
+// TODO: refactor with shared mocks
 type FakeReceipt = { logs?: Log[]; status?: number };
 function makeL1Provider(receipt: FakeReceipt | null) {
   return {
@@ -198,7 +194,6 @@ describe('services/verification.waitForL2ExecutionFromL1Tx', () => {
   });
 
   it('extracts via canonical topics if NPR missing/corrupt', async () => {
-    // Corrupt NPR and include canonical SUCCESS with hash at [3]
     const badNpr = { ...makeNprLog({}), data: '0x1234' } as Log;
     const success = {
       ...makeTopicOnlyLog(TOPIC_CANONICAL_SUCCESS, ['0x1', '0x2', H.l2tx]),

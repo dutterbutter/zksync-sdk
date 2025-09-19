@@ -27,7 +27,6 @@ describe('withdrawals/messengerLogIndex', () => {
       { sender: '0x2222222222222222222222222222222222222222' },
       { sender: custom },
     ]);
-    // choose the second occurrence of custom (index=1 within hits)
     const idx = messengerLogIndex(r, { messenger: custom, index: 1 });
     expect(idx).toBe(2);
   });

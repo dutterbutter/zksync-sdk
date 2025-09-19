@@ -49,7 +49,6 @@ describe('rpc/zks.normalizeProof', () => {
       throw new Error('expected to throw');
     } catch (e) {
       expect(isZKsyncError(e)).toBe(true);
-      // Optional: assert message stability
       expect(String(e)).toContain('Malformed proof: missing id or batch number');
     }
   });

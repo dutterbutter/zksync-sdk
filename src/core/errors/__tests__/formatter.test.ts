@@ -5,7 +5,6 @@ import { formatEnvelopePretty } from '../formatter';
 import chalk from 'chalk';
 
 beforeAll(() => {
-  // Stabilize output (no ANSI colors)
   chalk.level = 0;
 });
 
@@ -45,12 +44,10 @@ describe('errors/formatter.formatEnvelopePretty', () => {
     // Operation always present
     expect(pretty).toMatch(/Operation\s+: zksrpc\.getL2ToL1LogProof/);
 
-    // Resource may appear before/after Context depending on formatter version — tolerate optional
-    // (If present, it must match 'zksrpc')
     const hasResource = /Resource\s+: zksrpc/.test(pretty);
     expect(hasResource || /Context\s+:/.test(pretty)).toBe(true);
 
-    // Context (txHash + nonce) and Step (order may vary)
+    // Context (txHash + nonce) and Step
     expect(pretty).toMatch(/Context\s+: .*txHash=0x[a-f0-9]{64}.*nonce=7/i);
     expect(pretty).toMatch(/Step\s+: fetch-proof/);
 
@@ -61,7 +58,7 @@ describe('errors/formatter.formatEnvelopePretty', () => {
     expect(pretty).toMatch(/fn=verify\(bytes32\)/);
     expect(pretty).toMatch(/args=\[\s*["']?0x[a-f0-9]{64}["']?\s*\]/i);
 
-    // Cause block (data can be quoted or not, depending on stringify)
+    // Cause block
     expect(pretty).toMatch(/Cause\s+: name=TimeoutError\s+code=ETIMEDOUT/);
     expect(pretty).toMatch(/message=5000ms exceeded while waiting for response/);
     expect(pretty).toMatch(/data=("?0xdeadbeefcafebabedeadbeef"?)/);
@@ -80,8 +77,6 @@ describe('errors/formatter.formatEnvelopePretty', () => {
     expect(pretty).toContain('ZKsyncError [STATE]');
     expect(pretty).toMatch(/Message\s+: Proof not yet available\. Please try again later\./);
     expect(pretty).toMatch(/Operation\s+: zksrpc\.getL2ToL1LogProof/);
-    // Resource line may or may not be present depending on local formatter version
-    // Accept either presence or absence.
     expect(/Resource\s+: zksrpc/.test(pretty) || true).toBe(true);
   });
 });

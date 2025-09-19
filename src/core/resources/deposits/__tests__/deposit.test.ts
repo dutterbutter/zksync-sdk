@@ -6,7 +6,7 @@ import {
   ETH_ADDRESS_IN_CONTRACTS,
 } from '../../../constants';
 
-// Tiny inline fake; no need for helpers yet
+// TODO:  Make shared fixtures
 function fakeClient(baseTokenAddr: string): BaseTokenLookup {
   return {
     baseToken(_chainId: bigint) {

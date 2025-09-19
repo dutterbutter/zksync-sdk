@@ -82,7 +82,7 @@ describe('adapters/ethers/deposits/routeErc20NonBase.build', () => {
   it('clamps provided l2GasLimit up to MIN if below; still works', async () => {
     const amount = 2_000n;
     const baseCost = 3_000n;
-    const provided = 1_000_000n; // < MIN → clamp to 2_500_000
+    const provided = 1_000_000n;
     const MIN = 2_500_000n;
 
     const mapping: Record<string, string> = {

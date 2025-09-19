@@ -30,7 +30,7 @@ describe('adapters/ethers/deposits/routeEthDirect.build', () => {
     });
     const signer = makeSigner(l1);
 
-    const p = { amount } as any; // ETH: tokenless; l2 destination defaults to sender
+    const p = { amount } as any;
     const ctx = makeCtx(l1, signer);
 
     const res = await routeEthDirect().build(p, ctx);
@@ -46,22 +46,19 @@ describe('adapters/ethers/deposits/routeEthDirect.build', () => {
     expect(step.key).toBe('bridgehub:direct');
     expect(step.kind).toBe('bridgehub:direct');
 
-    // Tx sanity
     const tx = step.tx as any;
     expect(tx.to.toLowerCase()).toBe(ADDR.bridgehub);
     expect(tx.from.toLowerCase()).toBe(ADDR.sender);
     expect(tx.value).toBe(expectedMint);
     expect(tx.gasLimit).toBe((200_000n * 115n) / 100n);
 
-    // Data selector matches requestL2TransactionDirect
     const selDirect = IBridgehub.getFunction('requestL2TransactionDirect').selector.toLowerCase();
     expect((tx.data as string).toLowerCase().startsWith(selDirect)).toBe(true);
 
-    // Decode the direct request and spot-check fields
     const decoded = IBridgehub.decodeFunctionData('requestL2TransactionDirect', tx.data);
     const req = decoded[0];
-    // Depending on ABI name mapping, req may be array-like; normalize
     const reqObj = req as any;
+
     expect(BigInt(reqObj.chainId)).toBe(ctx.chainIdL2);
     expect(BigInt(reqObj.mintValue)).toBe(expectedMint);
     expect(BigInt(reqObj.l2GasLimit)).toBe(ctx.l2GasLimit);

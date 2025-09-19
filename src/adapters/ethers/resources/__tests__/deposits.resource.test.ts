@@ -46,7 +46,6 @@ describe('deposits: plan/quote', () => {
   });
 
   it('tryQuote(): returns ok:false with shaped error when planning fails', async () => {
-    // Missing base cost mapping causes routeEthDirect.build to throw; should be wrapped
     const l1 = makeL1Provider({});
     const l2 = makeL2Provider();
     const signer = makeSigner(l1);
@@ -55,7 +54,6 @@ describe('deposits: plan/quote', () => {
     const deposits = createDepositsResource(client);
     const res = await deposits.tryQuote({ token: ADDR.sender as any, amount: 1n } as any);
     expect(res.ok).toBe(false);
-    // Unknown error is shaped by toResult() as ZKsyncError
     expect(isZKsyncError((res as any).error)).toBe(true);
   });
 
@@ -73,7 +71,6 @@ describe('deposits: plan/quote', () => {
     const l1 = makeL1Provider(mapping, { estimateGas: 100_000n });
     const l2 = makeL2Provider();
     const signer = makeSigner(l1);
-    // Make baseToken() return ADDR.token so commonCtx picks 'erc20-base'
     const client = makeClient({ l1, l2, signer, baseToken: async () => ADDR.token as any });
 
     const deposits = createDepositsResource(client);
@@ -85,7 +82,6 @@ describe('deposits: plan/quote', () => {
   });
 
   it('tryPrepare(): returns ok:false with shaped error when preparation fails', async () => {
-    // Missing base cost mapping causes routeEthDirect.build to throw; should be wrapped
     const l1 = makeL1Provider({});
     const l2 = makeL2Provider();
     const signer = makeSigner(l1);
@@ -102,8 +98,6 @@ describe('deposits: plan/quote', () => {
 describe('deposits: create/tryCreate', () => {
   it('create(): ETH — builds, estimates gas if missing, sends one step, returns handle', async () => {
     const baseCost = 2_000n;
-    // Force route build to skip setting gasLimit (by making estimateGas throw there),
-    // so index.ts does its own gas estimate later.
     const mapping = {
       [keyFor(ADDR.bridgehub, IBridgehub, 'l2TransactionBaseCost')]: enc(
         IBridgehub,
@@ -122,7 +116,6 @@ describe('deposits: create/tryCreate', () => {
     expect(handle.kind).toBe('deposit');
     expect(typeof handle.l1TxHash).toBe('string');
     expect(handle.plan.route).toBe('eth');
-    // nonce management: index.ts sets .nonce and bumps per step
     const onlyStep = handle.plan.steps[0];
     expect(typeof onlyStep.tx.nonce).toBe('number');
   });
@@ -131,17 +124,12 @@ describe('deposits: create/tryCreate', () => {
     const amount = 1_000n,
       baseCost = 2_000n;
     const mapping = {
-      // Route build: allowance < amount -> approve step appears
       [keyFor(ADDR.token, IERC20, 'allowance')]: enc(IERC20, 'allowance', [amount - 1n]),
       [keyFor(ADDR.bridgehub, IBridgehub, 'l2TransactionBaseCost')]: enc(
         IBridgehub,
         'l2TransactionBaseCost',
         [baseCost],
       ),
-      // Re-check in create(): a new allowance query executed with signer — return >= amount to skip
-      // (same key lookup since Contract(address, IERC20) encodes the same selector)
-      // Easiest: override makeSigner to return a different provider? Not needed — index calls Contract(...).allowance(from, router)
-      // We'll just keep the same mapping but set amount MUCH bigger so re-check >= target.
       [keyFor(ADDR.token, IERC20, 'allowance')]: enc(IERC20, 'allowance', [amount + 100n]),
     };
     const l1 = makeL1Provider(mapping, { estimateGas: 100_000n, getTransactionCount: 0 });
@@ -206,27 +194,27 @@ describe('deposits: status/wait', () => {
 
   it('status(): L1_PENDING / L1_INCLUDED / L2_PENDING / L2_EXECUTED', async () => {
     const l2tx = ('0x' + 'bb'.repeat(32)) as `0x${string}`;
-    // 1) L1 missing
+    // 1 missing
     let l1 = makeL1Provider({}, { getTransactionReceipt: null });
     let l2 = makeL2Provider({ getTransactionReceipt: null });
     let client = makeClient({ l1, l2, signer: makeSigner(l1) });
     let s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L1_PENDING');
 
-    // 2) L1 present, NPR log but no L2 receipt yet
+    // L1 present, NPR log but no L2 receipt yet
     l1 = makeL1Provider({}, { getTransactionReceipt: { logs: [nprLog(l2tx)], status: 1 } });
     l2 = makeL2Provider({ getTransactionReceipt: null });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
     s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L2_PENDING');
 
-    // 3) L2 pending
+    // L2 pending
     l2 = makeL2Provider({ getTransactionReceipt: null });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
     s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);
     expect(s.phase).toBe('L2_PENDING');
 
-    // 4) L2 executed
+    // L2 executed
     l2 = makeL2Provider({ getTransactionReceipt: { status: 1 } });
     client = makeClient({ l1, l2, signer: makeSigner(l1) });
     s = await createDepositsResource(client).status(('0x' + 'aa'.repeat(32)) as any);

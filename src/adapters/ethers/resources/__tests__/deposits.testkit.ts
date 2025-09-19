@@ -5,7 +5,7 @@ import IBridgehubABI from '../../../../internal/abis/IBridgehub.json';
 export const IERC20 = new Interface(IERC20ABI as any);
 export const IBridgehub = new Interface(IBridgehubABI as any);
 
-// Stable hex-only fixtures
+// TODO: refactor with other shared fixtures
 export const ADDR = {
   bridgehub: '0xb000000000000000000000000000000000000000',
   assetRouter: '0xa000000000000000000000000000000000000000',
@@ -99,7 +99,6 @@ export function makeSigner(l1: any, addr = ADDR.sender) {
       return { ...tx };
     },
     async sendTransaction(tx: any) {
-      // minimal tx "response"
       return {
         hash: ('0x' + 'ab'.repeat(32)) as `0x${string}`,
         async wait() {
@@ -110,7 +109,7 @@ export function makeSigner(l1: any, addr = ADDR.sender) {
   } as any;
 }
 
-// Build a **minimal** EthersClient fake for DepositsResource
+// Build a **minimal** EthersClient mock for DepositsResource
 export function makeClient({
   l1,
   l2,

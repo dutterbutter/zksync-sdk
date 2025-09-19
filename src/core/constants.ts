@@ -1,5 +1,8 @@
 import { keccak256, toUtf8Bytes } from 'ethers';
 import type { Address } from './types/primitives';
+
+// TODO: taken from zksync-ethers, can be cleaned up
+
 /**
  * The address of the L1 `ETH` token.
  * @readonly

@@ -8,6 +8,9 @@ import {
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../client';
 
+// TODO: refactor this entirely
+// separate encoding, and move gas helpers to new resource
+
 // Returns the assetId for a token in the Native Token Vault with specific origin chainId and address
 export function encodeNativeTokenVaultAssetId(chainId: bigint, address: string) {
   const abi = new AbiCoder();

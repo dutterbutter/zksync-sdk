@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
+// tests/e2e/withdrawals.eth.test.ts
 import { describe, it, expect, beforeAll } from 'bun:test';
 import type { Address, Hex } from '../../../core/types/primitives.ts';
 import { ETH_ADDRESS_IN_CONTRACTS } from '../../../core/constants.ts';
@@ -17,6 +17,7 @@ import {
 
 const WITHDRAW_WEI = 1_000_000_000_000_000n; // 0.001 ETH
 
+//TODO: Refactor to share setup with deposits
 describe('withdrawals.e2e (ethers): ETH withdrawal', () => {
   // Shared state
   let client: any, sdk: any, me: Address;
@@ -88,7 +89,7 @@ describe('withdrawals.e2e (ethers): ETH withdrawal', () => {
   }, 180_000);
 
   it('should finalize on L1 and reflect correct balance changes', async () => {
-    // finalize() sends the L1 finalize tx if needed and returns status + optional L1 receipt
+    // finalize() sends the L1 finalize tx if needed and returns status + L1 receipt
     const res = await sdk.withdrawals.finalize(handle.l2TxHash as Hex);
     expect(['FINALIZED']).toContain(res.status.phase);
 
@@ -97,8 +98,7 @@ describe('withdrawals.e2e (ethers): ETH withdrawal', () => {
       res.receipt ??
       (await sdk.withdrawals.wait(handle, { for: 'finalized', pollMs: 2500, timeoutMs: 60_000 }));
 
-    // If still no receipt, we still accept FINALIZED, but skip exact gas math
-    // (verifyWithdrawalBalancesAfterFinalize handles both cases)
+    // If still no receipt, we still accept FINALIZED
     await verifyWithdrawalBalancesAfterFinalize({
       client,
       me,

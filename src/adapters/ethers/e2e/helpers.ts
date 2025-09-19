@@ -12,7 +12,7 @@ import { createEthersClient } from '../client.ts';
 import { createEthersSdk } from '../sdk.ts';
 import { expect } from 'bun:test';
 
-// Load from environment variables for flexibility
+// TODO: make this shared across resources
 const L1_RPC_URL = 'http://127.0.0.1:8545';
 const L2_RPC_URL = 'http://127.0.0.1:3050';
 const PRIVATE_KEY = '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6';
@@ -27,7 +27,7 @@ export function createTestClientAndSdk() {
   return { client, sdk };
 }
 
-// Reusable polling helper
+// polling helper
 export async function waitForL1Inclusion(sdk: any, handle: any, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -53,7 +53,7 @@ export async function waitForL2InclusionWithdraw(sdk: any, handle: any, timeoutM
   throw new Error('Timed out waiting for L2 inclusion (withdrawal).');
 }
 
-// Reusable balance verification helper
+// balance verification helper
 export async function verifyDepositBalances(
   client: any,
   me: Address,
@@ -130,9 +130,8 @@ export async function verifyWithdrawalBalancesAfterFinalize(args: {
   ]);
 
   // ---------- L2 checks ----------
-  const l2Delta = balancesBefore.l2 - l2After; // decrease
-  expect(l2Delta >= amount).toBeTrue(); // at least amount
-  // If gasUsed & effectiveGasPrice are present on L2, check tighter bound
+  const l2Delta = balancesBefore.l2 - l2After;
+  expect(l2Delta >= amount).toBeTrue();
   try {
     const gasUsed = BigInt(l2Rcpt?.gasUsed ?? 0n);
     const gp =
@@ -149,7 +148,7 @@ export async function verifyWithdrawalBalancesAfterFinalize(args: {
   }
 
   // ---------- L1 checks ----------
-  const l1Delta = l1After - balancesBefore.l1; // net increase after finalization
+  const l1Delta = l1After - balancesBefore.l1;
 
   if (l1FinalizeRcpt) {
     const gasUsed = BigInt(l1FinalizeRcpt.gasUsed ?? 0n);
@@ -160,11 +159,8 @@ export async function verifyWithdrawalBalancesAfterFinalize(args: {
           ? BigInt(l1FinalizeRcpt.gasPrice)
           : 0n;
     const finalizeFee = gasUsed * gp;
-    // exact net effect: +amount - finalizeFee
     expect(l1Delta).toBe(amount - finalizeFee);
   } else {
-    // receipt missing (acceptable if node didn't return it)—at least ensure funds arrived
-    // allow small slack if finalize fee > amount (rare on local): just assert l1Delta >= 0
     expect(l1Delta >= 0n).toBeTrue();
   }
 }

@@ -8,6 +8,7 @@ import { REVERT_TO_READINESS } from '../../../core/errors/withdrawal-revert-map'
 import type { FinalizeReadiness } from '../../../core/types/flows/withdrawals';
 import type { Address } from '../../../core/types';
 
+// TODO: refactor as lots of duplication here
 export interface DecodedRevert {
   /** 4-byte selector, always present if this is a revert */
   selector: `0x${string}`;

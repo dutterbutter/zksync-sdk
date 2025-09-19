@@ -1,5 +1,7 @@
 import type { FinalizeReadiness } from '../../core/types/flows/withdrawals';
 
+// TODO: should we make this more exhaustive?
+
 /** Maps withdrawal revert reasons to readiness states. */
 export const REVERT_TO_READINESS: Record<string, FinalizeReadiness> = {
   // Already done

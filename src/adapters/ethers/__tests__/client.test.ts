@@ -10,7 +10,7 @@ import {
   L2_BASE_TOKEN_SYSTEM_CONTRACT_ADDR as L2_BASE_TOKEN_ADDRESS,
 } from '../../../core/constants';
 
-// ---------- tiny helpers ----------
+// TODO: refactor this to be shared and use bun mocks
 
 const IBridgehub = new Interface(IBridgehubABI as any);
 const IL1AssetRouter = new Interface(IL1AssetRouterABI as any);
@@ -61,7 +61,7 @@ function makeFakeSigner() {
   } as any;
 }
 
-// ---------- fixture addresses we’ll return from our fakes ----------
+// ---------- fixture addresses ----------
 const ADDR = {
   bridgehub: '0xB000000000000000000000000000000000000000',
   l1AssetRouter: '0xA000000000000000000000000000000000000000',
@@ -71,7 +71,6 @@ const ADDR = {
 };
 
 function mappingForL1Calls() {
-  // Encode return payloads that ethers.Contract will decode
   const map: Record<string, string> = {};
 
   // Bridgehub.assetRouter() -> l1AssetRouter
@@ -87,7 +86,6 @@ function mappingForL1Calls() {
     const to = hexLower(ADDR.bridgehub);
     const sel = IBridgehub.getFunction('baseToken')!.selector.toLowerCase();
     const key = `${to}|${sel}`;
-    // Contract will pass the encoded args in data; our fake matches on selector only
     map[key] = IBridgehub.encodeFunctionResult('baseToken', [ADDR.baseTokenFor324]);
   }
 
@@ -148,7 +146,6 @@ describe('adapters/ethers/createEthersClient', () => {
     const a = await client.ensureAddresses();
     const c1 = await client.contracts();
 
-    // Sanity: targets match addresses we resolved
     expect((c1.bridgehub as any).target.toLowerCase()).toBe(a.bridgehub.toLowerCase());
     expect((c1.l1AssetRouter as any).target.toLowerCase()).toBe(a.l1AssetRouter.toLowerCase());
     expect((c1.l1Nullifier as any).target.toLowerCase()).toBe(a.l1Nullifier.toLowerCase());
@@ -184,8 +181,8 @@ describe('adapters/ethers/createEthersClient', () => {
   });
 
   it('respects manual overrides (skips zks + calls)', async () => {
-    const l1 = makeFakeL1Provider({}); // no mappings needed when all overridden
-    const l2 = makeFakeL2Provider('0xdead'); // should be ignored
+    const l1 = makeFakeL1Provider({});
+    const l2 = makeFakeL2Provider('0xdead');
     const signer = makeFakeSigner();
 
     const overrides = {

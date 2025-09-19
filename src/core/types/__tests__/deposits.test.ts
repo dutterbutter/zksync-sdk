@@ -87,7 +87,6 @@ describe('types/flows/deposits — basic shapes', () => {
 describe('types/flows/deposits — Plan / Handle / Waitable', () => {
   it('DepositPlan<Tx> is assignable from Plan<Tx, Route, Quote>', () => {
     type Tx = { hash: string };
-    // Just assert type assignability; concrete values not needed
     const plan: DepositPlan<Tx> = {} as unknown as Plan<Tx, DepositRoute, DepositQuote>;
     expectType<DepositPlan<Tx>>(plan);
   });
@@ -97,11 +96,9 @@ describe('types/flows/deposits — Plan / Handle / Waitable', () => {
     const handle: DepositHandle<Tx> = {
       kind: 'deposit',
       route: 'erc20-nonbase',
-      // Handle<Ctx, Route, Plan<Tx>> requires 'ctx' (Record<string, Hex>) by your definition
       stepHashes: {} as Record<string, Hex>,
       plan: {} as unknown as DepositPlan<Tx>,
       l1TxHash: ('0x' + 'aa'.repeat(32)) as Hex,
-      // optional
       l2ChainId: 324,
       l2TxHash: ('0x' + 'bb'.repeat(32)) as Hex,
     };
@@ -138,7 +135,7 @@ describe('types/flows/deposits — Plan / Handle / Waitable', () => {
     const w3: DepositWaitable = handle;
     expectType<DepositWaitable>(w3);
 
-    // @ts-expect-error wrong shape (missing required in all members)
+    // @ts-expect-error wrong shape
     const bad: DepositWaitable = { foo: 1 };
     expect(bad).toBeDefined();
   });

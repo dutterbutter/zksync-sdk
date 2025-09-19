@@ -115,7 +115,6 @@ export function createZksRpc(transport: RpcTransport): ZksRpc {
         async () => {
           const proof: unknown = await transport(METHODS.getL2ToL1LogProof, [txHash, index]);
           if (!proof) {
-            // proof missing is a normal “unavailable yet” state from node → classify as STATE
             throw createError('STATE', {
               resource: 'zksrpc' as Resource,
               operation: 'zksrpc.getL2ToL1LogProof',

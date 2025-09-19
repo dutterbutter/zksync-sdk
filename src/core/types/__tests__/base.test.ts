@@ -5,7 +5,7 @@ import type { ApprovalNeed, PlanStep, Plan, Handle, Waitable, CommonCtx } from '
 // ------------------------ Type-only helpers ------------------------
 
 function expectType<T>(_value: T): void {
-  void _value; // compile-time only
+  void _value;
 }
 
 // ------------------------ Tests ------------------------
