@@ -77,7 +77,7 @@ jobs:
         env:
           CARGO_TERM_COLOR: always
           CARGO_INCREMENTAL: 0
-        run: cargo build --release
+        run: cargo build --release --bin zksync_os_bin
 
       - name: Start Anvil (L1)
         working-directory: zksync-os-server
@@ -91,39 +91,24 @@ jobs:
             sleep 1
           done
 
-      - name: Run L2 server (background) and wait for JSON-RPC
-        working-directory: zksync-os-server
+      - name: Run server
         run: |
-          if [ -x ./target/release/zksync-os-server ]; then
-            nohup ./target/release/zksync-os-server > l2.log 2>&1 &
-          else
-            nohup cargo run --release > l2.log 2>&1 &
-          fi
+            if [ -x ./target/release/zksync_os_bin ]; then
+              nohup ./target/release/zksync_os_bin > l2.log 2>&1 &
+            else
+              nohup cargo run --release > l2.log 2>&1 &
+            fi
 
-          for i in {1..600}; do
-            if curl -sS -X POST http://127.0.0.1:3050 \
-                -H 'content-type: application/json' \
-                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-                | grep -q '"result"'; then
-              echo "L2 JSON-RPC is up"
-              break
-            fi
-            if [ $((i % 30)) -eq 0 ]; then
-              echo "--- l2.log (last 50 lines) ---"
-              tail -n 50 l2.log || true
-            fi
-            sleep 1
+      - name: Wait for zksync OS to start
+        run: |
+          while ! nc -z localhost 3050; do
+            echo "Waiting for zksync OS to start..."
+            sleep 3
           done
+          echo "Sequencer is up and running."
 
-          if ! curl -sS -X POST http://127.0.0.1:3050 \
-              -H 'content-type: application/json' \
-              --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-              | grep -q '"result"'; then
-            echo "L2 JSON-RPC failed to start."
-            echo "--- l2.log (last 200 lines) ---"
-            tail -n 200 l2.log || true
-            exit 1
-          fi
+      - name: Run ethers e2e tests
+        run: bun run test:e2e:ethers
 
-      - name: Run e2e tests
-        run: bun run test:e2e
+      - name: Run viem e2e tests
+        run: bun run test:e2e:viem
