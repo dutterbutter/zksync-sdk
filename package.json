@@ -57,14 +57,14 @@
       "require": "./dist/adapters/viem/index.cjs"
     },
     "./types": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/types/index.js",
-      "require": "./dist/types/index.cjs"
+      "types": "./dist/core/types/index.d.ts",
+      "import": "./dist/core/types/index.js",
+      "require": "./dist/core/types/index.cjs"
     },
     "./types/*": {
-      "types": "./dist/types/*.d.ts",
-      "import": "./dist/types/*.js",
-      "require": "./dist/types/*.cjs"
+      "types": "./dist/core/types/*.d.ts",
+      "import": "./dist/core/types/*.js",
+      "require": "./dist/core/types/*.cjs"
     },
     "./ethers/*": {
       "types": "./dist/adapters/ethers/*.d.ts",
@@ -120,8 +120,7 @@
     "clean": "rimraf dist",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:js": "tsup --config tsup.config.ts",
-    "build:abis": "mkdir -p dist/core/internal/abis && cp -R src/core/internal/abis/* dist/core/internal/abis/",
-    "build": "bun run clean && bun run build:types && bun run build:js && bun run build:abis",
+    "build": "bun run clean && bun run build:types && bun run build:js",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "types": "typechain --target ethers-v6 --out-dir src/adapters/ethers/typechain src/core/internal/abis/*.json && ncp src/adapters/ethers/typechain typechain",
     "prepublishOnly": "bun run clean && bun run build",
@@ -147,23 +146,26 @@
       "ethers": [
         "dist/adapters/ethers/index.d.ts"
       ],
-      "viem": [
-        "dist/adapters/viem/index.d.ts"
-      ],
-      "types/*": [
-        "dist/types/*"
-      ],
       "ethers/*": [
         "dist/adapters/ethers/*"
+      ],
+      "viem": [
+        "dist/adapters/viem/index.d.ts"
       ],
       "viem/*": [
         "dist/adapters/viem/*"
       ],
-      "core/*": [
-        "dist/core/*"
+      "types": [
+        "dist/core/types/index.d.ts"
+      ],
+      "types/*": [
+        "dist/core/types/*"
       ],
       "core": [
         "dist/core/index.d.ts"
+      ],
+      "core/*": [
+        "dist/core/*"
       ],
       "*": [
         "dist/*"
