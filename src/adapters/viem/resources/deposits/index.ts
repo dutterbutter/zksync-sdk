@@ -17,7 +17,7 @@ import type {
   TransactionReceipt,
   WriteContractParameters,
 } from 'viem';
-import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'json' };
+import IERC20ABI from '../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
 
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';

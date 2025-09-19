@@ -19,13 +19,13 @@ import {
 } from '../../core/constants';
 
 // ABIs from internal snapshot (same as ethers adapter)
-import IBridgehubABI from '../../internal/abis/IBridgehub.json';
-import IL1AssetRouterABI from '../../internal/abis/IL1AssetRouter.json';
-import IL1NullifierABI from '../../internal/abis/IL1Nullifier.json';
-import IL2AssetRouterABI from '../../internal/abis/IL2AssetRouter.json';
-import L2NativeTokenVaultABI from '../../internal/abis/L2NativeTokenVault.json';
-import L1NativeTokenVaultABI from '../../internal/abis/L1NativeTokenVault.json';
-import IBaseTokenABI from '../../internal/abis/IBaseToken.json';
+import IBridgehubABI from '../../core/internal/abis/IBridgehub.json';
+import IL1AssetRouterABI from '../../core/internal/abis/IL1AssetRouter.json';
+import IL1NullifierABI from '../../core/internal/abis/IL1Nullifier.json';
+import IL2AssetRouterABI from '../../core/internal/abis/IL2AssetRouter.json';
+import L2NativeTokenVaultABI from '../../core/internal/abis/L2NativeTokenVault.json';
+import L1NativeTokenVaultABI from '../../core/internal/abis/L1NativeTokenVault.json';
+import IBaseTokenABI from '../../core/internal/abis/IBaseToken.json';
 
 export interface ResolvedAddresses {
   bridgehub: Address;

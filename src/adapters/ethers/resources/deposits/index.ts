@@ -13,7 +13,7 @@ import type { Address, Hex } from '../../../../core/types/primitives.ts';
 import { extractL2TxHashFromL1Logs, waitForL2ExecutionFromL1Tx } from './services/verification.ts';
 
 import { Contract, type TransactionRequest, type TransactionReceipt, NonceManager } from 'ethers';
-import IERC20ABI from '../../../../internal/abis/IERC20.json' assert { type: 'json' };
+import IERC20ABI from '../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
 
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';

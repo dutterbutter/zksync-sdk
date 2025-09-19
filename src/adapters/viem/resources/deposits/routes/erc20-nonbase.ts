@@ -2,8 +2,8 @@
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
 import { encodeSecondBridgeErc20Args } from '../../utils';
-import IERC20ABI from '../../../../../internal/abis/IERC20.json' assert { type: 'json' };
-import IBridgehubABI from '../../../../../internal/abis/IBridgehub.json' assert { type: 'json' };
+import IERC20ABI from '../../../../../core/internal/abis/IERC20.json' assert { type: 'json' };
+import IBridgehubABI from '../../../../../core/internal/abis/IBridgehub.json' assert { type: 'json' };
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 
