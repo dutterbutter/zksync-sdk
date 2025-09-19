@@ -34,7 +34,7 @@ The SDK extends your existing client. Configure **viem** or **ethers** as you no
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
-import { ETH_ADDRESS } from '@@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 
@@ -60,7 +60,7 @@ await sdk.deposits.wait(handle, { for: 'l2' }); // funds available on L2
 ```ts
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
-import { ETH_ADDRESS } from '@@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const l1 = new JsonRpcProvider(process.env.L1_RPC!);
 const l2 = new JsonRpcProvider(process.env.L2_RPC!);
