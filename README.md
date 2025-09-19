@@ -8,14 +8,14 @@ _TypeScript SDK for deposits, withdrawals, and RPC access across the Elastic Net
 [![Release](https://img.shields.io/github/v/release/dutterbutter/zksync-sdk?label=version)](https://github.com/dutterbutter/zksync-sdk/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![X: @zksync](https://img.shields.io/badge/follow-@zksync-1DA1F2?logo=x)](https://x.com/zksync)
-[![User Book](https://img.shields.io/badge/docs-user%20book-brightgreen)](https://dutterbutter.github.io/zksync-sdk/latest/)
+[![User Book](https://img.shields.io/badge/docs-user%20book-brightgreen)](https://dutterbutter.github.io/zksync-sdk/)
 
 </div>
 
 <p align="center">
   <b>
     <a href="https://dutterbutter.github.io/zksync-sdk/latest/quickstart/">Quickstart</a> ·
-    <a href="https://dutterbutter.github.io/zksync-sdk/latest/">User Book</a> ·
+    <a href="https://dutterbutter.github.io/zksync-sdk/">User Book</a> ·
     <a href="./.github/CONTRIBUTING.md">Contributing</a>
   </b>
 </p>
@@ -102,13 +102,13 @@ await sdk.deposits.wait(handle, { for: 'l2' });
 console.log('Deposit complete ✅');
 ```
 
-> See [Quickstart docs](https://dutterbutter.github.io/zksync-sdk/latest/quickstart/) for full examples.
+> See [Quickstart docs](https://dutterbutter.github.io/zksync-sdk/quickstart/) for full examples.
 
 ## 📚 Documentation
 
-- [User Book](https://dutterbutter.github.io/zksync-sdk/latest/) – guides, concepts, API docs
-- [How-to Guides](https://dutterbutter.github.io/zksync-sdk/latest/guides/) – deposits, withdrawals, RPC helpers
-- [Concepts](https://dutterbutter.github.io/zksync-sdk/latest/concepts/) – mental model, status vs wait, finalization
+- [User Book](https://dutterbutter.github.io/zksync-sdk/) – guides, concepts, API docs
+- [How-to Guides](https://dutterbutter.github.io/zksync-sdk/guides/) – deposits, withdrawals, RPC helpers
+- [Concepts](https://dutterbutter.github.io/zksync-sdk/concepts/) – mental model, status vs wait, finalization
 
 ## 🤝 Contributing
 
