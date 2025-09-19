@@ -1,4 +1,4 @@
-name: check
+name: ci-run
 
 on:
   pull_request:
@@ -10,7 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
+  general-checks:
+    name: general-checks 🧹
     runs-on: ubuntu-latest
 
     steps:
