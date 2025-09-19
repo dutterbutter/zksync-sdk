@@ -2,7 +2,8 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  // Transpile every public .ts so dist mirrors src (needed for subpath exports)
+  // Mirror src so subpath exports like "./core/*" resolve to real files.
+  // We exclude tests, mocks, e2e, etc.
   entry: [
     'src/**/*.ts',
     '!src/**/__tests__/**',
@@ -12,29 +13,30 @@ export default defineConfig({
   ],
   outDir: 'dist',
 
-  // Emits both ESM and CJS to satisfy "module" and "main" fields
+  // Emit both ESM and CJS to satisfy "module" and "main"
   format: ['esm', 'cjs'],
   target: 'es2022',
 
-  bundle: false,
-  splitting: false,
-  skipNodeModulesBundle: true,
+  // Key: inline internal imports so no ".ts" specifiers remain in dist
+  bundle: true,
+  splitting: false, // simpler dual-outputs without chunks
+  skipNodeModulesBundle: true, // keep peers external
+  external: ['ethers', 'viem', '@typechain/ethers-v6'],
 
-  dts: false,
+  dts: false, // you generate .d.ts via `tsc`
   sourcemap: true,
   clean: true,
   minify: false,
-  shims: false,
   treeshake: true,
+  shims: false,
 
-  // Ensure .cjs for CJS, .js for ESM
+  // Make CJS end in .cjs and ESM in .js
   outExtension({ format }) {
     return { js: format === 'cjs' ? '.cjs' : '.js' };
   },
 
   tsconfig: 'tsconfig.build.json',
-  external: ['ethers', 'viem', '@typechain/ethers-v6'],
-  loader: {
-    '.json': 'json',
-  },
+
+  // Inline JSON (ABIs, etc.) into the bundles – no copy step needed
+  loader: { '.json': 'json' },
 });
