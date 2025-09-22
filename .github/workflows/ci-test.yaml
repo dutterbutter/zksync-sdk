@@ -27,8 +27,17 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Run unit tests
-        run: bun run test
+      - name: Run unit tests w/ coverage
+        run: |
+          bun test
+          test -f coverage/lcov.info || (echo "lcov not found for unit tests" && exit 1)
+          mv coverage/lcov.info lcov.unit.info
+
+      - name: Upload unit coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-unit
+          path: lcov.unit.info
 
   e2e-tests:
     name: e2e-tests 🔚2️⃣🔚
@@ -47,7 +56,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install build deps
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config lcov
 
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
@@ -103,8 +112,89 @@ jobs:
           done
           echo "L2 JSON-RPC not ready"; tail -n 200 l2.log || true; exit 1
 
-      - name: Run ethers e2e tests
-        run: bun run test:e2e:ethers
+      - name: Run ethers e2e
+        run: |
+          bun run test:e2e:ethers
+          test -f coverage/lcov.info || (echo "lcov not found for e2e ethers" && exit 1)
+          mv coverage/lcov.info lcov.e2e.ethers.info
 
-      - name: Run viem e2e tests
-        run: bun run test:e2e:viem
+      - name: Run viem e2e
+        run: |
+          bun run test:e2e:viem
+          test -f coverage/lcov.info || (echo "lcov not found for e2e viem" && exit 1)
+          mv coverage/lcov.info lcov.e2e.viem.info
+
+      - name: Merge E2E LCOV
+        run: |
+          lcov -a lcov.e2e.ethers.info -a lcov.e2e.viem.info -o lcov.e2e.info
+
+      - name: Upload e2e coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-e2e
+          path: lcov.e2e.info
+
+  coverage-merge:
+    name: coverage-merge 📊
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    needs: [unit-tests, e2e-tests]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: lcov-unit
+          path: ./cov
+      - uses: actions/download-artifact@v4
+        with:
+          name: lcov-e2e
+          path: ./cov
+
+      - name: Install lcov and merge
+        run: |
+          sudo apt-get update && sudo apt-get install -y lcov
+          lcov -a ./cov/lcov.unit.info -a ./cov/lcov.e2e.info -o ./cov/lcov.merged.info
+
+      - name: Report coverage on PR
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: zgosalvez/github-actions-report-lcov@v4
+        with:
+          coverage-files: ./cov/lcov.merged.info
+          minimum-coverage: 80
+          artifact-name: coverage-html
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          update-comment: true
+          title-prefix: "ci-run-tests"
+
+      - name: Upload merged LCOV
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-merged
+          path: ./cov/lcov.merged.info
+          if-no-files-found: error
+          retention-days: 7
+
+  codecov:
+    name: codecov ☁️
+    runs-on: ubuntu-latest
+    needs: coverage-merge
+    steps:
+      - name: Download merged LCOV
+        uses: actions/download-artifact@v4
+        with:
+          name: lcov-merged
+          path: ./cov
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./cov/lcov.merged.info
+          flags: combined
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

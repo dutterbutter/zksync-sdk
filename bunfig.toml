@@ -1,3 +1,13 @@
 [test]
 coverage = true
-# coverageThreshold = { statements = 85, branches = 80, functions = 85, lines = 85 }
+
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = [
+  "dist/**",
+  "coverage/**",
+  "node_modules/**",
+]
+
