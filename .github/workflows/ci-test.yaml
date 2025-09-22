@@ -55,8 +55,7 @@ jobs:
       - name: Install Foundry (anvil)
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
-          cache: true
+          version: 1.3.4
 
       - name: Clone zksync-os-server
         run: git clone https://github.com/matter-labs/zksync-os-server.git
@@ -71,6 +70,19 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('zksync-os-server/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
+
+      - name: Verify L1 state file exists
+        working-directory: zksync-os-server
+        run: |
+          test -f zkos-l1-state.json || { echo "zkos-l1-state.json missing"; ls -la; exit 1; }
+      
+      - name: List zksync-os-server contents
+        working-directory: zksync-os-server
+        run: |
+          echo "=== pwd ==="
+          pwd
+          echo "=== ls -la ==="
+          ls -la
 
       - name: Build server (release)
         working-directory: zksync-os-server
