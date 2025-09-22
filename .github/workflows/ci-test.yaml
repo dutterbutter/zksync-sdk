@@ -72,26 +72,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Build L2 server (release)
+      - name: Build server
         working-directory: zksync-os-server
-        env:
-          CARGO_TERM_COLOR: always
-          CARGO_INCREMENTAL: 0
         run: cargo build --release --bin zksync_os_bin
 
-      - name: Start Anvil (L1)
+      - name: Run anvil L1
         working-directory: zksync-os-server
-        run: |
-          nohup anvil --load-state zkos-l1-state.json --host 0.0.0.0 --port 8545 > anvil.log 2>&1 &
-          for i in {1..60}; do
-            if curl -s http://127.0.0.1:8545 > /dev/null; then
-              echo "Anvil is up"
-              break
-            fi
-            sleep 1
-          done
+        run: anvil --load-state ./zkos-l1-state.json --port 8545 &
 
       - name: Run server
+        working-directory: zksync-os-server
         run: |
             if [ -x ./target/release/zksync_os_bin ]; then
               nohup ./target/release/zksync_os_bin > l2.log 2>&1 &
@@ -99,33 +89,14 @@ jobs:
               nohup cargo run --release > l2.log 2>&1 &
             fi
 
-            # Wait up to 10 minutes for RPC (port 3050) to respond
-            for i in {1..600}; do
-              if curl -sS -X POST http://127.0.0.1:3050 \
-                  -H 'content-type: application/json' \
-                  --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-                  | grep -q '"result"'; then
-                echo "L2 JSON-RPC is up"
-                break
-              fi
-              # show progress logs every 30s
-              if [ $((i % 30)) -eq 0 ]; then
-                echo "--- l2.log (last 50 lines) ---"
-                tail -n 50 l2.log || true
-              fi
-              sleep 1
-            done
-
-            # Final check: fail fast if still not up
-            if ! curl -sS -X POST http://127.0.0.1:3050 \
-                -H 'content-type: application/json' \
-                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-                | grep -q '"result"'; then
-              echo "L2 JSON-RPC failed to start."
-              echo "--- l2.log (last 200 lines) ---"
-              tail -n 200 l2.log || true
-              exit 1
-            fi
+      - name: Wait for zksync OS to start
+        working-directory: zksync-os-server
+        run: |
+          while ! nc -z localhost 3050; do
+            echo "Waiting for zksync OS to start..."
+            sleep 3
+          done
+          echo "Sequencer is up and running."
 
       - name: Run ethers e2e tests
         run: bun run test:e2e:ethers
