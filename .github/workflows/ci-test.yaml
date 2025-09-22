@@ -138,42 +138,35 @@ jobs:
   coverage-merge:
     name: coverage-merge 📊
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [unit-tests, e2e-tests]
     steps:
-      - name: Download unit LCOV
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: lcov-unit
           path: ./cov
-      - name: Download e2e LCOV
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: lcov-e2e
           path: ./cov
 
-      - name: Install lcov
-        run: sudo apt-get update && sudo apt-get install -y lcov
-
-      - name: Merge LCOV (unit + e2e)
+      - name: Install lcov and merge
         run: |
+          sudo apt-get update && sudo apt-get install -y lcov
           lcov -a ./cov/lcov.unit.info -a ./cov/lcov.e2e.info -o ./cov/lcov.merged.info
 
-      - name: Generate HTML & PR summary
-        run: |
-          genhtml ./cov/lcov.merged.info --output-directory ./cov/html --quiet --title "Combined Coverage"
-          echo "### Combined Test Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          lcov --summary ./cov/lcov.merged.info 2>/dev/null >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload coverage HTML (artifact)
-        uses: actions/upload-artifact@v4
+      - name: Report coverage on PR
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: zgosalvez/github-actions-report-lcov@v4
         with:
-          name: coverage-html
-          path: ./cov/html
+          coverage-files: ./cov/lcov.merged.info
+          minimum-coverage: 0
+          artifact-name: coverage-html
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload merged LCOV (artifact)
+      - name: Upload merged LCOV
         uses: actions/upload-artifact@v4
         with:
           name: lcov-merged
