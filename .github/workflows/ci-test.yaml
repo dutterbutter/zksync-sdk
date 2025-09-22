@@ -56,7 +56,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install build deps
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config lcov
 
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
@@ -112,13 +112,13 @@ jobs:
           done
           echo "L2 JSON-RPC not ready"; tail -n 200 l2.log || true; exit 1
 
-      - name: Run ethers e2e (bunfig coverage + lcov)
+      - name: Run ethers e2e
         run: |
           bun run test:e2e:ethers
           test -f coverage/lcov.info || (echo "lcov not found for e2e ethers" && exit 1)
           mv coverage/lcov.info lcov.e2e.ethers.info
 
-      - name: Run viem e2e (bunfig coverage + lcov)
+      - name: Run viem e2e
         run: |
           bun run test:e2e:viem
           test -f coverage/lcov.info || (echo "lcov not found for e2e viem" && exit 1)
@@ -126,7 +126,6 @@ jobs:
 
       - name: Merge E2E LCOV
         run: |
-          sudo apt-get update && sudo apt-get install -y lcov
           lcov -a lcov.e2e.ethers.info -a lcov.e2e.viem.info -o lcov.e2e.info
 
       - name: Upload e2e coverage
@@ -143,6 +142,8 @@ jobs:
       pull-requests: write
     needs: [unit-tests, e2e-tests]
     steps:
+      - uses: actions/checkout@v4
+      
       - uses: actions/download-artifact@v4
         with:
           name: lcov-unit
