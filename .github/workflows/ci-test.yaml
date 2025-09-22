@@ -143,7 +143,9 @@ jobs:
     needs: [unit-tests, e2e-tests]
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v4
         with:
           name: lcov-unit
@@ -163,15 +165,11 @@ jobs:
         uses: zgosalvez/github-actions-report-lcov@v4
         with:
           coverage-files: ./cov/lcov.merged.info
-          minimum-coverage: 0
+          minimum-coverage: 80
           artifact-name: coverage-html
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload merged LCOV
-        uses: actions/upload-artifact@v4
-        with:
-          name: lcov-merged
-          path: ./cov/lcov.merged.info
+          update-comment: true
+          title-prefix: "ci-run-tests"
 
   codecov:
     name: codecov ☁️
