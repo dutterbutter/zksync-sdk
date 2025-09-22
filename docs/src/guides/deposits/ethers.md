@@ -29,7 +29,7 @@ A fast path to deposit **ETH / ERC-20** from L1 → ZKsync (L2) using the **ethe
 ## Fast path (one-shot)
 
 ```ts
-{{#include ../../../../examples/ethers/deposit-eth.ts}}
+{{#include ../../../snippets/ethers/deposit-eth.ts}}
 ```
 
 - `create()` prepares **and** sends.

@@ -28,7 +28,7 @@ Withdrawals are a **two-step process**:
 ## Fast path (one-shot)
 
 ```ts
-{{#include ../../../../examples/ethers/withdrawal-eth.ts}}
+{{#include ../../../snippets/ethers/withdrawals-eth.ts}}
 ```
 
 - `create()` prepares **and** sends the L2 withdrawal.

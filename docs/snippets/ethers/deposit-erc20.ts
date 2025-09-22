@@ -1,8 +1,6 @@
 // examples/deposit-erc20.ts
-import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethers';
-import { createEthersClient } from '../../src/adapters/ethers/client';
-import { createEthersSdk } from '../../src/adapters/ethers/sdk';
-import { Address } from '../../src/core/types/primitives';
+import { JsonRpcProvider, Wallet, parseUnits, type Signer } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
@@ -15,10 +13,12 @@ async function main() {
 
   const client = await createEthersClient({ l1, l2, signer });
   const sdk = createEthersSdk(client);
-  // // sepolia
-  const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
 
-  const me = (await signer.getAddress()) as Address;
+  // ERC20 on sepolia
+  // Deploy your own if you can not use this one
+  const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873';
+
+  const me = (await signer.getAddress());
   const depositAmount = parseUnits('250', 18);
 
   // quote
