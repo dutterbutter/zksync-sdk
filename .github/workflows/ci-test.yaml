@@ -71,104 +71,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Verify L1 state file exists
-        working-directory: zksync-os-server
-        run: |
-          test -f zkos-l1-state.json || { echo "zkos-l1-state.json missing"; ls -la; exit 1; }
-      
-      - name: List zksync-os-server contents
-        working-directory: zksync-os-server
-        run: |
-          echo "=== pwd ==="
-          pwd
-          echo "=== ls -la ==="
-          ls -la
-
       - name: Build server (release)
         working-directory: zksync-os-server
-        env:
-          CARGO_TERM_COLOR: always
-          CARGO_INCREMENTAL: 0
         run: cargo build --release --bin zksync_os_bin
 
       - name: Start Anvil (L1) and wait
         working-directory: zksync-os-server
         run: |
           nohup anvil --load-state zkos-l1-state.json --port 8545 > anvil.log 2>&1 &
-          # Wait up to 60s for Anvil
           for i in {1..60}; do
             if curl -sS -X POST http://127.0.0.1:8545 \
                 -H 'content-type: application/json' \
-                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-              | jq -e '.result' >/dev/null; then
-              echo "Anvil is up"
-              break
+                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | grep -q '"result"'; then
+              echo "Anvil ready"; exit 0
             fi
             sleep 1
           done
-          if ! curl -sS -X POST http://127.0.0.1:8545 \
-              -H 'content-type: application/json' \
-              --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-            | jq -e '.result' >/dev/null; then
-            echo "Anvil failed to start"
-            echo "--- anvil.log (last 200) ---"
-            tail -n 200 anvil.log || true
-            exit 1
-          fi
+          echo "Anvil not ready"; tail -n 120 anvil.log || true; exit 1
 
-      - name: Run sequencer and wait for JSON-RPC
+      - name: Start server (L2) and wait
         working-directory: zksync-os-server
-        env:
-          RUST_LOG: info
         run: |
-          set -euo pipefail
-
-          # Start sequencer
-          if [ -x ./target/release/zksync_os_bin ]; then
-            nohup ./target/release/zksync_os_bin > l2.log 2>&1 &
-          else
-            nohup cargo run --release --bin zksync_os_bin > l2.log 2>&1 &
-          fi
-
-          SEQP=$!
-          echo "Sequencer PID: $SEQP"
-
-          # Wait up to 10 minutes for a *valid* eth_blockNumber response
-          for i in {1..600}; do
+          nohup ./target/release/zksync_os_bin > l2.log 2>&1 &
+          for i in {1..300}; do
             if curl -sS -X POST http://127.0.0.1:3050 \
-                  -H 'content-type: application/json' \
-                  --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-                | jq -e '.result | startswith("0x")' >/dev/null; then
-              echo "L2 JSON-RPC is up"
-              break
-            fi
-
-            # If the process died, fail fast with logs
-            if ! kill -0 "$SEQP" 2>/dev/null; then
-              echo "Sequencer process exited early"
-              echo "--- l2.log (last 200) ---"
-              tail -n 200 l2.log || true
-              exit 1
-            fi
-
-            # Show progress logs every 30s
-            if [ $((i % 30)) -eq 0 ]; then
-              echo "--- l2.log (last 80) ---"
-              tail -n 80 l2.log || true
+                -H 'content-type: application/json' \
+                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | grep -q '"result"'; then
+              echo "L2 JSON-RPC ready"; exit 0
             fi
             sleep 1
           done
-
-          # Final readiness check
-          if ! curl -sS -X POST http://127.0.0.1:3050 \
-                -H 'content-type: application/json' \
-                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' \
-              | jq -e '.result | startswith("0x")' >/dev/null; then
-            echo "L2 JSON-RPC failed to start within timeout."
-            echo "--- l2.log (last 200) ---"
-            tail -n 200 l2.log || true
-            exit 1
-          fi
+          echo "L2 JSON-RPC not ready"; tail -n 200 l2.log || true; exit 1
 
       - name: Run ethers e2e tests
         run: bun run test:e2e:ethers
