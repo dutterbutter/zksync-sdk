@@ -82,7 +82,7 @@ jobs:
       - name: Start Anvil (L1) and wait
         working-directory: zksync-os-server
         run: |
-          nohup anvil --load-state ./zkos-l1-state.json --host 0.0.0.0 --port 8545 > anvil.log 2>&1 &
+          nohup anvil --load-state zkos-l1-state.json --port 8545 > anvil.log 2>&1 &
           # Wait up to 60s for Anvil
           for i in {1..60}; do
             if curl -sS -X POST http://127.0.0.1:8545 \
