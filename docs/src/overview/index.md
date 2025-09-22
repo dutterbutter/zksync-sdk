@@ -11,9 +11,9 @@ Instead of re-implementing accounts or RPC logic, this SDK focuses only on **ZKs
 
 ## What you’ll find here
 
-- [**What this SDK does**](what-it-does.md) — the purpose, scope, and non-goals.
-- [**Mental model**](mental-model.md) — how to think about the core methods (`quote → prepare → create → status → wait → finalize`).
-- [**Adapters (viem & ethers)**](adapters.md) — how the SDK integrates with your existing stack.
+- [**What this SDK does**](./what-it-does.md) — the purpose, scope, and non-goals.
+- [**Mental model**](./mental-model.md) — how to think about the core methods (`quote → prepare → create → status → wait → finalize`).
+- [**Adapters (viem & ethers)**](./adapters.md) — how the SDK integrates with your existing stack.
 
 ## Next steps
 

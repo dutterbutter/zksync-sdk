@@ -28,7 +28,7 @@ Withdrawals are a **two-step process**:
 ## Fast path (one-shot)
 
 ```ts
-{{#include ../../../../examples/viem/withdrawals-eth.ts}}
+{{#include ../../../snippets/viem/withdrawals-eth.ts}}
 ```
 
 - `create()` prepares **and** sends the L2 withdrawal.

@@ -27,7 +27,7 @@ A fast path to deposit **ETH / ERC-20** from L1 → ZKsync (L2) using the **viem
 ## Fast path (one-shot)
 
 ```ts
-{{#include ../../../../examples/viem/deposit-eth.ts}}
+{{#include ../../../snippets/viem/deposit-eth.ts}}
 ```
 
 - `create()` prepares **and** sends.
