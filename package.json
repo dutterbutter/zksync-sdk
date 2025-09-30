@@ -4,7 +4,6 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "devDependencies": {
-    "@noble/hashes": "^1.8.0",
     "@types/bun": "latest",
     "bun-types": "^1.2.19",
     "chalk": "^5.6.2",
@@ -20,6 +19,9 @@
     "ethers": "^6.15.0",
     "@typechain/ethers-v6": "^0.5.0",
     "viem": "^2.0.0"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.8.0"
   },
   "peerDependencies": {
     "ethers": "^6.15.0",
@@ -119,6 +121,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "verify:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --listEmittedFiles",
     "build:js": "tsup --config tsup.config.ts",
     "build": "bun run clean && bun run build:types && bun run build:js",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",

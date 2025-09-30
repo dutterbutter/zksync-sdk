@@ -18,7 +18,6 @@ const entry = [
 ];
 
 export default defineConfig([
-  // ESM: no sourcemaps, enable splitting to dedupe shared code/ABIs
   {
     entry,
     outDir: 'dist',
@@ -31,15 +30,14 @@ export default defineConfig([
     skipNodeModulesBundle: true,
     external: ['ethers', 'viem', '@typechain/ethers-v6'],
     dts: false,
-    clean: true,
+    clean: false,
     minify: false,
     shims: false,
     outExtension: () => ({ js: '.js' }),
     tsconfig: 'tsconfig.build.json',
     loader: { '.json': 'json' },
   },
-
-  // CJS: sourcemaps ON, no splitting (fewer .map files, closer to viem)
+  // cjs sourcemaps 
   {
     entry,
     outDir: 'dist',

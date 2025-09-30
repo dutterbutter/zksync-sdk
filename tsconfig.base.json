@@ -7,15 +7,16 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "declaration": true,
-    "declarationMap": true,
-    "composite": true,
     "types": ["node", "bun-types"],
     // Bundler mode
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "noEmit": true
+    "noEmit": false,
+    // types
+    "declaration": false,
+    "declarationMap": false,
+    "composite": false
   },
   "files": [],
   "exclude": [
