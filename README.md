@@ -64,9 +64,10 @@ const l1Provider = new JsonRpcProvider('https://sepolia.infura.io/v3/...');
 const l2Provider = new JsonRpcProvider('https://zksync-testnet.rpc');
 const signer = new Wallet(process.env.PRIVATE_KEY!, l1Provider);
 
-const client = await createEthersClient({ l1Provider, l2Provider, signer });
+const client = await createEthersClient({ l1Provider, l2Provider, signer });  
+const sdk = createEthersSdk(client);
 
-const deposit = await client.deposits.create({
+const deposit = await sdk.deposits.create({
   token: ETH_ADDRESS,
   amount: parseEther('0.01'),
   to: signer.address,
@@ -89,8 +90,8 @@ const l1Wallet = createWalletClient({
   account,
   transport: http('https://sepolia.infura.io/v3/...'),
 });
-
-const sdk = createViemSdk({ l1, l2, l1Wallet });
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
 
 const handle = await sdk.deposits.create({
   token: ETH_ADDRESS,
