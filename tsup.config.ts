@@ -37,7 +37,7 @@ export default defineConfig([
     tsconfig: 'tsconfig.build.json',
     loader: { '.json': 'json' },
   },
-  // cjs sourcemaps 
+  // CJS sourcemaps
   {
     entry,
     outDir: 'dist',

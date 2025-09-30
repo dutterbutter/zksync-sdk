@@ -3,7 +3,6 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "noEmit": false,
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationMap": false,
