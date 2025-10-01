@@ -10,7 +10,8 @@ import { ETH_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+const PRIVATE_KEY =
+  process.env.PRIVATE_KEY || '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
 
 async function main() {
   if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
@@ -61,7 +62,7 @@ async function main() {
 
   // Create (prepare + send)
   const created = await sdk.deposits.create(params);
-  console.log('CREATE response:', created);
+  console.log('CREATE response222:', created);
 
   // Status (quick check)
   const status = await sdk.deposits.status(created);
@@ -92,6 +93,9 @@ async function main() {
     'hash:',
     l2Receipt?.transactionHash,
   );
+
+  const status3 = await sdk.deposits.status(created);
+  console.log('STATUS3 response:', status3);
 }
 
 main().catch((e) => {

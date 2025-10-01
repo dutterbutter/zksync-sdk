@@ -13,6 +13,13 @@ import { OP_WITHDRAWALS } from '../../../../../core/types';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
+// Strongly-typed signatures for overloaded functions
+// Necessary for ethers v6 when contract has multiple functions with same name
+// which is the case for L2AssetRouter.withdraw
+const SIG = {
+  withdraw: 'withdraw(bytes32,bytes)',
+} as const;
+
 // Route for withdrawing ERC-20 via L2-L1
 export function routeErc20(): WithdrawRouteStrategy {
   return {
@@ -87,12 +94,23 @@ export function routeErc20(): WithdrawRouteStrategy {
       const dataWithdraw = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.erc20.encodeWithdraw,
-        () => Promise.resolve(l2ar.interface.encodeFunctionData('withdraw', [assetId, assetData])),
+        () =>
+          Promise.resolve(l2ar.interface.encodeFunctionData(SIG.withdraw, [assetId, assetData])),
         {
           ctx: { where: 'L2AssetRouter.withdraw', assetId },
           message: 'Failed to encode withdraw calldata.',
         },
       );
+
+      // const dataWithdraw = await wrapAs(
+      //   'INTERNAL',
+      //   OP_WITHDRAWALS.erc20.encodeWithdraw,
+      //   () => Promise.resolve(l2arIface.encodeFunctionData(SIG.withdraw, [assetId, assetData])),
+      //   {
+      //     ctx: { where: 'L2AssetRouter.withdraw', assetId },
+      //     message: 'Failed to encode withdraw calldata.',
+      //   },
+      // );
 
       const withdrawTx: TransactionRequest = {
         to: ctx.l2AssetRouter,
