@@ -84,6 +84,72 @@ export function isZKsyncError(e: unknown): e is ZKsyncError {
   return typeof envelope?.type === 'string' && typeof envelope?.message === 'string';
 }
 
+// "receipt not found" detector across viem / ethers / generic RPC.
+export function isReceiptNotFound(e: unknown): boolean {
+  type ReceiptErrorNode = {
+    name?: string;
+    code?: string | number;
+    shortMessage?: string;
+    message?: string;
+    cause?: unknown;
+  };
+  const chain: ReceiptErrorNode[] = [];
+  let cur: ReceiptErrorNode | undefined = e as ReceiptErrorNode | undefined;
+  for (let i = 0; i < 5 && cur; i++) {
+    chain.push(cur);
+    cur = cur.cause as ReceiptErrorNode | undefined;
+  }
+
+  // Known names/labels
+  const NAME_HITS = new Set([
+    'TransactionReceiptNotFoundError', // viem
+    'TransactionNotFoundError', // viem
+    'NotFoundError', // some RPC wrappers
+  ]);
+
+  const CODE_HITS = new Set([
+    'TRANSACTION_NOT_FOUND', // some ethers-ish shapes / providers
+    'RECEIPT_NOT_FOUND',
+    'NOT_FOUND',
+    -32000, // JSON-RPC server error
+  ]);
+
+  // Message regex fallback
+  const MSG_RE = /(transaction|receipt)[^]*?(not\s+(?:be\s+)?found|missing)/i;
+
+  for (const node of chain) {
+    const name = node?.name;
+    const code = node?.code;
+    const short = node?.shortMessage;
+    const msg = String(short ?? node?.message ?? '');
+
+    if (name && NAME_HITS.has(name)) return true;
+    if (code && CODE_HITS.has(code)) return true;
+    if (MSG_RE.test(msg)) return true;
+  }
+
+  // Final fallback: inspect the original error text
+  const raw = (() => {
+    const node = e as ReceiptErrorNode | undefined;
+    const short = node?.shortMessage;
+    const msg = node?.message;
+    if (typeof short === 'string' && short) return short;
+    if (typeof msg === 'string' && msg) return msg;
+    if (e == null) return '';
+    if (typeof e === 'string') return e;
+    try {
+      return util.inspect(e, { depth: 5 });
+    } catch {
+      try {
+        return JSON.stringify(e);
+      } catch {
+        return Object.prototype.toString.call(e);
+      }
+    }
+  })();
+  return MSG_RE.test(raw);
+}
+
 // TryResult type for operations that can fail without throwing
 export type TryResult<T> = { ok: true; value: T } | { ok: false; error: ZKsyncError };
 

@@ -20,7 +20,7 @@ import { routeEthDirect } from './routes/eth';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import type { DepositRouteStrategy } from './routes/types.ts';
 
-import { isZKsyncError, OP_DEPOSITS } from '../../../../core/types/errors';
+import { isZKsyncError, isReceiptNotFound, OP_DEPOSITS } from '../../../../core/types/errors';
 import { createError } from '../../../../core/errors/factory.ts';
 import { toZKsyncError, createErrorHandlers } from '../../errors/error-ops.ts';
 
@@ -298,13 +298,18 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
         try {
           l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash);
         } catch (e) {
+          if (isReceiptNotFound(e)) {
+            // Expected pending state: do not throw
+            return { phase: 'L2_PENDING', l1TxHash, l2TxHash };
+          }
+          // Unexpected provider/transport error: do throw
           throw toZKsyncError(
             'RPC',
             {
               resource: 'deposits',
               operation: 'deposits.status.getTransactionReceipt',
-              context: { where: 'l2.getTransactionReceipt', l1TxHash, l2TxHash },
               message: 'Failed to fetch L2 transaction receipt.',
+              context: { l2TxHash, where: 'l2.getTransactionReceipt' },
             },
             e,
           );

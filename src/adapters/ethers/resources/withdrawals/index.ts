@@ -15,6 +15,7 @@ import type { Address, Hex } from '../../../../core/types/primitives';
 import { commonCtx } from './context';
 import { toZKsyncError } from '../../errors/error-ops';
 import { createError } from '../../../../core/errors/factory';
+import { isReceiptNotFound } from '../../../../core/types/errors';
 import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes/types';
 import { routeEth } from './routes/eth';
 import { routeErc20 } from './routes/erc20';
@@ -247,13 +248,18 @@ export function createWithdrawalsResource(client: EthersClient): WithdrawalsReso
         try {
           l2Rcpt = await client.l2.getTransactionReceipt(l2TxHash);
         } catch (e) {
+          if (isReceiptNotFound(e)) {
+            // Expected pending state: do not throw
+            return { phase: 'L2_PENDING', l2TxHash };
+          }
+          // Unexpected provider/transport error: do throw
           throw toZKsyncError(
             'RPC',
             {
               resource: 'withdrawals',
               operation: 'withdrawals.status.getTransactionReceipt',
               message: 'Failed to fetch L2 transaction receipt.',
-              context: { l2TxHash },
+              context: { l2TxHash, where: 'l2.getTransactionReceipt' },
             },
             e,
           );
