@@ -24,8 +24,8 @@ const DECIMALS = 6n;
 const UNIT = 10n ** DECIMALS;
 
 // Test amounts
-const DEPOSIT_AMOUNT = 1_000_000n * UNIT;   // 1,000,000 units
-const WITHDRAW_FRACTION = 2n;               // withdraw 1/2 of L2 balance from deposit
+const DEPOSIT_AMOUNT = 1_000_000n * UNIT; // 1,000,000 units
+const WITHDRAW_FRACTION = 2n; // withdraw 1/2 of L2 balance
 
 describe('e2e (ethers): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
   let client: any, sdk: any, me: Address;
@@ -45,11 +45,16 @@ describe('e2e (ethers): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
     ({ client, sdk } = createTestClientAndSdk());
     me = (await client.signer.getAddress()) as Address;
 
-    // Use the Anvil deployer for admin ops (deploy + mint) on L1
     const { deployerL1 } = makeDeployers(client.l1, client.l2);
 
     // Deploy L1 token and mint
-    const tokenL1 = await deployMintableErc20(client.l1, deployerL1, 'USD Token', 'USDT', Number(DECIMALS));
+    const tokenL1 = await deployMintableErc20(
+      client.l1,
+      deployerL1,
+      'USD Token',
+      'USDT',
+      Number(DECIMALS),
+    );
     l1TokenAddr = (await tokenL1.getAddress()) as Address;
     const contract = tokenL1.connect(deployerL1);
     await mintTo(contract as Contract, me, DEPOSIT_AMOUNT * 10n);

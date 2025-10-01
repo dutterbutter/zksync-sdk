@@ -9,11 +9,7 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import type { Address } from '../../../core/types/primitives.ts';
 import { ETH_ADDRESS } from '../../../core/constants.ts';
-import {
-  createTestClientAndSdk,
-  waitForL1Inclusion,
-  verifyDepositBalances,
-} from './helpers.ts';
+import { createTestClientAndSdk, waitForL1Inclusion, verifyDepositBalances } from './helpers.ts';
 import { sleep } from 'bun';
 
 const DEPOSIT_WEI = 1_000_000_000_000_000n; // 0.001 ETH

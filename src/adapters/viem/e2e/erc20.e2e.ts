@@ -21,7 +21,7 @@ import {
 const DECIMALS = 6n;
 const UNIT = 10n ** DECIMALS;
 const DEPOSIT_AMOUNT = 1_000_000n * UNIT; // 1,000,000 units
-const WITHDRAW_FRACTION = 2n;             // withdraw half of current L2 balance
+const WITHDRAW_FRACTION = 2n; // withdraw half of current L2 balance
 
 describe('e2e (viem): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
   let client: any, sdk: any, me: Address;
@@ -45,7 +45,13 @@ describe('e2e (viem): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
     const { deployerL1 } = makeDeployers();
 
     // Deploy token on L1 & mint
-    l1TokenAddr = await deployMintableErc20(client.l1, deployerL1, 'USD Token', 'USDT', Number(DECIMALS));
+    l1TokenAddr = await deployMintableErc20(
+      client.l1,
+      deployerL1,
+      'USD Token',
+      'USDT',
+      Number(DECIMALS),
+    );
     await mintTo(deployerL1, client.l1, l1TokenAddr, me, DEPOSIT_AMOUNT * 10n);
 
     // Snapshots
@@ -74,7 +80,11 @@ describe('e2e (viem): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
   }, 20_000);
 
   it('deposits: create, wait l1, wait l2', async () => {
-    depositHandle = await sdk.deposits.create({ token: l1TokenAddr, amount: DEPOSIT_AMOUNT, to: me });
+    depositHandle = await sdk.deposits.create({
+      token: l1TokenAddr,
+      amount: DEPOSIT_AMOUNT,
+      to: me,
+    });
     expect(depositHandle.kind).toBe('deposit');
     expect(depositHandle.l1TxHash).toMatch(/^0x[0-9a-fA-F]{64}$/);
 
@@ -113,10 +123,18 @@ describe('e2e (viem): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
     expect(l2Now > 0n).toBeTrue();
     const withdrawAmount = l2Now / WITHDRAW_FRACTION || l2Now;
 
-    const quote = await sdk.withdrawals.quote({ token: l2TokenAddr, amount: withdrawAmount, to: me });
+    const quote = await sdk.withdrawals.quote({
+      token: l2TokenAddr,
+      amount: withdrawAmount,
+      to: me,
+    });
     expect(quote.route).toBeDefined();
 
-    const plan = await sdk.withdrawals.prepare({ token: l2TokenAddr, amount: withdrawAmount, to: me });
+    const plan = await sdk.withdrawals.prepare({
+      token: l2TokenAddr,
+      amount: withdrawAmount,
+      to: me,
+    });
     expect(plan.steps.length).toBeGreaterThan(0);
 
     const hasApprove = plan.steps.some(
@@ -126,7 +144,9 @@ describe('e2e (viem): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
     );
     expect(hasApprove).toBeTrue();
 
-    const hasWithdraw = plan.steps.some((s: any) => String(s.key).includes('l2-asset-router:withdraw'));
+    const hasWithdraw = plan.steps.some((s: any) =>
+      String(s.key).includes('l2-asset-router:withdraw'),
+    );
     expect(hasWithdraw).toBeTrue();
   }, 25_000);
 
@@ -135,7 +155,11 @@ describe('e2e (viem): ERC-20 deposit L1->L2 and withdraw L2->L1', () => {
     const l1Before = await erc20BalanceOf(client.l1, l1TokenAddr, me);
     const withdrawAmount = l2Before / WITHDRAW_FRACTION || l2Before;
 
-    const handle = await sdk.withdrawals.create({ token: l2TokenAddr, amount: withdrawAmount, to: me });
+    const handle = await sdk.withdrawals.create({
+      token: l2TokenAddr,
+      amount: withdrawAmount,
+      to: me,
+    });
 
     const s = await waitForL2InclusionWithdraw(sdk, handle, 120_000);
     expect(['PENDING', 'READY_TO_FINALIZE', 'FINALIZED']).toContain(s.phase);

@@ -231,7 +231,6 @@ export async function verifyWithdrawalBalancesAfterFinalize(args: {
   }
 }
 
-
 // ---------- ERC-20 helpers ----------
 
 // Deploys erc20 contract
@@ -243,8 +242,7 @@ export async function deployMintableErc20(
   decimals = 18,
 ): Promise<Address> {
   const raw = (tokenJson as any).bytecode;
-  const bytecode: `0x${string}` =
-    (typeof raw === 'string' ? raw : raw?.object) as `0x${string}`;
+  const bytecode: `0x${string}` = (typeof raw === 'string' ? raw : raw?.object) as `0x${string}`;
 
   if (typeof bytecode !== 'string' || !bytecode.startsWith('0x')) {
     throw new Error('MintableERC20 bytecode is not a 0x-prefixed hex string.');
@@ -255,7 +253,7 @@ export async function deployMintableErc20(
     bytecode,
     args: [name, symbol, Number(decimals)],
     account: l1Deployer.account as unknown as `0x${string}`,
-    chain: undefined
+    chain: undefined,
   });
 
   const rcpt = await l1Public.waitForTransactionReceipt({ hash });
@@ -264,7 +262,7 @@ export async function deployMintableErc20(
   return addr;
 }
 
-// Mint tokens 
+// Mint tokens
 export async function mintTo(
   l1Deployer: ReturnType<typeof createWalletClient>,
   l1Public: ReturnType<typeof createPublicClient>,
@@ -279,7 +277,7 @@ export async function mintTo(
     args: [to, amount],
     gas: 300000n,
     account: l1Deployer.account as unknown as `0x${string}`,
-    chain: undefined
+    chain: undefined,
   });
   await l1Public.waitForTransactionReceipt({ hash: txHash });
 }

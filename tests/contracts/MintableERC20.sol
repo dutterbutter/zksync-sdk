@@ -19,11 +19,6 @@ contract MintableERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    // modifier onlyOwner() {
-    //     if (msg.sender != owner) revert NotOwner();
-    //     _;
-    // }
-
     constructor(string memory _name, string memory _symbol, uint8 _decimals) {
         name = _name;
         symbol = _symbol;
