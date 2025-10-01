@@ -14,6 +14,8 @@ const entry = [
   '!src/**/__tests__/**',
   '!src/**/__mocks__/**',
   '!src/**/e2e/**',
+  '!src/**/*.e2e.ts',
+  '!src/**/e2e/**',
   '!test/**',
 ];
 

@@ -138,3 +138,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 docs/book/*
+
+# Temporary folders
+tests/contracts/cache
+tests/contracts/out

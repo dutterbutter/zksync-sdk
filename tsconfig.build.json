@@ -10,5 +10,5 @@
     "incremental": false
   },
   "include": ["src/**/*.ts", "src/**/*.json"],
-  "exclude": ["**/*.test.ts", "**/__tests__/**", "test/**"]
+  "exclude": ["**/*.test.ts", "**/__tests__/**", "test/**", "src/**/e2e/**", "**/*.e2e.ts"]
 }

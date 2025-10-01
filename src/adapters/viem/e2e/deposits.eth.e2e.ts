@@ -9,11 +9,7 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import type { Address } from '../../../core/types/primitives.ts';
 import { ETH_ADDRESS } from '../../../core/constants.ts';
-import {
-  createTestClientAndSdkViem,
-  waitForL1InclusionViem,
-  verifyDepositBalancesViem,
-} from './helpers.ts';
+import { createTestClientAndSdk, waitForL1Inclusion, verifyDepositBalances } from './helpers.ts';
 import { sleep } from 'bun';
 
 const DEPOSIT_WEI = 1_000_000_000_000_000n; // 0.001 ETH
@@ -25,7 +21,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
   let quoteResult: any;
 
   beforeAll(async () => {
-    ({ client, sdk } = createTestClientAndSdkViem());
+    ({ client, sdk } = createTestClientAndSdk());
     me = client.account.address as Address;
 
     const [l1, l2] = await Promise.all([
@@ -70,7 +66,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
 
   it('should be included on L1 after a short wait', async () => {
     await sleep(1500);
-    const status = await waitForL1InclusionViem(sdk, handle);
+    const status = await waitForL1Inclusion(sdk, handle);
     expect(['L1_INCLUDED', 'L2_PENDING', 'L2_EXECUTED', 'L2_FAILED']).toContain(status.phase);
   }, 60_000);
 
@@ -86,7 +82,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
   it('should reflect correct balance changes on L1 and L2', async () => {
     const l1TxHashes = handle.stepHashes ? Object.values(handle.stepHashes) : [handle.l1TxHash];
 
-    await verifyDepositBalancesViem({
+    await verifyDepositBalances({
       client,
       me,
       balancesBefore,
