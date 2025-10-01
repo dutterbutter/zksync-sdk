@@ -8,6 +8,7 @@
 
 // tests/e2e/viem/helpers.viem.ts
 import type { Address, Hex } from '../../../core/types/primitives.ts';
+import tokenJson from '../../../../tests/contracts/out/MintableERC20.sol/MintableERC20.json' assert { type: 'json' };
 import { expect } from 'bun:test';
 
 import {
@@ -17,6 +18,7 @@ import {
   type Transport,
   type Chain,
   type Account,
+  type Abi,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createViemClient } from '../client.ts';
@@ -26,11 +28,12 @@ import { createViemSdk } from '../sdk.ts';
 const L1_RPC = 'http://127.0.0.1:8545';
 const L2_RPC = 'http://127.0.0.1:3050';
 const PRIVATE_KEY = '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6';
+const DEPLOYER_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const L1_CHAIN: Chain | undefined = undefined;
 const L2_CHAIN: Chain | undefined = undefined;
 
 // ------- Factory used by tests -------
-export function createTestClientAndSdkViem() {
+export function createTestClientAndSdk() {
   // --- Account ---
   const account: Account = privateKeyToAccount(PRIVATE_KEY);
 
@@ -63,11 +66,29 @@ export function createTestClientAndSdkViem() {
   return { client, sdk };
 }
 
+export function makeDeployers() {
+  const deployerAccount = privateKeyToAccount(DEPLOYER_PRIVATE_KEY);
+
+  const l1Deployer = createWalletClient({
+    account: deployerAccount,
+    transport: http(L1_RPC),
+    ...(L1_CHAIN ? { chain: L1_CHAIN } : {}),
+  });
+
+  const l2Deployer = createWalletClient({
+    account: deployerAccount,
+    transport: http(L2_RPC),
+    ...(L2_CHAIN ? { chain: L2_CHAIN } : {}),
+  });
+
+  return { deployerL1: l1Deployer, deployerL2: l2Deployer };
+}
+
 // ---------------- Polling helpers ----------------
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function waitForL1InclusionViem(sdk: any, handle: any, timeoutMs = 60_000) {
+export async function waitForL1Inclusion(sdk: any, handle: any, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const s = await sdk.deposits.status(handle);
@@ -81,7 +102,7 @@ export async function waitForL1InclusionViem(sdk: any, handle: any, timeoutMs = 
 
 // ---------------- Balance verification ----------------
 
-export async function verifyDepositBalancesViem(args: {
+export async function verifyDepositBalances(args: {
   client: any;
   me: Address;
   balancesBefore: { l1: bigint; l2: bigint };
@@ -121,7 +142,7 @@ export async function verifyDepositBalancesViem(args: {
  * Poll until L2 inclusion is confirmed for a withdrawal (status != L2_PENDING/UNKNOWN).
  * Also tolerant to viem throwing TransactionReceiptNotFoundError (wrapped).
  */
-export async function waitForL2InclusionWithdrawViem(sdk: any, handle: any, timeoutMs = 60_000) {
+export async function waitForL2InclusionWithdraw(sdk: any, handle: any, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
@@ -140,7 +161,7 @@ export async function waitForL2InclusionWithdrawViem(sdk: any, handle: any, time
  * Wait until withdrawal becomes READY_TO_FINALIZE (or FINALIZED).
  * No side-effects (uses status loop, not finalize()).
  */
-export async function waitUntilReadyToFinalizeViem(
+export async function waitUntilReadyToFinalize(
   sdk: any,
   handle: any,
   timeoutMs = 180_000,
@@ -166,7 +187,7 @@ export async function waitUntilReadyToFinalizeViem(
  *  - L1: after finalization, net delta = +amount - finalizeGas
  * If finalize receipt is unavailable, we only check that L1 increased (>= 0).
  */
-export async function verifyWithdrawalBalancesAfterFinalizeViem(args: {
+export async function verifyWithdrawalBalancesAfterFinalize(args: {
   client: any;
   me: Address;
   balancesBefore: { l1: bigint; l2: bigint };
@@ -208,4 +229,70 @@ export async function verifyWithdrawalBalancesAfterFinalizeViem(args: {
   } else {
     expect(l1Delta >= 0n).toBeTrue();
   }
+}
+
+
+// ---------- ERC-20 helpers ----------
+
+// Deploys erc20 contract
+export async function deployMintableErc20(
+  l1Public: ReturnType<typeof createPublicClient>,
+  l1Deployer: ReturnType<typeof createWalletClient>,
+  name = 'TestToken',
+  symbol = 'TT',
+  decimals = 18,
+): Promise<Address> {
+  const raw = (tokenJson as any).bytecode;
+  const bytecode: `0x${string}` =
+    (typeof raw === 'string' ? raw : raw?.object) as `0x${string}`;
+
+  if (typeof bytecode !== 'string' || !bytecode.startsWith('0x')) {
+    throw new Error('MintableERC20 bytecode is not a 0x-prefixed hex string.');
+  }
+
+  const hash = await l1Deployer.deployContract({
+    abi: tokenJson.abi as Abi,
+    bytecode,
+    args: [name, symbol, Number(decimals)],
+    account: l1Deployer.account as unknown as `0x${string}`,
+    chain: undefined
+  });
+
+  const rcpt = await l1Public.waitForTransactionReceipt({ hash });
+  const addr = rcpt.contractAddress!;
+  expect(addr).toMatch(/^0x[0-9a-fA-F]{40}$/);
+  return addr;
+}
+
+// Mint tokens 
+export async function mintTo(
+  l1Deployer: ReturnType<typeof createWalletClient>,
+  l1Public: ReturnType<typeof createPublicClient>,
+  token: Address,
+  to: Address,
+  amount: bigint,
+) {
+  const txHash = await l1Deployer.writeContract({
+    address: token,
+    abi: tokenJson.abi as Abi,
+    functionName: 'mint',
+    args: [to, amount],
+    gas: 300000n,
+    account: l1Deployer.account as unknown as `0x${string}`,
+    chain: undefined
+  });
+  await l1Public.waitForTransactionReceipt({ hash: txHash });
+}
+
+export async function erc20BalanceOf(
+  client: ReturnType<typeof createPublicClient>,
+  tokenAddress: Address,
+  who: Address,
+): Promise<bigint> {
+  return (await client.readContract({
+    address: tokenAddress,
+    abi: tokenJson.abi as Abi,
+    functionName: 'balanceOf',
+    args: [who],
+  })) as bigint;
 }

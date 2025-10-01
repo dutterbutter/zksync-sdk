@@ -6,7 +6,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // tests/e2e/helpers.ts
-import { JsonRpcProvider, Wallet } from 'ethers';
+import { JsonRpcProvider, Wallet, Contract, ContractFactory, NonceManager } from 'ethers';
+import tokenJson from '../../../../tests/contracts/out/MintableERC20.sol/MintableERC20.json' assert { type: 'json' };
+
+// Ethers v6 accepts ABI as any[]
+export const TEST_ERC20_ABI = tokenJson.abi as any[];
+export const TEST_ERC20_BYTECODE = tokenJson.bytecode as unknown as `0x${string}`;
 import type { Address, Hex } from '../../../core/types/primitives.ts';
 import { createEthersClient } from '../client.ts';
 import { createEthersSdk } from '../sdk.ts';
@@ -18,13 +23,28 @@ const L2_RPC_URL = 'http://127.0.0.1:3050';
 const PRIVATE_KEY = '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+export const DEPLOYER_PRIVATE_KEY =
+  (process.env.DEPLOYER_PRIVATE_KEY as `0x${string}`) ??
+  ('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' as const);
+
 export function createTestClientAndSdk() {
   const l1 = new JsonRpcProvider(L1_RPC_URL);
   const l2 = new JsonRpcProvider(L2_RPC_URL);
-  const signer = new Wallet(PRIVATE_KEY, l1);
+  const base = new Wallet(PRIVATE_KEY, l1);
+  const signer = new NonceManager(base);
+
   const client = createEthersClient({ l1, l2, signer });
   const sdk = createEthersSdk(client);
   return { client, sdk };
+}
+
+/** Create deployer wallets bound to current providers (same PK on both chains). */
+export function makeDeployers(l1: JsonRpcProvider, l2: JsonRpcProvider) {
+  const baseL1 = new Wallet(DEPLOYER_PRIVATE_KEY, l1);
+  const baseL2 = new Wallet(DEPLOYER_PRIVATE_KEY, l2);
+  const deployerL1 = new NonceManager(baseL1);
+  const deployerL2 = new NonceManager(baseL2);
+  return { deployerL1, deployerL2 };
 }
 
 // polling helper
@@ -163,4 +183,53 @@ export async function verifyWithdrawalBalancesAfterFinalize(args: {
   } else {
     expect(l1Delta >= 0n).toBeTrue();
   }
+}
+
+// Deploy a mintable ERC-20 on the provided chain (L1 or L2).
+export async function deployMintableErc20(
+  provider: JsonRpcProvider,
+  deployer: NonceManager,
+  name = 'TestToken',
+  symbol = 'TT',
+  decimals = 18,
+): Promise<Contract> {
+  if (!TEST_ERC20_BYTECODE || TEST_ERC20_BYTECODE === '0x') {
+    throw new Error(
+      'TEST_ERC20_BYTECODE missing. Did you compile TestERC20.sol and is the import path correct?',
+    );
+  }
+
+  const factory = new ContractFactory(TEST_ERC20_ABI, TEST_ERC20_BYTECODE, deployer);
+  const token = await factory.deploy(name, symbol, decimals);
+  await token.waitForDeployment();
+
+  const addr = await token.getAddress();
+  expect(addr).toMatch(/^0x[0-9a-fA-F]{40}$/);
+  return token as unknown as Contract;
+}
+
+// Mint tokens
+export async function mintTo(token: Contract, to: Address, amount: bigint) {
+  const signer = token.runner as Wallet;
+  if (!('sendTransaction' in signer)) {
+    throw new Error('mintTo: token is not connected to a signer');
+  }
+  const data = token.interface.encodeFunctionData('mint(address,uint256)', [to, amount]);
+  const tx = await signer.sendTransaction({
+    to: await token.getAddress(),
+    data,
+    gasLimit: 300_000n,
+  });
+  await tx.wait();
+}
+
+// Check balance of an ERC-20 token
+export async function erc20BalanceOf(
+  provider: JsonRpcProvider,
+  tokenAddress: Address,
+  who: Address,
+): Promise<bigint> {
+  const token = new Contract(tokenAddress, TEST_ERC20_ABI, provider);
+  const bal: bigint = await token.getFunction('balanceOf').staticCall(who);
+  return bal;
 }
