@@ -62,7 +62,7 @@ async function main() {
 
   // Create (prepare + send)
   const created = await sdk.deposits.create(params);
-  console.log('CREATE response222:', created);
+  console.log('CREATE response:', created);
 
   // Status (quick check)
   const status = await sdk.deposits.status(created);

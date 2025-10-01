@@ -9,11 +9,10 @@ import { IERC20ABI } from '../../src/core/internal/abi-registry';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY =
-  process.env.PRIVATE_KEY || '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 // Replace with a real **L2 ERC-20 token address** you hold on L2
-const L1_ERC20_TOKEN = '0x8464135c8F25Da09e49BC8782676a84730C318bC' as Address;
+const L1_ERC20_TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
 
 async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);
