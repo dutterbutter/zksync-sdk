@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.6-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.5-alpha...v0.0.6-alpha) (2025-10-01)
+
+
+### Features
+
+* add e2e tests for erc20 for ethers and viem adapters ([#38](https://github.com/dutterbutter/zksync-sdk/issues/38)) ([763587a](https://github.com/dutterbutter/zksync-sdk/commit/763587a3035da61d7764864efe1048e8f4144062))
+
+
+### Bug Fixes
+
+* add reported code coverage ([#32](https://github.com/dutterbutter/zksync-sdk/issues/32)) ([98834dc](https://github.com/dutterbutter/zksync-sdk/commit/98834dc722559e38da270395591145f4d91ea2e4))
+* address docs issue ([#28](https://github.com/dutterbutter/zksync-sdk/issues/28)) ([533eb70](https://github.com/dutterbutter/zksync-sdk/commit/533eb70a61c33718a3f56850ba8db65a7f3204af))
+* e2e ci test env resolved ([#31](https://github.com/dutterbutter/zksync-sdk/issues/31)) ([5d4df64](https://github.com/dutterbutter/zksync-sdk/commit/5d4df64c7a3307ec02ff9d6158f6b535af4f98b5))
+* fix issues with published build with types ([#35](https://github.com/dutterbutter/zksync-sdk/issues/35)) ([901a0ea](https://github.com/dutterbutter/zksync-sdk/commit/901a0ea717e16076323f5c37b6e98ca5b2540578))
+* fix withdraw fn overload issue with ethers erc20 withdrawal ([#37](https://github.com/dutterbutter/zksync-sdk/issues/37)) ([2403a9c](https://github.com/dutterbutter/zksync-sdk/commit/2403a9c122e7a6e8c1f24cd407eef57abf3b076a))
+
 ## [0.0.5-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.4-alpha...v0.0.5-alpha) (2025-09-19)
 
 
