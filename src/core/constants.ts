@@ -1,4 +1,6 @@
-import { keccak256, toUtf8Bytes } from 'ethers';
+import { keccak_256 } from '@noble/hashes/sha3';
+import { utf8ToBytes, bytesToHex } from '@noble/hashes/utils';
+
 import type { Address } from './types/primitives';
 
 // TODO: taken from zksync-ethers, can be cleaned up
@@ -41,13 +43,11 @@ export const L2_BASE_TOKEN_ADDRESS = '0x000000000000000000000000000000000000800A
 export const TOPIC_L1_MESSAGE_SENT =
   '0x2632cc0d58b0cb1017b99cc0b6cc66ad86440cc0dd923bfdaa294f95ba1b0201' as const;
 
-// Support both OS flavors
-export const TOPIC_L1_MESSAGE_SENT_NEW = keccak256(
-  toUtf8Bytes('L1MessageSent(uint256,bytes32,bytes)'),
-).toLowerCase();
-export const TOPIC_L1_MESSAGE_SENT_LEG = keccak256(
-  toUtf8Bytes('L1MessageSent(address,bytes32,bytes)'),
-).toLowerCase();
+const k256hex = (s: string) => ('0x' + bytesToHex(keccak_256(utf8ToBytes(s)))).toLowerCase();
+
+export const TOPIC_L1_MESSAGE_SENT_NEW = k256hex('L1MessageSent(uint256,bytes32,bytes)');
+
+export const TOPIC_L1_MESSAGE_SENT_LEG = k256hex('L1MessageSent(address,bytes32,bytes)');
 
 // Bridgehub.NewPriorityRequest(chainId indexed, sender indexed, txHash bytes32, txId uint256, data bytes)
 // topic hash (stable across adapters)

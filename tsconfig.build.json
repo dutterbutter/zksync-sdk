@@ -3,7 +3,11 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "emitDeclarationOnly": false
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "composite": false,
+    "incremental": false
   },
   "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["**/*.test.ts", "**/__tests__/**", "test/**"]
