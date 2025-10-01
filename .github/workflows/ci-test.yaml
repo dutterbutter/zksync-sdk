@@ -112,6 +112,11 @@ jobs:
           done
           echo "L2 JSON-RPC not ready"; tail -n 200 l2.log || true; exit 1
 
+      - name: Compile test contracts
+        working-directory: tests/contracts
+        run: |
+          forge build
+
       - name: Run ethers e2e
         run: |
           bun run test:e2e:ethers

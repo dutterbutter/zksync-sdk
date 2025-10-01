@@ -25,6 +25,8 @@
     "examples/*",
     "docs/**",
     "**/__tests__/**",
-    "typechain/**/**"
+    "typechain/**/**",
+    "**/*.e2e.ts",
+    "src/**/e2e/**"
   ]
 }
