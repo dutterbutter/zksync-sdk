@@ -5,6 +5,7 @@ import {
   L2_NATIVE_TOKEN_VAULT_ADDRESS,
   L1_FEE_ESTIMATION_COEF_DENOMINATOR,
   L1_FEE_ESTIMATION_COEF_NUMERATOR,
+  ETH_ADDRESS,
 } from '../../../core/constants';
 
 import type { ViemClient } from '../client';
@@ -156,10 +157,9 @@ export function buildDirectRequestStruct(args: {
 }
 
 /* -----------------------------------------------------------------------------
- * Two-bridges encoding: ERC20 tuple (token, amount, l2Receiver)
+ * Two-bridges encoding: generic tuple (token, amount, l2Receiver)
  * ---------------------------------------------------------------------------*/
-
-export function encodeSecondBridgeErc20Args(
+export function encodeSecondBridgeArgs(
   token: Address,
   amount: bigint,
   l2Receiver: Address,
@@ -172,4 +172,26 @@ export function encodeSecondBridgeErc20Args(
     ],
     [token, amount, l2Receiver],
   );
+}
+
+/* -----------------------------------------------------------------------------
+ * Two-bridges encoding: ERC20 tuple (token, amount, l2Receiver)
+ * ---------------------------------------------------------------------------*/
+export function encodeSecondBridgeErc20Args(
+  token: Address,
+  amount: bigint,
+  l2Receiver: Address,
+): Hex {
+  return encodeSecondBridgeArgs(token, amount, l2Receiver);
+}
+
+/* -----------------------------------------------------------------------------
+ * Two-bridges encoding: ETH convenience (uses ETH sentinel address)
+ * ---------------------------------------------------------------------------*/
+export function encodeSecondBridgeEthArgs(
+  amount: bigint,
+  l2Receiver: Address,
+  ethToken: Address = ETH_ADDRESS,
+): Hex {
+  return encodeSecondBridgeArgs(ethToken, amount, l2Receiver);
 }

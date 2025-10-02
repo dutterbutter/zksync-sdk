@@ -14,7 +14,8 @@ export interface DepositParams {
 }
 
 /** Routes */
-export type DepositRoute = 'eth' | 'erc20-nonbase';
+export type DepositRoute = 'eth-base' | 'eth-nonbase' | 'erc20-base' | 'erc20-nonbase';
+// | 'erc20-base'  // uncomment when supported
 
 /** Quote */
 export interface DepositQuote {

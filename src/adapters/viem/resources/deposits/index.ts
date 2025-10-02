@@ -22,6 +22,8 @@ import { IERC20ABI } from '../../../../core/internal/abi-registry.ts';
 import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
+import { routeEthNonBase } from './routes/eth-nonbase';
+import { routeErc20Base } from './routes/erc20-base';
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './routes/types';
 
 import { extractL2TxHashFromL1Logs, waitForL2ExecutionFromL1Tx } from './services/verification';
@@ -34,10 +36,18 @@ const { wrap, toResult } = createErrorHandlers('deposits');
 // --------------------
 // Deposit Route map
 // --------------------
-// DepositRoute = 'eth' | 'erc20-nonbase';
-const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
-  eth: routeEthDirect(),
+// Each route = (asset being deposited) + (what the target L2 uses as its base token / fee token)
+//
+// - 'eth-base'      : Deposit ETH → target L2 base token is ETH (direct bridge, fees in ETH)
+// - 'eth-nonbase'   : Deposit ETH → target L2 base token is NOT ETH (fees paid in that ERC-20 base token)
+// - 'erc20-base'    : Deposit ERC-20 (e.g. SOPH) → target L2 base token is the SAME token (fees in that token)
+// - 'erc20-nonbase' : Deposit ERC-20 → target L2 base token is different (ETH)
+//
+export const ROUTES: Record<DepositRoute, DepositRouteStrategy> = {
+  'eth-base': routeEthDirect(),
+  'eth-nonbase': routeEthNonBase(),
   'erc20-nonbase': routeErc20NonBase(),
+  'erc20-base': routeErc20Base(),
 };
 
 // --------------------

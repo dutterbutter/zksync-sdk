@@ -32,7 +32,7 @@ export async function commonCtx(p: DepositParams, client: ViemClient) {
   const operatorTip = p.operatorTip ?? 0n;
   const refundRecipient = p.refundRecipient ?? sender;
 
-  const route = pickDepositRoute(client, BigInt(chainId), p.token);
+  const route = await pickDepositRoute(client, BigInt(chainId), p.token);
 
   return {
     client,

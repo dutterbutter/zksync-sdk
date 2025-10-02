@@ -4,6 +4,7 @@ import {
   L2_NATIVE_TOKEN_VAULT_ADDRESS,
   L1_FEE_ESTIMATION_COEF_DENOMINATOR,
   L1_FEE_ESTIMATION_COEF_NUMERATOR,
+  ETH_ADDRESS,
 } from '../../../core/constants';
 import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../client';
@@ -122,8 +123,8 @@ export function buildDirectRequestStruct(args: {
   };
 }
 
-// --- Two-bridges encoding: ERC20 tuple (token, amount, l2Receiver) ---
-export function encodeSecondBridgeErc20Args(
+// --- Two-bridges encoding: generic tuple (token, amount, l2Receiver) ---
+export function encodeSecondBridgeArgs(
   token: Address,
   amount: bigint,
   l2Receiver: Address,
@@ -132,4 +133,22 @@ export function encodeSecondBridgeErc20Args(
     ['address', 'uint256', 'address'],
     [token, amount, l2Receiver],
   ) as `0x${string}`;
+}
+
+// --- Two-bridges encoding: ERC20 tuple (token, amount, l2Receiver) ---
+export function encodeSecondBridgeErc20Args(
+  token: Address,
+  amount: bigint,
+  l2Receiver: Address,
+): `0x${string}` {
+  return encodeSecondBridgeArgs(token, amount, l2Receiver);
+}
+
+// NEW: ETH-specific convenience (uses the ETH sentinel address)
+export function encodeSecondBridgeEthArgs(
+  amount: bigint,
+  l2Receiver: Address,
+  ethToken: Address = ETH_ADDRESS,
+): `0x${string}` {
+  return encodeSecondBridgeArgs(ethToken, amount, l2Receiver);
 }

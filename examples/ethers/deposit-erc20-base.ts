@@ -3,11 +3,12 @@ import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient } from '../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../src/adapters/ethers/sdk';
 import { Address } from '../../src/core/types/primitives';
-import { ETH_ADDRESS } from '../../src/core/constants';
+import { L1_SOPH_TOKEN_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'http://localhost:3050'; // your L2 RPC
-const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC where ETH is not the base token
+const PRIVATE_KEY =
+  process.env.PRIVATE_KEY || '0x';
 
 async function main() {
   if (!PRIVATE_KEY) {
@@ -28,9 +29,9 @@ async function main() {
 
   const me = (await signer.getAddress()) as Address;
   const params = {
-    amount: parseEther('.01'), // 0.01 ETH
+    amount: parseEther('.01'), // 0.001 SOPH
     to: me,
-    token: ETH_ADDRESS,
+    token: L1_SOPH_TOKEN_ADDRESS, // SOPH
     // optional:
     // l2GasLimit: 300_000n,
     // gasPerPubdata: 800n,

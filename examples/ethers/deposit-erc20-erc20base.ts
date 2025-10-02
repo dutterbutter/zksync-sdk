@@ -1,58 +1,40 @@
-// examples/deposit-eth.ts
-import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+// examples/deposit-erc20.ts
+import { JsonRpcProvider, Contract, Wallet, parseUnits, type Signer } from 'ethers';
 import { createEthersClient } from '../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../src/adapters/ethers/sdk';
 import { Address } from '../../src/core/types/primitives';
-import { ETH_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
 const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
-  if (!PRIVATE_KEY) {
-    throw new Error('Set your PRIVATE_KEY in the .env file');
-  }
   const l1 = new JsonRpcProvider(L1_RPC);
   const l2 = new JsonRpcProvider(L2_RPC);
   const signer = new Wallet(PRIVATE_KEY, l1);
 
-  const balance = await l1.getBalance(signer.address);
-  console.log('L1 balance:', balance.toString());
-
-  const balanceL2 = await l2.getBalance(signer.address);
-  console.log('L2 balance:', balanceL2.toString());
-
   const client = await createEthersClient({ l1, l2, signer });
   const sdk = createEthersSdk(client);
+  // // sepolia
+  const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
 
   const me = (await signer.getAddress()) as Address;
-  const params = {
-    amount: parseEther('.01'), // 0.01 ETH
-    to: me,
-    token: ETH_ADDRESS,
-    // optional:
-    // l2GasLimit: 300_000n,
-    // gasPerPubdata: 800n,
-    // operatorTip: 0n,
-    // refundRecipient: me,
-  } as const;
+  const depositAmount = parseUnits('250', 18);
 
-  // Quote
-  const quote = await sdk.deposits.quote(params);
-  console.log('QUOTE response: ', quote);
+  // quote
+  const quote = await sdk.deposits.quote({ token: TOKEN, to: me, amount: depositAmount });
+  console.log('QUOTE:', quote);
 
-  const prepare = await sdk.deposits.prepare(params);
-  console.log('PREPARE response: ', prepare);
+  const prepare = await sdk.deposits.prepare({ token: TOKEN, to: me, amount: depositAmount });
+  console.log('PREPARE:', prepare);
 
-  // Create (prepare + send)
-  const create = await sdk.deposits.create(params);
-  console.log('CREATE response: ', create);
+  const create = await sdk.deposits.create({ token: TOKEN, to: me, amount: depositAmount });
+  console.log('CREATE:', create);
 
   const status = await sdk.deposits.status(create);
-  console.log('STATUS response: ', status);
+  console.log('STATUS (immediate):', status);
 
-  // Wait (for now, L1 inclusion)
+  // Wait until the L1 tx is included
   const receipt = await sdk.deposits.wait(create, { for: 'l1' });
   console.log(
     'Included at block:',
@@ -63,10 +45,7 @@ async function main() {
     receipt?.hash,
   );
 
-  const status2 = await sdk.deposits.status(create);
-  console.log('STATUS2 response: ', status2);
-
-  // Wait (for now, L2 inclusion)
+  // Wait until the L2 tx is included
   const l2Receipt = await sdk.deposits.wait(create, { for: 'l2' });
   console.log(
     'Included at block:',
