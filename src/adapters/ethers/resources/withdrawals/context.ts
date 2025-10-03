@@ -1,11 +1,13 @@
 // src/adapters/ethers/resources/withdrawals/context.ts
 
-import { type TransactionRequest } from 'ethers';
+import { Contract, type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
 import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
+import { isETH } from '../../../../core/utils/addr';
+import { IBridgehubABI } from '../../../../core/internal/abi-registry';
 
 // Common context for building withdrawal (L2 -> L1) transactions
 export interface BuildCtx extends CommonCtx {
@@ -17,6 +19,10 @@ export interface BuildCtx extends CommonCtx {
   l2AssetRouter: Address;
   l2NativeTokenVault: Address;
   l2BaseTokenSystem: Address;
+
+  // Base token info
+  baseToken: Address;
+  baseIsEth: boolean;
 
   // L2 gas
   l2GasLimit: bigint;
@@ -44,8 +50,13 @@ export async function commonCtx(
   const { chainId } = await client.l2.getNetwork();
   const chainIdL2 = BigInt(chainId);
 
-  // Route: eth | erc20
-  const route = pickWithdrawRoute(p.token);
+  const bh = new Contract(bridgehub, IBridgehubABI, client.l1);
+  const baseToken = (await bh.baseToken(chainIdL2)) as Address;
+  const baseIsEth = isETH(baseToken);
+
+  // Pure route selection
+  const route = pickWithdrawRoute(p.token, baseToken);
+
   // TODO: improve gas estimations
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasBufferPct = 15;
@@ -61,6 +72,8 @@ export async function commonCtx(
     l2AssetRouter,
     l2NativeTokenVault,
     l2BaseTokenSystem,
+    baseToken,
+    baseIsEth,
     l2GasLimit,
     gasBufferPct,
   } satisfies BuildCtx & { route: WithdrawRoute };

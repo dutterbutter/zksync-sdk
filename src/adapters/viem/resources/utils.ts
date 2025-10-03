@@ -159,11 +159,7 @@ export function buildDirectRequestStruct(args: {
 /* -----------------------------------------------------------------------------
  * Two-bridges encoding: generic tuple (token, amount, l2Receiver)
  * ---------------------------------------------------------------------------*/
-export function encodeSecondBridgeArgs(
-  token: Address,
-  amount: bigint,
-  l2Receiver: Address,
-): Hex {
+export function encodeSecondBridgeArgs(token: Address, amount: bigint, l2Receiver: Address): Hex {
   return encodeAbiParameters(
     [
       { type: 'address', name: 'token' },

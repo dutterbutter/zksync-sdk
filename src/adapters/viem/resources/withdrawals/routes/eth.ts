@@ -12,7 +12,7 @@ import { OP_WITHDRAWALS } from '../../../../../core/types';
 const { wrapAs } = createErrorHandlers('withdrawals');
 
 // Route for withdrawing ETH via L2-L1
-export function routeEth(): WithdrawRouteStrategy {
+export function routeEthBase(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;

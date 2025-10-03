@@ -7,8 +7,7 @@ import { L2_BASE_TOKEN_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC where ETH is not the base token
-const PRIVATE_KEY =
-  process.env.PRIVATE_KEY || '';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
   if (!PRIVATE_KEY) {
@@ -29,9 +28,9 @@ async function main() {
 
   const me = (await signer.getAddress()) as Address;
   const params = {
-    amount: parseEther('.001'), // 0.001 SOPH
+    amount: parseEther('.001'), // 0.001 ETH
     to: me,
-    token: L2_BASE_TOKEN_ADDRESS, // SOPH
+    token: L2_BASE_TOKEN_ADDRESS, // ETH
     // optional:
     // l2GasLimit: 300_000n,
     // gasPerPubdata: 800n,

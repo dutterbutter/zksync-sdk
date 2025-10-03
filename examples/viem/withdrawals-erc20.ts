@@ -89,10 +89,10 @@ async function main() {
   } as const;
 
   // -------- Dry runs / planning --------
-  console.log('TRY QUOTE:', await sdk.withdrawals.tryQuote(params));
-  console.log('QUOTE:', await sdk.withdrawals.quote(params));
-  console.log('TRY PREPARE:', await sdk.withdrawals.tryPrepare(params));
-  console.log('PREPARE:', await sdk.withdrawals.prepare(params));
+  // console.log('TRY QUOTE:', await sdk.withdrawals.tryQuote(params));
+  // console.log('QUOTE:', await sdk.withdrawals.quote(params));
+  // console.log('TRY PREPARE:', await sdk.withdrawals.tryPrepare(params));
+  // console.log('PREPARE:', await sdk.withdrawals.prepare(params));
 
   // -------- Create (L2 approvals if needed + withdraw) --------
   const created = await sdk.withdrawals.create(params);

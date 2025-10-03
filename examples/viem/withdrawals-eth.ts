@@ -13,7 +13,7 @@ import { privateKeyToAccount, nonceManager } from 'viem/accounts';
 import { createViemClient } from '../../src/adapters/viem/client';
 import { createViemSdk } from '../../src/adapters/viem/sdk';
 import type { Address } from '../../src/core/types/primitives';
-import { ETH_ADDRESS } from '../../src/core/constants';
+import { ETH_ADDRESS, L2_BASE_TOKEN_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
@@ -46,19 +46,19 @@ async function main() {
 
   // Withdraw ETH
   const params = {
-    token: ETH_ADDRESS,
-    amount: parseEther('0.01'),
+    token: L2_BASE_TOKEN_ADDRESS,
+    amount: parseEther('0.4'),
     to: me,
     // l2GasLimit: 300_000n, // optional
   } as const;
 
   // Quote (dry run)
-  const quote = await sdk.withdrawals.quote(params);
-  console.log('QUOTE:', quote);
+  // const quote = await sdk.withdrawals.quote(params);
+  // console.log('QUOTE:', quote);
 
-  // Prepare (no sends)
-  const plan = await sdk.withdrawals.prepare(params);
-  console.log('PREPARE:', plan);
+  // // Prepare (no sends)
+  // const plan = await sdk.withdrawals.prepare(params);
+  // console.log('PREPARE:', plan);
 
   // Create (send L2 withdraw)
   const created = await sdk.withdrawals.create(params);

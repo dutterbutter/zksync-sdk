@@ -18,14 +18,14 @@ const MIN_L2_GAS_FOR_ERC20 = 2_500_000n;
 export function routeErc20NonBase(): DepositRouteStrategy {
   return {
     async preflight() {
-      // keep lean; validation happens in build
+      // TODO: move validations here
     },
 
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const assetRouter = ctx.l1AssetRouter;
 
-      // ── 1) Resolve target base token once (source of truth) ───────────────────
+      // Resolve target base token once
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.nonbase.baseToken ?? 'deposits.erc20-nonbase:baseToken',
@@ -48,10 +48,12 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         { ctx: { depositToken: p.token, baseToken } },
       );
 
-      // ── 2) Gas settings & base cost ───────────────────────────────────────────
+      // TODO: refactor to improve gas estimate / fees
       const l2GasLimitUsed =
         ctx.l2GasLimit && ctx.l2GasLimit > 0n
-          ? (ctx.l2GasLimit < MIN_L2_GAS_FOR_ERC20 ? MIN_L2_GAS_FOR_ERC20 : ctx.l2GasLimit)
+          ? ctx.l2GasLimit < MIN_L2_GAS_FOR_ERC20
+            ? MIN_L2_GAS_FOR_ERC20
+            : ctx.l2GasLimit
           : MIN_L2_GAS_FOR_ERC20;
 
       const rawBaseCost = (await wrapAs(
@@ -73,13 +75,13 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const baseCost = BigInt(rawBaseCost);
       const mintValue = baseCost + ctx.operatorTip;
 
-      // ── 3) Approvals (branch by who pays fees) ───────────────────────────────
+      // Approvals (branch by who pays fees)
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
 
       const l1Signer = ctx.client.signer.connect(ctx.client.l1);
 
-      // (a) Always ensure deposit token (CROWN) approval for the amount
+      // Always ensure deposit token approval for the amount
       {
         const erc20Deposit = new Contract(p.token, IERC20ABI, l1Signer);
         const allowanceToken: bigint = (await wrapAs(
@@ -94,7 +96,10 @@ export function routeErc20NonBase(): DepositRouteStrategy {
 
         if (allowanceToken < p.amount) {
           approvals.push({ token: p.token, spender: assetRouter, amount: p.amount });
-          const data = erc20Deposit.interface.encodeFunctionData('approve', [assetRouter, p.amount]);
+          const data = erc20Deposit.interface.encodeFunctionData('approve', [
+            assetRouter,
+            p.amount,
+          ]);
           steps.push({
             key: `approve:${p.token}:${assetRouter}`,
             kind: 'approve',
@@ -104,7 +109,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         }
       }
 
-      // (b) If base token is NOT ETH, fees are paid in base ERC-20 ⇒ approve base token for mintValue
+      // If base token is NOT ETH, fees are paid in base ERC-20 ⇒ approve base token for mintValue
       const baseIsEth = isETH(baseToken);
       if (!baseIsEth) {
         const erc20Base = new Contract(baseToken, IERC20ABI, l1Signer);
@@ -130,7 +135,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         }
       }
 
-      // ── 4) Encode two-bridges calldata (for the deposit token) ───────────────
+      // Encode two-bridges calldata (for the deposit token)
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,
@@ -141,7 +146,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         },
       );
 
-      // Build outer params: secondBridge is always L1AssetRouter
       const outer = {
         chainId: ctx.chainIdL2,
         mintValue, // fees (in ETH if base=ETH, else pulled as base ERC-20)
@@ -150,7 +154,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         l2GasPerPubdataByteLimit: ctx.gasPerPubdata,
         refundRecipient: ctx.refundRecipient,
         secondBridgeAddress: assetRouter,
-        secondBridgeValue: 0n, // ERC-20 asset goes via router, not msg.value
+        secondBridgeValue: 0n,
         secondBridgeCalldata,
       } as const;
 
@@ -175,7 +179,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             message: 'Failed to estimate gas for Bridgehub request.',
           },
         );
-        // generous buffer for two-bridges
+        // TODO: refactor to improve gas estimate / fees
         bridgeTx.gasLimit = (BigInt(est) * 125n) / 100n;
       } catch {
         // ignore;
@@ -184,10 +188,9 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       steps.push({
         key: 'bridgehub:two-bridges:nonbase',
         kind: 'bridgehub:two-bridges',
-        description:
-          baseIsEth
-            ? 'Bridge ERC-20 (fees in ETH) via Bridgehub.requestL2TransactionTwoBridges'
-            : 'Bridge ERC-20 (fees in base ERC-20) via Bridgehub.requestL2TransactionTwoBridges',
+        description: baseIsEth
+          ? 'Bridge ERC-20 (fees in ETH) via Bridgehub.requestL2TransactionTwoBridges'
+          : 'Bridge ERC-20 (fees in base ERC-20) via Bridgehub.requestL2TransactionTwoBridges',
         tx: bridgeTx,
       });
 

@@ -3,12 +3,11 @@ import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient } from '../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../src/adapters/ethers/sdk';
 import type { Address } from '../../src/core/types/primitives';
-import { ETH_ADDRESS } from '../../src/core/constants';
+import { L2_BASE_TOKEN_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'http://localhost:3050'; // your L2 
-const PRIVATE_KEY =
-  process.env.PRIVATE_KEY || '';
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
   const l1 = new JsonRpcProvider(L1_RPC);
@@ -22,7 +21,7 @@ async function main() {
 
   // Withdraw params (ETH)
   const params = {
-    token: ETH_ADDRESS,
+    token: L2_BASE_TOKEN_ADDRESS,
     amount: parseEther('0.01'), // 0.001 ETH
     to: me,
     // l2GasLimit: 300_000n,

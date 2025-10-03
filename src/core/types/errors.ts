@@ -172,16 +172,16 @@ export const OP_DEPOSITS = {
     assertErc20Asset: 'deposits.erc20-base:assertErc20Asset',
     assertMatchesBase: 'deposits.erc20-base:assertMatchesBase',
     baseToken: 'deposits.erc20-base:baseToken',
-    allowance: 'deposits.erc20-base:allowance',                  // base token -> router (mintValue)
+    allowance: 'deposits.erc20-base:allowance', // base token -> router (mintValue)
     baseCost: 'deposits.erc20-base:l2TransactionBaseCost',
     estGas: 'deposits.erc20-base:estimateGas',
   },
 
   // ERC20 is NOT the base token (two-bridges). Handles both base=ETH and base=ERC20.
   nonbase: {
-    baseToken: 'deposits.erc20-nonbase:baseToken',               // read Bridgehub.baseToken
-    assertNotEthAsset: 'deposits.erc20-nonbase:assertNotEthAsset',// sanity: deposit token is ERC20
-    allowance: 'deposits.erc20-nonbase:allowance',               // deposit token -> router (amount)
+    baseToken: 'deposits.erc20-nonbase:baseToken', // read Bridgehub.baseToken
+    assertNotEthAsset: 'deposits.erc20-nonbase:assertNotEthAsset', // sanity: deposit token is ERC20
+    allowance: 'deposits.erc20-nonbase:allowance', // deposit token -> router (amount)
     allowanceFees: 'deposits.erc20-nonbase:allowanceFeesBaseToken', // base token -> router (mintValue) when base is ERC20
     baseCost: 'deposits.erc20-nonbase:l2TransactionBaseCost',
     encodeCalldata: 'deposits.erc20-nonbase:encodeSecondBridgeErc20Args',
@@ -203,7 +203,7 @@ export const OP_DEPOSITS = {
   ethNonBase: {
     baseToken: 'deposits.eth-nonbase:baseToken',
     baseCost: 'deposits.eth-nonbase:l2TransactionBaseCost',
-    allowanceBase: 'deposits.eth-nonbase:allowanceBaseToken',    // base token -> router (mintValue)
+    allowanceBase: 'deposits.eth-nonbase:allowanceBaseToken', // base token -> router (mintValue)
     ethBalance: 'deposits.eth-nonbase:getEthBalance',
     encodeCalldata: 'deposits.eth-nonbase:encodeSecondBridgeEthArgs',
     estGas: 'deposits.eth-nonbase:estimateGas',
@@ -212,7 +212,6 @@ export const OP_DEPOSITS = {
     assertEthBalance: 'deposits.eth-nonbase:assertEthBalance',
   },
 } as const;
-
 
 // Operation constants for Withdrawal error contexts
 export const OP_WITHDRAWALS = {
@@ -235,6 +234,22 @@ export const OP_WITHDRAWALS = {
   eth: {
     encodeWithdraw: 'withdrawals.eth:encodeWithdraw',
     estGas: 'withdrawals.eth:estimateGas',
+  },
+  ethNonBase: {
+    allowance: 'withdrawals.eth-nonbase:allowance', // L2 allowance for L2-ETH token → NTV
+    ensureRegistered: 'withdrawals.eth-nonbase:ensureTokenIsRegistered', // NTV.ensureTokenIsRegistered
+    encodeAssetData: 'withdrawals.eth-nonbase:encodeAssetData',
+    encodeWithdraw: 'withdrawals.eth-nonbase:encodeWithdraw',
+    estGas: 'withdrawals.eth-nonbase:estimateGas',
+    baseToken: 'withdrawals.eth-nonbase:baseToken', // Bridgehub.baseToken
+    assertNonEthBase: 'withdrawals.eth-nonbase:assertNonEthBase',
+  },
+  base: {
+    baseToken: 'withdrawals.base:baseToken', // Bridgehub.baseToken
+    encodeWithdraw: 'withdrawals.base:encodeWithdraw', // Base token system-contract call
+    estGas: 'withdrawals.base:estimateGas',
+    assertErc20Base: 'withdrawals.base:assertErc20Base', // base ≠ ETH
+    assertMatches: 'withdrawals.base:assertMatchesBase', // p.token == baseToken
   },
   finalize: {
     fetchParams: {

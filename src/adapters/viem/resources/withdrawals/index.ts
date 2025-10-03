@@ -27,8 +27,10 @@ import type {
   TransactionReceiptZKsyncOS,
   ViemPlanWriteRequest,
 } from './routes/types';
-import { routeEth } from './routes/eth';
-import { routeErc20 } from './routes/erc20';
+import { routeEthBase } from './routes/eth';
+import { routeErc20NonBase } from './routes/erc20-nonbase';
+import { routeEthNonBase } from './routes/eth-nonbase';
+import { routeErc20Base } from './routes/erc20-base';
 import { createFinalizationServices, type FinalizationServices } from './services/finalization';
 import { OP_WITHDRAWALS } from '../../../../core/types/errors';
 import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
@@ -36,10 +38,11 @@ import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
 // --------------------
 // Route map
 // --------------------
-// WithdrawalRoute = 'eth' | 'erc20';
-const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
-  eth: routeEth(),
-  erc20: routeErc20(),
+export const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
+  'eth-base': routeEthBase(),
+  'erc20-nonbase': routeErc20NonBase(),
+  'eth-nonbase': routeEthNonBase(),
+  'erc20-base': routeErc20Base(),
 };
 
 export interface WithdrawalsResource {

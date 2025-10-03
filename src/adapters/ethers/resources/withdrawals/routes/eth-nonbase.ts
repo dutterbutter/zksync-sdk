@@ -1,81 +1,94 @@
-// src/adapters/ethers/resources/withdrawals/routes/erc20.ts
-import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
+// src/adapters/ethers/resources/withdrawals/routes/eth-nonbase.ts
+import { Contract, AbiCoder, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
 import {
   IL2AssetRouterABI,
   L2NativeTokenVaultABI,
   IERC20ABI,
+  IBridgehubABI,
 } from '../../../../../core/internal/abi-registry';
-
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
+import { isETH } from '../../../../../core/utils/addr';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
-// Strongly-typed signatures for overloaded functions
-// Necessary for ethers v6 when contract has multiple functions with same name
-// which is the case for L2AssetRouter.withdraw
-const SIG = {
-  withdraw: 'withdraw(bytes32,bytes)',
-} as const;
+const SIG = { withdraw: 'withdraw(bytes32,bytes)' } as const;
 
-// Route for withdrawing ERC-20 via L2-L1
-export function routeErc20(): WithdrawRouteStrategy {
+export function routeEthNonBase(): WithdrawRouteStrategy {
   return {
+    async preflight(p, ctx) {
+      // Base token must not be ETH on target chain
+      const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const baseToken = (await wrapAs(
+        'CONTRACT',
+        OP_WITHDRAWALS.ethNonBase.baseToken,
+        () => bh.baseToken(ctx.chainIdL2),
+        { ctx: { where: 'bridgehub.baseToken', chainIdL2: ctx.chainIdL2 } },
+      )) as `0x${string}`;
+
+      await wrapAs(
+        'VALIDATION',
+        OP_WITHDRAWALS.ethNonBase.assertNonEthBase,
+        () => {
+          if (isETH(baseToken)) {
+            throw new Error('eth-nonbase withdrawal requires target chain base token ≠ ETH.');
+          }
+        },
+        { ctx: { baseToken } },
+      );
+
+      return;
+    },
+
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
       const approvals: ApprovalNeed[] = [];
 
+      // L2 “ETH” here is an ERC-20-like token (p.token) managed by NTV
       const l2Signer = ctx.client.signer.connect(ctx.client.l2);
-      // L2 allowance
       const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
-      const current: bigint = (await wrapAs(
+
+      const allowance = (await wrapAs(
         'CONTRACT',
-        OP_WITHDRAWALS.erc20.allowance,
+        OP_WITHDRAWALS.ethNonBase.allowance,
         () => erc20.allowance(ctx.sender, ctx.l2NativeTokenVault),
         {
-          ctx: {
-            where: 'erc20.allowance',
-            chain: 'L2',
-            token: p.token,
-            spender: ctx.l2NativeTokenVault,
-          },
-          message: 'Failed to read L2 ERC-20 allowance.',
+          ctx: { where: 'erc20.allowance', token: p.token, spender: ctx.l2NativeTokenVault },
+          message: 'Failed to read L2 allowance for L2-ETH token.',
         },
       )) as bigint;
 
-      if (current < p.amount) {
+      if (allowance < p.amount) {
         approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
-
         const data = erc20.interface.encodeFunctionData('approve', [
           ctx.l2NativeTokenVault,
           p.amount,
         ]);
-
         steps.push({
           key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
           kind: 'approve:l2',
-          description: `Approve ${p.amount} to NativeTokenVault`,
+          description: `Approve L2 ETH token to NativeTokenVault`,
           tx: { to: p.token, data, from: ctx.sender, ...(ctx.fee ?? {}) },
         });
       }
 
-      // Compute assetId + assetData
+      // ensureRegistered + assetData
       const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultABI, ctx.client.l2);
       const assetId = (await wrapAs(
         'CONTRACT',
-        OP_WITHDRAWALS.erc20.ensureRegistered,
+        OP_WITHDRAWALS.ethNonBase.ensureRegistered,
         () => ntv.getFunction('ensureTokenIsRegistered').staticCall(p.token),
         {
           ctx: { where: 'L2NativeTokenVault.ensureTokenIsRegistered', token: p.token },
-          message: 'Failed to ensure token is registered in L2NativeTokenVault.',
+          message: 'Failed to ensure L2-ETH token is registered.',
         },
       )) as `0x${string}`;
 
       const assetData = await wrapAs(
         'INTERNAL',
-        OP_WITHDRAWALS.erc20.encodeAssetData,
+        OP_WITHDRAWALS.ethNonBase.encodeAssetData,
         () =>
           Promise.resolve(
             AbiCoder.defaultAbiCoder().encode(
@@ -84,8 +97,8 @@ export function routeErc20(): WithdrawRouteStrategy {
             ),
           ),
         {
-          ctx: { where: 'AbiCoder.encode', token: p.token, to: p.to ?? ctx.sender },
-          message: 'Failed to encode burn/withdraw asset data.',
+          ctx: { token: p.token, to: p.to ?? ctx.sender },
+          message: 'Failed to encode burn/withdraw asset data (L2 ETH).',
         },
       );
 
@@ -93,24 +106,11 @@ export function routeErc20(): WithdrawRouteStrategy {
       const l2ar = new Contract(ctx.l2AssetRouter, IL2AssetRouterABI, ctx.client.l2);
       const dataWithdraw = await wrapAs(
         'INTERNAL',
-        OP_WITHDRAWALS.erc20.encodeWithdraw,
+        OP_WITHDRAWALS.ethNonBase.encodeWithdraw,
         () =>
           Promise.resolve(l2ar.interface.encodeFunctionData(SIG.withdraw, [assetId, assetData])),
-        {
-          ctx: { where: 'L2AssetRouter.withdraw', assetId },
-          message: 'Failed to encode withdraw calldata.',
-        },
+        { ctx: { where: 'L2AssetRouter.withdraw', assetId } },
       );
-
-      // const dataWithdraw = await wrapAs(
-      //   'INTERNAL',
-      //   OP_WITHDRAWALS.erc20.encodeWithdraw,
-      //   () => Promise.resolve(l2arIface.encodeFunctionData(SIG.withdraw, [assetId, assetData])),
-      //   {
-      //     ctx: { where: 'L2AssetRouter.withdraw', assetId },
-      //     message: 'Failed to encode withdraw calldata.',
-      //   },
-      // );
 
       const withdrawTx: TransactionRequest = {
         to: ctx.l2AssetRouter,
@@ -120,9 +120,9 @@ export function routeErc20(): WithdrawRouteStrategy {
       };
 
       steps.push({
-        key: 'l2-asset-router:withdraw',
+        key: 'l2-asset-router:withdraw:eth-nonbase',
         kind: 'l2-asset-router:withdraw',
-        description: 'Burn on L2 & send L2→L1 message',
+        description: 'Withdraw ETH (base ≠ ETH) via L2AssetRouter + NativeTokenVault',
         tx: withdrawTx,
       });
 

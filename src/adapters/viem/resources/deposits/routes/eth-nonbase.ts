@@ -190,7 +190,11 @@ export function routeEthNonBase(): DepositRouteStrategy {
         OP_DEPOSITS.ethNonBase.encodeCalldata,
         () => Promise.resolve(encodeSecondBridgeEthArgs(p.amount, p.to ?? ctx.sender)),
         {
-          ctx: { where: 'encodeSecondBridgeEthArgs', amount: p.amount.toString(), to: p.to ?? ctx.sender },
+          ctx: {
+            where: 'encodeSecondBridgeEthArgs',
+            amount: p.amount.toString(),
+            to: p.to ?? ctx.sender,
+          },
           message: 'Failed to encode ETH bridging calldata.',
         },
       );
@@ -244,7 +248,8 @@ export function routeEthNonBase(): DepositRouteStrategy {
       steps.push({
         key: 'bridgehub:two-bridges:eth-nonbase',
         kind: 'bridgehub:two-bridges',
-        description: 'Bridge ETH (fees in base ERC-20) via Bridgehub.requestL2TransactionTwoBridges',
+        description:
+          'Bridge ETH (fees in base ERC-20) via Bridgehub.requestL2TransactionTwoBridges',
         tx: bridgeTx,
       });
 

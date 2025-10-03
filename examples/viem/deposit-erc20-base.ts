@@ -1,33 +1,25 @@
-// examples/deposit-erc20.ts
-import {
-  Account,
-  Chain,
-  createPublicClient,
-  createWalletClient,
-  http,
-  parseUnits,
-  Transport,
-  WalletClient,
-} from 'viem';
+// examples/deposit-eth.ts
+import { createPublicClient, createWalletClient, http, parseEther, WalletClient } from 'viem';
+import type { Account, Chain, Transport } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
 import { createViemClient } from '../../src/adapters/viem/client';
 import { createViemSdk } from '../../src/adapters/viem/sdk';
 import type { Address } from '../../src/core/types/primitives';
-
-import { IERC20ABI } from '../../src/core/internal/abi-registry';
+import { L1_SOPH_TOKEN_ADDRESS } from '../../src/core/constants';
 
 const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
 const L2_RPC = 'http://localhost:3050'; // your L2 RPC
 const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
-  if (!PRIVATE_KEY) {
+  if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
     throw new Error('Set your PRIVATE_KEY in the .env file');
   }
 
   // --- Viem clients ---
   const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+
   const l1 = createPublicClient({ transport: http(L1_RPC) });
   const l2 = createPublicClient({ transport: http(L2_RPC) });
   const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
@@ -35,51 +27,47 @@ async function main() {
     transport: http(L1_RPC),
   });
 
-  // --- SDK ---
+  // Check balances
+  const [balL1, balL2] = await Promise.all([
+    l1.getBalance({ address: account.address }),
+    l2.getBalance({ address: account.address }),
+  ]);
+  console.log('L1 balance:', balL1.toString());
+  console.log('L2 balance:', balL2.toString());
+
+  // client + sdk
   const client = createViemClient({ l1, l2, l1Wallet });
   const sdk = createViemSdk(client);
 
-  // sepolia example
-  const TOKEN = '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address;
-
   const me = account.address as Address;
+  const params = {
+    amount: parseEther('1'), // 1 SOPH
+    to: me,
+    token: L1_SOPH_TOKEN_ADDRESS,
+    // optional:
+    // l2GasLimit: 300_000n,
+    // gasPerPubdata: 800n,
+    // operatorTip: 0n,
+    // refundRecipient: me,
+  } as const;
 
-  const decimals = (await l1.readContract({
-    address: TOKEN,
-    abi: IERC20ABI,
-    functionName: 'decimals',
-  })) as number;
+  // Quote
+  // const quote = await sdk.deposits.quote(params);
+  // console.log('QUOTE response:', quote);
 
-  const amount = parseUnits('100000', decimals);
-  const depositAmount = parseUnits('250', decimals);
+  // // Prepare (route + steps, no sends)
+  // const prepared = await sdk.deposits.prepare(params);
+  // console.log('PREPARE response:', prepared);
 
-  // Optional (local): mint some tokens first if your ERC-20 supports `mint(address,uint256)`
-  // const { request } = await l1.simulateContract({
-  //   address: TOKEN,
-  //   abi: IERC20ABI as const,
-  //   functionName: 'mint',
-  //   args: [me, amount] as const,
-  //   account,
-  // });
-  // await l1Wallet.writeContract(request);
+  // Create (prepare + send)
+  const created = await sdk.deposits.create(params);
+  console.log('CREATE response:', created);
 
-  // --- Quote ---
-  // const quote = await sdk.deposits.quote({ token: TOKEN, to: me, amount: depositAmount });
-  // console.log('QUOTE:', quote);
-
-  // --- Prepare (route + steps, no sends) ---
-  // const prepared = await sdk.deposits.prepare({ token: TOKEN, to: me, amount: depositAmount });
-  // console.log('PREPARE:', prepared);
-
-  // --- Create (prepare + send all steps) ---
-  const created = await sdk.deposits.create({ token: TOKEN, to: me, amount: depositAmount });
-  console.log('CREATE:', created);
-
-  // Immediate status
+  // Status (quick check)
   const status = await sdk.deposits.status(created);
-  console.log('STATUS (immediate):', status);
+  console.log('STATUS response:', status);
 
-  // Wait for L1 inclusion
+  // Wait (L1 inclusion)
   const l1Receipt = await sdk.deposits.wait(created, { for: 'l1' });
   console.log(
     'L1 Included at block:',
@@ -89,6 +77,10 @@ async function main() {
     'hash:',
     l1Receipt?.transactionHash,
   );
+
+  // Status again
+  const status2 = await sdk.deposits.status(created);
+  console.log('STATUS2 response:', status2);
 
   // Wait for L2 execution
   const l2Receipt = await sdk.deposits.wait(created, { for: 'l2' });
@@ -100,6 +92,9 @@ async function main() {
     'hash:',
     l2Receipt?.transactionHash,
   );
+
+  const status3 = await sdk.deposits.status(created);
+  console.log('STATUS3 response:', status3);
 }
 
 main().catch((e) => {

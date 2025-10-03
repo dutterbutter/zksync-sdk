@@ -99,7 +99,7 @@ export function routeErc20Base(): DepositRouteStrategy {
       // For direct requests, mintValue must cover fees + the L2 msg.value (amount)
       const l2Value = p.amount;
       const rawMintValue = baseCost + ctx.operatorTip + l2Value;
-      const mintValue = withBuffer(rawMintValue); 
+      const mintValue = withBuffer(rawMintValue);
 
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
