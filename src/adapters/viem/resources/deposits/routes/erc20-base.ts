@@ -11,19 +11,13 @@ import type { Abi } from 'viem';
 
 const { wrapAs } = createErrorHandlers('deposits');
 
+// TODO: all gas buffers need to be moved to a dedicated resource
+// this is getting messy
 const BASE_COST_BUFFER_BPS = 100n; // 1%
 const BPS = 10_000n;
 const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
 
-/**
- * ERC20 deposit where the deposit token IS the target chain's base token (base ≠ ETH).
- *
- * Flow:
- * - Uses Bridgehub.requestL2TransactionDirect (single bridge).
- * - msg.value MUST be 0 when base token is ERC-20 (Bridgehub enforces this).
- * - User must approve the base token to L1AssetRouter for `mintValue = baseCost + tip + amount` (plus small buffer).
- * - L2 receives `l2Value = amount` to `l2Contract = to || sender`.
- */
+//  ERC20 deposit where the deposit token IS the target chain's base token (base ≠ ETH).
 export function routeErc20Base(): DepositRouteStrategy {
   return {
     async preflight(p, ctx) {
@@ -71,7 +65,6 @@ export function routeErc20Base(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
-      // Read base token again (defensive & cheap)
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.base.baseToken,
@@ -159,7 +152,6 @@ export function routeErc20Base(): DepositRouteStrategy {
         });
       }
 
-      // Build direct request payload (same struct as ethers utils)
       const req = buildDirectRequestStruct({
         chainId: ctx.chainIdL2,
         mintValue,
@@ -184,7 +176,7 @@ export function routeErc20Base(): DepositRouteStrategy {
           account: ctx.client.account,
         } as const;
       } else {
-        // Optional fee overrides: viem requires explicit inclusion if you set them on the client
+        // Optional fee overrides
         const feeOverrides: Record<string, unknown> = {};
         if ('maxFeePerGas' in ctx.fee && ctx.fee.maxFeePerGas != null) {
           feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;

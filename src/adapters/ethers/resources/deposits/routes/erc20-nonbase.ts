@@ -13,6 +13,7 @@ import { isETH, normalizeAddrEq } from '../../../../../core/utils/addr';
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
 
+// TODO: all gas buffers need to be moved to a dedicated resource
 const MIN_L2_GAS_FOR_ERC20 = 2_500_000n;
 
 export function routeErc20NonBase(): DepositRouteStrategy {
@@ -135,7 +136,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         }
       }
 
-      // Encode two-bridges calldata (for the deposit token)
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,

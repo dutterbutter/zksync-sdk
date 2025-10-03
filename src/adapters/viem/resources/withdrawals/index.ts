@@ -30,19 +30,17 @@ import type {
 import { routeEthBase } from './routes/eth';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import { routeEthNonBase } from './routes/eth-nonbase';
-import { routeErc20Base } from './routes/erc20-base';
 import { createFinalizationServices, type FinalizationServices } from './services/finalization';
 import { OP_WITHDRAWALS } from '../../../../core/types/errors';
 import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
 
 // --------------------
-// Route map
+// Withdrawal Route map
 // --------------------
 export const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
-  'eth-base': routeEthBase(),
-  'erc20-nonbase': routeErc20NonBase(),
-  'eth-nonbase': routeEthNonBase(),
-  'erc20-base': routeErc20Base(),
+  'eth-base': routeEthBase(), // BaseTokenSystem.withdraw, chain base = ETH
+  'eth-nonbase': routeEthNonBase(), // BaseTokenSystem.withdraw, chain base ≠ ETH
+  'erc20-nonbase': routeErc20NonBase(), // AssetRouter.withdraw for non-base ERC-20s
 };
 
 export interface WithdrawalsResource {

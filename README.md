@@ -53,6 +53,8 @@ npm install @dutterbutter/zksync-sdk ethers
 
 ## ⚡️ Quick-start
 
+For exhaustive examples please refer to [`./examples`](./examples/) directory.
+
 **ETH deposit (ethers)**
 
 ```ts

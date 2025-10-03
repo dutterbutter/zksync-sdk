@@ -5,8 +5,7 @@ import type { Address } from '../../../../core/types/primitives';
 import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
-import { isETH } from '../../../../core/utils/addr';
-import { IBridgehubABI } from '../../../../core/internal/abi-registry';
+import { isEthBasedChain } from '../token-info';
 
 // TODO: move all fee and gas items to dedicated resource?
 export type ViemFeeOverrides = {
@@ -25,9 +24,7 @@ export interface BuildCtx extends CommonCtx {
   l2AssetRouter: Address;
   l2NativeTokenVault: Address;
   l2BaseTokenSystem: Address;
-
-  // base token info
-  baseToken: Address;
+  // Base token info
   baseIsEth: boolean;
 
   // L2 chain + sender
@@ -58,19 +55,13 @@ export async function commonCtx(
   } = await client.ensureAddresses();
 
   const chainIdL2 = BigInt(await client.l2.getChainId());
+  const baseIsEth = await isEthBasedChain(client.l2, l2NativeTokenVault);
 
-  // Route: 'eth' | 'erc20'
-  const baseToken = await client.l1.readContract({
-    address: bridgehub,
-    abi: IBridgehubABI,
-    functionName: 'baseToken',
-    args: [chainIdL2],
+  // route selection
+  const route = pickWithdrawRoute({
+    token: p.token,
+    baseIsEth,
   });
-
-  const baseIsEth = isETH(baseToken);
-
-  // Pure route selection
-  const route = pickWithdrawRoute(p.token, baseToken);
 
   // TODO: improve gas estimations
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
@@ -87,7 +78,6 @@ export async function commonCtx(
     l2AssetRouter,
     l2NativeTokenVault,
     l2BaseTokenSystem,
-    baseToken,
     baseIsEth,
     l2GasLimit,
     gasBufferPct,

@@ -12,22 +12,14 @@ import { isETH } from '../../../../../core/utils/addr';
 
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
+
+// TODO: all gas buffers need to be moved to a dedicated resource
+// this is getting messy
 const BASE_COST_BUFFER_BPS = 100n; // 1%
 const BPS = 10_000n;
 const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
 
-/**
- * ETH deposit to a chain whose base token is NOT ETH.
- *
- * Contract expectations (Bridgehub.requestL2TransactionTwoBridges):
- * - base token ≠ ETH ⇒ msg.value MUST equal secondBridgeValue (the ETH asset),
- *   and the base-token `mintValue` is pulled by L1AssetRouter (shared bridge)
- *   via ERC-20 `transferFrom` → requires allowance(baseToken → L1AssetRouter) ≥ mintValue.
- *
- * Steps produced:
- * 1) (optional) approve baseToken → L1AssetRouter for `mintValue`
- * 2) Bridgehub.requestL2TransactionTwoBridges (value = ETH amount)
- */
+// ETH deposit to a chain whose base token is NOT ETH.
 export function routeEthNonBase(): DepositRouteStrategy {
   return {
     async preflight(p, ctx) {

@@ -12,22 +12,13 @@ import type { Abi } from 'viem';
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
 
+// TODO: all gas buffers need to be moved to a dedicated resource
+// this is getting messy
 const BASE_COST_BUFFER_BPS = 100n; // 1%
 const BPS = 10_000n;
 const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
 
-/**
- * ETH deposit to a chain whose base token is NOT ETH.
- *
- * Contract expectations (Bridgehub.requestL2TransactionTwoBridges):
- * - base token ≠ ETH ⇒ msg.value MUST equal secondBridgeValue (the ETH asset),
- *   and the base-token `mintValue` is pulled by L1AssetRouter via ERC-20 `transferFrom`
- *   (requires allowance(baseToken → L1AssetRouter) ≥ mintValue).
- *
- * Steps produced:
- * 1) (optional) approve baseToken → L1AssetRouter for `mintValue`
- * 2) Bridgehub.requestL2TransactionTwoBridges (value = ETH amount)
- */
+// ETH deposit to a chain whose base token is NOT ETH.
 export function routeEthNonBase(): DepositRouteStrategy {
   return {
     async preflight(p, ctx) {
@@ -97,7 +88,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
-      // Resolve base token (source of truth).
+      // Resolve base token
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.ethNonBase.baseToken,
@@ -114,7 +105,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
         },
       )) as `0x${string}`;
 
-      // Compute baseCost / mintValue (fees funded in base token)
+      // Compute baseCost / mintValue
       const rawBaseCost = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.ethNonBase.baseCost,
@@ -138,7 +129,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<ViemPlanWriteRequest>[] = [];
 
-      // Check/ensure base-token allowance to L1AssetRouter for `mintValue`.
       const allowance = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.ethNonBase.allowanceBase,
@@ -184,7 +174,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
         });
       }
 
-      // Build two-bridges payload
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.ethNonBase.encodeCalldata,
@@ -207,11 +196,11 @@ export function routeEthNonBase(): DepositRouteStrategy {
         l2GasPerPubdataByteLimit: ctx.gasPerPubdata,
         refundRecipient: ctx.refundRecipient,
         secondBridgeAddress: ctx.l1AssetRouter,
-        secondBridgeValue: p.amount, // msg.value must equal this
+        secondBridgeValue: p.amount,
         secondBridgeCalldata,
       } as const;
 
-      // viem: if approval needed, don't simulate the bridge call (could revert depending on state).
+      // viem: if approval needed, don't simulate the bridge call (could revert).
       // Return a write-ready request with correct `value = p.amount`.
       let bridgeTx: ViemPlanWriteRequest;
 

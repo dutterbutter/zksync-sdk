@@ -57,7 +57,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
-      // Read base token (source of truth)
+      // Read base token
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.nonbase.baseToken,
@@ -71,7 +71,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         { ctx: { where: 'bridgehub.baseToken', chainIdL2: ctx.chainIdL2 } },
       )) as `0x${string}`;
 
-      // Gas floor on L2 (still conservative for ERC-20 asset bridging)
+      // TODO: again need to consolidate all gas estimations, buffers, etc.
       const MIN_L2_GAS_FOR_ERC20 = 2_500_000n;
       const l2GasLimitUsed =
         ctx.l2GasLimit && ctx.l2GasLimit > 0n
@@ -101,7 +101,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<ViemPlanWriteRequest>[] = [];
 
-      // (1) Deposit token allowance → router for `amount`
       const depositAllowance = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.nonbase.allowance,
@@ -146,7 +145,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         });
       }
 
-      // (2) If base token is ERC-20, also need base-token allowance → router for `mintValue`
       const baseIsEth = isETH(baseToken);
       let msgValue: bigint = 0n;
 
@@ -201,7 +199,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         msgValue = mintValue;
       }
 
-      // Two-bridges calldata: deposit ERC-20 (p.token, p.amount → l2Receiver)
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,
@@ -217,18 +214,18 @@ export function routeErc20NonBase(): DepositRouteStrategy {
 
       const outer = {
         chainId: ctx.chainIdL2,
-        mintValue, // pulled by router in base asset (ETH or base ERC-20)
+        mintValue,
         l2Value: 0n,
         l2GasLimit: l2GasLimitUsed,
         l2GasPerPubdataByteLimit: ctx.gasPerPubdata,
         refundRecipient: ctx.refundRecipient,
         secondBridgeAddress: ctx.l1AssetRouter,
-        secondBridgeValue: 0n, // asset is ERC-20 → no ETH in inner call
+        secondBridgeValue: 0n,
         secondBridgeCalldata,
       } as const;
 
       // viem simulate/write:
-      // If *any* approval is required, skip simulate (can revert due to current state) and return a raw write.
+      // If any approval is required, skip simulate (can revert) and return a raw write.
       const approvalsNeeded = approvals.length > 0;
       let bridgeTx: ViemPlanWriteRequest;
 

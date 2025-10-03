@@ -10,19 +10,14 @@ import { normalizeAddrEq, isETH } from '../../../../../core/utils/addr';
 
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
+
+// TODO: all gas buffers need to be moved to a dedicated resource
+// this is getting messy
 const BASE_COST_BUFFER_BPS = 100n; // 1%
 const BPS = 10_000n;
 const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
 
-/**
- * ERC20 deposit where the deposit token IS the target chain's base token (base ≠ ETH).
- *
- * Flow:
- * - Uses Bridgehub.requestL2TransactionDirect (single bridge).
- * - msg.value MUST be 0 when base token is ERC-20 (Bridgehub enforces this).
- * - User must approve the base token to L1AssetRouter for `mintValue = baseCost + tip + amount`.
- * - L2 receives `l2Value = amount` to `l2Contract = to || sender`.
- */
+//  ERC20 deposit where the deposit token IS the target chain's base token (base ≠ ETH).
 export function routeErc20Base(): DepositRouteStrategy {
   return {
     async preflight(p, ctx) {
@@ -38,7 +33,7 @@ export function routeErc20Base(): DepositRouteStrategy {
         { ctx: { token: p.token } },
       );
 
-      // Ensure the provided ERC-20 is indeed the base token of the target chain.
+      // Check provided token matches target chain base token
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -67,7 +62,7 @@ export function routeErc20Base(): DepositRouteStrategy {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
 
-      // Source of truth: read base token again (cheap & defensive)
+      // Read base token
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.base.baseToken,
@@ -78,7 +73,7 @@ export function routeErc20Base(): DepositRouteStrategy {
         },
       )) as `0x${string}`;
 
-      // Base cost (L2 fee)
+      // Base cost
       const rawBaseCost = (await wrapAs(
         'RPC',
         OP_DEPOSITS.base.baseCost,
@@ -96,7 +91,7 @@ export function routeErc20Base(): DepositRouteStrategy {
       )) as bigint;
       const baseCost = BigInt(rawBaseCost);
 
-      // For direct requests, mintValue must cover fees + the L2 msg.value (amount)
+      // Direct path: mintValue must cover fee + the L2 msg.value (amount) → plus a small buffer
       const l2Value = p.amount;
       const rawMintValue = baseCost + ctx.operatorTip + l2Value;
       const mintValue = withBuffer(rawMintValue);
@@ -104,7 +99,7 @@ export function routeErc20Base(): DepositRouteStrategy {
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
 
-      // Approval: base token → L1AssetRouter for mintValue
+      // Check allowance for base token -> L1AssetRouter
       {
         const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.signer.connect(ctx.client.l1));
         const allowance = (await wrapAs(
@@ -132,15 +127,14 @@ export function routeErc20Base(): DepositRouteStrategy {
         }
       }
 
-      // Build the direct request
       const req = buildDirectRequestStruct({
         chainId: ctx.chainIdL2,
-        mintValue, // pulled in base token by L1AssetRouter
+        mintValue,
         l2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
         refundRecipient: ctx.refundRecipient,
         l2Contract: p.to ?? ctx.sender,
-        l2Value, // amount of base token to deliver on L2
+        l2Value,
       });
 
       const data = new Contract(

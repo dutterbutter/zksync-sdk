@@ -1,19 +1,14 @@
+// src/adapters/viem/resources/withdrawals/routes/eth-nonbase.ts
 import type { WithdrawRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
-import {
-  L2NativeTokenVaultABI,
-  IL2AssetRouterABI,
-} from '../../../../../core/internal/abi-registry.ts';
+import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
+import { IBaseTokenABI } from '../../../../../core/internal/abi-registry';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
-import { ETH_ADDRESS } from '../../../../../core/constants';
-import { isETH } from '../../../../../core/utils/addr';
-import { encodeAbiParameters, type Abi } from 'viem';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
-// Withdraw ETH on a chain whose base token is NOT ETH.
-// Uses L2NativeTokenVault + L2AssetRouter.withdraw(assetId, assetData).
+// Withdraw the chain's base token (on a non-ETH-based chain) via BaseTokenSystem.withdraw
 export function routeEthNonBase(): WithdrawRouteStrategy {
   return {
     async preflight(p, ctx) {
@@ -21,11 +16,13 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
         'VALIDATION',
         OP_WITHDRAWALS.ethNonBase.assertNonEthBase,
         () => {
-          if (!isETH(p.token)) {
-            throw new Error('eth-nonbase route requires ETH (token == ETH sentinel).');
+          // Must be the base-token system alias (0x…800A)
+          if (p.token.toLowerCase() !== L2_BASE_TOKEN_ADDRESS.toLowerCase()) {
+            throw new Error('eth-nonbase route requires the L2 base-token alias (0x…800A).');
           }
+          // Chain’s base must not be ETH
           if (ctx.baseIsEth) {
-            throw new Error('eth-nonbase route requires base token ≠ ETH on target L2.');
+            throw new Error('eth-nonbase route requires chain base ≠ ETH.');
           }
         },
         { ctx: { token: p.token, baseIsEth: ctx.baseIsEth } },
@@ -33,62 +30,41 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
     },
 
     async build(p, ctx) {
-      const steps: Array<PlanStep<ViemPlanWriteRequest>> = [];
+      const toL1 = p.to ?? ctx.sender;
 
-      // 1) assetId = ensureTokenIsRegistered(ETH)
-      const assetId = await wrapAs(
+      const feeOverrides: Record<string, unknown> = {};
+      if (ctx.fee?.maxFeePerGas != null && ctx.fee?.maxPriorityFeePerGas != null) {
+        feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
+        feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
+      }
+
+      const sim = await wrapAs(
         'CONTRACT',
-        OP_WITHDRAWALS.erc20.ensureRegistered, // reuse context tag
+        OP_WITHDRAWALS.eth.estGas,
         () =>
-          ctx.client.l2.readContract({
-            address: ctx.l2NativeTokenVault,
-            abi: L2NativeTokenVaultABI as Abi,
-            functionName: 'ensureTokenIsRegistered',
-            args: [ETH_ADDRESS],
+          ctx.client.l2.simulateContract({
+            address: L2_BASE_TOKEN_ADDRESS,
+            abi: IBaseTokenABI,
+            functionName: 'withdraw',
+            args: [toL1] as const,
+            value: p.amount,
+            account: ctx.client.account,
+            ...feeOverrides,
           }),
         {
-          ctx: { where: 'L2NativeTokenVault.ensureTokenIsRegistered', token: 'ETH' },
-          message: 'Failed to ensure ETH is registered in L2NativeTokenVault.',
+          ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_ADDRESS },
+          message: 'Failed to simulate L2 base-token withdraw.',
         },
       );
 
-      // 2) assetData = abi.encode(uint256 amount, address to, address token)
-      const to = p.to ?? ctx.sender;
-      const assetData = await wrapAs(
-        'INTERNAL',
-        OP_WITHDRAWALS.erc20.encodeAssetData,
-        () =>
-          Promise.resolve(
-            encodeAbiParameters(
-              [
-                { type: 'uint256', name: 'amount' },
-                { type: 'address', name: 'l1Receiver' },
-                { type: 'address', name: 'token' },
-              ],
-              [p.amount, to, ETH_ADDRESS],
-            ),
-          ),
+      const steps: Array<PlanStep<ViemPlanWriteRequest>> = [
         {
-          ctx: { where: 'encodeAbiParameters', token: 'ETH', to },
-          message: 'Failed to encode ETH withdraw asset data.',
+          key: 'l2-base-token:withdraw',
+          kind: 'l2-base-token:withdraw',
+          description: 'Withdraw base token via L2 Base Token System (base ≠ ETH)',
+          tx: sim.request as ViemPlanWriteRequest,
         },
-      );
-
-      // 3) L2AssetRouter.withdraw(assetId, assetData)
-      const withdrawReq: ViemPlanWriteRequest = {
-        address: ctx.l2AssetRouter,
-        abi: IL2AssetRouterABI,
-        functionName: 'withdraw',
-        args: [assetId as `0x${string}`, assetData],
-        account: ctx.client.account,
-      };
-
-      steps.push({
-        key: 'l2-asset-router:withdraw:eth-nonbase',
-        kind: 'l2-asset-router:withdraw',
-        description: 'Withdraw ETH via L2 NativeTokenVault / AssetRouter (base ≠ ETH)',
-        tx: withdrawReq,
-      });
+      ];
 
       return { steps, approvals: [], quoteExtras: {} };
     },

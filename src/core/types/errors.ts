@@ -154,7 +154,6 @@ export function isReceiptNotFound(e: unknown): boolean {
 export type TryResult<T> = { ok: true; value: T } | { ok: false; error: ZKsyncError };
 
 // Operation constants for Deposit error contexts
-// Operation constants for Deposit error contexts
 export const OP_DEPOSITS = {
   // high-level flow ops
   quote: 'deposits.quote',
@@ -166,23 +165,19 @@ export const OP_DEPOSITS = {
   status: 'deposits.status',
   wait: 'deposits.wait',
   tryWait: 'deposits.tryWait',
-
-  // ERC20 is the base token (base ≠ ETH), direct path
   base: {
     assertErc20Asset: 'deposits.erc20-base:assertErc20Asset',
     assertMatchesBase: 'deposits.erc20-base:assertMatchesBase',
     baseToken: 'deposits.erc20-base:baseToken',
-    allowance: 'deposits.erc20-base:allowance', // base token -> router (mintValue)
+    allowance: 'deposits.erc20-base:allowance',
     baseCost: 'deposits.erc20-base:l2TransactionBaseCost',
     estGas: 'deposits.erc20-base:estimateGas',
   },
-
-  // ERC20 is NOT the base token (two-bridges). Handles both base=ETH and base=ERC20.
   nonbase: {
-    baseToken: 'deposits.erc20-nonbase:baseToken', // read Bridgehub.baseToken
-    assertNotEthAsset: 'deposits.erc20-nonbase:assertNotEthAsset', // sanity: deposit token is ERC20
-    allowance: 'deposits.erc20-nonbase:allowance', // deposit token -> router (amount)
-    allowanceFees: 'deposits.erc20-nonbase:allowanceFeesBaseToken', // base token -> router (mintValue) when base is ERC20
+    baseToken: 'deposits.erc20-nonbase:baseToken',
+    assertNotEthAsset: 'deposits.erc20-nonbase:assertNotEthAsset',
+    allowance: 'deposits.erc20-nonbase:allowance',
+    allowanceFees: 'deposits.erc20-nonbase:allowanceFeesBaseToken',
     baseCost: 'deposits.erc20-nonbase:l2TransactionBaseCost',
     encodeCalldata: 'deposits.erc20-nonbase:encodeSecondBridgeErc20Args',
     estGas: 'deposits.erc20-nonbase:estimateGas',
@@ -192,18 +187,14 @@ export const OP_DEPOSITS = {
     allowanceToken: 'deposits.erc20-nonbase:allowanceToken',
     allowanceBase: 'deposits.erc20-nonbase:allowanceBase',
   },
-
-  // ETH is the asset AND the base token (direct path)
   eth: {
     baseCost: 'deposits.eth:l2TransactionBaseCost',
     estGas: 'deposits.eth:estimateGas',
   },
-
-  // ETH is the asset, base token is ERC20 (two-bridges)
   ethNonBase: {
     baseToken: 'deposits.eth-nonbase:baseToken',
     baseCost: 'deposits.eth-nonbase:l2TransactionBaseCost',
-    allowanceBase: 'deposits.eth-nonbase:allowanceBaseToken', // base token -> router (mintValue)
+    allowanceBase: 'deposits.eth-nonbase:allowanceBaseToken',
     ethBalance: 'deposits.eth-nonbase:getEthBalance',
     encodeCalldata: 'deposits.eth-nonbase:encodeSecondBridgeEthArgs',
     estGas: 'deposits.eth-nonbase:estimateGas',
@@ -236,20 +227,13 @@ export const OP_WITHDRAWALS = {
     estGas: 'withdrawals.eth:estimateGas',
   },
   ethNonBase: {
-    allowance: 'withdrawals.eth-nonbase:allowance', // L2 allowance for L2-ETH token → NTV
-    ensureRegistered: 'withdrawals.eth-nonbase:ensureTokenIsRegistered', // NTV.ensureTokenIsRegistered
+    allowance: 'withdrawals.eth-nonbase:allowance',
+    ensureRegistered: 'withdrawals.eth-nonbase:ensureTokenIsRegistered',
     encodeAssetData: 'withdrawals.eth-nonbase:encodeAssetData',
     encodeWithdraw: 'withdrawals.eth-nonbase:encodeWithdraw',
     estGas: 'withdrawals.eth-nonbase:estimateGas',
-    baseToken: 'withdrawals.eth-nonbase:baseToken', // Bridgehub.baseToken
+    baseToken: 'withdrawals.eth-nonbase:baseToken',
     assertNonEthBase: 'withdrawals.eth-nonbase:assertNonEthBase',
-  },
-  base: {
-    baseToken: 'withdrawals.base:baseToken', // Bridgehub.baseToken
-    encodeWithdraw: 'withdrawals.base:encodeWithdraw', // Base token system-contract call
-    estGas: 'withdrawals.base:estimateGas',
-    assertErc20Base: 'withdrawals.base:assertErc20Base', // base ≠ ETH
-    assertMatches: 'withdrawals.base:assertMatchesBase', // p.token == baseToken
   },
   finalize: {
     fetchParams: {

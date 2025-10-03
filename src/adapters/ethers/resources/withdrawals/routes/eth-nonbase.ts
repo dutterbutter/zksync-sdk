@@ -1,132 +1,78 @@
 // src/adapters/ethers/resources/withdrawals/routes/eth-nonbase.ts
-import { Contract, AbiCoder, type TransactionRequest } from 'ethers';
+import { Interface, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
-import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import {
-  IL2AssetRouterABI,
-  L2NativeTokenVaultABI,
-  IERC20ABI,
-  IBridgehubABI,
-} from '../../../../../core/internal/abi-registry';
+import type { PlanStep } from '../../../../../core/types/flows/base';
+import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
+import { IBaseTokenABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
-import { isETH } from '../../../../../core/utils/addr';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
-const SIG = { withdraw: 'withdraw(bytes32,bytes)' } as const;
-
+// Withdraw the chain's base token on a non-ETH-based chain.
 export function routeEthNonBase(): WithdrawRouteStrategy {
   return {
     async preflight(p, ctx) {
-      // Base token must not be ETH on target chain
-      const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
-      const baseToken = (await wrapAs(
-        'CONTRACT',
-        OP_WITHDRAWALS.ethNonBase.baseToken,
-        () => bh.baseToken(ctx.chainIdL2),
-        { ctx: { where: 'bridgehub.baseToken', chainIdL2: ctx.chainIdL2 } },
-      )) as `0x${string}`;
-
       await wrapAs(
         'VALIDATION',
         OP_WITHDRAWALS.ethNonBase.assertNonEthBase,
         () => {
-          if (isETH(baseToken)) {
-            throw new Error('eth-nonbase withdrawal requires target chain base token ≠ ETH.');
+          if (p.token.toLowerCase() !== L2_BASE_TOKEN_ADDRESS.toLowerCase()) {
+            throw new Error('eth-nonbase route requires the L2 base-token alias (0x…800A).');
+          }
+          if (ctx.baseIsEth) {
+            throw new Error('eth-nonbase route requires chain base ≠ ETH.');
           }
         },
-        { ctx: { baseToken } },
+        { ctx: { token: p.token, baseIsEth: ctx.baseIsEth } },
       );
-
-      return;
     },
 
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
-      const approvals: ApprovalNeed[] = [];
 
-      // L2 “ETH” here is an ERC-20-like token (p.token) managed by NTV
-      const l2Signer = ctx.client.signer.connect(ctx.client.l2);
-      const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
-
-      const allowance = (await wrapAs(
-        'CONTRACT',
-        OP_WITHDRAWALS.ethNonBase.allowance,
-        () => erc20.allowance(ctx.sender, ctx.l2NativeTokenVault),
-        {
-          ctx: { where: 'erc20.allowance', token: p.token, spender: ctx.l2NativeTokenVault },
-          message: 'Failed to read L2 allowance for L2-ETH token.',
-        },
-      )) as bigint;
-
-      if (allowance < p.amount) {
-        approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
-        const data = erc20.interface.encodeFunctionData('approve', [
-          ctx.l2NativeTokenVault,
-          p.amount,
-        ]);
-        steps.push({
-          key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
-          kind: 'approve:l2',
-          description: `Approve L2 ETH token to NativeTokenVault`,
-          tx: { to: p.token, data, from: ctx.sender, ...(ctx.fee ?? {}) },
-        });
-      }
-
-      // ensureRegistered + assetData
-      const ntv = new Contract(ctx.l2NativeTokenVault, L2NativeTokenVaultABI, ctx.client.l2);
-      const assetId = (await wrapAs(
-        'CONTRACT',
-        OP_WITHDRAWALS.ethNonBase.ensureRegistered,
-        () => ntv.getFunction('ensureTokenIsRegistered').staticCall(p.token),
-        {
-          ctx: { where: 'L2NativeTokenVault.ensureTokenIsRegistered', token: p.token },
-          message: 'Failed to ensure L2-ETH token is registered.',
-        },
-      )) as `0x${string}`;
-
-      const assetData = await wrapAs(
+      const toL1 = p.to ?? ctx.sender;
+      const iface = new Interface(IBaseTokenABI);
+      const data = await wrapAs(
         'INTERNAL',
-        OP_WITHDRAWALS.ethNonBase.encodeAssetData,
-        () =>
-          Promise.resolve(
-            AbiCoder.defaultAbiCoder().encode(
-              ['uint256', 'address', 'address'],
-              [p.amount, p.to ?? ctx.sender, p.token],
-            ),
-          ),
-        {
-          ctx: { token: p.token, to: p.to ?? ctx.sender },
-          message: 'Failed to encode burn/withdraw asset data (L2 ETH).',
-        },
+        OP_WITHDRAWALS.eth.encodeWithdraw, // reuse label for base-token system call
+        () => Promise.resolve(iface.encodeFunctionData('withdraw', [toL1])),
+        { ctx: { where: 'L2BaseToken.withdraw', to: toL1 } },
       );
 
-      // L2AssetRouter.withdraw(assetId, assetData)
-      const l2ar = new Contract(ctx.l2AssetRouter, IL2AssetRouterABI, ctx.client.l2);
-      const dataWithdraw = await wrapAs(
-        'INTERNAL',
-        OP_WITHDRAWALS.ethNonBase.encodeWithdraw,
-        () =>
-          Promise.resolve(l2ar.interface.encodeFunctionData(SIG.withdraw, [assetId, assetData])),
-        { ctx: { where: 'L2AssetRouter.withdraw', assetId } },
-      );
-
-      const withdrawTx: TransactionRequest = {
-        to: ctx.l2AssetRouter,
-        data: dataWithdraw,
+      const tx: TransactionRequest = {
+        to: L2_BASE_TOKEN_ADDRESS,
+        data,
         from: ctx.sender,
+        value: p.amount,
         ...(ctx.fee ?? {}),
       };
 
+      // TODO: consider a more robust buffer strategy
+      // best-effort gas estimate
+      try {
+        const est = await wrapAs(
+          'RPC',
+          OP_WITHDRAWALS.eth.estGas,
+          () => ctx.client.l2.estimateGas(tx),
+          {
+            ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
+            message: 'Failed to estimate gas for L2 base-token withdraw.',
+          },
+        );
+        tx.gasLimit = (BigInt(est) * 115n) / 100n;
+      } catch {
+        // ignore
+      }
+
       steps.push({
-        key: 'l2-asset-router:withdraw:eth-nonbase',
-        kind: 'l2-asset-router:withdraw',
-        description: 'Withdraw ETH (base ≠ ETH) via L2AssetRouter + NativeTokenVault',
-        tx: withdrawTx,
+        key: 'l2-base-token:withdraw',
+        kind: 'l2-base-token:withdraw',
+        description: 'Withdraw base token via L2 Base Token System (base ≠ ETH)',
+        tx,
       });
 
-      return { steps, approvals, quoteExtras: {} };
+      return { steps, approvals: [], quoteExtras: {} };
     },
   };
 }

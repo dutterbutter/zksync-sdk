@@ -12,7 +12,7 @@ export interface WithdrawParams {
 }
 
 /** Routes */
-export type WithdrawRoute = 'eth-base' | 'erc20-base' | 'erc20-nonbase' | 'eth-nonbase';
+export type WithdrawRoute = 'eth-base' | 'erc20-nonbase' | 'eth-nonbase';
 
 /** Quote */
 export interface WithdrawQuote {

@@ -16,6 +16,7 @@ const { wrapAs } = createErrorHandlers('withdrawals');
 // Route for withdrawing ERC-20 via L2-L1
 export function routeErc20NonBase(): WithdrawRouteStrategy {
   return {
+    // TODO: add preflight validations here
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
 
