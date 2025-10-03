@@ -43,7 +43,6 @@ export function makeL1Provider(mapping: Record<string, string>, opts: L1Opts = {
   const _nonce = opts.getTransactionCount ?? 0;
   const _defaultBase = (opts.defaultBaseToken ?? (ADDR.baseToken as Address)) as Address;
 
-
   return {
     async call(tx) {
       const k = keyOf(tx);

@@ -11,7 +11,9 @@ describe('withdrawals/pickWithdrawRoute', () => {
 
   it('returns eth-base / eth-nonbase for L2 base-token alias (0x…800A)', () => {
     expect(pickWithdrawRoute({ token: L2_BASE_TOKEN_ADDRESS, baseIsEth: true })).toBe('eth-base');
-    expect(pickWithdrawRoute({ token: L2_BASE_TOKEN_ADDRESS, baseIsEth: false })).toBe('eth-nonbase');
+    expect(pickWithdrawRoute({ token: L2_BASE_TOKEN_ADDRESS, baseIsEth: false })).toBe(
+      'eth-nonbase',
+    );
 
     // case-insensitive
     expect(
