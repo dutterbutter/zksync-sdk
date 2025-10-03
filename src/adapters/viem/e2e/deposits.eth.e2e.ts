@@ -38,7 +38,7 @@ describe('deposits.e2e (viem): ETH deposit', () => {
       to: me,
     });
 
-    expect(quoteResult.route).toBe('eth');
+    expect(quoteResult.route).toBe('eth-base');
     expect(quoteResult.mintValue).toBeDefined();
     expect(BigInt(quoteResult.mintValue)).toBeGreaterThanOrEqual(DEPOSIT_WEI);
   }, 10_000);
