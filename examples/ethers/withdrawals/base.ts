@@ -24,11 +24,9 @@ import { createEthersSdk } from '../../../src/adapters/ethers/sdk';
 import type { Address } from '../../../src/core/types/primitives';
 import { L2_BASE_TOKEN_ADDRESS } from '../../../src/core/constants';
 
-const L1_RPC =
-  'https://rpc.ankr.com/eth_sepolia/070715f5f3878124fc8e3b05fa7e5f8ec165ffc887f2ffd3a51c9e906681492c'; // e.g. https://sepolia.infura.io/v3/XXX
-const L2_RPC = 'https://zksync-os-testnet-sophon.zksync.dev'; // your L2 RPC
-const PRIVATE_KEY =
-  process.env.PRIVATE_KEY || '0x4d908585a4106c79dd3084fd49e0e0ac6003421396bce482824b7380b3db62dd';
+const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 async function main() {
   if (!PRIVATE_KEY) throw new Error('Set your PRIVATE_KEY in the environment');
