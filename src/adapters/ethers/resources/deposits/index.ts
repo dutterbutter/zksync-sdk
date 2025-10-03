@@ -19,7 +19,7 @@ import { commonCtx } from './context';
 import { routeEthDirect } from './routes/eth';
 import { routeErc20NonBase } from './routes/erc20-nonbase';
 import { routeEthNonBase } from './routes/eth-nonbase.ts';
-import { routeErc20Base } from './routes/erc20-base.ts';
+import { routeErc20Base } from './routes/erc20-base';
 import type { DepositRouteStrategy } from './routes/types.ts';
 
 import { isZKsyncError, isReceiptNotFound, OP_DEPOSITS } from '../../../../core/types/errors';
