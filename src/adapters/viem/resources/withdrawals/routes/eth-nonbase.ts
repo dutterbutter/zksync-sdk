@@ -40,7 +40,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
 
       const sim = await wrapAs(
         'CONTRACT',
-        OP_WITHDRAWALS.eth.estGas,
+        OP_WITHDRAWALS.ethNonBase.estGas,
         () =>
           ctx.client.l2.simulateContract({
             address: L2_BASE_TOKEN_ADDRESS,
