@@ -45,7 +45,7 @@ describe('deposits.e2e (ethers): ETH deposit', () => {
       amount: DEPOSIT_WEI,
       to: me,
     });
-    expect(plan.route).toBe('eth');
+    expect(plan.route).toBe('eth-base');
     expect(plan.steps.length).toBeGreaterThan(0);
   }, 10_000);
 
