@@ -155,6 +155,7 @@ export type TryResult<T> = { ok: true; value: T } | { ok: false; error: ZKsyncEr
 
 // Operation constants for Deposit error contexts
 export const OP_DEPOSITS = {
+  // high-level flow ops
   quote: 'deposits.quote',
   tryQuote: 'deposits.tryQuote',
   prepare: 'deposits.prepare',
@@ -165,20 +166,41 @@ export const OP_DEPOSITS = {
   wait: 'deposits.wait',
   tryWait: 'deposits.tryWait',
   base: {
+    assertErc20Asset: 'deposits.erc20-base:assertErc20Asset',
+    assertMatchesBase: 'deposits.erc20-base:assertMatchesBase',
+    baseToken: 'deposits.erc20-base:baseToken',
     allowance: 'deposits.erc20-base:allowance',
     baseCost: 'deposits.erc20-base:l2TransactionBaseCost',
-    encodeCalldata: 'deposits.erc20-base:encodeSecondBridgeErc20Args',
     estGas: 'deposits.erc20-base:estimateGas',
   },
   nonbase: {
+    baseToken: 'deposits.erc20-nonbase:baseToken',
+    assertNotEthAsset: 'deposits.erc20-nonbase:assertNotEthAsset',
     allowance: 'deposits.erc20-nonbase:allowance',
+    allowanceFees: 'deposits.erc20-nonbase:allowanceFeesBaseToken',
     baseCost: 'deposits.erc20-nonbase:l2TransactionBaseCost',
     encodeCalldata: 'deposits.erc20-nonbase:encodeSecondBridgeErc20Args',
     estGas: 'deposits.erc20-nonbase:estimateGas',
+    assertBaseIsEth: 'deposits.erc20-nonbase:assertBaseIsEth',
+    assertBaseIsErc20: 'deposits.erc20-nonbase:assertBaseIsErc20',
+    assertNonBaseToken: 'deposits.erc20-nonbase:assertNonBaseToken',
+    allowanceToken: 'deposits.erc20-nonbase:allowanceToken',
+    allowanceBase: 'deposits.erc20-nonbase:allowanceBase',
   },
   eth: {
     baseCost: 'deposits.eth:l2TransactionBaseCost',
     estGas: 'deposits.eth:estimateGas',
+  },
+  ethNonBase: {
+    baseToken: 'deposits.eth-nonbase:baseToken',
+    baseCost: 'deposits.eth-nonbase:l2TransactionBaseCost',
+    allowanceBase: 'deposits.eth-nonbase:allowanceBaseToken',
+    ethBalance: 'deposits.eth-nonbase:getEthBalance',
+    encodeCalldata: 'deposits.eth-nonbase:encodeSecondBridgeEthArgs',
+    estGas: 'deposits.eth-nonbase:estimateGas',
+    assertEthAsset: 'deposits.eth-nonbase:assertEthAsset',
+    assertNonEthBase: 'deposits.eth-nonbase:assertNonEthBase',
+    assertEthBalance: 'deposits.eth-nonbase:assertEthBalance',
   },
 } as const;
 
@@ -203,6 +225,15 @@ export const OP_WITHDRAWALS = {
   eth: {
     encodeWithdraw: 'withdrawals.eth:encodeWithdraw',
     estGas: 'withdrawals.eth:estimateGas',
+  },
+  ethNonBase: {
+    allowance: 'withdrawals.eth-nonbase:allowance',
+    ensureRegistered: 'withdrawals.eth-nonbase:ensureTokenIsRegistered',
+    encodeAssetData: 'withdrawals.eth-nonbase:encodeAssetData',
+    encodeWithdraw: 'withdrawals.eth-nonbase:encodeWithdraw',
+    estGas: 'withdrawals.eth-nonbase:estimateGas',
+    baseToken: 'withdrawals.eth-nonbase:baseToken',
+    assertNonEthBase: 'withdrawals.eth-nonbase:assertNonEthBase',
   },
   finalize: {
     fetchParams: {

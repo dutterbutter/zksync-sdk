@@ -6,6 +6,7 @@ import type { Address } from '../../../../core/types/primitives';
 import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
+import { isEthBasedChain } from '../token-info';
 
 // Common context for building withdrawal (L2 -> L1) transactions
 export interface BuildCtx extends CommonCtx {
@@ -17,6 +18,9 @@ export interface BuildCtx extends CommonCtx {
   l2AssetRouter: Address;
   l2NativeTokenVault: Address;
   l2BaseTokenSystem: Address;
+
+  // Base token info
+  baseIsEth: boolean;
 
   // L2 gas
   l2GasLimit: bigint;
@@ -43,9 +47,11 @@ export async function commonCtx(
 
   const { chainId } = await client.l2.getNetwork();
   const chainIdL2 = BigInt(chainId);
+  const baseIsEth = await isEthBasedChain(client.l2, l2NativeTokenVault);
 
-  // Route: eth | erc20
-  const route = pickWithdrawRoute(p.token);
+  // route selection
+  const route = pickWithdrawRoute({ token: p.token, baseIsEth });
+
   // TODO: improve gas estimations
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasBufferPct = 15;
@@ -61,6 +67,7 @@ export async function commonCtx(
     l2AssetRouter,
     l2NativeTokenVault,
     l2BaseTokenSystem,
+    baseIsEth,
     l2GasLimit,
     gasBufferPct,
   } satisfies BuildCtx & { route: WithdrawRoute };

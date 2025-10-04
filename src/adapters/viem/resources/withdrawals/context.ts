@@ -5,6 +5,7 @@ import type { Address } from '../../../../core/types/primitives';
 import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
+import { isEthBasedChain } from '../token-info';
 
 // TODO: move all fee and gas items to dedicated resource?
 export type ViemFeeOverrides = {
@@ -23,6 +24,8 @@ export interface BuildCtx extends CommonCtx {
   l2AssetRouter: Address;
   l2NativeTokenVault: Address;
   l2BaseTokenSystem: Address;
+  // Base token info
+  baseIsEth: boolean;
 
   // L2 chain + sender
   chainIdL2: bigint;
@@ -52,9 +55,13 @@ export async function commonCtx(
   } = await client.ensureAddresses();
 
   const chainIdL2 = BigInt(await client.l2.getChainId());
+  const baseIsEth = await isEthBasedChain(client.l2, l2NativeTokenVault);
 
-  // Route: 'eth' | 'erc20'
-  const route = pickWithdrawRoute(p.token);
+  // route selection
+  const route = pickWithdrawRoute({
+    token: p.token,
+    baseIsEth,
+  });
 
   // TODO: improve gas estimations
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
@@ -71,6 +78,7 @@ export async function commonCtx(
     l2AssetRouter,
     l2NativeTokenVault,
     l2BaseTokenSystem,
+    baseIsEth,
     l2GasLimit,
     gasBufferPct,
   } satisfies BuildCtx & { route: WithdrawRoute };

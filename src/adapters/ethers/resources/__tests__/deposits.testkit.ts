@@ -1,5 +1,6 @@
 import { Interface } from 'ethers';
 import { IBridgehubABI, IERC20ABI } from '../../../../core/internal/abi-registry';
+import { Address } from '../../../../core/types';
 
 export const IERC20 = new Interface(IERC20ABI as any);
 export const IBridgehub = new Interface(IBridgehubABI as any);
@@ -9,6 +10,7 @@ export const ADDR = {
   bridgehub: '0xb000000000000000000000000000000000000000',
   assetRouter: '0xa000000000000000000000000000000000000000',
   token: '0xc000000000000000000000000000000000000000',
+  baseToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
   sender: '0x1111111111111111111111111111111111111111',
   l2Contract: '0x2222222222222222222222222222222222222222',
 } as const;
@@ -24,11 +26,14 @@ export const keyFor = (to: string, iface: Interface, fn: string) =>
 export const enc = (iface: Interface, fn: string, args: unknown[]) =>
   iface.encodeFunctionResult(fn as any, args);
 
+const BASE_TOKEN_SEL = IBridgehub.getFunction('baseToken')!.selector.toLowerCase();
+
 type L1Opts = {
   estimateGas?: bigint | Error;
   getTransactionReceipt?: any; // null | receipt | throws
   waitForTransaction?: any; // null | receipt | throws
   getTransactionCount?: number; // initial nonce
+  defaultBaseToken?: Address;
 };
 
 export function makeL1Provider(mapping: Record<string, string>, opts: L1Opts = {}) {
@@ -36,11 +41,21 @@ export function makeL1Provider(mapping: Record<string, string>, opts: L1Opts = {
   const _rcpt = opts.getTransactionReceipt;
   const _wait = opts.waitForTransaction;
   const _nonce = opts.getTransactionCount ?? 0;
+  const _defaultBase = (opts.defaultBaseToken ?? (ADDR.baseToken as Address)) as Address;
 
   return {
-    async call(tx: CallTx) {
-      const out = mapping[keyOf(tx)];
-      if (!out) throw new Error(`no mapping for ${keyOf(tx)}`);
+    async call(tx) {
+      const k = keyOf(tx);
+      const out = mapping[k];
+      if (!out) {
+        const isBridgehub = lower(tx.to) === lower(ADDR.bridgehub);
+        const isBaseTokenCall =
+          selector(tx.data) === IBridgehub.getFunction('baseToken')!.selector.toLowerCase();
+        if (isBridgehub && isBaseTokenCall) {
+          return enc(IBridgehub, 'baseToken', [_defaultBase]); // << distinct base token
+        }
+        throw new Error(`no mapping for ${k}`);
+      }
       return out;
     },
     async estimateGas(_tx: any) {
@@ -122,7 +137,7 @@ export function makeClient({
     l2NativeTokenVault: '0xf100000000000000000000000000000000000000',
     l2BaseTokenSystem: '0xf200000000000000000000000000000000000000',
   },
-  baseToken = async (_chainId: bigint) => ADDR.token as `0x${string}`,
+  baseToken = async (_chainId: bigint) => ADDR.baseToken as `0x${string}`,
 }: any) {
   return {
     kind: 'ethers',

@@ -17,8 +17,9 @@ import { toZKsyncError } from '../../errors/error-ops';
 import { createError } from '../../../../core/errors/factory';
 import { isReceiptNotFound } from '../../../../core/types/errors';
 import type { WithdrawRouteStrategy, TransactionReceiptZKsyncOS } from './routes/types';
-import { routeEth } from './routes/eth';
-import { routeErc20 } from './routes/erc20';
+import { routeEthBase } from './routes/eth';
+import { routeErc20NonBase } from './routes/erc20-nonbase';
+import { routeEthNonBase } from './routes/eth-nonbase';
 import { createFinalizationServices, type FinalizationServices } from './services/finalization';
 import { createErrorHandlers } from '../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../core/types/errors';
@@ -27,10 +28,10 @@ import type { ReceiptWithL2ToL1 } from '../../../../core/rpc/types';
 // --------------------
 // Withdrawal Route map
 // --------------------
-// WithdrawalRoute = 'eth' | 'erc20';
-const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
-  eth: routeEth(),
-  erc20: routeErc20(),
+export const ROUTES: Record<WithdrawRoute, WithdrawRouteStrategy> = {
+  'eth-base': routeEthBase(), // BaseTokenSystem.withdraw, chain base = ETH
+  'eth-nonbase': routeEthNonBase(), // BaseTokenSystem.withdraw, chain base ≠ ETH
+  'erc20-nonbase': routeErc20NonBase(), // AssetRouter.withdraw for non-base ERC-20s
 };
 
 export interface WithdrawalsResource {

@@ -1,4 +1,5 @@
-// src/adapters/ethers/resources/withdrawals/routes/erc20.ts
+// src/adapters/ethers/resources/withdrawals/routes/erc20-nonbase.ts
+
 import { AbiCoder, Contract, type TransactionRequest } from 'ethers';
 import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
@@ -21,7 +22,7 @@ const SIG = {
 } as const;
 
 // Route for withdrawing ERC-20 via L2-L1
-export function routeErc20(): WithdrawRouteStrategy {
+export function routeErc20NonBase(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
@@ -101,16 +102,6 @@ export function routeErc20(): WithdrawRouteStrategy {
           message: 'Failed to encode withdraw calldata.',
         },
       );
-
-      // const dataWithdraw = await wrapAs(
-      //   'INTERNAL',
-      //   OP_WITHDRAWALS.erc20.encodeWithdraw,
-      //   () => Promise.resolve(l2arIface.encodeFunctionData(SIG.withdraw, [assetId, assetData])),
-      //   {
-      //     ctx: { where: 'L2AssetRouter.withdraw', assetId },
-      //     message: 'Failed to encode withdraw calldata.',
-      //   },
-      // );
 
       const withdrawTx: TransactionRequest = {
         to: ctx.l2AssetRouter,
