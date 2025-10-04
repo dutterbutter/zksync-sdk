@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.6-alpha...v0.0.7-alpha) (2025-10-04)
+
+
+### Features
+
+* add custom base token support ([#39](https://github.com/dutterbutter/zksync-sdk/issues/39)) ([a1bab03](https://github.com/dutterbutter/zksync-sdk/commit/a1bab034e6d133c74c43422533d5780165608e3f))
+
 ## [0.0.6-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.5-alpha...v0.0.6-alpha) (2025-10-01)
 
 
