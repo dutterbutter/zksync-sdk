@@ -1,0 +1,123 @@
+---
+title: Welcome
+description: Learn what the `@zksync-sdk` is and how it simplifies ZKsync cross-chain flows for viem and ethers.
+---
+
+# Introduction
+
+The **`@zksync-sdk`** is a lightweight extension for [`viem`](https://viem.sh) and [`ethers`](https://docs.ethers.io/) that makes ZKsync cross-chain actions simple and consistent.
+
+Instead of re-implementing accounts or low-level RPC logic, this SDK focuses only on **ZKsync-specific flows**:
+
+- Deposits (L1 → L2)
+- Withdrawals (L2 → L1, including finalization)
+- Try variants for functional error handling (e.g. )
+- Status & wait helpers
+- ZKsync-specific JSON-RPC methods
+
+<Info>
+The SDK doesn’t replace your existing Ethereum libraries — it **extends** them with ZKsync-only capabilities while keeping your current tooling intact.
+</Info>
+
+### Key Supported Features
+
+- **Deposits (L1 → L2)** — ETH, Custom Base Token and ERC-20  
+  - **Initiate on L1:** build and send the deposit transaction from Ethereum.  
+  - **Track progress:** query intermediate states (queued, included, executed).  
+  - **Verify completion on L2:** confirm funds credited/available on ZKsync.
+
+- **Withdrawals (L2 → L1)** — ETH, Custom Base Token and ERC-20  
+  - **Initiate on L2:** create the withdrawal transaction on ZKsync.  
+  - **Track progress:** monitor execution and finalization availability.  
+  - **Finalize on L1:** finalize withdrawal to release funds back to Ethereum.
+
+- **ZKsync RPC Enhancements**  
+  - **`getBridgehubAddress`** (`zks_getBridgehubContract`) – resolve the canonical Bridgehub contract address.  
+  - **`getL2ToL1LogProof`** (`zks_getL2ToL1LogProof`) – retrieve the log proof for an L2 → L1 transaction.  
+  - **`getReceiptWithL2ToL1`** *(receipt extension)* – returns a standard Ethereum `TransactionReceipt` **augmented** with `l2ToL1Logs`.
+
+## What you’ll find here
+
+- [**What this SDK does**](./what-it-does) — the purpose, scope, and non-goals.
+- [**Mental model**](./mental-model) — how to think about the core methods (`quote → prepare → create → status → wait → finalize`).
+- [**Adapters (viem & ethers)**](./adapters) — how the SDK integrates with your existing stack.
+
+## Quick Example
+
+Here's how a simple deposit looks like using both **`viem`** and **`ethers`** adapters:
+
+<CodeGroup>
+```ts viem.ts
+import { createPublicClient, http, createWalletClient, parseEther } from "viem";
+import { createViemSdk, createViemClient } from "@dutterbutter/zksync-sdk/viem";
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const l1 = createPublicClient({ transport: http(L1_RPC) });
+const l2 = createPublicClient({ transport: http(L2_RPC) });
+
+const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+    account,
+    transport: http(L1_RPC),
+  });
+
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
+
+const me = account.address as Address;
+const params = {
+  amount: parseEther('0.01'),
+  token: ETH_ADDRESS,
+  to: me,
+  // optional:
+  // l2GasLimit: 300_000n,
+  // gasPerPubdata: 800n,
+  // operatorTip: 0n,
+  // refundRecipient: me,
+} as const;
+
+const handle = await sdk.deposits.create({ params });
+await sdk.deposits.wait(handle, { for: 'l1' }); // L1 included
+await sdk.deposits.wait(handle, { for: 'l2' }); // L2 executed
+
+console.log('Deposit complete ✅');
+```
+
+```ts ethers.ts
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const L1_RPC = new JsonRpcProvider('https://sepolia.infura.io/v3/...');
+const L2_RPC = new JsonRpcProvider('https://zksync-testnet.rpc');
+const signer = new Wallet(process.env.PRIVATE_KEY!, L1_RPC);
+
+const client = await createEthersClient({ l1Provider: L1_RPC, l2Provider: L2_RPC, signer });
+const sdk = createEthersSdk(client);
+
+const params = {
+  amount: parseEther('0.01'),
+  token: ETH_ADDRESS,
+  to: signer.address,
+  // optional:
+  // l2GasLimit: 300_000n,
+  // gasPerPubdata: 800n,
+  // operatorTip: 0n,
+  // refundRecipient: me,
+} as const;
+
+const handle = await sdk.deposits.create({ params });
+await sdk.deposits.wait(handle, { for: 'l1' }); // L1 included
+await sdk.deposits.wait(handle, { for: 'l2' }); // L2 executed
+
+console.log('Deposit complete ✅');
+```
+</CodeGroup>
+
+## Next steps
+
+👉 Ready to build? Jump to the [Quickstart](../quickstart/index).
+
+<FooterLinks
+previous={null}
+next={{ title: "What this SDK does", href: "./what-it-does" }}
+/>

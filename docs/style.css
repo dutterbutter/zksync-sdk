@@ -1,0 +1,67 @@
+/* ===== Hero (Bridge-style) ===== */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 120px 16px 96px;
+  margin: -24px -24px 0;        /* stretch to page edges if your theme pads content */
+}
+
+/* Dot grid + soft gradient (light) */
+.hero {
+  background:
+    radial-gradient(rgba(19,213,211,0.28) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    linear-gradient(180deg, rgba(19,213,211,0.14), rgba(19,213,211,0) 60%);
+}
+
+/* Dark mode variant */
+:root.dark .hero,
+.dark .hero {
+  background:
+    radial-gradient(rgba(23,85,244,0.28) 1px, transparent 1.2px) 0 0 / 16px 16px,
+    linear-gradient(180deg, rgba(23,85,244,0.18), rgba(23,85,244,0) 60%);
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+  font-weight: 800;
+}
+
+.hero-subtitle {
+  max-width: 880px;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  line-height: 1.65;
+  opacity: 0.9;
+  margin: 0 0 32px;
+}
+
+/* CTA button; uses your palette (fallbacks included) */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #ffffff;
+  background: var(--color-primary, #1755F4);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.hero-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  background: var(--color-primary-dark, #0C18EC);
+}
+
+/* optional: larger hero on wide screens */
+@media (min-width: 1024px) {
+  .hero { padding: 140px 16px 110px; }
+}

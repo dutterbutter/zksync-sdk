@@ -1,0 +1,118 @@
+---
+title: Viem Deposits
+description: Get your first ETH deposit from Ethereum to ZKsync using the viem adapter of @zksync-sdk.
+---
+
+# Quickstart (viem): ETH Deposit (L1 → L2)
+
+This guide walks you through sending your first **ETH deposit** from Ethereum (L1) to ZKsync (L2) using the **viem** adapter.
+
+## 1. Prerequisites
+
+- [Bun](https://bun.sh/) installed  
+- A funded **L1 wallet** with ETH for both the deposit amount and L1 gas fees
+
+<Info>
+Use a test network like **Sepolia** for experimentation.
+</Info>
+
+## 2. Install dependencies
+
+```bash bun
+bun install @dutterbutter/zksync-sdk viem dotenv
+```
+
+Create a `.env` file in your project root:
+
+```env
+# Your funded L1 private key (0x + 64 hex)
+PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
+
+# RPC endpoints
+L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_ID
+L2_RPC_URL=ZKSYNC-OS-TESTNET-RPC
+```
+
+<Warning>
+Never commit your `.env` file to source control.
+</Warning>
+
+## 3. Write the deposit script
+
+Save as **`deposit-viem.ts`**:
+
+```ts
+import 'dotenv/config';
+import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const L1_RPC_URL = process.env.L1_RPC_URL;
+const L2_RPC_URL = process.env.L2_RPC_URL;
+
+async function main() {
+  if (!PRIVATE_KEY || !L1_RPC_URL || !L2_RPC_URL) {
+    throw new Error('Please set PRIVATE_KEY, L1_RPC_URL, and L2_RPC_URL in your .env file');
+  }
+
+  // 1. Set up clients
+  const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+  const l1 = createPublicClient({ transport: http(L1_RPC_URL) });
+  const l2 = createPublicClient({ transport: http(L2_RPC_URL) });
+  const l1Wallet = createWalletClient({ account, transport: http(L1_RPC_URL) });
+
+  // 2. Initialize the SDK
+  const client = createViemClient({ l1, l2, l1Wallet });
+  const sdk = createViemSdk(client);
+
+  console.log('Wallet balances:');
+  console.log('  L1:', await l1.getBalance({ address: account.address }));
+  console.log('  L2:', await l2.getBalance({ address: account.address }));
+
+  // 3. Perform the deposit
+  console.log('Sending deposit transaction...');
+  const depositHandle = await sdk.deposits.create({
+    token: ETH_ADDRESS,
+    amount: parseEther('0.001'),
+    to: account.address,
+  });
+
+  console.log(`L1 transaction hash: ${depositHandle.l1TxHash}`);
+
+  console.log('Waiting for confirmation on L1...');
+  const l1Receipt = await sdk.deposits.wait(depositHandle, { for: 'l1' });
+  console.log(`✔️ Confirmed on L1 at block ${l1Receipt?.blockNumber}`);
+
+  console.log('Waiting for execution on L2...');
+  const l2Receipt = await sdk.deposits.wait(depositHandle, { for: 'l2' });
+  console.log(`✔️ Executed on L2 at block ${l2Receipt?.blockNumber}`);
+
+  console.log('Deposit complete ✅');
+
+  console.log('Updated balances:');
+  console.log('  L1:', await l1.getBalance({ address: account.address }));
+  console.log('  L2:', await l2.getBalance({ address: account.address }));
+}
+
+main().catch((err) => {
+  console.error('An error occurred:', err);
+  process.exit(1);
+});
+```
+
+## 4. Run it
+
+```bash bun
+bun run deposit-viem.ts
+```
+
+You’ll see logs for the L1 transaction, then L2 execution, followed by updated balances.
+
+## 5. Troubleshooting 
+
+- **Insufficient funds on L1:** Ensure enough ETH for the deposit **and** L1 gas. - **Invalid PRIVATE_KEY:** Must be 0x + 64 hex chars.
+- **Invalid PRIVATE_KEY:** Must be 0x + 64 hex chars.
+- **Stuck at wait(..., `{ for: 'l2' }`):** Verify L2_RPC_URL and network health; check sdk.deposits.status(handle) to see the current phase.
+- **ERC-20 deposits:** Make sure you have an L1 token deployed and a sufficient balance.

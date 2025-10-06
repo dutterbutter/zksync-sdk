@@ -1,87 +1,102 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "theme": "palm",
+  "name": "ZKsyncOS SDK",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#1755F4",
+    "light": "#13D5D3",
+    "dark": "#0C18EC"
   },
   "favicon": "/favicon.svg",
-  "navigation": {
+"navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Home",
+        "icon": "house",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Overview",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "index"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Getting Started",
+        "icon": "play",
+        "groups": [
+        {
+          "group": "Overview",
+          "pages": [
+            "overview/index",
+            "overview/mental-model",
+            "overview/adapters"
+          ]
+        },
+        {
+          "group": "Quickstart",
+          "pages": [
+            "quickstart/index",
+            "quickstart/viem",
+            "quickstart/ethers"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "guides/index",
+            "guides/deposits/viem",
+            "guides/deposits/ethers",
+            "guides/withdrawals/viem",
+            "guides/withdrawals/ethers"
+          ]
+        },
+        {
+          "group": "Concepts",
+          "pages": [
+            "concepts/index",
+            "concepts/status-vs-wait",
+            "concepts/finalization"
+          ]
+        }
+      ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "code",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Core",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/core/client",
+              "api-reference/core/types",
+              "api-reference/core/errors"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Adapters",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/adapters/ethers",
+              "api-reference/adapters/viem"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "icon": "calendar",
+        "groups": [
+          {
+            "group": "Releases",
+            "pages": [
+              "changelog"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -114,9 +129,9 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/zksync",
+      "github": "https://github.com/dutterbutter/zksync-sdk",
+      "linkedin": "https://linkedin.com/company/matter-labs"
     }
   }
 }

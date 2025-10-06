@@ -1,97 +1,54 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Custom page title"
+mode: "center"
 ---
 
-## Setting up
+<div className="hero">
+  <h1>Build with @zksync-sdk.</h1>
+  <p className="hero-subtitle">
+    Extend <strong>viem</strong> and <strong>ethers</strong> with ZKsync-specific flows — deposits,
+    withdrawals, and status/wait helpers — at the speed and scale of the Elastic Network.
+  </p>
+  <a className="hero-cta" href="./quickstart/index">Get started →</a>
+</div>
 
-Get your documentation site up and running in minutes.
+---
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+## Quickstart guides
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<Columns cols={3}>
+  <Card title="Deposit ETH (L1 → L2)" icon="arrow-down-tray" href="./guides/deposits/viem">
+    Send ETH from Ethereum to ZKsync, then track inclusion on L1 and execution on L2.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Withdraw (L2 → L1)" icon="arrow-up-tray" href="./guides/withdrawals/viem">
+    Create the withdrawal on ZKsync, monitor execution, and finalize back on Ethereum.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Quickstart (viem)" icon="code" href="./quickstart/viem">
+    Install the viem adapter, connect clients, and run your first deposit.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Quickstart (ethers)" icon="code-2" href="./quickstart/ethers">
+    Use an ethers v6 signer to perform a deposit and wait for finality.
+  </Card>
+  <Card title="Status & Wait helpers" icon="clock" href="./concepts/status-vs-wait">
+    Understand statuses vs waits and how to poll each phase of a flow.
+  </Card>
+  <Card title="ZKsync RPC helpers" icon="terminal" href="./overview/adapters">
+    Utilities like <code>getBridgehubAddress</code>, <code>getL2ToL1LogProof</code>, and enhanced receipts.
   </Card>
 </Columns>
 
-## Create beautiful pages
+---
 
-Everything you need to create world-class documentation.
+## Resources
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<Columns cols={3}>
+  <Card title="API Reference" icon="book-open" href="./api-reference/introduction">
+    Fully typed clients, methods, and errors for core and adapters.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Changelog" icon="calendar" href="./changelog">
+    See what’s new, fixed, and changed across releases.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="Support" icon="life-buoy" href="mailto:hi@mintlify.com">
+    Questions or issues? Reach out and we’ll help you integrate quickly.
   </Card>
 </Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>

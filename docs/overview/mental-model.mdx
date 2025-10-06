@@ -1,0 +1,153 @@
+---
+title: Mental model
+description: Understand the predictable lifecycle (`quote → prepare → create → status → wait → finalize`) that powers every L1–L2 and L2–L1 action in the SDK.
+---
+
+# Mental Model
+
+The SDK is designed around a **predictable, layered API** for handling L1 → L2 and L2 → L1 operations.  
+Every action — whether a deposit or a withdrawal — follows a consistent lifecycle.  
+Understanding this lifecycle is key to using the SDK effectively.
+
+```bash
+quote → prepare → create → status → wait → (finalize*)
+````
+
+* The first five steps are common to both **Deposits** and **Withdrawals**.
+* Withdrawals require an additional **`finalize`** step to prove and claim funds on L1.
+
+<Info>
+You can enter this lifecycle at **different stages** depending on how much control you need.
+</Info>
+
+## The Core API: A Layered Approach
+
+The core methods give you **progressively more automation**.
+Start by just gathering info (`quote`), move to building transactions yourself (`prepare`), or execute the entire flow with a single call (`create`).
+
+### `quote(params)`
+
+> *"What will this operation involve and cost?"*
+
+* **Read-only dry run**: performs no transactions and has no side effects.
+* Returns a `Quote` object with estimated fees, gas costs, and the planned steps.
+
+<Hint>
+Best for **displaying a confirmation screen** or cost estimate to a user before committing.
+</Hint>
+
+### `prepare(params)`
+
+> *"Build the transactions for me, but let me send them."*
+
+* Constructs all necessary transactions as an array of `TransactionRequest` objects inside a `Plan`.
+* Does **not** sign or send them.
+
+<Hint>
+Best for **custom workflows** (e.g., multisigs or when you want to review the raw tx data before signing).
+</Hint>
+
+### `create(params)`
+
+> *"Prepare, sign, and send in one go."*
+
+* Calls `prepare` internally, then signs & dispatches the txs using your configured signer.
+* Returns a `Handle` — a lightweight tracker for later `status` or `wait`.
+
+<Hint>
+Best for **standard use cases** where you just want to kick off a deposit or withdrawal.
+</Hint>
+
+### `status(handle | txHash)`
+
+> *"Where is my transaction right now?"*
+
+* Non-blocking: returns the **current state** of an operation.
+* Works with a `Handle` or raw transaction hash.
+
+Example return values:
+
+```ts
+// Deposits
+{ phase: 'L1_PENDING' | 'L2_EXECUTED' }
+
+// Withdrawals
+{ phase: 'L1_INCLUDED' | 'L2_PENDING' | 'READY_TO_FINALIZE' | 'FINALIZED' }
+```
+
+<Hint>
+Best for **polling in a UI** to show live progress without blocking.
+</Hint>
+
+### `wait(handle, { for })`
+
+> *"Pause until a specific checkpoint is reached."*
+
+* Blocking async method: polls until the desired checkpoint, then resolves with the tx receipt.
+
+Common checkpoints:
+
+* **Deposits:** `'l1'` (included on L1) or `'l2'` (executed on L2).
+* **Withdrawals:** `'l2'` (included), `'ready'` (ready to finalize), `'finalized'` (L1 finalization done).
+
+<Hint>
+Best for **scripts or backends** that need to ensure one step is complete before the next.
+</Hint>
+
+### `finalize(l2TxHash)` *(Withdrawals Only)*
+
+> *"My funds are ready on L1. Finalize and release them."*
+
+* Executes the **final step** of a withdrawal after `status` reports `READY_TO_FINALIZE`.
+
+<Hint>
+Best for **claiming funds back to Ethereum** once the withdrawal is ready.
+</Hint>
+
+## Error Handling: The `try*` Philosophy
+
+For functional-style error handling (no `try/catch`), every core method has a **`try*` variant** (`tryQuote`, `tryCreate`, etc.).
+
+```ts
+// Imperative style
+try {
+  const handle = await sdk.withdrawals.create(params);
+  // happy path
+} catch (error) {
+  // sad path
+}
+
+// Functional style
+const result = await sdk.withdrawals.tryCreate(params);
+
+if (result.ok) {
+  const handle = result.value;
+} else {
+  console.error('Withdrawal failed:', result.error);
+}
+```
+
+<Hint>
+Best for **applications that want explicit, predictable error handling** and to avoid uncaught exceptions.
+</Hint>
+
+## Putting It All Together
+
+You can compose flows as simple or complex as needed.
+
+### Simple Flow
+
+```ts
+// 1. Create the deposit
+const depositHandle = await sdk.deposits.create(params);
+
+// 2. Wait for it to be finalized on L2
+const receipt = await sdk.deposits.wait(depositHandle, { for: 'l2' });
+
+console.log('Deposit complete!');
+```
+
+<FooterLinks
+previous={{ title: "What this SDK Does", href: "./what-it-does" }}
+next={{ title: "Adapters (viem & ethers)", href: "./adapters" }}
+/>
