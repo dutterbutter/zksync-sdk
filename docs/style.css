@@ -1,3 +1,6 @@
+/* Prevent sideways scroll caused by full-bleed sections */
+html, body { overflow-x: hidden; }
+
 /* ===== Hero (Bridge-style) ===== */
 .hero {
   position: relative;
@@ -5,30 +8,40 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 18px;
   padding: 120px 16px 96px;
-  margin: -24px -24px 0;        /* stretch to page edges if your theme pads content */
+  min-height: 68vh;                /* nice tall hero */
 }
 
-/* Dot grid + soft gradient (light) */
-.hero {
+/* Make ONLY the hero full-bleed (no negative margins) */
+.hero--bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+:root.light .hero--bleed { border-bottom-color: rgba(0,0,0,.06); }
+
+/* Dot grid + soft gradient */
+.hero--bleed {
   background:
     radial-gradient(rgba(19,213,211,0.28) 1px, transparent 1.2px) 0 0 / 16px 16px,
     linear-gradient(180deg, rgba(19,213,211,0.14), rgba(19,213,211,0) 60%);
 }
-
-/* Dark mode variant */
-:root.dark .hero,
-.dark .hero {
+/* Dark mode */
+:root.dark .hero--bleed,
+.dark .hero--bleed {
   background:
     radial-gradient(rgba(23,85,244,0.28) 1px, transparent 1.2px) 0 0 / 16px 16px,
     linear-gradient(180deg, rgba(23,85,244,0.18), rgba(23,85,244,0) 60%);
 }
 
 .hero h1 {
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  line-height: 1.1;
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  line-height: 1.08;
   letter-spacing: -0.02em;
-  margin: 0 0 16px;
+  margin: 0;
   font-weight: 800;
 }
 
@@ -37,10 +50,10 @@
   font-size: clamp(1.05rem, 2vw, 1.25rem);
   line-height: 1.65;
   opacity: 0.9;
-  margin: 0 0 32px;
+  margin: 4px 0 8px;
 }
 
-/* CTA button; uses your palette (fallbacks included) */
+/* CTA button; uses docs.json colors if present */
 .hero-cta {
   display: inline-flex;
   align-items: center;
@@ -50,7 +63,7 @@
   border-radius: 12px;
   font-weight: 600;
   text-decoration: none;
-  color: #ffffff;
+  color: #fff;
   background: var(--color-primary, #1755F4);
   box-shadow: 0 6px 16px rgba(0,0,0,0.08);
   transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease;
@@ -61,7 +74,23 @@
   background: var(--color-primary-dark, #0C18EC);
 }
 
-/* optional: larger hero on wide screens */
+/* ===== Landing page content container (for custom mode) ===== */
+.lp-container {
+  max-width: 1200px;               /* 1040–1280px all fine */
+  margin: 0 auto;
+  padding: 40px 24px 56px;
+}
+
+.lp-container > h2 {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+/* If an <hr> appears after the hero, hide it */
+.hero--bleed + hr { display: none; }
+
+/* Optional: a bit taller hero on widescreens */
 @media (min-width: 1024px) {
   .hero { padding: 140px 16px 110px; }
 }

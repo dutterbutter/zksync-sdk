@@ -1,9 +1,10 @@
 ---
-title: "Custom page title"
-mode: "center"
+title: ZKsyncOS SDK
+description: Lightweight adapters for viem and ethers to build ZKsync L1↔L2 flows fast.
+mode: "custom"
 ---
 
-<div className="hero">
+<div className="hero hero--bleed">
   <h1>Build with @zksync-sdk.</h1>
   <p className="hero-subtitle">
     Extend <strong>viem</strong> and <strong>ethers</strong> with ZKsync-specific flows — deposits,
@@ -12,43 +13,41 @@ mode: "center"
   <a className="hero-cta" href="./quickstart/index">Get started →</a>
 </div>
 
----
+<section className="lp-container">
+  <h2>Quickstart guides</h2>
+  <Columns cols={3}>
+    <Card title="Deposit ETH (L1 → L2)" icon="arrow-down-tray" href="./guides/deposits/viem">
+      Send ETH from Ethereum to ZKsync, then track inclusion on L1 and execution on L2.
+    </Card>
+    <Card title="Withdraw (L2 → L1)" icon="arrow-up-tray" href="./guides/withdrawals/viem">
+      Create the withdrawal on ZKsync, monitor execution, and finalize back on Ethereum.
+    </Card>
+    <Card title="Quickstart (viem)" icon="code" href="./quickstart/viem">
+      Install the viem adapter, connect clients, and run your first deposit.
+    </Card>
+    <Card title="Quickstart (ethers)" icon="code-2" href="./quickstart/ethers">
+      Use an ethers v6 signer to perform a deposit and wait for finality.
+    </Card>
+    <Card title="Status & Wait helpers" icon="clock" href="./concepts/status-vs-wait">
+      Understand statuses vs waits and how to poll each phase of a flow.
+    </Card>
+    <Card title="ZKsync RPC helpers" icon="terminal" href="./overview/adapters">
+      Utilities like <code>getBridgehubAddress</code>, <code>getL2ToL1LogProof</code>, and enhanced receipts.
+    </Card>
+  </Columns>
+</section>
 
-## Quickstart guides
-
-<Columns cols={3}>
-  <Card title="Deposit ETH (L1 → L2)" icon="arrow-down-tray" href="./guides/deposits/viem">
-    Send ETH from Ethereum to ZKsync, then track inclusion on L1 and execution on L2.
-  </Card>
-  <Card title="Withdraw (L2 → L1)" icon="arrow-up-tray" href="./guides/withdrawals/viem">
-    Create the withdrawal on ZKsync, monitor execution, and finalize back on Ethereum.
-  </Card>
-  <Card title="Quickstart (viem)" icon="code" href="./quickstart/viem">
-    Install the viem adapter, connect clients, and run your first deposit.
-  </Card>
-  <Card title="Quickstart (ethers)" icon="code-2" href="./quickstart/ethers">
-    Use an ethers v6 signer to perform a deposit and wait for finality.
-  </Card>
-  <Card title="Status & Wait helpers" icon="clock" href="./concepts/status-vs-wait">
-    Understand statuses vs waits and how to poll each phase of a flow.
-  </Card>
-  <Card title="ZKsync RPC helpers" icon="terminal" href="./overview/adapters">
-    Utilities like <code>getBridgehubAddress</code>, <code>getL2ToL1LogProof</code>, and enhanced receipts.
-  </Card>
-</Columns>
-
----
-
-## Resources
-
-<Columns cols={3}>
-  <Card title="API Reference" icon="book-open" href="./api-reference/introduction">
-    Fully typed clients, methods, and errors for core and adapters.
-  </Card>
-  <Card title="Changelog" icon="calendar" href="./changelog">
-    See what’s new, fixed, and changed across releases.
-  </Card>
-  <Card title="Support" icon="life-buoy" href="mailto:hi@mintlify.com">
-    Questions or issues? Reach out and we’ll help you integrate quickly.
-  </Card>
-</Columns>
+<section className="lp-container">
+  <h2>Resources</h2>
+  <Columns cols={3}>
+    <Card title="API Reference" icon="book-open" href="./api-reference/introduction">
+      Fully typed clients, methods, and errors for core and adapters.
+    </Card>
+    <Card title="Changelog" icon="calendar" href="./changelog">
+      See what’s new, fixed, and changed across releases.
+    </Card>
+    <Card title="Support" icon="life-buoy" href="mailto:hi@mintlify.com">
+      Questions or issues? Reach out and we’ll help you integrate quickly.
+    </Card>
+  </Columns>
+</section>
