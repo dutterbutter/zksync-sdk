@@ -8,7 +8,7 @@ import {
   type Chain,
   type Transport,
 } from 'viem';
-import { privateKeyToAccount, nonceManager } from 'viem/accounts';
+import { privateKeyToAccount } from 'viem/accounts';
 
 import { createViemSdk, createViemClient } from '@dutterbutter/zksync-sdk/viem';
 import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';

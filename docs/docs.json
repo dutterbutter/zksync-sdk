@@ -31,15 +31,17 @@
           "pages": [
             "overview/index",
             "overview/mental-model",
-            "overview/adapters"
+            "overview/adapters",
+            "overview/status-vs-wait",
+            "overview/finalization"
           ]
         },
         {
           "group": "Quickstart",
           "pages": [
             "quickstart/index",
-            "quickstart/viem",
-            "quickstart/ethers"
+            "quickstart/deposits",
+            "quickstart/withdrawals"
           ]
         },
        {
@@ -49,15 +51,7 @@
           "guides/withdrawals",
           "guides/finalization"
         ]
-       },
-        {
-          "group": "Concepts",
-          "pages": [
-            "concepts/index",
-            "concepts/status-vs-wait",
-            "concepts/finalization"
-          ]
-        }
+       }
       ]
       },
       {
@@ -104,7 +98,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "https://github.com/zkSync-Community-Hub/zksync-developers/discussions/categories/sdks"
       }
     ],
     "primary": {
