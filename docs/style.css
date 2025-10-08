@@ -1,315 +1,255 @@
-/* Prevent sideways scroll caused by full-bleed sections */
+/* =========================
+   Base / Tokens / Resets
+   ========================= */
 html, body { overflow-x: hidden; }
 
-/* ==== Brand tokens ==== */
 :root{
-  --zk-blue:  #1755F4;  /* primary blue */
-  --zk-royal: #0C18EC;  /* deep blue */
-  --zk-teal:  #13D5D3;  /* accent dots */
-  --zk-lime:  #BFF351;  /* lime accent */
-  --zk-black: #000000;
-  --zk-white: #FFFFFF;
-}
+  /* Brand */
+  --zk-blue:  #1755F4;
+  --zk-royal: #0C18EC;
+  --zk-teal:  #13D5D3;
+  --zk-lime:  #BFF351;
 
-/* ===== Hero (full-bleed, stacked) ===== */
-.hero {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding: 120px 16px 96px;
-  min-height: 68vh;
-  text-align: center;
-}
+  /* UI neutrals */
+  --white:  #FFFFFF;
+  --surface:#FFFFFF;
+  --ink-0:  #05060A;   /* dark bg */
+  --ink-1:  #0b1226;   /* heading */
+  --ink-2:  #334155;   /* body */
+  --line:   rgba(2,6,23,.10);
 
-.hero--bleed {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  border-radius: 0;
-  border-bottom: 1px solid rgba(191,243,81,0.14);
-}
-
-/* Backgrounds */
-.hero--bleed {
-  background:
-    radial-gradient(rgba(19,213,211,0.18) 1px, transparent 1.2px) 0 0 / 16px 16px,
-    linear-gradient(180deg, rgba(23,85,244,0.12), rgba(23,85,244,0) 60%),
-    var(--zk-white);
-}
-:root.dark .hero--bleed, .dark .hero--bleed {
-  border-bottom-color: rgba(191,243,81,0.18);
-  background:
-    radial-gradient(rgba(19,213,211,0.20) 1px, transparent 1.2px) 0 0 / 16px 16px,
-    linear-gradient(180deg, rgba(12,24,236,0.55) 0%, rgba(12,24,236,0.25) 35%, transparent 70%),
-    var(--zk-black);
-}
-
-/* --- stacked layout container --- */
-.hero--stack .hero-inner{
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-}
-
-/* Pill tag (eyebrow) */
-.pill-tag{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--zk-white);
-  border: 1px solid rgba(191,243,81,0.65);              /* lime border */
-  background: color-mix(in srgb, var(--zk-royal) 22%, transparent);
-  backdrop-filter: blur(2px);
-}
-:root.light .pill-tag{
-  color: #0b1226;
-  background: color-mix(in srgb, var(--zk-blue) 12%, transparent);
-  border-color: rgba(191,243,81,0.55);
-}
-.pill-icon{ font-size: 1rem; line-height: 1; }
-
-/* Type scale */
-.hero h1 {
-  font-size: clamp(2.6rem, 6vw, 4.5rem);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  margin: 0;
-  font-weight: 800;
-}
-.hero-subtitle {
-  max-width: 880px;
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
-  line-height: 1.65;
-  opacity: 0.9;
-  margin: 4px 0 8px;
-}
-
-/* Dev install card — single bordered, rounded */
-.dev-card{
-  width: 100%;
-  max-width: 720px;
-  border-radius: 16px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background:
-    linear-gradient(135deg, rgba(23,85,244,0.18), rgba(12,24,236,0.12));
-}
-:root.light .dev-card{
-  border-color: rgba(0,0,0,0.10);
-  background:
-    linear-gradient(135deg, rgba(23,85,244,0.06), rgba(12,24,236,0.04), rgba(0,0,0,0));
-}
-.dev-label{
-  font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.85;
-  margin: 2px 0 8px;
-}
-.dev-card pre{ margin: 0 !important; } /* snug code block */
-
-/* CTA group */
-.hero-actions{
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 6px;
-}
-.hero-cta{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 22px;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  color: #fff;
-  background: var(--color-primary, var(--zk-blue));
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
-}
-.hero-cta:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-  background: var(--color-primary-dark, var(--zk-royal));
-}
-.hero-cta.ghost{
-  background: transparent;
-  color: var(--zk-white);
-  border: 1px solid rgba(255,255,255,0.28);
-  box-shadow: none;
-}
-:root.light .hero-cta.ghost{
-  color: #0b1226;
-  border-color: rgba(0,0,0,0.22);
-}
-.hero-cta.ghost:hover{
-  border-color: color-mix(in srgb, var(--zk-lime) 50%, #ffffff);
-}
-
-/* Landing page content container */
-.lp-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 24px 56px;
-}
-.lp-container > h2 {
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
-  font-weight: 600;
-  margin: 0 0 16px;
-}
-
-/* Hide stray hr after hero */
-.hero--bleed + hr { display: none; }
-
-/* Taller hero on widescreens */
-@media (min-width: 1024px){
-  .hero { padding: 140px 16px 110px; }
+  /* CTA teal */
+  --teal-700:#0BA3A1;
+  --teal-600:#0FBEBB;
 }
 
 /* =========================
-   DARK MODE BEAUTIFICATION
+   Hero layout
    ========================= */
+.hero { position: relative; padding: 96px 16px; }
 
-/* Better dark palette tokens */
-:root.dark {
-  --text-1: #E8EDFF;   /* headings */
-  --text-2: #A7B1D6;   /* body/subtitles */
-  --ink-0:  #05060A;   /* deep background */
-  --ring:   rgba(23,85,244,.45);
-  --ring2:  rgba(23,85,244,.22);
+/* “Apple-style” background with subtle dot grid */
+.hero--ai{
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(rgba(23,85,244,.06) 1px, transparent 1.2px) 0 0 / 18px 18px,
+    radial-gradient(1200px 700px at 85% -10%, rgba(12,24,236,.26), transparent 60%),
+    radial-gradient(1100px 600px at 10% 80%,  rgba(19,213,211,.24), transparent 60%),
+    radial-gradient(900px  580px at 30% 20%,  rgba(239,109,242,.20), transparent 60%),
+    radial-gradient(900px  520px at 70% 70%,  rgba(253,64,44,.16),  transparent 60%),
+    radial-gradient(1200px 520px at -10% -20%, rgba(191,243,81,.18), transparent 60%),
+    var(--surface);
 }
 
-/* Hero: richer blue glow, subtler dot grid, gentle bottom vignette */
-:root.dark .hero--bleed,
-.dark .hero--bleed {
+:root.dark .hero--ai{
   border-bottom-color: rgba(23,85,244,.28);
   background:
-    /* subtle teal dot grid */
-    radial-gradient(rgba(19,213,211,.12) 1px, transparent 1.2px) 0 0 / 18px 18px,
-    /* top blue glow */
-    radial-gradient(1200px 600px at 50% -10%, rgba(23,85,244,.55), transparent 60%),
-    /* bottom vignette */
-    radial-gradient(1000px 520px at 50% 100%, rgba(0,0,0,0), rgba(0,0,0,.65)),
+    radial-gradient(rgba(23,85,244,.13) 1px, transparent 1.2px) 0 0 / 18px 18px,
+    radial-gradient(1250px 720px at 62% -10%, rgba(12,24,236,.60), transparent 62%),
+    radial-gradient(1100px 650px at 10% 86%,  rgba(19,213,211,.25), transparent 62%),
+    radial-gradient(900px  600px at 26% 28%,  rgba(239,109,242,.25), transparent 62%),
+    radial-gradient(900px  560px at 76% 72%,  rgba(253,64,44,.18),  transparent 62%),
+    radial-gradient(1100px 540px at -10% -20%, rgba(191,243,81,.16),  transparent 62%),
     var(--ink-0);
 }
 
-/* Type contrast in dark */
-:root.dark .hero h1 { color: var(--text-1); text-shadow: 0 1px 0 rgba(255,255,255,.02); }
-:root.dark .hero-subtitle { color: var(--text-2); opacity: 1; }
+/* Grid + split */
+.hero--split .hero-inner{
+  max-width: 1200px; margin: 0 auto; display: grid;
+  grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; padding: 0 24px;
+}
+.promo-left { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+.promo-right{ display: flex; justify-content: flex-end; }
 
-/* Eyebrow pill */
+/* =========================
+   Pill (eyebrow)
+   ========================= */
+.pill-tag{
+  align-self:flex-start; position:relative;
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 14px; border-radius:999px;
+  font-size:.95rem; font-weight:600; color: var(--ink-1);
+  border:1px solid rgba(191,243,81,.45);
+  background: color-mix(in srgb, var(--zk-blue) 8%, #fff);
+}
+.pill-icon{ font-size:1rem; line-height:1; }
+.pill-tag--ring{
+  border:1px solid transparent;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    conic-gradient(#BFF351, #1755F4, #EF6DF2, #FD402C, #13D5D3, #BFF351) border-box;
+}
 :root.dark .pill-tag{
-  color: #EAF2FF;
-  background: linear-gradient(180deg, rgba(12,24,236,.28), rgba(12,24,236,.12));
-  border-color: rgba(191,243,81,.55);                  /* lime ring */
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.03),
-    0 0 0 6px rgba(12,24,236,.08);                     /* soft aura */
+  color:#F1F5FF;
+  background: linear-gradient(180deg, rgba(12,24,236,.32), rgba(12,24,236,.16));
+  border-color: rgba(191,243,81,.60);
+}
+:root.dark .pill-tag--ring{
+  background:
+    linear-gradient(#0C1322, #0C1322) padding-box,
+    conic-gradient(#BFF351, #1755F4, #EF6DF2, #FD402C, #13D5D3, #BFF351) border-box;
+  border: 1px solid transparent;
 }
 
-/* Install card: single border, no inner pills, gentle blue wash */
-:root.dark .dev-card{
-  background: linear-gradient(180deg, rgba(12,24,236,.16), rgba(5,6,10,.42));
-  border-color: rgba(23,85,244,.35);
-  box-shadow: 0 12px 36px rgba(0,0,0,.6), 0 0 0 1px rgba(5,12,255,.06) inset;
+/* =========================
+   Headline (no gradient text)
+   ========================= */
+.promo-title{
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  line-height: .95;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  margin: 0;
+  max-width: 12ch;
+  color: var(--ink-1);        /* LIGHT default for “in your favorite libraries” */
 }
-:root.dark .dev-label{ color:#AFBEFF; opacity:.9; }
+.promo-title .zk-strong{ color: var(--zk-blue); }  /* LIGHT: “ZKsync power” */
 
-/* Remove the inner code block “second border”/background */
+/* DARK: flip the colors per your spec */
+:root.dark .promo-title{ color: var(--zk-blue); }  /* “in your favorite libraries” */
+:root.dark .promo-title .zk-strong{ color: var(--white); }  /* “ZKsync power” */
+
+/* =========================
+   Subtitle
+   ========================= */
+.hero-subtitle{
+  max-width: 680px;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  line-height: 1.65;
+  margin: 6px 0 4px;
+  color: var(--ink-2);
+}
+:root.dark .hero-subtitle{ color:#A7B1D6; }
+
+/* =========================
+   CTAs
+   ========================= */
+.hero-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; }
+.hero-cta{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:14px 22px; border-radius:12px; font-weight:600; text-decoration:none;
+  color:#fff; background: var(--zk-blue);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
+}
+.hero-cta:hover{ transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+.hero-cta.ghost{ background:#fff; color:var(--ink-1); border:1px solid var(--line); box-shadow:none; }
+.hero-cta.ghost:hover{ background:#f8fafc; border-color: rgba(2,6,23,.14); }
+.hero-cta.teal{
+  background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
+  color:#fff; border:1px solid rgba(19,213,211,.35);
+}
+:root.dark .hero-cta{
+  background: linear-gradient(90deg, #1755F4, #0C18EC);
+  box-shadow: 0 8px 24px rgba(23,85,244,.35);
+}
+
+/* =========================
+   Installer card
+   ========================= */
+.dev-card{
+  width:100%; max-width:520px; border-radius:16px; padding:16px;
+  border:1px solid var(--line);
+  background:#fff;
+  box-shadow: 0 8px 26px rgba(2,6,23,.06);
+}
+.dev-label{ font-size:.9rem; font-weight:600; color:#64748b; margin-bottom:8px; }
+.dev-footnote{ margin-top:10px; font-size:.85rem; color:#94a3b8; }
+
+/* single-border look for code block */
 .dev-card pre,
 .dev-card pre[class*="language-"],
 .dev-card .shiki,
 .dev-card .code-block,
-.dev-card pre code {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+.dev-card pre code{
+  background:transparent !important; border:0 !important; box-shadow:none !important;
 }
-.dev-card pre { margin: 0 !important; padding: 14px 18px !important; border-radius: 10px !important; outline: none !important; }
+.dev-card pre{ margin:0 !important; padding:14px 16px !important; border-radius:10px !important; }
 
-/* Dark code color for command */
-:root.dark .dev-card pre code { color: #DFF2FF; }
+/* optional gradient ring variant */
+.dev-card--gradient{
+  position:relative; border:1px solid transparent; border-radius:16px;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(135deg, #1755F4, #EF6DF2, #FD402C, #13D5D3) border-box;
+  box-shadow: 0 12px 32px rgba(2,6,23,.10);
+}
+:root.dark .dev-card{
+  background: linear-gradient(180deg, rgba(12,24,236,.18), rgba(12,16,28,.30));
+  border-color: rgba(232,237,255,.16);
+  box-shadow: 0 14px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(5,12,255,.06) inset;
+}
+:root.dark .dev-card--gradient{
+  background:
+    linear-gradient(#0C1322, #0C1322) padding-box,
+    linear-gradient(135deg, #1755F4, #EF6DF2, #FD402C, #13D5D3) border-box;
+  border: 1px solid transparent;
+}
+:root.dark .dev-card pre code{ color:#F3FAFF; }
 
-/* Copy button minimal */
-.dev-card [aria-label="Copy code"],
-.dev-card .copy,
-.dev-card button[class*="copy"]{
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  opacity: .9;
-}
+/* =========================
+   Sections & responsive
+   ========================= */
+.lp-container{ max-width:1200px; margin:0 auto; padding:40px 24px 56px; }
+.lp-container > h2{ font-size:clamp(1.25rem, 2vw, 1.5rem); font-weight:600; margin:0 0 16px; }
 
-/* CTAs: saturated gradient primary, crisp ghost */
-:root.dark .hero-cta{
-  background: linear-gradient(90deg, #1755F4, #0C18EC);
-  box-shadow: 0 8px 24px rgba(23,85,244,.35);
-  color: #fff;
+@media (max-width: 960px){
+  .hero--split .hero-inner{ grid-template-columns:1fr; gap:28px; }
+  .promo-right{ justify-content:flex-start; }
 }
-:root.dark .hero-cta:hover{
-  filter: brightness(1.06);
-  transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(23,85,244,.45);
-}
-:root.dark .hero-cta.ghost{
-  background: rgba(255,255,255,.02);
-  color: #E8EDFF;
-  border: 1px solid rgba(232,237,255,.22);
-}
-:root.dark .hero-cta.ghost:hover{
-  border-color: var(--zk-teal);
-  box-shadow: 0 0 0 3px rgba(191,243,81,.12);
-}
-
-/* Teal CTA variant (matches nav link) */
-:root{
-  /* slightly darker teals than #13D5D3 for contrast with white text */
-  --teal-600: #0FBEBB;
-  --teal-700: #0BA3A1;
+@media (min-width: 1280px){
+  .hero--split .hero-inner{ gap:44px; }
+  .promo-right{ transform: translateY(6px); }
+  .dev-card{ max-width:520px; }
 }
 
-/* default + light mode */
+
+/* Base CTA styles (unchanged) */
+.hero-cta{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:14px 22px; border-radius:12px; font-weight:600; text-decoration:none;
+  color:#fff; background: var(--zk-blue);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
+}
+.hero-cta:hover{ transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+
+/* Variants (light) */
 .hero-cta.teal{
   background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
-  color: #FFFFFF;
-  border: 1px solid rgba(19,213,211,.35);
-  box-shadow:
-    0 8px 20px rgba(19,213,211,.25),
-    0 1px 0 rgba(255,255,255,.06) inset;
+  color:#fff; border:1px solid rgba(19,213,211,.35);
 }
-.hero-cta.teal:hover{
-  transform: translateY(-2px);
-  filter: saturate(1.06) brightness(1.03);
-  box-shadow:
-    0 14px 36px rgba(19,213,211,.35),
-    0 1px 0 rgba(255,255,255,.08) inset;
+.hero-cta.ghost{
+  background:#fff; color:var(--ink-1); border:1px solid var(--line); box-shadow:none;
 }
-.hero-cta.teal:focus-visible{
-  outline: none;
-  box-shadow:
-    0 0 0 3px rgba(19,213,211,.35),
-    0 10px 28px rgba(19,213,211,.30);
+.hero-cta.ghost:hover{ background:#f8fafc; border-color: rgba(2,6,23,.14); }
+
+/* ---------- Dark mode overrides ---------- */
+/* Default CTA stays blue unless a variant below overrides it */
+:root.dark .hero-cta{
+  background: linear-gradient(90deg, #1755F4, #0C18EC);
+  color:#fff; box-shadow: 0 8px 24px rgba(23,85,244,.35);
 }
 
-/* dark mode tune: a hair deeper for readability */
-:root.dark .hero-cta.teal,
-.dark .hero-cta.teal{
-  background: linear-gradient(90deg, #0A8887, #0FBEBB);
-  border-color: rgba(19,213,211,.45);
+/* Keep "Get started" teal in dark too */
+:root.dark .hero-cta.teal{
+  background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
+  color:#fff;
+  border:1px solid rgba(19,213,211,.45);
   box-shadow: 0 10px 28px rgba(19,213,211,.32);
 }
-:root.dark .hero-cta.teal:hover,
-.dark .hero-cta.teal:hover{
-  filter: brightness(1.06) saturate(1.08);
-  box-shadow: 0 18px 44px rgba(19,213,211,.42);
+
+/* Make "View on GitHub" white in dark as well */
+:root.dark .hero-cta.ghost{
+  background:#fff;
+  color:#0b1226;
+  border:1px solid rgba(2,6,23,.28);
+  box-shadow:none;
+}
+:root.dark .hero-cta.ghost:hover{
+  background:#f8fafc;
+  border-color: rgba(2,6,23,.40);
 }

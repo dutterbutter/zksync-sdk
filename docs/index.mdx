@@ -4,41 +4,57 @@ description: Lightweight adapters for viem and ethers to build ZKsync L1↔L2 fl
 mode: "custom"
 ---
 
-<div className="hero hero--bleed hero--stack">
-   <div className="hero-inner">
-    <div className="pill-tag">
-      <span className="pill-icon">⚡</span>
-      Next-gen ZK development
+<div className="hero hero--bleed hero--split hero--ai">
+  <div className="hero-inner">
+    {/* LEFT: Promo copy */}
+    <div className="promo-left">
+      <div className="pill-tag pill-tag--ring">
+        <span className="pill-icon">⚡</span>
+        Ready for the Atlas Upgrade
+      </div>
+
+      <h1 className="promo-title">
+        <span className="zk-strong">ZKsync</span>
+        <span className="zk-strong"> power</span><br/>
+        in your favorite<br/>libraries
+      </h1>
+
+      <p className="hero-subtitle">
+        Extend <strong>viem</strong> and <strong>ethers</strong> with optimized L1↔L2 flows:
+        deposits, withdrawals, and clean <code>status</code>/<code>wait</code> helpers—tuned for the
+        Elastic Network and great DX.
+      </p>
+
+      <div className="hero-actions">
+        <a className="hero-cta teal" href="./quickstart/index">Get started</a>
+        <a className="hero-cta ghost" href="https://github.com/dutterbutter/zksync-sdk" target="_blank" rel="noreferrer">
+          View on GitHub
+        </a>
+      </div>
     </div>
 
-    <h1>ZKsync SDK</h1>
-
-    <p className="hero-subtitle">
-      Extend <strong>viem</strong> and <strong>ethers</strong> with ZKsync-specific flows — deposits,
-      withdrawals, and status/wait helpers — at the speed and scale of the Elastic Network.
-    </p>
-
-    <div className="dev-card dev-card--wide">
-    ```bash
-    bun add @dutterbutter/zksync-sdk
-    ```
-    </div> 
-<div className="hero-actions">
-  <a className="hero-cta" href="./quickstart/index">Get started</a>
-  <a className="hero-cta ghost" href="https://github.com/dutterbutter/zksync-sdk" target="_blank" rel="noreferrer">
-    View on GitHub
-  </a>
-</div>
-</div>
+    {/* RIGHT: Installer card */}
+    <div className="promo-right">
+      <div className="dev-card dev-card--gradient">
+        <div className="dev-label">Install with bun</div>
+        ```bash
+        bun add @dutterbutter/zksync-sdk
+        ```
+        <div className="dev-footnote">
+          Prefer npm or pnpm? Try <code>npm i</code> or <code>pnpm add.</code>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <section className="lp-container">
   <h2>Quickstart guides</h2>
   <Columns cols={3}>
-    <Card title="Deposit ETH (L1 → L2)" icon="money-bill-transfer" href="./guides/deposits/viem">
-      Send ETH from Ethereum to ZKsync, then track inclusion on L1 and execution on L2.
+    <Card title="Deposit (L1 → L2)" icon="money-bill-transfer" href="./guides/deposits">
+      Send ETH or ERC-20 from Ethereum to ZKsync, then track L1 inclusion and L2 execution.
     </Card>
-    <Card title="Withdraw (L2 → L1)" icon="money-check-dollar" href="./guides/withdrawals/viem">
+    <Card title="Withdraw (L2 → L1)" icon="money-check-dollar" href="./guides/withdrawals">
       Create the withdrawal on ZKsync, monitor execution, and finalize back on Ethereum.
     </Card>
     <Card title="Quickstart (viem)" icon="code" href="./quickstart/viem">
@@ -50,7 +66,7 @@ mode: "custom"
     <Card title="Status & Wait helpers" icon="clock" href="./concepts/status-vs-wait">
       Understand statuses vs waits and how to poll each phase of a flow.
     </Card>
-    <Card title="ZKsync RPC helpers" icon="terminal" href="./overview/adapters">
+    <Card title="ZKsync RPC helpers" icon="terminal" href="./zks/methods">
       Utilities like <code>getBridgehubAddress</code>, <code>getL2ToL1LogProof</code>, and enhanced receipts.
     </Card>
   </Columns>

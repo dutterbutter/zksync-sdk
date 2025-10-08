@@ -42,16 +42,14 @@
             "quickstart/ethers"
           ]
         },
-        {
-          "group": "Guides",
-          "pages": [
-            "guides/index",
-            "guides/deposits/viem",
-            "guides/deposits/ethers",
-            "guides/withdrawals/viem",
-            "guides/withdrawals/ethers"
-          ]
-        },
+       {
+        "group": "Guides",
+        "pages": [
+          "guides/deposits",
+          "guides/withdrawals",
+          "guides/finalization"
+        ]
+       },
         {
           "group": "Concepts",
           "pages": [
