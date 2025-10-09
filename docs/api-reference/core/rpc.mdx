@@ -84,9 +84,9 @@ type ReceiptWithL2ToL1 = {
 
 ## Usage
 
-### ethers
+<CodeGroup>
 
-```ts
+```ts title="ethers"
 import { JsonRpcProvider, Wallet } from "ethers";
 import { createEthersClient } from "@dutterbutter/zksync-sdk/ethers";
 
@@ -100,9 +100,7 @@ const client = createEthersClient({ l1, l2, signer });
 const bridgehub = await client.zks.getBridgehubAddress();
 ```
 
-### viem
-
-```ts
+```ts title="viem"
 import { createPublicClient, http } from "viem";
 import { createViemClient } from "@dutterbutter/zksync-sdk/viem";
 
@@ -117,3 +115,5 @@ const client = createViemClient({ l1, l2, l1Wallet });
 // Public RPC surface:
 const bridgehub = await client.zks.getBridgehubAddress();
 ```
+
+</CodeGroup>
