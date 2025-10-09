@@ -4,11 +4,23 @@
   "name": "ZKsyncOS SDK",
   "colors": {
     "primary": "#1755F4",
-    "light": "#13D5D3",
+    "light": "#BFF351", 
     "dark": "#0C18EC"
   },
   "favicon": "/favicon.svg",
-"navigation": {
+  "appearance": {
+    "default": "dark"
+  },
+  "styling": { 
+    "eyebrows": "breadcrumbs",
+    "codeblocks": {
+      "theme": {
+      "light": "vitesse-light",
+      "dark": "tokyo-night"
+    }
+  }
+  },
+  "navigation": {
     "tabs": [
       {
         "tab": "Home",
@@ -59,19 +71,27 @@
         "icon": "code",
         "groups": [
           {
-            "group": "Core",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction",
-              "api-reference/core/client",
-              "api-reference/core/types",
-              "api-reference/core/errors"
+              "api-reference/introduction"
             ]
           },
           {
-            "group": "Adapters",
+            "group": "Ethers",
             "pages": [
-              "api-reference/adapters/ethers",
-              "api-reference/adapters/viem"
+              "api-reference/ethers/client",
+              "api-reference/ethers/sdk",
+              "api-reference/ethers/deposits",
+              "api-reference/ethers/withdrawals"              
+            ]
+          },
+          {
+            "group": "Viem",
+            "pages": [
+              "api-reference/viem/client",
+              "api-reference/viem/sdk",
+              "api-reference/viem/deposits",
+              "api-reference/viem/withdrawals"
             ]
           }
         ]
@@ -92,20 +112,25 @@
   },
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "https://zksync.io"
+  },
+    "search": {
+      "prompt": "Search ZKsyncOS SDK..."
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "https://github.com/zkSync-Community-Hub/zksync-developers/discussions/categories/sdks"
+        "href": "https://github.com/zkSync-Community-Hub/zksync-developers/discussions/categories/sdks",
+        "icon": "arrow-up-right-from-square"
+      },
+      {
+        "label": "Examples",
+        "href": "https://github.com/dutterbutter/zksync-sdk/tree/main/examples",
+        "icon": "arrow-up-right-from-square"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+    ]
   },
   "contextual": {
     "options": [
@@ -124,6 +149,34 @@
       "x": "https://x.com/zksync",
       "github": "https://github.com/dutterbutter/zksync-sdk",
       "linkedin": "https://linkedin.com/company/matter-labs"
-    }
+    },
+    "links": [
+      {
+        "header": "Community",
+        "items": [
+          {
+            "label": "Discord",
+            "href": "https://join.zksync.dev/"
+          },
+          {
+            "label": "GitHub Discussions",
+            "href": "https://github.com/zkSync-Community-Hub/zksync-developers/discussions"
+          }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          {
+            "label": "Block Explorer",
+            "href": "https://explorer.zksync.io/"
+          },
+          {
+            "label": "Website",
+            "href": "https://zksync.io/"
+          }
+        ]
+      }
+    ]
   }
 }

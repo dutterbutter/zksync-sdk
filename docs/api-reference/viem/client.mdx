@@ -1,0 +1,156 @@
+---
+title: ViemClient
+description: Low-level client that carries viem public/wallet clients, resolves core contract addresses, and exposes convenience contract instances for the Viem adapter.
+group: API Reference / Viem
+---
+
+## Import
+
+```ts
+import {
+  createViemClient,
+} from '@dutterbutter/zksync-sdk/viem';
+```
+
+## Quick start
+
+```ts
+import { createPublicClient, createWalletClient, http } from 'viem';
+// import { mainnet } from 'viem/chains' // or your own chain objects
+
+// Minimal example — provide your chain objects & RPCs.
+const l1 = createPublicClient({ /* chain: mainnet, */ transport: http(process.env.ETH_RPC!) });
+const l2 = createPublicClient({ /* chain: zkSync,  */ transport: http(process.env.ZKSYNC_RPC!) });
+
+// l1 wallet must have an account
+const l1Wallet = createWalletClient({
+  account: /* your Account */,
+  /* chain: mainnet, */ transport: http(process.env.ETH_RPC!),
+});
+
+// (optional) a dedicated L2 wallet; if omitted, ViemClient can derive one via getL2Wallet()
+const l2Wallet = createWalletClient({
+  account: l1Wallet.account,
+  /* chain: zkSync, */ transport: http(process.env.ZKSYNC_RPC!),
+});
+
+const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
+
+// Resolve core addresses once (cached)
+const addrs = await client.ensureAddresses();
+
+// Grab connected Contract instances (typed viem contracts)
+const { bridgehub, l1AssetRouter } = await client.contracts();
+```
+
+<Tip>
+  <code>l1Wallet.account</code> is required. If you omit <code>l2Wallet</code>, the client will lazily create one that reuses the L1 account over the L2 transport via <code>getL2Wallet()</code>.
+</Tip>
+
+## `createViemClient(args) → ViemClient`
+
+<ParamField name="args.l1" type="viem.PublicClient" required>
+  L1 client used for address resolution and L1 reads.
+</ParamField>
+<ParamField name="args.l2" type="viem.PublicClient" required>
+  L2 client (target ZK chain). Used for ZK RPC and reads.
+</ParamField>
+<ParamField name="args.l1Wallet" type="viem.WalletClient&lt;Transport, Chain, Account&gt;" required>
+  Wallet used for sends; must include an <code>account</code>.
+</ParamField>
+<ParamField name="args.l2Wallet" type="viem.WalletClient&lt;Transport, Chain, Account&gt;" >
+  Optional dedicated L2 wallet. If omitted, call <code>getL2Wallet()</code> to obtain a lazily created one.
+</ParamField>
+<ParamField name="args.overrides" type="Partial&lt;ResolvedAddresses&gt;">
+  Optional manual contract-address overrides (useful for forks or testing).
+</ParamField>
+
+## ViemClient interface
+
+<ResponseField name="kind" type="'viem'">
+  Discriminator for the adapter.
+</ResponseField>
+<ResponseField name="l1" type="viem.PublicClient">
+  Read/write L1 client.
+</ResponseField>
+<ResponseField name="l2" type="viem.PublicClient">
+  Read-only L2 client (target ZK chain).
+</ResponseField>
+<ResponseField name="l1Wallet" type="viem.WalletClient&lt;Transport, Chain, Account&gt;">
+  Wallet bound to L1 RPC; carries the default <code>account</code> for sends.
+</ResponseField>
+<ResponseField name="l2Wallet" type="viem.WalletClient&lt;Transport, Chain, Account&gt; | undefined">
+  Optional pre-supplied L2 wallet. If not provided, use <code>getL2Wallet()</code>.
+</ResponseField>
+<ResponseField name="account" type="viem.Account">
+  The default account (from <code>l1Wallet</code>).
+</ResponseField>
+<ResponseField name="zks" type="ZksRpc">
+  ZKsync-specific RPC surface bound to <code>l2</code>.
+</ResponseField>
+
+### Methods
+
+#### `ensureAddresses() → Promise<ResolvedAddresses>`
+
+Resolves and caches core contract addresses via on-chain lookups (and optional overrides).
+
+```ts
+const a = await client.ensureAddresses();
+/*
+a = {
+  bridgehub, l1AssetRouter, l1Nullifier, l1NativeTokenVault,
+  l2AssetRouter, l2NativeTokenVault, l2BaseTokenSystem
+}
+*/
+```
+
+#### `contracts() → Promise<{ ...contracts }>`
+
+Returns connected **typed viem contracts** (`getContract(...)`) for all core contracts.
+
+```ts
+const c = await client.contracts();
+const bh = c.bridgehub;
+```
+
+#### `refresh(): void`
+
+Clears cached addresses/contracts. Next calls will re-resolve.
+
+```ts
+client.refresh();
+await client.ensureAddresses(); // re-fetches
+```
+
+#### `baseToken(chainId: bigint) → Promise<Address>`
+
+Looks up the **L1 address** of the base token for a given L2 chain via `Bridgehub.baseToken(chainId)`.
+
+```ts
+const base = await client.baseToken( BigInt(324) /* e.g., zk chain id */ );
+```
+
+#### `getL2Wallet() → WalletClient<Transport, Chain, Account>`
+
+Returns the L2 wallet. If one wasn’t passed at construction, it lazily creates a wallet using the **same account** as `l1Wallet` with the L2 transport.
+
+```ts
+const l2W = client.getL2Wallet();
+```
+
+## Types
+
+### `ResolvedAddresses`
+
+```ts
+type ResolvedAddresses = {
+  bridgehub: Address;
+  l1AssetRouter: Address;
+  l1Nullifier: Address;
+  l1NativeTokenVault: Address;
+  l2AssetRouter: Address;
+  l2NativeTokenVault: Address;
+  l2BaseTokenSystem: Address;
+};
+```

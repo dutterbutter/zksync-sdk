@@ -1,0 +1,253 @@
+---
+title: Deposits
+description: L1 → L2 deposits for ETH and ERC-20 with quote, prepare, create, status, and wait helpers (Viem adapter).
+group: API Reference / Viem
+---
+
+## Import
+
+The Deposits resource is available via the **Viem** SDK:
+
+```ts
+import { parseEther } from "viem";
+import {
+  createViemClient,
+  createViemSdk,
+} from "@dutterbutter/zksync-sdk/viem";
+
+// Constants (ETH_ADDRESS, etc.) are re-exported by the SDK:
+import { ETH_ADDRESS } from "@dutterbutter/zksync-sdk/constants";
+````
+
+## Quick start
+
+Deposit **0.1 ETH** from L1 → L2 and wait for **L2 execution**:
+
+```ts
+const sdk = createViemSdk(
+  createViemClient({ l1, l2, l1Wallet, l2Wallet })
+);
+
+const handle = await sdk.deposits.create({
+  token: ETH_ADDRESS,
+  amount: parseEther("0.1"),
+  to: /* L2 recipient address */,
+});
+
+// Wait for canonical L2 execution; returns a viem TransactionReceipt or null
+const l2Receipt = await sdk.deposits.wait(handle, { for: "l2" });
+```
+
+## Routes (auto-selected)
+
+The SDK automatically selects a route based on the **asset** and the **L2 base token**:
+
+* `eth-base` — Deposit ETH when L2 base token is **ETH**
+* `eth-nonbase` — Deposit ETH when L2 base token is **not ETH**
+* `erc20-base` — Deposit ERC-20 that **is** the L2 base token
+* `erc20-nonbase` — Deposit ERC-20 that **is not** the L2 base token
+
+You don’t need to pass a route; it’s derived internally.
+
+## Methods
+
+### `quote(p: DepositParams) → Promise<DepositQuote>`
+
+Get a **non-executing** summary of the deposit (route, approvals, gas hints).
+
+<ParamField name="p.token" type="Address" required>
+  L1 token address (use <code>0x…00</code> or <code>ETH_ADDRESS</code> for ETH).
+</ParamField>
+<ParamField name="p.amount" type="bigint" required>
+  Amount in wei (e.g., <code>parseEther("0.25")</code>).
+</ParamField>
+<ParamField name="p.to" type="Address" required>
+  Recipient on L2.
+</ParamField>
+
+```ts
+const q = await sdk.deposits.quote({
+  token: ETH_ADDRESS,
+  amount: parseEther("0.25"),
+  to: /* L2 recipient */,
+});
+/*
+q = {
+  route: "eth-base" | "eth-nonbase" | "erc20-base" | "erc20-nonbase",
+  approvalsNeeded: [{ token, spender, amount }, ...],
+  baseCost?: bigint,
+  mintValue?: bigint,
+  suggestedL2GasLimit?: bigint,
+  gasPerPubdata?: bigint
+}
+*/
+```
+
+<Tip>
+  If <code>approvalsNeeded</code> is non-empty for ERC-20 deposits, the SDK will include approval steps during <code>create</code>.
+</Tip>
+
+### `tryQuote(p) → Promise<{ ok: true; value } | { ok: false; error }>`
+
+Result-style version of `quote`.
+
+### `prepare(p: DepositParams) → Promise<DepositPlan<ViemPlanWriteRequest>>`
+
+Build the **plan** (route + ordered steps) without sending transactions.
+
+```ts
+const plan = await sdk.deposits.prepare({
+  token: ETH_ADDRESS,
+  amount: parseEther("0.05"),
+  to: /* L2 recipient */,
+});
+/*
+plan = {
+  route,
+  summary: { ...DepositQuote },
+  steps: [
+    // Each step has a unique .key, a .kind
+    // and a Viem "writeContract" request in .tx (ViemPlanWriteRequest)
+  ]
+}
+*/
+```
+
+### `tryPrepare(p) → Promise<{ ok: true; value } | { ok: false; error }>`
+
+Result-style version of `prepare`.
+
+### `create(p: DepositParams) → Promise<DepositHandle<ViemPlanWriteRequest>>`
+
+Prepare and **execute** all required steps on **L1** (via Viem `writeContract`). Returns a handle with the L1 hash.
+
+```ts
+const handle = await sdk.deposits.create({ token, amount, to });
+/*
+handle = {
+  kind: "deposit",
+  l1TxHash,                   // Hex
+  stepHashes: Record<string, Hex>, // tx hashes per step
+  plan                        // DepositPlan returned by prepare()
+}
+*/
+```
+
+<Warning>
+  If any step reverts on L1, <code>create</code> throws a typed error.
+  Use <code>tryCreate</code> if you prefer a result object.
+</Warning>
+
+### `tryCreate(p) → Promise<{ ok: true; value } | { ok: false; error }>`
+
+Result-style version of `create`.
+
+### `status(h | l1TxHash) → Promise<DepositStatus>`
+
+Check a deposit’s current phase. Accepts the **handle** from `create` or a raw **L1 tx hash**.
+
+Phases:
+
+* `UNKNOWN` — no L1 hash on input
+* `L1_PENDING` — L1 receipt not found yet
+* `L1_INCLUDED` — included on L1 but L2 hash not yet derivable
+* `L2_PENDING` — L2 hash known but L2 receipt missing
+* `L2_EXECUTED` — L2 receipt found with `status === 'success'`
+* `L2_FAILED` — L2 receipt found with `status !== 'success'`
+
+```ts
+const s = await sdk.deposits.status(handle);
+/*
+s = { phase, l1TxHash, l2TxHash? }
+*/
+```
+
+### `wait(h | l1TxHash, { for: 'l1' | 'l2' }) → Promise<TransactionReceipt | null>`
+
+Block until a checkpoint:
+
+* `{ for: 'l1' }` → resolves the **L1 receipt** (or `null` if no L1 hash on input)
+* `{ for: 'l2' }` → resolves the **L2 receipt** after canonical execution (or `null` if no L1 hash)
+
+```ts
+const l1Receipt = await sdk.deposits.wait(handle, { for: "l1" });
+const l2Receipt = await sdk.deposits.wait(handle, { for: "l2" });
+```
+
+### `tryWait(h, { for }) → Promise<{ ok: true; value } | { ok: false; error }>`
+
+Result-style version of `wait`.
+
+## End-to-end examples
+
+### ETH deposit (most common)
+
+```ts
+const handle = await sdk.deposits.create({
+  token: ETH_ADDRESS,
+  amount: parseEther("0.1"),
+  to: /* L2 recipient */,
+});
+
+await sdk.deposits.wait(handle, { for: "l2" }); // get L2 receipt when executed
+```
+
+### ERC-20 deposit with approvals
+
+```ts
+const handle = await sdk.deposits.create({
+  token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // erc20 token example
+  amount: 1_000_000n, // USDC 6 decimals
+  to: /* L2 recipient */,
+});
+
+// Wait for L1 inclusion only, if you need to chain logic at that point
+const l1Receipt = await sdk.deposits.wait(handle, { for: "l1" });
+```
+
+## Types (shape overview)
+
+These types live in `core/types` and are summarized here for convenience.
+
+```ts
+type DepositParams = {
+  token: Address;      // L1 token (0x…00 for ETH)
+  amount: bigint;      // in wei
+  to: Address;         // L2 recipient
+  // ...see core/types for full spec
+};
+
+type DepositQuote = {
+  route: "eth-base" | "eth-nonbase" | "erc20-base" | "erc20-nonbase";
+  approvalsNeeded: Array<{ token: Address; spender: Address; amount: bigint }>;
+  baseCost?: bigint;
+  mintValue?: bigint;
+  suggestedL2GasLimit?: bigint;
+  gasPerPubdata?: bigint;
+};
+
+type DepositPlan<TTx = ViemPlanWriteRequest> = {
+  route: DepositQuote["route"];
+  summary: DepositQuote;
+  steps: Array<{ key: string; kind: string; tx: TTx }>;
+};
+
+type DepositHandle<TTx = ViemPlanWriteRequest> = {
+  kind: "deposit";
+  l1TxHash: Hex;
+  stepHashes: Record<string, Hex>;
+  plan: DepositPlan<TTx>;
+};
+
+type DepositStatus =
+  | { phase: "UNKNOWN";     l1TxHash: Hex }
+  | { phase: "L1_PENDING";  l1TxHash: Hex }
+  | { phase: "L1_INCLUDED"; l1TxHash: Hex }
+  | { phase: "L2_PENDING";  l1TxHash: Hex; l2TxHash: Hex }
+  | { phase: "L2_EXECUTED"; l1TxHash: Hex; l2TxHash: Hex }
+  | { phase: "L2_FAILED";   l1TxHash: Hex; l2TxHash: Hex };
+```
+
+<Tip>
+  Prefer the <code>try*</code> variants if you want to avoid exceptions and work with result objects.
+</Tip>
