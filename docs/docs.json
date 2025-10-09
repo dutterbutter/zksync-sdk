@@ -93,6 +93,13 @@
               "api-reference/viem/deposits",
               "api-reference/viem/withdrawals"
             ]
+          },
+          {
+            "group": "Core",
+            "pages": [
+              "api-reference/core/rpc",
+              "api-reference/core/errors"
+            ]
           }
         ]
       },
@@ -111,12 +118,12 @@
     ]
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg",
+    "light": "/logo/zksync-dark.svg",
+    "dark": "/logo/zksync-light.svg",
     "href": "https://zksync.io"
   },
     "search": {
-      "prompt": "Search ZKsyncOS SDK..."
+      "prompt": "Search ZKsync SDK..."
   },
   "navbar": {
     "links": [

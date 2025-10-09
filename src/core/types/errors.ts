@@ -53,7 +53,8 @@ export interface ErrorEnvelope {
   cause?: unknown;
 }
 
-/** Error class.
+// TODO: move to errors/
+/** Error class. 
  * Represents an error that occurs within the ZKsync SDK.
  * It encapsulates an ErrorEnvelope which provides detailed information about the error,
  *

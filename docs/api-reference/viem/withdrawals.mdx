@@ -187,10 +187,10 @@ if (status.phase === "FINALIZED") {
 }
 ```
 
-<Callout>
+<Info>
   <b>Behavior</b>: If the withdrawal is not ready, <code>finalize</code> throws a typed <code>STATE</code> error.  
   Use <code>status(...)</code> or <code>`wait(..., { for: 'ready' })`</code> to check first.
-</Callout>
+</Info>
 
 ### `tryFinalize(l2TxHash) → Promise<{ ok: true; value: { status; receipt? } } | { ok: false; error }>`
 

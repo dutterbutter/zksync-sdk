@@ -56,7 +56,7 @@ export const TOPIC_L1_MESSAGE_SENT_LEG = k256hex('L1MessageSent(address,bytes32,
 export const TOPIC_BRIDGEHUB_NEW_PRIORITY =
   '0x0f87e1ea5eb1f034a6071ef630c174063e3d48756f853efaaf4292b929298240';
 
-// Optional canonical markers (some OS builds)
+// Optional canonical markers
 export const TOPIC_CANONICAL_ASSIGNED =
   '0x779f441679936c5441b671969f37400b8c3ed0071cb47444431bf985754560df'; // hash in topics[2]
 export const TOPIC_CANONICAL_SUCCESS =
