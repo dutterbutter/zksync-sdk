@@ -1,0 +1,116 @@
+---
+title: Adapters (viem & ethers)
+description: Learn how the SDK extends your existing viem or ethers setup with ZKsync-specific functionality.
+---
+
+# Adapters: `viem` & `ethers`
+
+The SDK is designed to work _with_ the tools you already know and love.  
+It’s not a standalone library — it’s an **extension** that plugs directly into your existing [`viem`](https://viem.sh) or [`ethers.js`](https://docs.ethers.io/) setup.
+
+<Info>
+This design means you can keep your existing provider, signer, and connection logic.  
+The SDK simply layers ZKsync-specific actions on top.
+</Info>
+
+## Why an Adapter Model?
+
+- **Bring Your Own Stack:** Integrates directly with `viem` (`PublicClient`, `WalletClient`) or `ethers` providers and signers.  
+- **Familiar Developer Experience:** Keep your existing connection and signing flow unchanged.  
+- **Lightweight & Focused:** Only adds ZKsync-specific functionality like deposits, withdrawals, and soon interop  — nothing more.
+
+## Installation
+
+```bash
+# For viem users
+npm install @dutterbutter/zksync-sdk viem
+
+# For ethers.js users
+npm install @dutterbutter/zksync-sdk ethers
+````
+
+<Hint>
+You install the **core SDK** plus the adapter matching your stack.
+</Hint>
+
+## How to Use
+
+The SDK extends your existing client. Configure **viem** or **ethers** normally, then wrap them with the SDK’s adapter factory.
+
+<CodeGroup>
+```ts viem.ts
+import { createPublicClient, http, createWalletClient, parseEther } from "viem";
+import { createViemSdk, createViemClient } from "@dutterbutter/zksync-sdk/viem";
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const l1 = createPublicClient({ transport: http(L1_RPC) });
+const l2 = createPublicClient({ transport: http(L2_RPC) });
+
+const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+    account,
+    transport: http(L1_RPC),
+  });
+
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
+
+const me = account.address as Address;
+const params = {
+  amount: parseEther('0.01'),
+  token: ETH_ADDRESS,
+  to: me,
+  // optional:
+  // l2GasLimit: 300_000n,
+  // gasPerPubdata: 800n,
+  // operatorTip: 0n,
+  // refundRecipient: me,
+} as const;
+
+const handle = await sdk.deposits.create({ params });
+await sdk.deposits.wait(handle, { for: 'l1' }); // L1 included
+await sdk.deposits.wait(handle, { for: 'l2' }); // L2 executed
+
+console.log('Deposit complete ✅');
+```
+
+```ts ethers.ts
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const L1_RPC = new JsonRpcProvider('https://sepolia.infura.io/v3/...');
+const L2_RPC = new JsonRpcProvider('https://zksync-testnet.rpc');
+const signer = new Wallet(process.env.PRIVATE_KEY!, L1_RPC);
+
+const client = await createEthersClient({ l1Provider: L1_RPC, l2Provider: L2_RPC, signer });
+const sdk = createEthersSdk(client);
+
+const params = {
+  amount: parseEther('0.01'),
+  token: ETH_ADDRESS,
+  to: signer.address,
+  // optional:
+  // l2GasLimit: 300_000n,
+  // gasPerPubdata: 800n,
+  // operatorTip: 0n,
+  // refundRecipient: me,
+} as const;
+
+const handle = await sdk.deposits.create({ params });
+await sdk.deposits.wait(handle, { for: 'l1' }); // L1 included
+await sdk.deposits.wait(handle, { for: 'l2' }); // L2 executed
+
+console.log('Deposit complete ✅');
+```
+</CodeGroup>
+
+## Key Principles
+
+* **No Key Management:** The SDK never asks for or stores private keys — signing stays with your `WalletClient` or `Signer`.
+* **API Parity:** Both adapters expose the same API. Calling `sdk.deposits.quote()` works identically with `viem` or `ethers`.
+* **Easy Migration:** Switch between `ethers` and `viem` by only changing the initialization code.
+
+<FooterLinks
+previous={{ title: "Mental model", href: "./mental-model" }}
+next={{ title: "Quickstart", href: "../quickstart/index" }}
+/>
