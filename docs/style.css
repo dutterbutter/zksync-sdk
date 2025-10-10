@@ -206,7 +206,6 @@ html, body { overflow-x: hidden; }
   .dev-card{ max-width:520px; }
 }
 
-
 /* Base CTA styles (unchanged) */
 .hero-cta{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
@@ -253,3 +252,53 @@ html, body { overflow-x: hidden; }
   background:#f8fafc;
   border-color: rgba(2,6,23,.40);
 }
+
+/* ---- Top-only gradient bleed for non-hero pages (scrolls away) ---- */
+
+:root { --zk-bleed-height: min(38vh, 560px); }
+
+body {                     /* create a containing block for the pseudo */
+  position: relative;
+  background: var(--surface);
+}
+:root.dark body { background: var(--ink-0); }
+
+/* Only on pages WITHOUT the hero */
+body:not(.has-hero)::before {
+  content: "";
+  position: absolute;      /* <-- was fixed; now scrolls with page */
+  top: 0; left: 0; right: 0;
+  height: var(--zk-bleed-height);
+  pointer-events: none;
+  z-index: 0;
+
+  /* same gradients as your hero--ai (light) */
+  background:
+    radial-gradient(rgba(23,85,244,.06) 1px, transparent 1.2px) 0 0 / 18px 18px,
+    radial-gradient(1200px 700px at 85% -10%, rgba(12,24,236,.26), transparent 60%),
+    radial-gradient(1100px 600px at 10% 80%,  rgba(19,213,211,.24), transparent 60%),
+    radial-gradient(900px  580px at 30% 20%,  rgba(239,109,242,.20), transparent 60%),
+    radial-gradient(900px  520px at 70% 70%,  rgba(253,64,44,.16),  transparent 60%),
+    radial-gradient(1200px 520px at -10% -20%, rgba(191,243,81,.18), transparent 60%),
+    transparent;
+  /* soft fade */
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.95) 58%, rgba(0,0,0,0));
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.95) 58%, rgba(0,0,0,0));
+  /* bottom divider */
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+/* Dark mode */
+:root.dark body:not(.has-hero)::before {
+  background:
+    radial-gradient(rgba(23,85,244,.13) 1px, transparent 1.2px) 0 0 / 18px 18px,
+    radial-gradient(1250px 720px at 62% -10%, rgba(12,24,236,.60), transparent 62%),
+    radial-gradient(1100px 650px at 10% 86%,  rgba(19,213,211,.25), transparent 62%),
+    radial-gradient(900px  600px at 26% 28%,  rgba(239,109,242,.25), transparent 62%),
+    radial-gradient(900px  560px at 76% 72%,  rgba(253,64,44,.18),  transparent 62%),
+    radial-gradient(1100px 540px at -10% -20%, rgba(191,243,81,.16),  transparent 62%),
+    transparent;
+}
+
+/* Ensure page content paints above the pseudo without fiddling z-index everywhere */
+body > * { position: relative; }

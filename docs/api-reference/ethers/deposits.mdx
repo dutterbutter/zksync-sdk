@@ -1,12 +1,17 @@
 ---
 title: Deposits
 description: L1 → L2 deposits for ETH and ERC-20 with quote, prepare, create, status, and wait helpers.
-group: API Reference / Ethers
+group: SDK Reference / Ethers
 ---
 
-## Import
+## At a glance
 
-The Deposits resource is available via the Ethers SDK:
+- **Resource:** `sdk.deposits`
+- **Most common flow:** `quote → create → wait({ for: 'l2' })`
+- **Auto-routing:** ETH vs ERC-20 and base-token vs non-base handled internally
+- **Error style:** Throwing methods (`quote`, `prepare`, `create`, `wait`) + result variants (`tryQuote`, `tryPrepare`, `tryCreate`, `tryWait`)
+
+## Import
 
 ```ts
 import { JsonRpcProvider, Wallet, parseEther } from "ethers";
@@ -27,41 +32,36 @@ Deposit **0.1 ETH** from L1 → L2 and wait for **L2 execution**:
 
 ```ts
 const handle = await sdk.deposits.create({
-  token: ETH_ADDRESS,
+  token: ETH_ADDRESS,                            // 0x…00 for ETH
   amount: parseEther("0.1"),
   to: await signer.getAddress(),
 });
 
-// Wait for canonical L2 execution; returns L2 receipt or null
-const l2Receipt = await sdk.deposits.wait(handle, { for: "l2" });
+const l2Receipt = await sdk.deposits.wait(handle, { for: "l2" }); // null only if no L1 hash
 ```
 
-## Routes (auto-selected)
+<Tip>
+For UX that never throws, use the <code>try*</code> variants and branch on <code>ok</code>.
+</Tip>
 
-The SDK automatically selects a route based on the **asset** and the **L2 base token**:
+## Route selection (automatic)
 
-* `eth-base` — Deposit ETH when L2 base token is **ETH**
-* `eth-nonbase` — Deposit ETH when L2 base token is **not ETH**
-* `erc20-base` — Deposit ERC-20 that **is** the L2 base token
-* `erc20-nonbase` — Deposit ERC-20 that **is not** the L2 base token
+* `eth-base` — ETH when L2 base token **is ETH**
+* `eth-nonbase` — ETH when L2 base token **≠ ETH**
+* `erc20-base` — ERC-20 that **is** the L2 base token
+* `erc20-nonbase` — ERC-20 that **is not** the L2 base token
 
-You don’t need to pass a route; it’s derived internally.
+You **do not** pass a route; it’s derived from network metadata + `token`.
 
-## Methods
+## Method reference
 
 ### `quote(p: DepositParams) → Promise<DepositQuote>`
 
-Get a **non-executing** summary of the deposit (route, approvals, gas hints).
+Estimate the operation (route, approvals, gas hints). Does **not** send txs.
 
-<ParamField name="p.token" type="Address" required>
-  L1 token address (use <code>0x…00</code> for ETH).
-</ParamField>
-<ParamField name="p.amount" type="bigint" required>
-  Amount in wei.
-</ParamField>
-<ParamField name="p.to" type="Address" required>
-  Recipient on L2.
-</ParamField>
+<ParamField name="p.token" type="Address" required>L1 token (use <code>0x…00</code> for ETH).</ParamField> <ParamField name="p.amount" type="bigint" required>Amount in wei.</ParamField> <ParamField name="p.to" type="Address" required>L2 recipient.</ParamField>
+
+**Returns:** `DepositQuote`
 
 ```ts
 const q = await sdk.deposits.quote({
@@ -70,112 +70,112 @@ const q = await sdk.deposits.quote({
   to: await signer.getAddress(),
 });
 /*
-q = {
+{
   route: "eth-base" | "eth-nonbase" | "erc20-base" | "erc20-nonbase",
-  approvalsNeeded: [{ token, spender, amount }, ...],
-  baseCost,            // bigint (bridge/base cost estimate if applicable)
-  mintValue,           // bigint (if applicable on route)
-  suggestedL2GasLimit, // bigint
-  gasPerPubdata        // bigint
+  approvalsNeeded: [{ token, spender, amount }],
+  baseCost?: bigint,
+  mintValue?: bigint,
+  suggestedL2GasLimit?: bigint,
+  gasPerPubdata?: bigint
 }
 */
 ```
 
 <Tip>
-  If <code>approvalsNeeded</code> is non-empty for ERC-20 deposits, the SDK will include
-  approval steps during <code>create</code>. These are approved automatically.
+If <code>approvalsNeeded</code> is non-empty (ERC-20), <code>create</code> will include those steps automatically.
 </Tip>
 
-### `tryQuote(p) → Promise<{ ok: true; value: DepositQuote } | { ok: false; error }>;`
+### `tryQuote(p) → Promise<{ ok: true; value: DepositQuote } | { ok: false; error }>`
 
-Result-style version of `quote`.
+Result-style `quote`.
 
 ### `prepare(p: DepositParams) → Promise<DepositPlan<TransactionRequest>>`
 
-Build the **plan** (route + ordered steps) without sending transactions.
+Builds the plan (ordered steps + unsigned txs) without sending.
+
+**Returns:** `DepositPlan`
 
 ```ts
 const plan = await sdk.deposits.prepare({ token: ETH_L1, amount: parseEther("0.05"), to });
 /*
-plan = {
+{
   route,
-  summary: { ...same shape as DepositQuote },
+  summary: DepositQuote,
   steps: [
-    // Each step has a unique .key, a .kind (e.g., "approve" | "bridge"),
-    // and a prebuilt ethers TransactionRequest in .tx
+    { key: "approve:USDC", kind: "approve", tx: TransactionRequest },
+    { key: "bridge",       kind: "bridge",  tx: TransactionRequest }
   ]
 }
 */
 ```
 
-### `tryPrepare(p) → Promise<{ ok: true; value: DepositPlan } | { ok: false; error }>;`
+### `tryPrepare(p) → Promise<{ ok: true; value: DepositPlan } | { ok: false; error }>`
 
-Result-style version of `prepare`.
+Result-style `prepare`.
 
 ### `create(p: DepositParams) → Promise<DepositHandle<TransactionRequest>>`
 
-Prepare and **execute** all required steps on **L1**. Returns a handle with the L1 hash.
+Prepares and **executes** all required L1 steps. Returns a handle (with L1 tx hash and per-step hashes).
+
+**Returns:** `DepositHandle`
 
 ```ts
 const handle = await sdk.deposits.create({ token, amount, to });
 /*
-handle = {
+{
   kind: "deposit",
-  l1TxHash,                  // Hex
-  stepHashes: Record<string, Hex>, // tx hashes per step
-  plan                       // DepositPlan returned by prepare()
+  l1TxHash: Hex,
+  stepHashes: Record<string, Hex>,
+  plan: DepositPlan
 }
 */
 ```
 
 <Warning>
-  If any step reverts on L1, <code>create</code> throws a typed error.
-  Use <code>tryCreate</code> if you prefer a result object.
+If any step reverts, <code>create</code> throws a typed error. Prefer <code>tryCreate</code> to avoid exceptions.
 </Warning>
 
-### `tryCreate(p) → Promise<{ ok: true; value: DepositHandle } | { ok: false; error }>;`
+### `tryCreate(p) → Promise<{ ok: true; value: DepositHandle } | { ok: false; error }>`
 
-Result-style version of `create`.
+Result-style `create`.
 
-### `status(h | l1TxHash) → Promise<DepositStatus>`
+### `status(handleOrHash) → Promise<DepositStatus>`
 
-Check a deposit’s current phase. Accepts the **handle** from `create` or a raw **L1 tx hash**.
+Resolve current phase for a deposit. Accepts the `DepositHandle` from `create` **or** a raw L1 tx hash.
 
-Phases:
+**Phases**
 
-* `UNKNOWN` — no L1 hash on input
-* `L1_PENDING` — L1 receipt not found yet
-* `L1_INCLUDED` — included on L1 but L2 hash not yet derivable
-* `L2_PENDING` — L2 hash known but L2 receipt missing
+* `UNKNOWN` — no L1 hash provided
+* `L1_PENDING` — L1 receipt not yet found
+* `L1_INCLUDED` — included on L1; L2 hash not derivable yet
+* `L2_PENDING` — L2 hash known; waiting for L2 receipt
 * `L2_EXECUTED` — L2 receipt found with `status === 1`
 * `L2_FAILED` — L2 receipt found with `status !== 1`
 
 ```ts
 const s = await sdk.deposits.status(handle);
-/*
-s = { phase, l1TxHash, l2TxHash? }
-*/
+// { phase, l1TxHash, l2TxHash? }
 ```
 
-### `wait(h | l1TxHash, { for: 'l1' | 'l2' }) → Promise<TransactionReceipt | null>`
+### `wait(handleOrHash, { for: 'l1' | 'l2' }) → Promise<TransactionReceipt | null>`
 
-Block until a checkpoint:
+Block until the chosen checkpoint.
 
-* `{ for: 'l1' }` → resolves the **L1 receipt** (or `null` if no L1 hash on input)
-* `{ for: 'l2' }` → resolves the **L2 receipt** after canonical execution (or `null` if no L1 hash)
+* `{ for: 'l1' }` → L1 receipt (or `null` if no L1 hash available)
+* `{ for: 'l2' }` → L2 receipt after canonical execution (or `null` if no L1 hash)
 
 ```ts
 const l1Receipt = await sdk.deposits.wait(handle, { for: "l1" });
 const l2Receipt = await sdk.deposits.wait(handle, { for: "l2" });
 ```
 
-### `tryWait(h, { for }) → Promise<{ ok: true; value: TransactionReceipt } | { ok: false; error }>;`
+### `tryWait(handleOrHash, opts) → Result<TransactionReceipt>`
 
-Result-style version of `wait`.
+Result-style `wait`.
 
 ## End-to-end examples
 
-### ETH deposit (most common)
+### ETH deposit (typical)
 
 ```ts
 const handle = await sdk.deposits.create({
@@ -184,32 +184,28 @@ const handle = await sdk.deposits.create({
   to: await signer.getAddress(),
 });
 
-await sdk.deposits.wait(handle, { for: "l2" }); // get L2 receipt when executed
+await sdk.deposits.wait(handle, { for: "l2" });
 ```
 
-### ERC-20 deposit with approvals
+### ERC-20 deposit (with automatic approvals)
 
 ```ts
 const handle = await sdk.deposits.create({
-  token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // example ERC-20
-  amount: 1000000n, // 1e6 (USDC 6 decimals)
+  token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // example: USDC
+  amount: 1_000_000n,                                  // 1.0 USDC (6 dp)
   to: await signer.getAddress(),
 });
 
-// Wait for L1 inclusion only, if you need to chain logic at that point
 const l1Receipt = await sdk.deposits.wait(handle, { for: "l1" });
 ```
 
-## Types (shape overview)
-
-These types live in `core/types` and are summarized here for convenience.
+## Types (overview)
 
 ```ts
 type DepositParams = {
-  token: Address;      // L1 token (0x…00 for ETH)
-  amount: bigint;      // in wei
-  to: Address;         // L2 recipient
-  // ...additional fields may exist; see core/types for the full spec
+  token: Address;             // 0x…00 for ETH
+  amount: bigint;             // wei
+  to: Address;                // L2 recipient
 };
 
 type DepositQuote = {
@@ -244,6 +240,11 @@ type DepositStatus =
 ```
 
 <Tip>
-  Prefer the <code>try*</code> variants if you want to avoid exceptions and work with result objects.
+Prefer the <code>try*</code> variants if you want to avoid exceptions and work with result objects.
 </Tip>
 
+## Notes & pitfalls
+
+* **ETH sentinel:** use the canonical `0x…00` address when passing ETH as `token`.
+* **Receipts timing:** `wait({ for: 'l2' })` resolves on canonical L2 execution; it can take longer than L1 inclusion.
+* **Gas hints:** `suggestedL2GasLimit` and `gasPerPubdata` are hints; advanced users may override via low-level calls from the plan.
