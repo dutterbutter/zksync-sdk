@@ -60,8 +60,7 @@
         "group": "Guides",
         "pages": [
           "guides/deposits",
-          "guides/withdrawals",
-          "guides/finalization"
+          "guides/withdrawals"
         ]
        }
       ]

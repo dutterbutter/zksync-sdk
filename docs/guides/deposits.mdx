@@ -1,116 +1,405 @@
 ---
-title: Deposits
-description: Deposit ETH from L1 → ZKsync (L2).
+title: "Deposits (L1 → L2)"
+description: "Fast, developer-focused deposits with validation, observability, and battle-tested patterns."
 ---
 
-import { ViemDeposit } from '/snippets/deposits/viem.mdx';
-import { EthersDeposit } from '/snippets/deposits/ethers.mdx';
+# Guide: Depositing funds L1 to L2
 
-A fast path to deposit **ETH** from L1 → ZKsync (L2). Toggle your adapter below.
+This guide provides a complete walkthrough for depositing funds from a L1 (Ethereum) to a L2 (ZKsync). We will use the `@dutterbutter/zksync-sdk` to simplify the process.
 
-## Prerequisites
+The SDK intelligently handles the deposit flow, automatically selecting the correct contract and route based on the token being used.
 
-- A funded **L1** account (gas + amount).
-- RPC URLs: `L1_RPC_URL`, `L2_RPC_URL`.
-- Installed: `@dutterbutter/zksync-sdk` + **one** adapter: `viem` **or** `ethers`.
+### Prerequisites
 
-## Parameters
+Before you begin, ensure you have the following:
 
-| Param             | Required | Meaning                                |
-| ----------------- | -------- | -------------------------------------- |
-| `token`           | Yes      | `ETH_ADDRESS` or ERC-20 address        |
-| `amount`          | Yes      | BigInt/wei (e.g. `parseEther('0.01')`) |
-| `to`              | Yes      | L2 recipient address                   |
-| `l2GasLimit`      | No       | L2 execution gas cap                   |
-| `gasPerPubdata`   | No       | Pubdata price hint                     |
-| `operatorTip`     | No       | Optional tip to operator               |
-| `refundRecipient` | No       | L2 address to receive fee refunds      |
+1.  **Node.js v20+** or **Bun.sh** installed.
 
-## Fast path (one-shot)
+2.  An L1 wallet (private key) with some ETH to pay for the deposit and gas fees.
 
-<a id="viem" />
-<a id="ethers" />
+3.  RPC endpoints for both the L1 and L2 you are targeting.
+
+4.  A project set up with `viem` or `ethers` and `@dutterbutter/zksync-sdk` installed.
+
+    <CodeGroup>
+    ```bash title="viem"
+    npm install viem @dutterbutter/zksync-sdk dotenv
+    ```
+    ```bash title="ethers"
+    npm install ethers @dutterbutter/zksync-sdk dotenv
+    ```
+    </CodeGroup>
+
+5.  An `.env` file in your project's root directory with the following variables:
+
+    ```ini
+    # .env
+    L1_RPC_URL="YOUR_L1_RPC_ENDPOINT"
+    L2_RPC_URL="YOUR_L2_RPC_ENDPOINT"
+    PRIVATE_KEY="YOUR_WALLET_PRIVATE_KEY"
+    ```
+
+### The Deposit Process: Step-by-Step
+
+The process can be broken down into 5 key steps after initial setup.
+
+#### Step 0: Setup and SDK Initialization
+
+First, we need to connect to the L1 and L2 networks using your preferred library (`viem` or `ethers`) and then initialize the ZKsync SDK.
 
 <CodeGroup>
-  <ViemDeposit />
-  <EthersDeposit />
+```typescript title="viem"
+import 'dotenv/config';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  type Account,
+  type Chain,
+  type Transport,
+  type WalletClient,
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+// Load configuration from .env file
+const L1_RPC = process.env.L1_RPC_URL!;
+const L2_RPC = process.env.L2_RPC_URL!;
+const PRIVATE_KEY = process.env.PRIVATE_KEY!;
+
+// --- Clients (Viem) ---
+const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+const l1 = createPublicClient({ transport: http(L1_RPC) });
+const l2 = createPublicClient({ transport: http(L2_RPC) });
+const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+  account,
+  transport: http(L1_RPC),
+});
+
+// --- 2. Initialize the SDK ---
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
+
+console.log(`Using account: ${account.address}`);
+```
+```typescript title="ethers"
+import 'dotenv/config';
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+// Load configuration from .env file
+const L1_RPC = process.env.L1_RPC_URL!;
+const L2_RPC = process.env.L2_RPC_URL!;
+const PRIVATE_KEY = process.env.PRIVATE_KEY!;
+
+// --- 1. Initialize Providers and Signer ---
+const l1Provider = new JsonRpcProvider(L1_RPC);
+const l2Provider = new JsonRpcProvider(L2_RPC);
+const signer = new Wallet(PRIVATE_KEY, l1Provider);
+
+// --- 2. Initialize the SDK ---
+const client = await createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
+const sdk = createEthersSdk(client);
+
+console.log(`Using account: ${signer.address}`);
+```
 </CodeGroup>
 
-- `create()` prepares **and** sends.
-- `wait(..., { for: 'l1' })` ⇒ included on **L1**.
-- `wait(..., { for: 'l2' })` ⇒ executed on **L2** (funds available).
+#### Step 1: Define Deposit Parameters
 
-## Inspect & customize (quote → prepare → create)
+Next, define the parameters for your deposit in an object. You’ll specify the deposit amount, the token address — which can represent ETH, a chain’s Base Token (like L1_SOPH_TOKEN_ADDRESS), or any ERC-20 — and the recipient’s address on L2.
 
-**1) Quote (no side-effects)** — preview fees/steps and whether an approval is required:
+<CodeGroup>
+```typescript title="ETH Token Deposit"
+const me = signer.address as Address;
 
-```ts
-const quote = await sdk.deposits.quote(params);
+const depositParams = {
+  amount: parseEther('0.01'), // The amount of ETH to deposit (e.g., 0.01 ETH)
+  token: ETH_ADDRESS,         // The address for native ETH
+  to: me,                     // The recipient address on L2 (in this case, our own address)
+} as const;
+```
+```typescript title="ERC20 Token Deposit"
+const me = signer.address as Address;
+
+const depositParams = {
+  amount: parseEther('0.01'), // The amount of ERC20 to deposit (e.g., 0.01 ERC20)
+  token: ERC20_TOKEN_ADDRESS,  // The address for the ERC20 token
+  to: me,                     // The recipient address on L2 (in this case, our own address)
+} as const;
+```
+```typescript title="Base Token Deposit"
+const me = signer.address as Address;
+
+const depositParams = {
+  amount: parseEther('0.01'), // The amount of SOPH to deposit (e.g., 0.01 SOPH)
+  token: L1_SOPH_TOKEN_ADDRESS,  // The address for SOPH (or your chain's base token on L1)
+  to: me,                     // The recipient address on L2 (in this case, our own address)
+} as const;
+```
+</CodeGroup>
+
+<Accordion title="Advanced Parameters (Optional)">
+
+You can also specify advanced options for finer control over the transaction:
+
+  * `l2GasLimit`: The gas limit for the L2 part of the transaction.
+  * `gasPerPubdata`: The gas price per byte of public data.
+  * `operatorTip`: A tip for the L2 operator.
+  * `refundRecipient`: An address to receive any L1 gas refunds.
+
+</Accordion>
+
+#### Step 2: Quote the Deposit
+
+Before sending, it's best practice to get a cost estimate using `sdk.deposits.quote`. This returns information about fees and the expected gas required.
+
+<Note>
+Users can skip this step and go directly to `create`, but quoting helps avoid surprises.
+</Note>
+
+```typescript
+// --- STEP 2: QUOTE ---
+const quote = await sdk.deposits.quote(depositParams);
+console.log('DEPOSIT QUOTE →', quote);
+// Outputs estimated costs and gas limits
 ```
 
-**2) Prepare (build txs, don’t send)** — get `TransactionRequest[]` for custom signing/UX:
+#### Step 3: Prepare the Transaction
 
-```ts
-const plan = await sdk.deposits.prepare(params);
+The `sdk.deposits.prepare` method builds the final transaction plan. This step is useful for inspecting the transaction details before execution.
+
+```typescript
+// --- STEP 3: PREPARE ---
+const plan = await sdk.deposits.prepare(depositParams);
+console.log('TRANSACTION PLAN →', plan);
+// Outputs the prepared transaction objects
 ```
 
-**3) Create (send)** — use defaults, or send your prepared transactions:
+#### Step 4: Create the Deposit
 
-```ts
-const handle = await sdk.deposits.create(params);
+The `sdk.deposits.create` method executes the plan by sending the transaction to the L1 network. It returns a `handle` which is a unique identifier used to track the deposit's progress.
+
+```typescript
+// --- STEP 4: CREATE (send tx) ---
+const handle = await sdk.deposits.create(depositParams);
+console.log('TRANSACTION CREATED →', handle);
+// Outputs the handle, e.g., { type: 'deposit', hash: '0x...' }
 ```
 
-## Track progress (status vs wait)
+#### Step 5: Track the Transaction Status
 
-**Non-blocking snapshot**
+A deposit is a two-stage process: inclusion on L1 and then execution on L2. The SDK provides tools to track both stages.
 
-```ts
-const s = await sdk.deposits.status(handle /* or l1TxHash */);
-// 'UNKNOWN' | 'L1_PENDING' | 'L1_INCLUDED' | 'L2_PENDING' | 'L2_EXECUTED' | 'L2_FAILED'
-```
+  * **`sdk.deposits.status(handle)`:** Check the current status of the deposit at any time.
+  * **`sdk.deposits.wait(handle, options)`:** Pause execution until the deposit reaches a specific stage.
 
-**Block until checkpoint**
-
-```ts
+```typescript
+// --- STEP 5: TRACK ---
+console.log('⏳ Waiting for L1 inclusion...');
 const l1Receipt = await sdk.deposits.wait(handle, { for: 'l1' });
+console.log('✅ L1 included at block:', l1Receipt?.blockNumber);
+
+// Check the status again after L1 inclusion
+const statusAfterL1 = await sdk.deposits.status(handle);
+console.log('STATUS (after L1) →', statusAfterL1);
+
+console.log('⏳ Waiting for L2 execution...');
 const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
+console.log('✅ L2 executed at block:', l2Receipt?.blockNumber);
 ```
 
-## Error handling patterns
+Once the `wait` for L2 execution completes, your ETH has successfully been deposited to your L2 address.
 
-**Exceptions**
+### Full Code Example
 
-```ts
-try {
+Here is the complete, runnable script for your reference.
+
+<Accordion title="Click to view the full script.">
+
+<CodeGroup>
+
+```typescript title="viem"
+/**
+ * Example: Deposit ETH into an L2
+ */
+import 'dotenv/config';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  type Account,
+  type Chain,
+  type Transport,
+  type WalletClient,
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+// --- CONFIG ---
+// Use env if available, otherwise fall back to local dev defaults.
+const L1_RPC = process.env.L1_RPC_URL ?? 'http://localhost:8545';
+const L2_RPC = process.env.L2_RPC_URL ?? 'http://localhost:3050';
+const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '';
+
+async function main() {
+  if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
+    throw new Error('⚠️ Set a 0x-prefixed 32-byte PRIVATE_KEY in your .env');
+  }
+
+  // --- Clients (Viem) ---
+  const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+  const l1 = createPublicClient({ transport: http(L1_RPC) });
+  const l2 = createPublicClient({ transport: http(L2_RPC) });
+
+  const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+    account,
+    transport: http(L1_RPC),
+  });
+
+  // Show balances for sanity
+  const [balL1, balL2] = await Promise.all([
+    l1.getBalance({ address: account.address }),
+    l2.getBalance({ address: account.address }),
+  ]);
+  console.log('Using account:', account.address);
+  console.log('L1 balance:', balL1.toString());
+  console.log('L2 balance:', balL2.toString());
+
+  // --- Init SDK ---
+  const client = createViemClient({ l1, l2, l1Wallet });
+  const sdk = createViemSdk(client);
+
+  // --- Deposit params ---
+  const me = account.address as Address;
+  const params = {
+    amount: parseEther('0.01'),
+    token: ETH_ADDRESS, // ETH sentinel
+    to: me,
+    // optional:
+    // l2GasLimit: 300_000n,
+    // gasPerPubdata: 800n,
+    // operatorTip: 0n,
+    // refundRecipient: me,
+  } as const;
+
+  // 1) QUOTE
+  const quote = await sdk.deposits.quote(params);
+  console.log('QUOTE →', quote);
+
+  // 2) PREPARE (no txs sent)
+  const plan = await sdk.deposits.prepare(params);
+  console.log('PREPARE →', plan);
+
+  // 3) CREATE (send deposit)
   const handle = await sdk.deposits.create(params);
-} catch (e) {
-  // normalized error envelope (type, operation, message, context, optional revert)
+  console.log('CREATE →', handle);
+
+  // 4) STATUS
+  const status = await sdk.deposits.status(handle);
+  console.log('STATUS →', status);
+
+  // 5) WAIT: L1 inclusion
+  console.log('⏳ Waiting for L1 inclusion...');
+  const l1Receipt = await sdk.deposits.wait(handle, { for: 'l1' });
+  console.log('✅ L1 included at block:', l1Receipt?.blockNumber);
+
+  const statusAfterL1 = await sdk.deposits.status(handle);
+  console.log('STATUS (after L1) →', statusAfterL1);
+
+  // 6) WAIT: L2 execution
+  console.log('⏳ Waiting for L2 execution...');
+  const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
+  console.log('✅ L2 executed at block:', l2Receipt?.blockNumber);
 }
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
 ```
+```typescript title="ethers"
+/**
+ * Example: Deposit ETH from L1 into a ZKsync L2
+ */
+import 'dotenv/config';
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
-**No-throw style**
+// --- CONFIG ---
+const L1_RPC = process.env.L1_RPC_URL ?? 'http://localhost:8545';
+const L2_RPC = process.env.L2_RPC_URL ?? 'http://localhost:3050';
+const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '';
 
-Every method has a `try*` variant (`tryQuote`, `tryPrepare`, `tryCreate`) returning `{ ok, value | error }`.
+async function main() {
+  if (!PRIVATE_KEY) throw new Error('⚠️ Set your PRIVATE_KEY in the .env file');
 
-```ts
-const r = await sdk.deposits.tryCreate(params);
-if (!r.ok) {
-  console.error('Deposit failed:', r.error);
-  // show a toast, retry, or branch UX…
-} else {
-  console.log('Deposit sent. L1 tx hash:', r.value.l1TxHash);
+  const l1 = new JsonRpcProvider(L1_RPC);
+  const l2 = new JsonRpcProvider(L2_RPC);
+  const signer = new Wallet(PRIVATE_KEY, l1);
+
+  const me = signer.address as Address;
+  console.log('Using account:', me);
+
+  // --- INIT SDK ---
+  const client = await createEthersClient({ l1, l2, signer });
+  const sdk = createEthersSdk(client);
+
+  // --- DEPOSIT PARAMS ---
+  const params = {
+    amount: parseEther('0.01'),
+    token: ETH_ADDRESS,
+    to: me,
+  } as const;
+
+  // --- STEP 1: QUOTE ---
+  const quote = await sdk.deposits.quote(params);
+  console.log('QUOTE →', quote);
+
+  // --- STEP 2: PREPARE ---
+  const plan = await sdk.deposits.prepare(params);
+  console.log('PREPARE →', plan);
+
+  // --- STEP 3: CREATE (send tx) ---
+  const handle = await sdk.deposits.create(params);
+  console.log('CREATE →', handle);
+
+  // --- STEP 4 & 5: TRACK ---
+  console.log('⏳ Waiting for L1 inclusion...');
+  const l1Receipt = await sdk.deposits.wait(handle, { for: 'l1' });
+  console.log('✅ L1 included at block:', l1Receipt?.blockNumber);
+
+  console.log('⏳ Waiting for L2 execution...');
+  const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
+  console.log('✅ L2 executed at block:', l2Receipt?.blockNumber);
+
+  const finalStatus = await sdk.deposits.status(handle);
+  console.log('FINAL STATUS →', finalStatus);
 }
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
 ```
+</CodeGroup>
+</Accordion>
 
-## Troubleshooting
+### Related API Reference
 
-- **Stuck at L1:** check L1 gas and RPC health.
-- **No L2 execution:** verify L2 RPC; re-check `status()` (should move to `L2_EXECUTED`).
-- **L2 failed:** if `phase === 'L2_FAILED'`, inspect the revert info via your error envelope/logs.
+For more detailed information on the methods used in this guide, see the official API reference:
 
----
-
-## See also
-
-- [Status vs Wait](/concepts/status-vs-wait)
-- [ZKsync RPC Helpers](/zks/methods)
+  * [`sdk.deposits.quote()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#quote-p%3A-depositparams-%E2%86%92-promise%3Cdepositquote%3E)
+  * [`sdk.deposits.prepare()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#prepare-p%3A-depositparams-%E2%86%92-promise%3Cdepositplan%3Ctransactionrequest%3E%3E)
+  * [`sdk.deposits.create()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#create-p%3A-depositparams-%E2%86%92-promise%3Cdeposithandle%3Ctransactionrequest%3E%3E)
+  * [`sdk.deposits.status()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#status-handleorhash-%E2%86%92-promise%3Cdepositstatus%3E)
+  * [`sdk.deposits.wait()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#wait-handleorhash%2C-%7B-for%3A-l1-%7C-l2-%7D-%E2%86%92-promise%3Ctransactionreceipt-%7C-null%3E)

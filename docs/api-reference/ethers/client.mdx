@@ -1,22 +1,26 @@
 ---
 title: EthersClient
-description: Low-level client that carries providers/signer, resolves core contract addresses, and exposes convenience contract instances for the Ethers adapter.
-group: API Reference / Ethers
+description: Low-level client for the Ethers adapter. Carries providers/signer, resolves core contract addresses, and exposes connected ethers.Contract instances.
+group: SDK Reference / Ethers
 ---
+
+## At a glance
+
+- **Factory:** `createEthersClient({ l1, l2, signer, overrides? }) → EthersClient`
+- **What it provides:** cached core **addresses**, connected **contracts**, L2-bound **ZKsync RPC** (`zks`), and a signer force-bound to **L1**.
+- **When to use:** create this first; then pass into `createEthersSdk(client)`.
 
 ## Import
 
 ```ts
-import {
-  createEthersClient,
-} from '@dutterbutter/zksync-sdk/ethers';
+import { createEthersClient } from "@dutterbutter/zksync-sdk/ethers";
 ```
 
 ## Quick start
 
 ```ts
-import { JsonRpcProvider, Wallet } from 'ethers';
-import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
+import { JsonRpcProvider, Wallet } from "ethers";
+import { createEthersClient } from "@dutterbutter/zksync-sdk/ethers";
 
 const l1 = new JsonRpcProvider(process.env.ETH_RPC!);
 const l2 = new JsonRpcProvider(process.env.ZKSYNC_RPC!);
@@ -24,90 +28,67 @@ const signer = new Wallet(process.env.PRIVATE_KEY!, l1);
 
 const client = createEthersClient({ l1, l2, signer });
 
-// Resolve core addresses once (cached)
+// Resolve core addresses (cached)
 const addrs = await client.ensureAddresses();
 
-// Grab connected Contract instances
+// Connected contracts
 const { bridgehub, l1AssetRouter } = await client.contracts();
 ```
 
+<Tip>
+The signer is force-bound to the **L1** provider to make L1 finalization flows work out of the box.
+</Tip>
+
 ## `createEthersClient(args) → EthersClient`
 
-<ParamField name="args.l1" type="ethers.AbstractProvider" required>
-  L1 provider used for address resolution and L1 transactions.
-</ParamField>
-<ParamField name="args.l2" type="ethers.AbstractProvider" required>
-  L2 provider (target ZK chain). Used for ZK RPC and reads.
-</ParamField>
-<ParamField name="args.signer" type="ethers.Signer" required>
-  Signer used for sends. If not already connected to <code>args.l1</code>, it will be connected.
-</ParamField>
-<ParamField name="args.overrides" type="Partial&lt;ResolvedAddresses&gt;">
-  Optional manual contract-address overrides (useful for forks or testing).
-</ParamField>
+<ParamField name="args.l1" type="ethers.AbstractProvider" required>L1 provider for reads and L1 transactions.</ParamField> <ParamField name="args.l2" type="ethers.AbstractProvider" required>L2 (ZKsync) provider for reads and ZK RPC.</ParamField> <ParamField name="args.signer" type="ethers.Signer" required>Signer for sends. If not connected to <code>args.l1</code>, it will be connected.</ParamField> <ParamField name="args.overrides" type="Partial&lt;ResolvedAddresses&gt;">Optional address overrides (forks/tests).</ParamField>
 
-<Tip>
-  The signer is force-bound to the L1 provider to ensure finalize transactions work out of the box.
-</Tip>
+**Returns:** `EthersClient`
 
 ## EthersClient interface
 
-<ResponseField name="kind" type="'ethers'">
-  Discriminator for the adapter.
-</ResponseField>
-<ResponseField name="l1" type="ethers.AbstractProvider">
-  Read/write L1 provider.
-</ResponseField>
-<ResponseField name="l2" type="ethers.AbstractProvider">
-  Read-only L2 provider (target ZK chain).
-</ResponseField>
-<ResponseField name="signer" type="ethers.Signer">
-  Signer used for sends; connected to <code>l1</code>.
-</ResponseField>
-<ResponseField name="zks" type="ZksRpc">
-  ZKsync-specific RPC surface bound to <code>l2</code>.
-</ResponseField>
+<ResponseField name="kind" type="'ethers'">Adapter discriminator.</ResponseField> <ResponseField name="l1" type="ethers.AbstractProvider">Public L1 provider.</ResponseField> <ResponseField name="l2" type="ethers.AbstractProvider">Public L2 (ZKsync) provider.</ResponseField> <ResponseField name="signer" type="ethers.Signer">Signer (bound to <code>l1</code> for sends).</ResponseField> <ResponseField name="zks" type="ZksRpc">ZKsync-specific RPC surface bound to <code>l2</code>.</ResponseField>
 
-### Methods
+## Methods
 
-#### `ensureAddresses() → Promise<ResolvedAddresses>`
+### `ensureAddresses() → Promise<ResolvedAddresses>`
 
-Resolves and caches core contract addresses via on-chain lookups (and optional overrides).
+Resolve and cache core contract addresses from chain state (merges any `overrides`).
 
 ```ts
 const a = await client.ensureAddresses();
 /*
-a = {
+{
   bridgehub, l1AssetRouter, l1Nullifier, l1NativeTokenVault,
   l2AssetRouter, l2NativeTokenVault, l2BaseTokenSystem
 }
 */
 ```
 
-#### `contracts() → Promise<{ ...contracts }>`
+### `contracts() → Promise<{ ...contracts }>`
 
-Returns connected `ethers.Contract` instances for all core contracts.
+Return connected `ethers.Contract` instances for all core contracts.
 
 ```ts
 const c = await client.contracts();
-const bh = c.bridgehub;
+const bh = c.bridgehub; // call bh.getAddress(), bh.interface, bh.functions.*, etc.
 ```
 
-#### `refresh(): void`
+### `refresh(): void`
 
-Clears cached addresses/contracts. Next calls will re-resolve.
+Clear cached addresses/contracts. Subsequent calls re-resolve.
 
 ```ts
 client.refresh();
-await client.ensureAddresses(); // re-fetches
+await client.ensureAddresses();
 ```
 
-#### `baseToken(chainId: bigint) → Promise<Address>`
+### `baseToken(chainId: bigint) → Promise<Address>`
 
-Looks up the **L1 address** of the base token for a given L2 chain via `Bridgehub.baseToken(chainId)`.
+Return the **L1 base-token address** for a given L2 chain via `Bridgehub.baseToken(chainId)`.
 
 ```ts
-const base = await client.baseToken( BigInt(324) /* ZKsync Era */ );
+const base = await client.baseToken(324n /* e.g., Era */);
 ```
 
 ## Types
@@ -125,3 +106,10 @@ type ResolvedAddresses = {
   l2BaseTokenSystem: Address;
 };
 ```
+
+## Notes & pitfalls
+
+* **Provider roles:** `l1` is used for L1 lookups and finalization sends; `l2` is used for ZKsync reads/RPC via `zks`.
+* **Signer binding:** The signer is connected to `l1` to ensure L1 transactions (e.g., finalize) succeed without extra wiring.
+* **Caching:** `ensureAddresses()` and `contracts()` are cached. Call `refresh()` after network changes or when using new overrides.
+* **Overrides:** For forks or custom deployments, pass `overrides` at construction; they are merged with on-chain resolution.

@@ -1,8 +1,14 @@
 ---
 title: EthersSdk
-description: High-level SDK for deposits, withdrawals, and helpers using the Ethers adapter.
-group: API Reference / Ethers
+description: High-level SDK composed over the Ethers adapter - deposits, withdrawals, and chain-aware helpers.
+group: SDK Reference / Ethers
 ---
+
+## At a glance
+
+- **Factory:** `createEthersSdk(client) → EthersSdk`
+- **Composed resources:** `sdk.deposits`, `sdk.withdrawals`, `sdk.helpers`
+- **Client vs SDK:** the **client** wires RPC/signing; the **sdk** adds high-level flows (quote → prepare → create → wait) and convenience helpers.
 
 ## Import
 
@@ -10,14 +16,14 @@ group: API Reference / Ethers
 import {
   createEthersClient,
   createEthersSdk,
-} from '@dutterbutter/zksync-sdk/ethers';
+} from "@dutterbutter/zksync-sdk/ethers";
 ```
 
 ## Quick start
 
 ```ts
-import { JsonRpcProvider, Wallet } from 'ethers';
-import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+import { JsonRpcProvider, Wallet, parseEther } from "ethers";
+import { createEthersClient, createEthersSdk } from "@dutterbutter/zksync-sdk/ethers";
 
 const l1 = new JsonRpcProvider(process.env.ETH_RPC!);
 const l2 = new JsonRpcProvider(process.env.ZKSYNC_RPC!);
@@ -26,44 +32,54 @@ const signer = new Wallet(process.env.PRIVATE_KEY!, l1);
 const client = createEthersClient({ l1, l2, signer });
 const sdk = createEthersSdk(client);
 
-// Example: get contracts and the L2 address for an L1 token
+// Example: deposit 0.05 ETH L1 → L2, wait for L2 execution
+const handle = await sdk.deposits.create({
+  token: ETH_ADDRESS,                      // 0x…00 sentinel for ETH supported
+  amount: parseEther("0.05"),
+  to: await signer.getAddress(),
+});
+
+await sdk.deposits.wait(handle, { for: "l2" });
+
+// Example: resolve core contracts
 const { l1NativeTokenVault } = await sdk.helpers.contracts();
-const l1_crown_address = await sdk.helpers.l1TokenAddress(CROWN_ERC20_ADDRESS);
 ```
 
 ## `createEthersSdk(client) → EthersSdk`
 
 <ParamField name="client" type="EthersClient" required>
-  Instance created by <code>createEthersClient</code>.
+  Instance returned by <code>`createEthersClient({ l1, l2, signer })`</code>.
 </ParamField>
 
+**Returns:** `EthersSdk`
+
 <Tip>
-  The SDK composes the client with high-level resources: <code>deposits</code>, <code>withdrawals</code>, and convenience <code>helpers</code>.
+The SDK composes the client with resources: <code>deposits</code>, <code>withdrawals</code>, and convenience <code>helpers</code>.
 </Tip>
 
 ## EthersSdk interface
 
-<ResponseField name="deposits" type="DepositsResource">
-  L1 → L2 flows (quote, prepare, create, status, wait). See <a href="/api-reference/ethers/deposits">Deposits</a>.
-</ResponseField>
+### `deposits: DepositsResource`
 
-<ResponseField name="withdrawals" type="WithdrawalsResource">
-  L2 → L1 flows (quote, prepare, create, status, wait, finalize). See <a href="/api-reference/ethers/withdrawals">Withdrawals</a>.
-</ResponseField>
+L1 → L2 flows. See **[Deposits](/api-reference/ethers/deposits)**.
 
-### `helpers`
+### `withdrawals: WithdrawalsResource`
 
-Utilities for addresses, contracts, and token mapping.
+L2 → L1 flows. See **[Withdrawals](/api-reference/ethers/withdrawals)**.
 
-#### `addresses() → Promise<ResolvedAddresses>`
+## helpers
 
-Resolves core addresses (Bridgehub, routers, vaults, base token system).
+Utilities for chain addresses, connected contracts, and L1↔L2 token mapping.
+
+### `addresses() → Promise<ResolvedAddresses>`
+
+Resolve core addresses (Bridgehub, routers, vaults, base-token system).
 
 ```ts
 const a = await sdk.helpers.addresses();
 ```
 
-#### `contracts() → Promise<{ ...contracts }>`
+### `contracts() → Promise<{ ...contracts }>`
 
 Connected `ethers.Contract` instances for all core contracts.
 
@@ -71,55 +87,54 @@ Connected `ethers.Contract` instances for all core contracts.
 const c = await sdk.helpers.contracts();
 ```
 
-#### `l1AssetRouter() / l1NativeTokenVault() / l1Nullifier() → Promise<Contract>`
+### One-off contract getters
 
-One-off getters if you only need a specific contract.
+`l1AssetRouter() → Promise<Contract>`
+`l1NativeTokenVault() → Promise<Contract>`
+`l1Nullifier() → Promise<Contract>`
 
 ```ts
 const nullifier = await sdk.helpers.l1Nullifier();
 ```
 
-#### `baseToken(chainId?: bigint) → Promise<Address>`
+### `baseToken(chainId?: bigint) → Promise<Address>`
 
-L1 address of the base token for a given **L2 chain**. If omitted, uses the current L2 provider’s chain id.
+L1 address of the **base token** for the current (or supplied) L2 chain.
 
 ```ts
-const base = await sdk.helpers.baseToken(); // infer from client.l2
+const base = await sdk.helpers.baseToken(); // infers from client.l2
 ```
 
-#### `l2TokenAddress(l1Token: Address) → Promise<Address>`
+### `l2TokenAddress(l1Token: Address) → Promise<Address>`
 
-Returns the **L2 token address** for a given **L1 token**.
+L2 token address for an L1 token.
 
-* Handles ETH special-case (L2 ETH placeholder).
-* If the token equals the chain’s base token, returns the L2 base-token system address.
+* Handles ETH special case (L2 ETH placeholder).
+* If token is the chain’s base token, returns the L2 base-token system address.
 * Otherwise queries `IL2NativeTokenVault.l2TokenAddress`.
 
 ```ts
-const l2_crown_address = await sdk.helpers.l2TokenAddress(CROWN_ERC20_ADDRESS);
+const l2Crown = await sdk.helpers.l2TokenAddress(CROWN_ERC20_ADDRESS);
 ```
 
-#### `l1TokenAddress(l2Token: Address) → Promise<Address>`
+### `l1TokenAddress(l2Token: Address) → Promise<Address>`
 
-Returns the **L1 token address** from an **L2 token** using `IL2AssetRouter.l1TokenAddress`.
-
-* ETH placeholder on L2 resolves to the canonical ETH address.
+L1 token for an L2 token via `IL2AssetRouter.l1TokenAddress`. ETH placeholder resolves to canonical ETH.
 
 ```ts
-const l1_crown_address = await sdk.helpers.l1TokenAddress(CROWN_ERC20_ADDRESS);
+const l1Crown = await sdk.helpers.l1TokenAddress(L2_CROWN_ADDRESS);
 ```
 
-#### `assetId(l1Token: Address) → Promise<Hex>`
+### `assetId(l1Token: Address) → Promise<Hex>`
 
-Computes the `bytes32` asset identifier for an L1 token via `L1NativeTokenVault.assetId`.
-
-* Treats canonical ETH appropriately.
+`bytes32` asset ID via `L1NativeTokenVault.assetId` (ETH handled canonically).
 
 ```ts
 const id = await sdk.helpers.assetId(CROWN_ERC20_ADDRESS);
 ```
 
-## Notes
+## Notes & pitfalls
 
-* The SDK defers to on-chain sources where possible; results may depend on the connected chain(s).
-* Errors surface as typed envelopes (see **Error Model** in API Reference intro). Use the <code>try*</code> variants on resources if you prefer result objects over exceptions.
+* **Client first:** You must construct the **client** with `{ l1, l2, signer }` before creating the SDK.
+* **Chain-derived behavior:** helpers pull from on-chain sources; results depend on the connected networks.
+* **Error model:** resource methods throw typed errors; prefer <code>try*</code> variants on resources for result objects.

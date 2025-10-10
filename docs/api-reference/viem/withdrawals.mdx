@@ -4,82 +4,92 @@ description: L2 → L1 withdrawals for ETH and ERC-20 with quote, prepare, creat
 group: API Reference / Viem
 ---
 
+## At a glance
+
+- **Resource:** `sdk.withdrawals`
+- **Typical flow:** `quote → create → wait({ for: 'l2' }) → wait({ for: 'ready' }) → finalize`
+- **Auto-routing:** ETH vs ERC-20 and base-token vs non-base handled internally
+- **Error style:** Throwing methods (`quote`, `prepare`, `create`, `status`, `wait`, `finalize`) + result variants (`tryQuote`, `tryPrepare`, `tryCreate`, `tryWait`, `tryFinalize`)
+
 ## Import
 
 ```ts
-import { parseEther } from "viem";
 import {
-  createViemClient,
-  createViemSdk,
-} from "@dutterbutter/zksync-sdk/viem";
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  type Account,
+  type Chain,
+  type Transport,
+  type WalletClient,
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
 
-// Useful constants
-import { ETH_ADDRESS } from "@dutterbutter/zksync-sdk/constants";
-````
+const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+const l1 = createPublicClient({ transport: http(L1_RPC) });
+const l2 = createPublicClient({ transport: http(L2_RPC) });
+const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+  account,
+  transport: http(L1_RPC),
+});
+
+// --- 2. Initialize the SDK ---
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
+// sdk.withdrawals → WithdrawalsResource
+```
 
 ## Quick start
 
-Withdraw **0.1 ETH** from L2 → L1, then finalize:
+Withdraw **0.1 ETH** from L2 → L1 and finalize on L1:
 
 ```ts
-const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
-const sdk = createViemSdk(client);
-
 const handle = await sdk.withdrawals.create({
-  token: ETH_ADDRESS,
+  token: ETH_ADDRESS,                     // ETH sentinel supported
   amount: parseEther("0.1"),
-  to: /* L1 recipient address */,
+  to: await signer.getAddress(),          // L1 recipient
 });
 
-// 1) Wait until included on L2 (returns TransactionReceipt with l2ToL1Logs if available)
-const l2Receipt = await sdk.withdrawals.wait(handle, { for: "l2" });
+// 1) L2 inclusion (adds l2ToL1Logs if available)
+await sdk.withdrawals.wait(handle, { for: "l2" });
 
 // 2) Wait until finalizable (no side effects)
 await sdk.withdrawals.wait(handle, { for: "ready", pollMs: 6000 });
 
-// 3) Send the L1 finalize tx (if not already finalized)
+// 3) Finalize on L1 (no-op if already finalized)
 const { status, receipt: l1Receipt } = await sdk.withdrawals.finalize(handle.l2TxHash);
 ```
 
-<Tip>
-  Withdrawals are a two-step process: include on **L2**, then finalize on **L1**. You can either
-  wait for <code>ready</code> before calling <code>finalize</code>, or call <code>finalize</code> directly— it will throw if not yet ready.
-</Tip>
+<Info>
+Withdrawals are two-phase: inclusion on **L2**, then **finalization on L1**. You can call <code>finalize</code> directly; it will throw if not yet ready. Prefer <code>`wait(..., { for: 'ready' })`</code> to avoid that.
+</Info>
 
----
-
-## Routes (auto-selected)
-
-Based on the asset and the L2 base token:
+## Route selection (automatic)
 
 * `eth-base` — Base token is **ETH** on L2
 * `eth-nonbase` — Base token is **not ETH** on L2
 * `erc20-nonbase` — Withdrawing an ERC-20 that is **not** the base token
 
-No route argument is needed; it’s derived internally.
+You **do not** pass a route; it’s derived from network metadata + `token`.
 
-## Methods
+## Method reference
 
 ### `quote(p: WithdrawParams) → Promise<WithdrawQuote>`
 
-Dry-run summary of a withdrawal (route, approvals, gas hints).
+Estimate the operation (route, approvals, gas hints). Does **not** send txs.
 
-<ParamField name="p.token" type="Address" required>
-  L2 token address (ETH handled by the SDK).
-</ParamField>
-<ParamField name="p.amount" type="bigint" required>
-  Amount in wei (e.g., <code>parseEther("0.1")</code>).
-</ParamField>
-<ParamField name="p.to" type="Address" required>
-  Recipient on L1.
-</ParamField>
+<ParamField name="p.token" type="Address" required>L2 token (ETH handled by the SDK; ETH sentinel supported).</ParamField> <ParamField name="p.amount" type="bigint" required>Amount in wei.</ParamField> <ParamField name="p.to" type="Address" required>L1 recipient.</ParamField>
+
+**Returns:** `WithdrawQuote`
 
 ```ts
 const q = await sdk.withdrawals.quote({ token, amount, to });
 /*
-q = {
+{
   route: "eth-base" | "eth-nonbase" | "erc20-nonbase",
-  approvalsNeeded: [{ token, spender, amount }, ...],
+  approvalsNeeded: [{ token, spender, amount }],
   suggestedL2GasLimit?: bigint
 }
 */
@@ -87,59 +97,65 @@ q = {
 
 ### `tryQuote(p) → Promise<{ ok: true; value: WithdrawQuote } | { ok: false; error }>`
 
-Result-style version of `quote`.
+Result-style `quote`.
 
-### `prepare(p: WithdrawParams) → Promise<WithdrawPlan<ViemPlanWriteRequest>>`
+### `prepare(p: WithdrawParams) → Promise<WithdrawPlan<TransactionRequest>>`
 
-Build the plan (route + ordered **L2** steps), no sends.
+Builds the plan (ordered L2 steps + unsigned txs) without sending.
+
+**Returns:** `WithdrawPlan`
 
 ```ts
 const plan = await sdk.withdrawals.prepare({ token, amount, to });
 /*
-plan = {
+{
   route,
   summary: WithdrawQuote,
-  steps: [{ key, kind, tx: ViemPlanWriteRequest }, ...]
+  steps: [
+    { key, kind, tx: TransactionRequest },
+    // …
+  ]
 }
 */
 ```
 
-### `tryPrepare(p) → Promise<{ ok: true; value } | { ok: false; error }>`
+### `tryPrepare(p) → Promise<{ ok: true; value: WithdrawPlan } | { ok: false; error }>`
 
-Result-style version of `prepare`.
+Result-style `prepare`.
 
-### `create(p: WithdrawParams) → Promise<WithdrawHandle<ViemPlanWriteRequest>>`
+### `create(p: WithdrawParams) → Promise<WithdrawHandle<TransactionRequest>>`
 
-Prepare + **send** L2 steps via Viem `writeContract`. Returns a handle with the **L2 tx hash**.
+Prepares and **executes** required **L2** steps. Returns a handle with the **L2 tx hash**.
+
+**Returns:** `WithdrawHandle`
 
 ```ts
 const handle = await sdk.withdrawals.create({ token, amount, to });
 /*
-handle = {
+{
   kind: "withdrawal",
   l2TxHash: Hex,
   stepHashes: Record<string, Hex>,
-  plan
+  plan: WithdrawPlan
 }
 */
 ```
 
 <Warning>
-  If any step reverts on L2, <code>create</code> throws a typed error.
-  Prefer <code>tryCreate</code> if you want a result object.
+If any L2 step reverts, <code>create</code> throws a typed error. Prefer <code>tryCreate</code> for a result object.
 </Warning>
 
 ### `tryCreate(p) → Promise<{ ok: true; value: WithdrawHandle } | { ok: false; error }>`
 
-Result-style version of `create`.
+Result-style `create`.
 
-### `status(h | l2TxHash) → Promise<WithdrawalStatus>`
+### `status(handleOrHash) → Promise<WithdrawalStatus>`
 
-Report current phase. Accepts the **handle** from `create` or a raw **L2 tx hash**.
+Report current phase for a withdrawal. Accepts the `WithdrawHandle` from `create` **or** a raw **L2 tx hash**.
 
-Phases:
+**Phases**
 
-* `UNKNOWN` — no L2 hash on input
+* `UNKNOWN` — no L2 hash provided
 * `L2_PENDING` — L2 receipt missing
 * `PENDING` — included on L2 but not yet finalizable
 * `READY_TO_FINALIZE` — can be finalized on L1 now
@@ -147,34 +163,30 @@ Phases:
 
 ```ts
 const s = await sdk.withdrawals.status(handle);
-/*
-s = { phase, l2TxHash, key? } // key identifies the canonical message for finalization
-*/
+// { phase, l2TxHash, key? }
 ```
 
-### `wait(h | l2TxHash, { for: 'l2' | 'ready' | 'finalized', pollMs?, timeoutMs? })`
+### `wait(handleOrHash, { for: 'l2' | 'ready' | 'finalized', pollMs?, timeoutMs? })`
 
 Block until a target is reached.
 
 * `{ for: 'l2' }` → resolves **L2 receipt** (`TransactionReceiptZKsyncOS`) or `null`
-  (SDK augments with `l2ToL1Logs` if available).
-* `{ for: 'ready' }` → resolves `null` when finalization becomes possible.
-* `{ for: 'finalized' }` → resolves **L1 receipt** when found, otherwise `null` (even if finalized).
+* `{ for: 'ready' }` → resolves `null` when finalizable
+* `{ for: 'finalized' }` → resolves **L1 receipt** (if found) or `null`
 
 ```ts
-// 1) L2 inclusion
 const l2Rcpt = await sdk.withdrawals.wait(handle, { for: "l2" });
-
-// 2) Finalization readiness (no side effects)
 await sdk.withdrawals.wait(handle, { for: "ready", pollMs: 6000, timeoutMs: 15 * 60_000 });
-
-// 3) Wait for finalized (returns L1 receipt or null)
 const l1Rcpt = await sdk.withdrawals.wait(handle, { for: "finalized", pollMs: 7000 });
 ```
 
 <Tip>
-  Default polling is 5500ms (minimum 1000ms). Use <code>timeoutMs</code> for long windows.
+Default polling is 5500 ms (min 1000 ms). Use <code>timeoutMs</code> for long windows.
 </Tip>
+
+### `tryWait(handleOrHash, opts) → Result<TransactionReceipt | null>`
+
+Result-style `wait`.
 
 ### `finalize(l2TxHash: Hex) → Promise<{ status: WithdrawalStatus; receipt?: TransactionReceipt }>`
 
@@ -188,13 +200,12 @@ if (status.phase === "FINALIZED") {
 ```
 
 <Info>
-  <b>Behavior</b>: If the withdrawal is not ready, <code>finalize</code> throws a typed <code>STATE</code> error.  
-  Use <code>status(...)</code> or <code>`wait(..., { for: 'ready' })`</code> to check first.
+If not ready, <code>finalize</code> throws a typed <code>STATE</code> error. Use <code>status(...)</code> or <code>`wait(..., { for: 'ready' })`</code> first to avoid throws.
 </Info>
 
-### `tryFinalize(l2TxHash) → Promise<{ ok: true; value: { status; receipt? } } | { ok: false; error }>`
+### `tryFinalize(l2TxHash) → Promise<{ ok: true; value: { status: WithdrawalStatus; receipt?: TransactionReceipt } } | { ok: false; error }>`
 
-Result-style version of `finalize`.
+Result-style `finalize`.
 
 ## End-to-end examples
 
@@ -203,25 +214,23 @@ Result-style version of `finalize`.
 ```ts
 const handle = await sdk.withdrawals.create({ token, amount, to });
 
-// Wait L2 inclusion
+// L2 inclusion
 await sdk.withdrawals.wait(handle, { for: "l2" });
 
-// Either finalize immediately…
-const { status, receipt } = await sdk.withdrawals.finalize(handle.l2TxHash);
+// Option A: finalize immediately (will throw if not ready)
+await sdk.withdrawals.finalize(handle.l2TxHash);
 
-// …or wait for readiness first, then finalize
+// Option B: wait for readiness, then finalize
 await sdk.withdrawals.wait(handle, { for: "ready" });
-const done = await sdk.withdrawals.finalize(handle.l2TxHash);
+await sdk.withdrawals.finalize(handle.l2TxHash);
 ```
 
-## Types (shape overview)
-
-These types live in `core/types` and are summarized here for convenience.
+## Types (overview)
 
 ```ts
 type WithdrawParams = {
-  token: Address;   // L2 token (ETH handled internally)
-  amount: bigint;   // in wei
+  token: Address;   // L2 token (ETH sentinel supported)
+  amount: bigint;   // wei
   to: Address;      // L1 recipient
 };
 
@@ -231,13 +240,13 @@ type WithdrawQuote = {
   suggestedL2GasLimit?: bigint;
 };
 
-type WithdrawPlan<TTx = ViemPlanWriteRequest> = {
+type WithdrawPlan<TTx = TransactionRequest> = {
   route: WithdrawQuote["route"];
   summary: WithdrawQuote;
   steps: Array<{ key: string; kind: string; tx: TTx }>;
 };
 
-type WithdrawHandle<TTx = ViemPlanWriteRequest> = {
+type WithdrawHandle<TTx = TransactionRequest> = {
   kind: "withdrawal";
   l2TxHash: Hex;
   stepHashes: Record<string, Hex>;
@@ -251,10 +260,13 @@ type WithdrawalStatus =
   | { phase: "READY_TO_FINALIZE";  l2TxHash: Hex; key: unknown }
   | { phase: "FINALIZED";          l2TxHash: Hex; key: unknown };
 
-// The L2 receipt returned by wait({ for: 'l2' }) is augmented:
-type TransactionReceiptZKsyncOS = TransactionReceipt & { l2ToL1Logs?: Array<unknown> };
+// L2 receipt augmentation returned by wait({ for: 'l2' })
+type TransactionReceiptZKsyncOS =
+  TransactionReceipt & { l2ToL1Logs?: Array<unknown> };
 ```
 
-<Tip>
-  Prefer the <code>try*</code> variants if you want result objects instead of exceptions.
-</Tip>
+## Notes & pitfalls
+
+* **Two chains, two receipts:** inclusion on **L2** and finalization on **L1** are independent events.
+* **Polling strategy:** for production UIs, prefer <code>`wait({ for: 'ready' })`</code> then <code>finalize</code>; it avoids premature finalize calls.
+* **Approvals:** if withdrawing ERC-20 requires approvals, `create` will include those steps automatically.
