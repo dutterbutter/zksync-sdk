@@ -24,10 +24,10 @@ export interface EthersSdk {
    * @see DepositsResourceType for a full list of methods.
    */
   deposits: DepositsResourceType;
-  /** 
-  * @summary Provides methods for withdrawing assets from L2 to L1.
-  * @see WithdrawalsResourceType for a full list of methods.
-  */
+  /**
+   * @summary Provides methods for withdrawing assets from L2 to L1.
+   * @see WithdrawalsResourceType for a full list of methods.
+   */
   withdrawals: WithdrawalsResourceType;
   /**
    * @summary A collection of utility functions for common tasks like resolving addresses,
@@ -122,7 +122,7 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
       async l1AssetRouter() {
         const { l1AssetRouter } = await client.contracts();
         return l1AssetRouter;
-      },  
+      },
       async l1NativeTokenVault() {
         const { l1NativeTokenVault } = await client.contracts();
         return l1NativeTokenVault;
