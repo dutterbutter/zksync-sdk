@@ -18,7 +18,6 @@ export function routeEthBase(): WithdrawRouteStrategy {
 
       const base = new Contract(
         L2_BASE_TOKEN_ADDRESS,
-
         new Interface(IBaseTokenABI),
         ctx.client.l2,
       );
