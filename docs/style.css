@@ -5,30 +5,25 @@ html, body { overflow-x: hidden; }
 
 :root{
   /* Brand */
-  --zk-blue:  #1755F4;
-  --zk-royal: #0C18EC;
-  --zk-teal:  #13D5D3;
-  --zk-lime:  #BFF351;
+  --zk-blue:#1755F4; --zk-royal:#0C18EC; --zk-teal:#13D5D3; --zk-lime:#BFF351;
 
   /* UI neutrals */
-  --white:  #FFFFFF;
-  --surface:#FFFFFF;
-  --ink-0:  #05060A;   /* dark bg */
-  --ink-1:  #0b1226;   /* heading */
-  --ink-2:  #334155;   /* body */
-  --line:   rgba(2,6,23,.10);
+  --white:#FFFFFF; --surface:#FFFFFF;
+  --ink-0:#05060A;   /* dark bg */
+  --ink-1:#0b1226;   /* heading */
+  --ink-2:#334155;   /* body */
+  --line:rgba(2,6,23,.10);
 
   /* CTA teal */
-  --teal-700:#0BA3A1;
-  --teal-600:#0FBEBB;
+  --teal-700:#0BA3A1; --teal-600:#0FBEBB;
 }
 
 /* =========================
-   Hero layout
+   Hero
    ========================= */
 .hero { position: relative; padding: 96px 16px; }
 
-/* “Apple-style” background with subtle dot grid */
+/* background grid + radial glow */
 .hero--ai{
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -43,7 +38,6 @@ html, body { overflow-x: hidden; }
     radial-gradient(1200px 520px at -10% -20%, rgba(191,243,81,.18), transparent 60%),
     var(--surface);
 }
-
 :root.dark .hero--ai{
   border-bottom-color: rgba(23,85,244,.28);
   background:
@@ -56,7 +50,7 @@ html, body { overflow-x: hidden; }
     var(--ink-0);
 }
 
-/* Grid + split */
+/* grid split */
 .hero--split .hero-inner{
   max-width: 1200px; margin: 0 auto; display: grid;
   grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; padding: 0 24px;
@@ -65,17 +59,14 @@ html, body { overflow-x: hidden; }
 .promo-right{ display: flex; justify-content: flex-end; }
 
 /* =========================
-   Pill (eyebrow)
+   Pill
    ========================= */
 .pill-tag{
-  align-self:flex-start; position:relative;
-  display:inline-flex; align-items:center; gap:8px;
-  padding:8px 14px; border-radius:999px;
-  font-size:.95rem; font-weight:600; color: var(--ink-1);
+  align-self:flex-start; position:relative; display:inline-flex; align-items:center; gap:8px;
+  padding:8px 14px; border-radius:999px; font-size:.95rem; font-weight:600; color: var(--ink-1);
   border:1px solid rgba(191,243,81,.45);
   background: color-mix(in srgb, var(--zk-blue) 8%, #fff);
 }
-.pill-icon{ font-size:1rem; line-height:1; }
 .pill-tag--ring{
   border:1px solid transparent;
   background:
@@ -95,32 +86,20 @@ html, body { overflow-x: hidden; }
 }
 
 /* =========================
-   Headline (no gradient text)
+   Headline & Subtitle
    ========================= */
 .promo-title{
   font-size: clamp(2.6rem, 6vw, 4.4rem);
-  line-height: .95;
-  letter-spacing: -0.02em;
-  font-weight: 800;
-  margin: 0;
-  max-width: 12ch;
-  color: var(--ink-1);        /* LIGHT default for “in your favorite libraries” */
+  line-height: .95; letter-spacing: -0.02em; font-weight: 800; margin: 0; max-width: 12ch;
+  color: var(--ink-1);
 }
-.promo-title .zk-strong{ color: var(--zk-blue); }  /* LIGHT: “ZKsync power” */
+.promo-title .zk-strong{ color: var(--zk-blue); }
+:root.dark .promo-title{ color: var(--zk-blue); }
+:root.dark .promo-title .zk-strong{ color: var(--white); }
 
-/* DARK: flip the colors per your spec */
-:root.dark .promo-title{ color: var(--zk-blue); }  /* “in your favorite libraries” */
-:root.dark .promo-title .zk-strong{ color: var(--white); }  /* “ZKsync power” */
-
-/* =========================
-   Subtitle
-   ========================= */
 .hero-subtitle{
-  max-width: 680px;
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
-  line-height: 1.65;
-  margin: 6px 0 4px;
-  color: var(--ink-2);
+  max-width: 680px; font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.65;
+  margin: 6px 0 4px; color: var(--ink-2);
 }
 :root.dark .hero-subtitle{ color:#A7B1D6; }
 
@@ -128,6 +107,7 @@ html, body { overflow-x: hidden; }
    CTAs
    ========================= */
 .hero-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; }
+
 .hero-cta{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   padding:14px 22px; border-radius:12px; font-weight:600; text-decoration:none;
@@ -136,15 +116,30 @@ html, body { overflow-x: hidden; }
   transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
 }
 .hero-cta:hover{ transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+
 .hero-cta.ghost{ background:#fff; color:var(--ink-1); border:1px solid var(--line); box-shadow:none; }
 .hero-cta.ghost:hover{ background:#f8fafc; border-color: rgba(2,6,23,.14); }
+
 .hero-cta.teal{
   background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
   color:#fff; border:1px solid rgba(19,213,211,.35);
 }
+
+/* dark */
 :root.dark .hero-cta{
   background: linear-gradient(90deg, #1755F4, #0C18EC);
-  box-shadow: 0 8px 24px rgba(23,85,244,.35);
+  color:#fff; box-shadow: 0 8px 24px rgba(23,85,244,.35);
+}
+:root.dark .hero-cta.teal{
+  background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
+  border:1px solid rgba(19,213,211,.45);
+  box-shadow: 0 10px 28px rgba(19,213,211,.32);
+}
+:root.dark .hero-cta.ghost{
+  background:#fff; color:#0b1226; border:1px solid rgba(2,6,23,.28);
+}
+:root.dark .hero-cta.ghost:hover{
+  background:#f8fafc; border-color: rgba(2,6,23,.40);
 }
 
 /* =========================
@@ -152,8 +147,7 @@ html, body { overflow-x: hidden; }
    ========================= */
 .dev-card{
   width:100%; max-width:520px; border-radius:16px; padding:16px;
-  border:1px solid var(--line);
-  background:#fff;
+  border:1px solid var(--line); background:#fff;
   box-shadow: 0 8px 26px rgba(2,6,23,.06);
 }
 .dev-label{ font-size:.9rem; font-weight:600; color:#64748b; margin-bottom:8px; }
@@ -169,7 +163,7 @@ html, body { overflow-x: hidden; }
 }
 .dev-card pre{ margin:0 !important; padding:14px 16px !important; border-radius:10px !important; }
 
-/* optional gradient ring variant */
+/* gradient ring variant */
 .dev-card--gradient{
   position:relative; border:1px solid transparent; border-radius:16px;
   background:
@@ -177,6 +171,8 @@ html, body { overflow-x: hidden; }
     linear-gradient(135deg, #1755F4, #EF6DF2, #FD402C, #13D5D3) border-box;
   box-shadow: 0 12px 32px rgba(2,6,23,.10);
 }
+
+/* dark */
 :root.dark .dev-card{
   background: linear-gradient(180deg, rgba(12,24,236,.18), rgba(12,16,28,.30));
   border-color: rgba(232,237,255,.16);
@@ -203,76 +199,20 @@ html, body { overflow-x: hidden; }
 @media (min-width: 1280px){
   .hero--split .hero-inner{ gap:44px; }
   .promo-right{ transform: translateY(6px); }
-  .dev-card{ max-width:520px; }
 }
 
-/* Base CTA styles (unchanged) */
-.hero-cta{
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:14px 22px; border-radius:12px; font-weight:600; text-decoration:none;
-  color:#fff; background: var(--zk-blue);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-  transition: transform .06s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
-}
-.hero-cta:hover{ transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
-
-/* Variants (light) */
-.hero-cta.teal{
-  background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
-  color:#fff; border:1px solid rgba(19,213,211,.35);
-}
-.hero-cta.ghost{
-  background:#fff; color:var(--ink-1); border:1px solid var(--line); box-shadow:none;
-}
-.hero-cta.ghost:hover{ background:#f8fafc; border-color: rgba(2,6,23,.14); }
-
-/* ---------- Dark mode overrides ---------- */
-/* Default CTA stays blue unless a variant below overrides it */
-:root.dark .hero-cta{
-  background: linear-gradient(90deg, #1755F4, #0C18EC);
-  color:#fff; box-shadow: 0 8px 24px rgba(23,85,244,.35);
-}
-
-/* Keep "Get started" teal in dark too */
-:root.dark .hero-cta.teal{
-  background: linear-gradient(90deg, var(--teal-700), var(--teal-600));
-  color:#fff;
-  border:1px solid rgba(19,213,211,.45);
-  box-shadow: 0 10px 28px rgba(19,213,211,.32);
-}
-
-/* Make "View on GitHub" white in dark as well */
-:root.dark .hero-cta.ghost{
-  background:#fff;
-  color:#0b1226;
-  border:1px solid rgba(2,6,23,.28);
-  box-shadow:none;
-}
-:root.dark .hero-cta.ghost:hover{
-  background:#f8fafc;
-  border-color: rgba(2,6,23,.40);
-}
-
-/* ---- Top-only gradient bleed for non-hero pages (scrolls away) ---- */
-
+/* =========================
+   Top bleed for non-hero pages
+   ========================= */
 :root { --zk-bleed-height: min(38vh, 560px); }
 
-body {                     /* create a containing block for the pseudo */
-  position: relative;
-  background: var(--surface);
-}
+body { position: relative; background: var(--surface); }
 :root.dark body { background: var(--ink-0); }
 
-/* Only on pages WITHOUT the hero */
+/* only on pages WITHOUT the hero */
 body:not(.has-hero)::before {
-  content: "";
-  position: absolute;      /* <-- was fixed; now scrolls with page */
-  top: 0; left: 0; right: 0;
-  height: var(--zk-bleed-height);
-  pointer-events: none;
-  z-index: 0;
-
-  /* same gradients as your hero--ai (light) */
+  content: ""; position: absolute; top: 0; left: 0; right: 0;
+  height: var(--zk-bleed-height); pointer-events: none; z-index: 0;
   background:
     radial-gradient(rgba(23,85,244,.06) 1px, transparent 1.2px) 0 0 / 18px 18px,
     radial-gradient(1200px 700px at 85% -10%, rgba(12,24,236,.26), transparent 60%),
@@ -281,14 +221,11 @@ body:not(.has-hero)::before {
     radial-gradient(900px  520px at 70% 70%,  rgba(253,64,44,.16),  transparent 60%),
     radial-gradient(1200px 520px at -10% -20%, rgba(191,243,81,.18), transparent 60%),
     transparent;
-  /* soft fade */
   mask-image: linear-gradient(to bottom, rgba(0,0,0,.95) 58%, rgba(0,0,0,0));
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.95) 58%, rgba(0,0,0,0));
-  /* bottom divider */
   box-shadow: inset 0 -1px 0 var(--line);
 }
 
-/* Dark mode */
 :root.dark body:not(.has-hero)::before {
   background:
     radial-gradient(rgba(23,85,244,.13) 1px, transparent 1.2px) 0 0 / 18px 18px,
@@ -300,5 +237,5 @@ body:not(.has-hero)::before {
     transparent;
 }
 
-/* Ensure page content paints above the pseudo without fiddling z-index everywhere */
+/* ensure content sits above the pseudo */
 body > * { position: relative; }
