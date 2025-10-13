@@ -16,11 +16,7 @@ export function routeEthBase(): WithdrawRouteStrategy {
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
 
-      const base = new Contract(
-        L2_BASE_TOKEN_ADDRESS,
-        new Interface(IBaseTokenABI),
-        ctx.client.l2,
-      );
+      const base = new Contract(L2_BASE_TOKEN_ADDRESS, new Interface(IBaseTokenABI), ctx.client.l2);
 
       const toL1 = p.to ?? ctx.sender;
       const data = await wrapAs(
