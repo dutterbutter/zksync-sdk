@@ -66,57 +66,15 @@ jobs:
         with:
           version: v1.3.4
 
-      - name: Checkout zksync-os-server
-        uses: actions/checkout@v4
+      - name: Run ZKsync OS (L1-L2)
+        uses: dutterbutter/zksync-server-action@main
         with:
-          repository: matter-labs/zksync-os-server
-          ref: v0.8.2
-          path: zksync-os-server
-          fetch-depth: 1
-          submodules: recursive
-
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            zksync-os-server/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('zksync-os-server/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Build server (release)
-        working-directory: zksync-os-server
-        run: cargo build --release --bin zksync_os_bin
-
-      - name: Start Anvil (L1) and wait
-        working-directory: zksync-os-server
-        run: |
-          nohup anvil --load-state zkos-l1-state.json --port 8545 > anvil.log 2>&1 &
-          for i in {1..60}; do
-            if curl -sS -X POST http://127.0.0.1:8545 \
-                -H 'content-type: application/json' \
-                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | grep -q '"result"'; then
-              echo "Anvil ready"; exit 0
-            fi
-            sleep 1
-          done
-          echo "Anvil not ready"; tail -n 120 anvil.log || true; exit 1
-
-      - name: Start server (L2) and wait
-        working-directory: zksync-os-server
-        run: |
-          nohup ./target/release/zksync_os_bin > l2.log 2>&1 &
-          for i in {1..300}; do
-            if curl -sS -X POST http://127.0.0.1:3050 \
-                -H 'content-type: application/json' \
-                --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' | grep -q '"result"'; then
-              echo "L2 JSON-RPC ready"; exit 0
-            fi
-            sleep 1
-          done
-          echo "L2 JSON-RPC not ready"; tail -n 200 l2.log || true; exit 1
+          version: latest
+          l1_port: 8545
+          l2_port: 3050
+          wait_seconds: 300
+          linux_arch: x86_64
+          include_prerelease: false
 
       - name: Compile test contracts
         working-directory: tests/contracts
