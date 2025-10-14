@@ -56,10 +56,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install build deps
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config lcov
-
-      - name: Install Rust (stable)
-        uses: dtolnay/rust-toolchain@stable
+        run: sudo apt-get update && sudo apt-get install -y lcov
 
       - name: Install Foundry (anvil)
         uses: foundry-rs/foundry-toolchain@v1
