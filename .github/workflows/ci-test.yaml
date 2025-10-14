@@ -69,7 +69,6 @@ jobs:
           version: latest
           l1_port: 8545
           l2_port: 3050
-          wait_seconds: 0
           linux_arch: x86_64
           include_prerelease: false
 
