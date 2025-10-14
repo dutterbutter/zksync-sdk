@@ -64,13 +64,7 @@ jobs:
           version: v1.3.4
 
       - name: Run ZKsync OS (L1-L2)
-        uses: dutterbutter/zksync-server-action@main
-        with:
-          version: latest
-          l1_port: 8545
-          l2_port: 3050
-          linux_arch: x86_64
-          include_prerelease: false
+        uses: dutterbutter/zksync-server-action@v0.1.0
 
       - name: Compile test contracts
         working-directory: tests/contracts
