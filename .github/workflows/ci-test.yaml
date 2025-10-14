@@ -66,7 +66,7 @@ jobs:
         with:
           version: v1.3.4
 
-      - name: Checkout zksync-os-server v0.8.0
+      - name: Checkout zksync-os-server
         uses: actions/checkout@v4
         with:
           repository: matter-labs/zksync-os-server

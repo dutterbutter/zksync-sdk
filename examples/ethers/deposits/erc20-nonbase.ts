@@ -14,7 +14,6 @@
  * - The target L2’s base token is something else (e.g. you’re sending USDC to an ETH-based chain).
  */
 
-import 'dotenv/config';
 import { JsonRpcProvider, Wallet, parseUnits } from 'ethers';
 
 import { createEthersClient } from '../../../src/adapters/ethers/client';
