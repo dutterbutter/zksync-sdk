@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: matter-labs/zksync-os-server
-          ref: v0.8.0
+          ref: v0.8.2
           path: zksync-os-server
           fetch-depth: 1
           submodules: recursive
