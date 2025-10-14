@@ -1,15 +1,12 @@
+// src/adapters/ethers/resources/interop/routes/direct.ts
 import type { TransactionRequest } from 'ethers';
-import { ZeroAddress } from 'ethers';
 
 import type { InteropRouteStrategy, BuildCtx } from './types';
 import type { InteropParams } from '../../../../../core/types/flows/interop';
 import type { Address, Hex } from '../../../../../core/types/primitives';
 
 import { AttributesEncoder } from '../attributes';
-import {
-  sumActionMsgValue,
-  sumErc20Amounts,
-} from '../../../../../core/resources/interop/route';
+import { sumActionMsgValue, sumErc20Amounts } from '../../../../../core/resources/interop/route';
 
 /** Route: 'direct'
  *  Preconditions:
@@ -19,21 +16,42 @@ import {
 export function routeDirect(): InteropRouteStrategy {
   return {
     preflight(p: InteropParams, ctx: BuildCtx) {
+      if (!p.actions?.length) {
+        throw new Error('route "direct" requires at least one action.');
+      }
+
       const hasErc20 = p.actions.some((a) => a.type === 'sendErc20');
       if (hasErc20) {
         throw new Error('route "direct" does not support ERC-20 actions; use the router route.');
       }
-      const match =
-        ctx.baseTokens.src.toLowerCase() === ctx.baseTokens.dst.toLowerCase();
+
+      const match = ctx.baseTokens.src.toLowerCase() === ctx.baseTokens.dst.toLowerCase();
       if (!match) {
-        throw new Error('route "direct" requires matching base tokens between source and destination.');
+        throw new Error(
+          'route "direct" requires matching base tokens between source and destination.',
+        );
+      }
+
+      // Basic sanity checks for value-carrying actions
+      for (const a of p.actions) {
+        if (a.type === 'sendNative' && a.amount < 0n) {
+          throw new Error('sendNative.amount must be >= 0.');
+        }
+        if (a.type === 'call' && a.value != null && a.value < 0n) {
+          throw new Error('call.value must be >= 0 when provided.');
+        }
       }
     },
 
     // eslint-disable-next-line @typescript-eslint/require-await
     async build(p: InteropParams, ctx: BuildCtx) {
       const enc = new AttributesEncoder(ctx.ifaces.attributes);
-      const steps: Array<{ key: string; kind: string; description: string; tx: TransactionRequest }> = [];
+      const steps: Array<{
+        key: string;
+        kind: string;
+        description: string;
+        tx: TransactionRequest;
+      }> = [];
 
       // Totals
       const totalActionValue = sumActionMsgValue(p.actions);
@@ -55,18 +73,21 @@ export function routeDirect(): InteropRouteStrategy {
 
       // Encode starters: (to, data, attributes)
       const starters: Array<[Address, Hex, Hex[]]> = p.actions.map((a, i) => {
-        if (a.type === 'sendNative') {
-          // Send value to a receiver contract on dst (empty payload).
-          return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
+        switch (a.type) {
+          case 'sendNative':
+            // Send value to a receiver contract on dst (empty payload).
+            return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
+
+          case 'call':
+            return [a.to, a.data ?? '0x', perCallAttrs[i] ?? []];
+
+          // Should be impossible due to preflight guard, but keep a safe fallback
+          default:
+            return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
         }
-        if (a.type === 'call') {
-          return [a.to, a.data, perCallAttrs[i] ?? []];
-        }
-        // no sendErc20 here (preflight guards)
-        return [ZeroAddress as Address, '0x' as Hex, []];
       });
 
-      // Choose sendCall vs sendBundle – single non-value call can be sendCall
+      // Choose sendCall vs sendBundle – single pure call can be sendCall
       const center = ctx.addresses.interopCenter;
 
       if (p.actions.length === 1 && p.actions[0].type === 'call') {
@@ -74,7 +95,7 @@ export function routeDirect(): InteropRouteStrategy {
         const data = ctx.ifaces.interopCenter.encodeFunctionData('sendCall', [
           ctx.dstChainId,
           only.to,
-          only.data,
+          only.data ?? '0x',
           [...(perCallAttrs[0] ?? []), ...bundleAttrs],
         ]) as Hex;
 
@@ -94,7 +115,7 @@ export function routeDirect(): InteropRouteStrategy {
         steps.push({
           key: 'sendBundle',
           kind: 'interop.center',
-          description: 'Send interop bundle (direct route)',
+          description: `Send interop bundle (direct route; ${p.actions.length} actions)`,
           // In direct route, msg.value equals total destination msg.value
           tx: { to: center, data, value: totalActionValue },
         });

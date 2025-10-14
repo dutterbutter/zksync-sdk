@@ -34,8 +34,7 @@ export function pickInteropRoute(args: {
   ctx: InteropCtx;
 }): InteropRoute {
   const hasErc20 = args.actions.some((a) => a.type === 'sendErc20');
-  const baseMatches =
-    args.ctx.baseTokenSrc.toLowerCase() === args.ctx.baseTokenDst.toLowerCase();
+  const baseMatches = args.ctx.baseTokenSrc.toLowerCase() === args.ctx.baseTokenDst.toLowerCase();
 
   // ERC-20 present → router. Base mismatch for value → router. Else direct.
   if (hasErc20) return 'router';

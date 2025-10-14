@@ -1,13 +1,13 @@
 // src/core/interop/events.ts
-import type { ParsedLog, ParsedReceipt } from '../../types/flows/interop';
+import type { ParsedLog, ParsedReceipt } from '../../types/flows/base';
 
 /** Event topics (declare names here; bind keccak values in constants.ts) */
 export interface InteropTopics {
-  InteropBundleSent: string;  // keccak256("InteropBundleSent(bytes32,bytes32,(...))")
-  BundleVerified: string;     // keccak256("BundleVerified(bytes32)")
-  BundleExecuted: string;     // keccak256("BundleExecuted(bytes32)")
-  BundleUnbundled: string;    // keccak256("BundleUnbundled(bytes32)")
-  CallProcessed?: string;     // optional; for granular per-call status
+  InteropBundleSent: string; // keccak256("InteropBundleSent(bytes32,bytes32,(...))")
+  BundleVerified: string; // keccak256("BundleVerified(bytes32)")
+  BundleExecuted: string; // keccak256("BundleExecuted(bytes32)")
+  BundleUnbundled: string; // keccak256("BundleUnbundled(bytes32)")
+  CallProcessed?: string; // optional; for granular per-call status
 }
 
 /** Finds the InteropBundleSent log in a source L2 receipt */

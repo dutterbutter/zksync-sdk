@@ -1,5 +1,5 @@
 // src/adapters/ethers/resources/interop/index.ts
-import type { TransactionRequest, TransactionReceipt } from 'ethers';
+import type { TransactionRequest } from 'ethers';
 import { NonceManager } from 'ethers';
 
 import type { EthersClient } from '../../client';
@@ -15,16 +15,17 @@ import type {
   InteropStatus,
 } from '../../../../core/types/flows/interop';
 
-import { commonCtx } from './context'; // tiny wrapper that returns { ...ctx, route }
+import { makeInteropContext } from './context'; // tiny wrapper that returns { ...ctx, route }
 import type { InteropRouteStrategy } from './routes/types';
 import { routeDirect } from './routes/direct';
 import { routeRouter } from './routes/router';
 
-import { createError } from '../../../../core/errors/factory';
-import { createErrorHandlers } from '../../errors/error-ops';
-import { isZKsyncError } from '../../../../core/types/errors';
+import { isZKsyncError, OP_INTEROP } from '../../../../core/types/errors';
+import { createError } from '../../../../core/errors/factory.ts';
+import { createErrorHandlers } from '../../errors/error-ops.ts';
 
-import * as statusSvc from './services/status';
+import * as statusSvc from './services/monitor.ts';
+import { pickInteropRoute } from '../../../../core/resources/interop/route.ts';
 
 const { wrap, toResult } = createErrorHandlers('interop');
 
@@ -53,7 +54,9 @@ export interface InteropResource {
   create(p: InteropParams): Promise<InteropHandle<TransactionRequest>>;
   tryCreate(
     p: InteropParams,
-  ): Promise<{ ok: true; value: InteropHandle<TransactionRequest> } | { ok: false; error: unknown }>;
+  ): Promise<
+    { ok: true; value: InteropHandle<TransactionRequest> } | { ok: false; error: unknown }
+  >;
 
   status(h: InteropWaitable | Hex): Promise<InteropStatus>;
   wait(
@@ -73,14 +76,55 @@ export function createInteropResource(client: EthersClient): InteropResource {
   // buildPlan constructs an InteropPlan for the given params
   // It does not execute any transactions.
   async function buildPlan(p: InteropParams): Promise<InteropPlan<TransactionRequest>> {
-    const ctx = await commonCtx(p, client); // provides { route, …ethersCtx }
+    // 1) Build adapter context (providers, signer, addresses, ABIs, topics, base tokens)
+    const ethCtx = await wrap(
+      OP_INTEROP.prepare, // “build context” phase
+      () => makeInteropContext(client, p.dst),
+      {
+        message: 'Failed to build interop context.',
+        ctx: { where: 'interop.context', dst: p.dst },
+      },
+    );
 
-    await ROUTES[ctx.route].preflight?.(p, ctx);
+    // 2) Compute sender and select route (kept in index, not in context)
+    const sender = (p.sender ?? (await client.signerFor().getAddress())) as Hex;
 
-    const { steps, approvals, quoteExtras } = await ROUTES[ctx.route].build(p, ctx);
+    const route = pickInteropRoute({
+      actions: p.actions,
+      ctx: {
+        sender,
+        srcChainId: ethCtx.srcChainId,
+        dstChainId: ethCtx.dstChainId,
+        baseTokenSrc: ethCtx.baseTokens.src,
+        baseTokenDst: ethCtx.baseTokens.dst,
+      },
+    });
 
+    const ctx = { ...ethCtx, route } as const;
+
+    // 3) Optional route preflight
+    await wrap(
+      route === 'direct' ? OP_INTEROP.routes.direct.preflight : OP_INTEROP.routes.router.preflight,
+      () => ROUTES[route].preflight?.(p, ctx),
+      {
+        message: 'Interop preflight failed.',
+        ctx: { where: `routes.${route}.preflight`, dst: p.dst },
+      },
+    );
+
+    // 4) Build route steps + approvals + quote extras
+    const { steps, approvals, quoteExtras } = await wrap(
+      route === 'direct' ? OP_INTEROP.routes.direct.build : OP_INTEROP.routes.router.build,
+      () => ROUTES[route].build(p, ctx),
+      {
+        message: 'Failed to build interop route plan.',
+        ctx: { where: `routes.${route}.build`, dst: p.dst },
+      },
+    );
+
+    // 5) Assemble the plan summary
     const summary: InteropQuote = {
-      route: ctx.route,
+      route,
       approvalsNeeded: approvals,
       totalActionValue: quoteExtras.totalActionValue,
       bridgedTokenTotal: quoteExtras.bridgedTokenTotal,
@@ -88,26 +132,21 @@ export function createInteropResource(client: EthersClient): InteropResource {
       l2Fee: quoteExtras.l2Fee,
     };
 
-    return {
-      route: ctx.route,
-      summary,
-      steps,
-    };
+    return { route, summary, steps };
   }
 
   // quote → build and return the summary
   const quote = (p: InteropParams): Promise<InteropQuote> =>
-    wrap('interop.quote', async () => {
+    wrap(OP_INTEROP.quote, async () => {
       const plan = await buildPlan(p);
       return plan.summary;
     });
 
-  const tryQuote = (p: InteropParams) =>
-    toResult<InteropQuote>('interop.tryQuote', () => quote(p));
+  const tryQuote = (p: InteropParams) => toResult<InteropQuote>('interop.tryQuote', () => quote(p));
 
   // prepare → build plan without executing
   const prepare = (p: InteropParams): Promise<InteropPlan<TransactionRequest>> =>
-    wrap('interop.prepare', () => buildPlan(p), {
+    wrap(OP_INTEROP.prepare, () => buildPlan(p), {
       message: 'Internal error while preparing an interop plan.',
       ctx: { where: 'interop.prepare', dst: p.dst },
     });
@@ -118,7 +157,7 @@ export function createInteropResource(client: EthersClient): InteropResource {
   // create → execute the plan
   const create = (p: InteropParams): Promise<InteropHandle<TransactionRequest>> =>
     wrap(
-      'interop.create',
+      OP_INTEROP.create,
       async () => {
         const plan = await prepare(p);
         const stepHashes: Record<string, Hex> = {};
@@ -189,7 +228,7 @@ export function createInteropResource(client: EthersClient): InteropResource {
 
   // status
   const status = (h: InteropWaitable | Hex): Promise<InteropStatus> =>
-    wrap('interop.status', () => statusSvc.status(client, h), {
+    wrap(OP_INTEROP.status, () => statusSvc.status(client, h), {
       message: 'Internal error while checking interop status.',
       ctx: { where: 'interop.status' },
     });
@@ -199,7 +238,7 @@ export function createInteropResource(client: EthersClient): InteropResource {
     h: InteropWaitable | Hex,
     opts: { for: 'verified' | 'executed'; pollMs?: number; timeoutMs?: number },
   ): Promise<null> =>
-    wrap('interop.wait', () => statusSvc.wait(client, h, opts), {
+    wrap(OP_INTEROP.wait, () => statusSvc.wait(client, h, opts), {
       message: 'Internal error while waiting for interop execution.',
       ctx: { where: 'interop.wait', for: opts.for },
     });

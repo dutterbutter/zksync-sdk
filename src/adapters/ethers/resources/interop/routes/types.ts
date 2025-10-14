@@ -1,7 +1,7 @@
 import type { TransactionRequest } from 'ethers';
 import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/base';
 import type { InteropParams, InteropRoute } from '../../../../../core/types/flows/interop';
-import type { InteropEthersContext } from '../context';
+import type { InteropEthersContext } from '../types';
 
 /** Build context for route strategies:
  *  - the picked route (direct | router)

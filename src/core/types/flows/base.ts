@@ -48,3 +48,15 @@ export interface CommonCtx {
   chainIdL2: bigint;
   bridgehub: Address;
 }
+
+// Parsed L1 receipt and logs
+export interface ParsedLog {
+  address?: string;
+  topics?: readonly Hex[];
+  data?: Hex;
+}
+
+export interface ParsedReceipt {
+  transactionHash: Hex;
+  logs: readonly ParsedLog[];
+}

@@ -23,11 +23,18 @@ export * from './resources/withdrawals/route';
 export * from './resources/withdrawals/events';
 export * from './resources/withdrawals/logs';
 
+// src/core/resources/interop/index.ts
+export * from './resources/interop/actions';
+export * from './resources/interop/events';
+export * from './resources/interop/logs';
+export * from './resources/interop/route';
+
 // Core types (type-only)
 export type * from './types';
 export type * from './types/errors';
 export type * from './types/flows/base';
 export type * from './types/flows/deposits';
 export type * from './types/flows/withdrawals';
+export type * from './types/flows/interop';
 export type * from './types/flows/route';
 export type * from './types/primitives';

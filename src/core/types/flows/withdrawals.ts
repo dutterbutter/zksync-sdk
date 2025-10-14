@@ -89,15 +89,3 @@ export type FinalizeReadiness =
       reason: 'message-invalid' | 'invalid-chain' | 'settlement-layer' | 'unsupported';
       detail?: string;
     };
-
-// Parsed L1 receipt and logs
-export type ParsedLog = {
-  address: string;
-  topics: Hex[];
-  data: Hex;
-};
-
-// Parsed L1 receipt
-export type ParsedReceipt = {
-  logs: ParsedLog[];
-};

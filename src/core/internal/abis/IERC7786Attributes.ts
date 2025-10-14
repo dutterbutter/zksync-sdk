@@ -2,57 +2,57 @@
 /* eslint-disable */
 export const IERC7786AttributesABI = [
   {
-    "type": "function",
-    "name": "executionAddress",
-    "inputs": [
+    type: 'function',
+    name: 'executionAddress',
+    inputs: [
       {
-        "name": "_executionAddress",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_executionAddress',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "pure"
+    outputs: [],
+    stateMutability: 'pure',
   },
   {
-    "type": "function",
-    "name": "indirectCall",
-    "inputs": [
+    type: 'function',
+    name: 'indirectCall',
+    inputs: [
       {
-        "name": "_indirectCallMessageValue",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_indirectCallMessageValue',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "pure"
+    outputs: [],
+    stateMutability: 'pure',
   },
   {
-    "type": "function",
-    "name": "interopCallValue",
-    "inputs": [
+    type: 'function',
+    name: 'interopCallValue',
+    inputs: [
       {
-        "name": "_interopCallValue",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+        name: '_interopCallValue',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "pure"
+    outputs: [],
+    stateMutability: 'pure',
   },
   {
-    "type": "function",
-    "name": "unbundlerAddress",
-    "inputs": [
+    type: 'function',
+    name: 'unbundlerAddress',
+    inputs: [
       {
-        "name": "_unbundlerAddress",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: '_unbundlerAddress',
+        type: 'bytes',
+        internalType: 'bytes',
+      },
     ],
-    "outputs": [],
-    "stateMutability": "pure"
-  }
+    outputs: [],
+    stateMutability: 'pure',
+  },
 ] as const;
 
 export default IERC7786AttributesABI;

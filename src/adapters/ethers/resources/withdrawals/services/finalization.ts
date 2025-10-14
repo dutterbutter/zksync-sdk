@@ -98,7 +98,21 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
       const message = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.decodeMessage,
-        () => Promise.resolve(AbiCoder.defaultAbiCoder().decode(['bytes'], ev.data)[0] as Hex),
+        () => {
+          if (!ev.data) {
+            throw createError('STATE', {
+              resource: 'withdrawals',
+              operation: OP_WITHDRAWALS.finalize.fetchParams.decodeMessage,
+              message: 'L1MessageSent event data is missing.',
+              context: { l2TxHash, event: ev },
+            });
+          }
+
+          const dataHex = ev.data;
+
+          const decoded = AbiCoder.defaultAbiCoder().decode(['bytes'], dataHex)[0] as Hex;
+          return decoded;
+        },
         {
           ctx: { where: 'decode L1MessageSent', data: ev.data },
           message: 'Failed to decode withdrawal message.',

@@ -1,13 +1,19 @@
 // src/core/interop/logs.ts
-import type { InteropStatus, ParsedReceipt } from '../../types/flows/interop';
+import type { ParsedReceipt } from '../../types/flows/base';
+import type { InteropStatus } from '../../types/flows/interop';
 import type { Hex } from '../../types/primitives';
-import { hasBundleVerified, hasBundleExecuted, hasBundleUnbundled, findBundleSentLog } from './events';
+import {
+  hasBundleVerified,
+  hasBundleExecuted,
+  hasBundleUnbundled,
+  findBundleSentLog,
+} from './events';
 import type { InteropTopics } from './events';
 
 /** Derive a coarse InteropStatus from known receipts (adapter can enrich) */
 export function deriveStatusFromReceipts(args: {
-  source?: ParsedReceipt;         // L2 source receipt with InteropBundleSent
-  destination?: ParsedReceipt;    // dest L2 receipt with handler events
+  source?: ParsedReceipt; // L2 source receipt with InteropBundleSent
+  destination?: ParsedReceipt; // dest L2 receipt with handler events
   topics: InteropTopics;
   hints?: { l1MsgHash?: string; bundleHash?: string; dstExecTxHash?: string };
 }): InteropStatus {
@@ -29,10 +35,10 @@ export function deriveStatusFromReceipts(args: {
 
     if (destination) {
       if (hasBundleExecuted(destination, topics)) {
-        return { ...base, phase: 'EXECUTED', dstExecTxHash: (hints?.dstExecTxHash as Hex) };
+        return { ...base, phase: 'EXECUTED', dstExecTxHash: hints?.dstExecTxHash as Hex };
       }
       if (hasBundleUnbundled(destination, topics)) {
-        return { ...base, phase: 'UNBUNDLED', dstExecTxHash: (hints?.dstExecTxHash as Hex) };
+        return { ...base, phase: 'UNBUNDLED', dstExecTxHash: hints?.dstExecTxHash as Hex };
       }
       if (hasBundleVerified(destination, topics)) {
         return { ...base, phase: 'VERIFIED' };

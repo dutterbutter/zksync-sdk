@@ -34,7 +34,7 @@ export interface InteropQuote {
   approvalsNeeded: readonly ApprovalNeed[];
 
   /** Value semantics */
-  totalActionValue: bigint;  // sum of msg.value across actions (sendNative + call.value)
+  totalActionValue: bigint; // sum of msg.value across actions (sendNative + call.value)
   bridgedTokenTotal: bigint; // sum of ERC-20 amounts to bridge (normalized total)
   // Fees (keep generic; adapters can refine/override)
   l1Fee?: bigint;
@@ -68,10 +68,10 @@ export type InteropWaitable =
 
 /** === Status & phases === */
 export type InteropPhase =
-  | 'SENT'        // InteropBundleSent observed on source
-  | 'VERIFIED'    // bundle verified on destination
-  | 'EXECUTED'    // fully executed atomically
-  | 'UNBUNDLED'   // selectively executed/cancelled
+  | 'SENT' // InteropBundleSent observed on source
+  | 'VERIFIED' // bundle verified on destination
+  | 'EXECUTED' // fully executed atomically
+  | 'UNBUNDLED' // selectively executed/cancelled
   | 'FAILED'
   | 'UNKNOWN';
 
@@ -84,13 +84,3 @@ export interface InteropStatus {
 }
 
 /** === Minimal receipt/log shapes used by core (adapter can adapt) === */
-export interface ParsedLog {
-  address?: string;
-  topics?: readonly Hex[];
-  data?: Hex;
-}
-
-export interface ParsedReceipt {
-  transactionHash: Hex;
-  logs: readonly ParsedLog[];
-}

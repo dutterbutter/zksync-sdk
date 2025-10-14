@@ -107,7 +107,18 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
         'INTERNAL',
         OP_WITHDRAWALS.finalize.fetchParams.decodeMessage,
         () => {
-          const [decoded] = decodeAbiParameters([{ type: 'bytes' }], ev.data);
+          if (!ev.data) {
+            throw createError('STATE', {
+              resource: 'withdrawals',
+              operation: OP_WITHDRAWALS.finalize.fetchParams.decodeMessage,
+              message: 'L1MessageSent event data is missing.',
+              context: { l2TxHash, event: ev },
+            });
+          }
+
+          const dataHex = ev.data;
+
+          const [decoded] = decodeAbiParameters([{ type: 'bytes' }] as const, dataHex);
           return decoded;
         },
         {

@@ -1,6 +1,6 @@
 // src/adapters/ethers/client.ts
 import type { AbstractProvider, ContractRunner, Signer } from 'ethers';
-import { Contract, Interface } from 'ethers';
+import { Contract, Interface, JsonRpcProvider } from 'ethers';
 import type { Address } from '../../core/types/primitives';
 import type { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromEthers } from './rpc';
@@ -37,7 +37,7 @@ export interface ResolvedAddresses {
   l2NativeTokenVault: Address;
   l2BaseTokenSystem: Address;
 
-  // Interop (same addresses on every L2)
+  // Interop
   interopCenter: Address;
   interopHandler: Address;
 }
@@ -84,7 +84,8 @@ export interface EthersClient {
   baseToken(chainId: bigint): Promise<Address>;
 
   /** Chain registry for interop destinations */
-  registerChain(chainId: bigint, provider: AbstractProvider): void;
+  registerChain(chainId: bigint, providerOrUrl: AbstractProvider | string): void;
+  registerChains(map: Record<string, AbstractProvider | string>): void;
   getProvider(chainId: bigint): AbstractProvider | undefined;
   requireProvider(chainId: bigint): AbstractProvider;
   listChains(): bigint[];
@@ -133,7 +134,9 @@ export function createEthersClient(args: InitArgs): EthersClient {
   const chainMap = new Map<bigint, AbstractProvider>();
   if (chains) {
     for (const [k, p] of Object.entries(chains)) {
-      chainMap.set(BigInt(k), p);
+      const id = BigInt(k);
+      const provider = typeof p === 'string' ? new JsonRpcProvider(p) : p;
+      chainMap.set(id, provider);
     }
   }
 
@@ -232,9 +235,18 @@ export function createEthersClient(args: InitArgs): EthersClient {
   }
 
   /** Chain registry utilities (for interop destinations) */
-  function registerChain(chainId: bigint, provider: AbstractProvider) {
+  function registerChain(chainId: bigint, providerOrUrl: AbstractProvider | string) {
+    const provider =
+      typeof providerOrUrl === 'string' ? new JsonRpcProvider(providerOrUrl) : providerOrUrl;
     chainMap.set(chainId, provider);
   }
+
+  function registerChains(map: Record<string, AbstractProvider | string>) {
+    for (const [k, p] of Object.entries(map)) {
+      registerChain(BigInt(k), p);
+    }
+  }
+
   function getProvider(chainId: bigint) {
     return chainMap.get(chainId);
   }
@@ -252,11 +264,8 @@ export function createEthersClient(args: InitArgs): EthersClient {
     if (target === 'l1') {
       return boundSigner.provider === l1 ? boundSigner : boundSigner.connect(l1);
     }
-    const provider =
-      typeof target === 'bigint' ? requireProvider(target) : l2; // default to current/source L2
-    return boundSigner.provider === provider
-      ? boundSigner
-      : boundSigner.connect(provider);
+    const provider = typeof target === 'bigint' ? requireProvider(target) : l2; // default to current/source L2
+    return boundSigner.provider === provider ? boundSigner : boundSigner.connect(provider);
   }
 
   /** Housekeeping */
@@ -283,6 +292,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     refresh,
     baseToken,
     registerChain,
+    registerChains,
     getProvider,
     requireProvider,
     listChains,
