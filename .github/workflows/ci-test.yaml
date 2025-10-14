@@ -66,8 +66,14 @@ jobs:
         with:
           version: v1.3.4
 
-      - name: Clone zksync-os-server
-        run: git clone https://github.com/matter-labs/zksync-os-server.git
+      - name: Checkout zksync-os-server
+        uses: actions/checkout@v4
+        with:
+          repository: matter-labs/zksync-os-server
+          ref: v0.8.2
+          path: zksync-os-server
+          fetch-depth: 1
+          submodules: recursive
 
       - name: Cache cargo
         uses: actions/cache@v4

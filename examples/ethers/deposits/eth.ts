@@ -13,7 +13,6 @@
  * 5. Track with `sdk.deposits.status` and `sdk.deposits.wait`.
  */
 
-import 'dotenv/config';
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
 import { createEthersClient } from '../../../src/adapters/ethers/client';
 import { createEthersSdk } from '../../../src/adapters/ethers/sdk';
