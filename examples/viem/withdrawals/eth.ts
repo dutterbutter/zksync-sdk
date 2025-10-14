@@ -63,7 +63,7 @@ async function main() {
 
   const params = {
     token: ETH_ADDRESS, // ETH Address
-    amount: parseEther('0.01'),
+    amount: parseEther('0.0001'),
     to: me,
   } as const;
 

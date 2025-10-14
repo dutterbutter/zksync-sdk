@@ -42,7 +42,7 @@ async function main() {
 
   const params = {
     token: ETH_ADDRESS, // ETH token on this chain
-    amount: parseEther('1'),
+    amount: parseEther('.0001'),
     to: me,
     // l2GasLimit?: 300_000n, fee overrides, etc...
   } as const;
