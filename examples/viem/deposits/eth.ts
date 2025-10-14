@@ -13,7 +13,6 @@
  * 5. Track with `sdk.deposits.status` and `sdk.deposits.wait`.
  */
 
-import 'dotenv/config';
 import {
   createPublicClient,
   createWalletClient,
