@@ -79,7 +79,7 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
         const { chainId } = await client.l2.getNetwork();
         const base = await client.baseToken(BigInt(chainId));
         if (isAddressEq(l1Token, base)) {
-          return L2_BASE_TOKEN_ADDRESS as Address;
+          return L2_BASE_TOKEN_ADDRESS;
         }
 
         const { l2NativeTokenVault } = await client.contracts();

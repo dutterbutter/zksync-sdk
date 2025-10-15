@@ -95,7 +95,7 @@ export function createViemSdk(client: ViemClient): ViemSdk {
         // Base token → L2 base-token system address
         const base = await client.baseToken(BigInt(await client.l2.getChainId()));
         if (isAddressEq(l1Token, base)) {
-          return L2_BASE_TOKEN_ADDRESS as Address;
+          return L2_BASE_TOKEN_ADDRESS;
         }
 
         // Lookup via L2 Native Token Vault
