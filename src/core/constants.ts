@@ -1,38 +1,46 @@
 // core/constants.ts
 
 import type { Address, Hex } from './types/primitives';
-import { k256hex } from './utils/addr';
+
+import { keccak_256 } from '@noble/hashes/sha3';
+import { utf8ToBytes, bytesToHex } from '@noble/hashes/utils';
+
+/** Keccak-256 of a string, returned as lowercase 0x-prefixed hex. */
+export const k256hex = (s: string): Hex =>
+  `0x${bytesToHex(keccak_256(utf8ToBytes(s)))}`.toLowerCase() as Hex;
 
 // -----------------------------------------------------------------------------
 // Addresses (system / core)
 // -----------------------------------------------------------------------------
 
 /** The formal zero address used to represent ETH on L1. */
-export const FORMAL_ETH_ADDRESS = '0x0000000000000000000000000000000000000000' satisfies Address;
+export const FORMAL_ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
 
 /** Some contracts disallow the zero address; use 0x…01 as a stand-in when needed. */
-export const ETH_ADDRESS = '0x0000000000000000000000000000000000000001' satisfies Address;
+export const ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000001';
 
 /** L2 Asset Router contract address. */
-export const L2_ASSET_ROUTER_ADDRESS =
-  '0x0000000000000000000000000000000000010003' satisfies Address;
+export const L2_ASSET_ROUTER_ADDRESS: Address = '0x0000000000000000000000000000000000010003';
 
 /** L2 Native Token Vault contract address. */
-export const L2_NATIVE_TOKEN_VAULT_ADDRESS =
-  '0x0000000000000000000000000000000000010004' satisfies Address;
+export const L2_NATIVE_TOKEN_VAULT_ADDRESS: Address = '0x0000000000000000000000000000000000010004';
 
 /** L1 Messenger contract address. */
-export const L1_MESSENGER_ADDRESS = '0x0000000000000000000000000000000000008008' as const;
+export const L1_MESSENGER_ADDRESS: Address = '0x0000000000000000000000000000000000008008';
 
 /** L2 Base Token System contract address. */
-export const L2_BASE_TOKEN_ADDRESS = '0x000000000000000000000000000000000000800A' as const;
+export const L2_BASE_TOKEN_ADDRESS: Address = '0x000000000000000000000000000000000000800A';
 
 /** L1 token address (SOPH). */
-export const L1_SOPH_TOKEN_ADDRESS = '0xa9544a49d4aEa4c8E074431c89C79fA9592049d8' as const;
+export const L1_SOPH_TOKEN_ADDRESS: Address = '0xa9544a49d4aEa4c8E074431c89C79fA9592049d8';
 
 // -----------------------------------------------------------------------------
 // Event topics
 // -----------------------------------------------------------------------------
+
+// topic0 for L1MessageSent(address,bytes32,bytes)
+export const TOPIC_L1_MESSAGE_SENT: Hex =
+  '0x2632cc0d58b0cb1017b99cc0b6cc66ad86440cc0dd923bfdaa294f95ba1b0201';
 
 /** New-format L1MessageSent(topic) signature: L1MessageSent(uint256,bytes32,bytes) */
 export const TOPIC_L1_MESSAGE_SENT_NEW: Hex = k256hex('L1MessageSent(uint256,bytes32,bytes)');
