@@ -1,8 +1,15 @@
 import type { Address, Hex } from '../types/primitives.ts';
 import { FORMAL_ETH_ADDRESS, ETH_ADDRESS, L2_BASE_TOKEN_ADDRESS } from '../constants.ts';
 
+import { keccak_256 } from '@noble/hashes/sha3';
+import { utf8ToBytes, bytesToHex } from '@noble/hashes/utils';
+
 // Returns true if the string is a 0x-prefixed hex of length 66 (32 bytes + '0x')
 export const isHash66 = (x?: string): x is Hex => !!x && x.startsWith('0x') && x.length === 66;
+
+/** Keccak-256 of a string, returned as lowercase 0x-prefixed hex. */
+export const k256hex = (s: string): Hex =>
+  `0x${bytesToHex(keccak_256(utf8ToBytes(s)))}`.toLowerCase() as Hex;
 
 // Compares two addresses for equality, ignoring case
 export function isAddressEq(a: Address, b: Address): boolean {
