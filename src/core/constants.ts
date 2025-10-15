@@ -1,106 +1,76 @@
+// core/constants.ts
+
 import { keccak_256 } from '@noble/hashes/sha3';
 import { utf8ToBytes, bytesToHex } from '@noble/hashes/utils';
 
-import type { Address } from './types/primitives';
+import type { Address, Hex } from './types/primitives';
 
-// TODO: taken from zksync-ethers, can be cleaned up
+/** Keccak-256 of a string, returned as lowercase 0x-prefixed hex. */
+const k256hex = (s: string): Hex =>
+  (`0x${bytesToHex(keccak_256(utf8ToBytes(s)))}`.toLowerCase() as Hex);
+
+// -----------------------------------------------------------------------------
+// Addresses (system / core)
+// -----------------------------------------------------------------------------
+
+/** The formal zero address used to represent ETH on L1. */
+export const FORMAL_ETH_ADDRESS = '0x0000000000000000000000000000000000000000' satisfies Address;
+
+/** Some contracts disallow the zero address; use 0x…01 as a stand-in when needed. */
+export const ETH_ADDRESS = '0x0000000000000000000000000000000000000001' satisfies Address;
+
+/** L2 Asset Router contract address. */
+export const L2_ASSET_ROUTER_ADDRESS =
+  '0x0000000000000000000000000000000000010003' satisfies Address;
+
+/** L2 Native Token Vault contract address. */
+export const L2_NATIVE_TOKEN_VAULT_ADDRESS =
+  '0x0000000000000000000000000000000000010004' satisfies Address;
+
+/** L1 Messenger contract address. */
+export const L1_MESSENGER_ADDRESS =
+  '0x0000000000000000000000000000000000008008' as const;
+
+/** L2 Base Token System contract address. */
+export const L2_BASE_TOKEN_ADDRESS =
+  '0x000000000000000000000000000000000000800A' as const;
+
+/** L1 token address (SOPH). */
+export const L1_SOPH_TOKEN_ADDRESS =
+  '0xa9544a49d4aEa4c8E074431c89C79fA9592049d8' as const;
+
+// -----------------------------------------------------------------------------
+// Event topics
+// -----------------------------------------------------------------------------
+
+/** New-format L1MessageSent(topic) signature: L1MessageSent(uint256,bytes32,bytes) */
+export const TOPIC_L1_MESSAGE_SENT_NEW: Hex =
+  k256hex('L1MessageSent(uint256,bytes32,bytes)');
+
+/** Legacy-format L1MessageSent(topic) signature: L1MessageSent(address,bytes32,bytes) */
+export const TOPIC_L1_MESSAGE_SENT_LEG: Hex =
+  k256hex('L1MessageSent(address,bytes32,bytes)');
+
+/** Optional canonical markers (present on some OS builds). */
+export const TOPIC_CANONICAL_ASSIGNED: Hex =
+  '0x779f441679936c5441b671969f37400b8c3ed0071cb47444431bf985754560df';
+  
+/** Optional canonical success marker (present on some OS builds). */
+export const TOPIC_CANONICAL_SUCCESS: Hex =
+  '0xe4def01b981193a97a9e81230d7b9f31812ceaf23f864a828a82c687911cb2df';
+
+// -----------------------------------------------------------------------------
+// L1->L2 fee estimation scaling
+// -----------------------------------------------------------------------------
 
 /**
- * The address of the L1 `ETH` token.
- * @readonly
- */
-export const FORMAL_ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
-
-/**
- * In the contracts the zero address can not be used, use one instead
- * @readonly
- */
-export const ETH_ADDRESS: Address = '0x0000000000000000000000000000000000000001';
-
-/**
- * The address of the L1 messenger contract.
- * @readonly
- */
-export const L2_ASSET_ROUTER_ADDRESS: Address = '0x0000000000000000000000000000000000010003';
-
-/**
- * The address of the L2 Native Token Vault contract.
- * @readonly
- */
-export const L2_NATIVE_TOKEN_VAULT_ADDRESS: Address = '0x0000000000000000000000000000000000010004';
-
-/** The address of the L1 messenger contract.
- * @readonly
- */
-export const L1_MESSENGER_ADDRESS = '0x0000000000000000000000000000000000008008' as const;
-
-/** The address of the L2 Base Token System contract.
- * @readonly
- */
-export const L2_BASE_TOKEN_ADDRESS = '0x000000000000000000000000000000000000800A' as const;
-
-export const L1_SOPH_TOKEN_ADDRESS = '0xa9544a49d4aEa4c8E074431c89C79fA9592049d8' as const;
-
-// topic0 for L1MessageSent(address,bytes32,bytes)
-export const TOPIC_L1_MESSAGE_SENT =
-  '0x2632cc0d58b0cb1017b99cc0b6cc66ad86440cc0dd923bfdaa294f95ba1b0201' as const;
-
-const k256hex = (s: string) => ('0x' + bytesToHex(keccak_256(utf8ToBytes(s)))).toLowerCase();
-
-export const TOPIC_L1_MESSAGE_SENT_NEW = k256hex('L1MessageSent(uint256,bytes32,bytes)');
-
-export const TOPIC_L1_MESSAGE_SENT_LEG = k256hex('L1MessageSent(address,bytes32,bytes)');
-
-// Bridgehub.NewPriorityRequest(chainId indexed, sender indexed, txHash bytes32, txId uint256, data bytes)
-// topic hash (stable across adapters)
-export const TOPIC_BRIDGEHUB_NEW_PRIORITY =
-  '0x0f87e1ea5eb1f034a6071ef630c174063e3d48756f853efaaf4292b929298240';
-
-// Optional canonical markers (some OS builds)
-export const TOPIC_CANONICAL_ASSIGNED =
-  '0x779f441679936c5441b671969f37400b8c3ed0071cb47444431bf985754560df'; // hash in topics[2]
-export const TOPIC_CANONICAL_SUCCESS =
-  '0xe4def01b981193a97a9e81230d7b9f31812ceaf23f864a828a82c687911cb2df'; // hash in topics[3]
-
-/**
- * Numerator used in scaling the gas limit to ensure acceptance of `L1->L2` transactions.
- *
- * This constant is part of a coefficient calculation to adjust the gas limit to account for variations
- * in the SDK estimation, ensuring the transaction will be accepted.
- *
- * @readonly
+ * Numerator used in scaling the gas limit to help ensure acceptance of L1->L2 txs.
+ * Used with {@link L1_FEE_ESTIMATION_COEF_DENOMINATOR}.
  */
 export const L1_FEE_ESTIMATION_COEF_NUMERATOR = 12;
 
 /**
- * Denominator used in scaling the gas limit to ensure acceptance of `L1->L2` transactions.
- *
- * This constant is part of a coefficient calculation to adjust the gas limit to account for variations
- * in the SDK estimation, ensuring the transaction will be accepted.
- *
- * @readonly
+ * Denominator used in scaling the gas limit to help ensure acceptance of L1->L2 txs.
+ * Used with {@link L1_FEE_ESTIMATION_COEF_NUMERATOR}.
  */
 export const L1_FEE_ESTIMATION_COEF_DENOMINATOR = 10;
-
-/**
- * Gas limit used for displaying the error messages when the
- * users do not have enough fee when depositing ERC20 token from L1 to L2.
- *
- * @readonly
- */
-export const L1_RECOMMENDED_MIN_ERC20_DEPOSIT_GAS_LIMIT = 1_000_000;
-
-/**
- * Gas limit used for displaying the error messages when the
- * users do not have enough fee when depositing `ETH` token from L1 to L2.
- *
- * @readonly
- */
-export const L1_RECOMMENDED_MIN_ETH_DEPOSIT_GAS_LIMIT = 200_000;
-
-/**
- * The `L1->L2` transactions are required to have the following gas per pubdata byte.
- *
- * @readonly
- */
-export const REQUIRED_L1_TO_L2_GAS_PER_PUBDATA_LIMIT = 800;
