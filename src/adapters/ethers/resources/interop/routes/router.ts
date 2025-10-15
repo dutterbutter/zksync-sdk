@@ -35,8 +35,8 @@ export function routeRouter(): InteropRouteStrategy {
 
       const approvals: Array<{ token: Address; spender: Address; amount: bigint }> = [];
 
-      // Primary spender: L2 Asset Router (preferred)
-      // Optional fallback: Bridgehub (only if your design actually uses it as spender on L2)
+      // Primary spender: L2 Asset Router
+      // Optional fallback: Bridgehub? todo: check contracts about this again
       const erc20Spender: Address | undefined =
         ctx.addresses.l2AssetRouter ?? ctx.addresses.bridgehub;
 

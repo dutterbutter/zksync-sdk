@@ -9,13 +9,13 @@ import type { InteropEthersContext } from '../types';
  */
 export type BuildCtx = InteropEthersContext & { route: InteropRoute };
 
-/** Quote add-ons a route can compute (merged into InteropQuote) */
+/** Quote add-ons a route can compute */
 export interface QuoteExtras {
   /** Sum of msg.value across actions (sendNative + call.value). */
   totalActionValue: bigint;
   /** Sum of ERC-20 amounts across actions (for approvals/bridging). */
   bridgedTokenTotal: bigint;
-  /** Optional fee estimates (fill if you have them). */
+  /** Optional fee estimates . */
   l1Fee?: bigint;
   l2Fee?: bigint;
 }

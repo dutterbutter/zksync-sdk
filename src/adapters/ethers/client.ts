@@ -105,11 +105,10 @@ type InitArgs = {
   /** Optional pre-seeded chain registry (eip155 → provider) for interop destinations */
   chains?: Record<string, AbstractProvider>;
 
-  /** Optional manual overrides for addresses (rarely needed) */
+  /** Optional manual overrides for addresses */
   overrides?: Partial<
     Omit<
       ResolvedAddresses,
-      // these three are hard-wired constants by default (but still overrideable if you insist)
       'l2AssetRouter' | 'l2NativeTokenVault' | 'l2BaseTokenSystem'
     >
   > & {
@@ -130,7 +129,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     boundSigner = signer.connect(l1);
   }
 
-  // Chain registry for interop destinations (and any extra L2 lookups)
+  // Chain registry for interop destinations
   const chainMap = new Map<bigint, AbstractProvider>();
   if (chains) {
     for (const [k, p] of Object.entries(chains)) {
@@ -140,7 +139,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
     }
   }
 
-  // zks RPC bound to the current/source L2 (same behavior as before)
+  // zks RPC bound to the current/source L2
   const zks = zksRpcFromEthers(l2);
 
   // Caches

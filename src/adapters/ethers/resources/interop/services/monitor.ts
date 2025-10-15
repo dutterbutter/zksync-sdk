@@ -44,7 +44,7 @@ function normalizeWaitable(h: InteropWaitable | Hex): {
   l1MsgHash?: Hex;
   bundleHash?: Hex;
   dstExecTxHash?: Hex;
-  dstChainId?: bigint; // present if full InteropHandle provided
+  dstChainId?: bigint;
 } {
   if (typeof h === 'string') return { l2SrcTxHash: h };
   const maybeHandle = h as InteropHandle<unknown>;

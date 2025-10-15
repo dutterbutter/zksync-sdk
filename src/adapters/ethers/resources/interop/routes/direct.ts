@@ -55,7 +55,7 @@ export function routeDirect(): InteropRouteStrategy {
 
       // Totals
       const totalActionValue = sumActionMsgValue(p.actions);
-      const bridgedTokenTotal = sumErc20Amounts(p.actions); // will be 0n by preflight
+      const bridgedTokenTotal = sumErc20Amounts(p.actions);
 
       // Bundle-level attributes (executor / unbundler)
       const bundleAttrs: Hex[] = [];
@@ -75,13 +75,12 @@ export function routeDirect(): InteropRouteStrategy {
       const starters: Array<[Address, Hex, Hex[]]> = p.actions.map((a, i) => {
         switch (a.type) {
           case 'sendNative':
-            // Send value to a receiver contract on dst (empty payload).
+            // Send value to a receiver contract on dst.
             return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
 
           case 'call':
             return [a.to, a.data ?? '0x', perCallAttrs[i] ?? []];
 
-          // Should be impossible due to preflight guard, but keep a safe fallback
           default:
             return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
         }

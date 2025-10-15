@@ -4,8 +4,7 @@ import IERC7786AttributesAbi from '../../../../../core/internal/abis/IERC7786Att
 import type { Hex, Address } from '../../../../../core/types/primitives';
 
 /**
- * Attribute encoders for ERC-7786 attributes we use.
- * Keep them tiny and pure — no provider/signer needed.
+ * Attribute encoders for ERC-7786 attributes.
  */
 export class AttributesEncoder {
   private readonly iface: Interface;
@@ -39,5 +38,5 @@ export class AttributesEncoder {
   }
 }
 
-/** Convenience singleton if you don’t want to thread an Interface around */
+/** Convenience singleton */
 export const attributes = new AttributesEncoder();
