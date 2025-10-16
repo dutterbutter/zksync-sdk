@@ -47,10 +47,9 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
       const needsApprove = current < p.amount;
 
       const feeOverrides: Record<string, unknown> = {};
-      if (ctx.fee?.maxFeePerGas != null && ctx.fee?.maxPriorityFeePerGas != null) {
-        feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
+      if (ctx.fee?.maxFeePerGas != null) feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
+      if (ctx.fee?.maxPriorityFeePerGas != null)
         feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
-      }
 
       const steps: Array<PlanStep<ViemPlanWriteRequest>> = [];
       const approvals: ApprovalNeed[] = [];
@@ -58,29 +57,52 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
       if (needsApprove) {
         approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
 
+        const approveParams = {
+          address: p.token,
+          abi: IERC20ABI,
+          functionName: 'approve',
+          args: [ctx.l2NativeTokenVault, p.amount] as const,
+          account: ctx.client.account,
+          ...feeOverrides,
+        } as const;
+
         const approveSim = await wrapAs(
           'CONTRACT',
           OP_WITHDRAWALS.erc20.estGas,
-          () =>
-            ctx.client.l2.simulateContract({
-              address: p.token,
-              abi: IERC20ABI,
-              functionName: 'approve',
-              args: [ctx.l2NativeTokenVault, p.amount] as const,
-              account: ctx.client.account,
-              ...feeOverrides,
-            }),
+          () => ctx.client.l2.simulateContract(approveParams),
           {
             ctx: { where: 'l2.simulateContract', to: p.token },
             message: 'Failed to simulate L2 ERC-20 approve.',
           },
         );
 
+        const approveTx = approveSim.request as ViemPlanWriteRequest;
+        const approveGas = await ctx.gas.ensure(
+          `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
+          'withdraw.approval.l2',
+          approveTx,
+          {
+            estimator: () =>
+              wrapAs(
+                'RPC',
+                OP_WITHDRAWALS.erc20.estGas,
+                () => ctx.client.l2.estimateContractGas(approveParams),
+                {
+                  ctx: { where: 'l2.estimateContractGas', to: p.token },
+                  message: 'Failed to estimate gas for L2 ERC-20 approve.',
+                },
+              ),
+          },
+        );
+        if (approveGas.recommended != null) {
+          approveTx.gas = approveGas.recommended;
+        }
+
         steps.push({
           key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
           kind: 'approve:l2',
           description: `Approve ${p.amount} to NativeTokenVault`,
-          tx: approveSim.request as ViemPlanWriteRequest,
+          tx: approveTx,
         });
       }
       // ensure token is registered in L2NativeTokenVault
@@ -111,38 +133,55 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
       );
 
       let withdrawTx: ViemPlanWriteRequest;
+      const withdrawParams = {
+        address: ctx.l2AssetRouter,
+        abi: IL2AssetRouterABI,
+        functionName: 'withdraw',
+        args: [assetId, assetData] as const,
+        account: ctx.client.account,
+        ...feeOverrides,
+      } as const;
 
       if (needsApprove) {
         // Do NOT simulate (would revert before approve). Return raw write params.
         // viem specific
         withdrawTx = {
-          address: ctx.l2AssetRouter,
-          abi: IL2AssetRouterABI,
-          functionName: 'withdraw',
-          args: [assetId, assetData] as const,
-          account: ctx.client.account,
+          ...withdrawParams,
           ...(ctx.fee ?? {}),
-        } satisfies ViemPlanWriteRequest;
+        } as ViemPlanWriteRequest;
       } else {
         // L2AssetRouter.withdraw(assetId, assetData)
         const sim = await wrapAs(
           'CONTRACT',
           OP_WITHDRAWALS.erc20.estGas,
-          () =>
-            ctx.client.l2.simulateContract({
-              address: ctx.l2AssetRouter,
-              abi: IL2AssetRouterABI,
-              functionName: 'withdraw',
-              args: [assetId, assetData] as const,
-              account: ctx.client.account,
-              ...feeOverrides,
-            }),
+          () => ctx.client.l2.simulateContract(withdrawParams),
           {
             ctx: { where: 'l2.simulateContract', to: ctx.l2AssetRouter },
             message: 'Failed to simulate L2 ERC-20 withdraw.',
           },
         );
         withdrawTx = sim.request as ViemPlanWriteRequest;
+      }
+
+      const withdrawGas = await ctx.gas.ensure(
+        'l2-asset-router:withdraw',
+        'withdraw.erc20-nonbase.l2',
+        withdrawTx,
+        {
+          estimator: () =>
+            wrapAs(
+              'RPC',
+              OP_WITHDRAWALS.erc20.estGas,
+              () => ctx.client.l2.estimateContractGas(withdrawParams),
+              {
+                ctx: { where: 'l2.estimateContractGas', to: ctx.l2AssetRouter },
+                message: 'Failed to estimate gas for L2 ERC-20 withdraw.',
+              },
+            ),
+        },
+      );
+      if (withdrawGas.recommended != null) {
+        withdrawTx.gas = withdrawGas.recommended;
       }
 
       steps.push({
@@ -152,7 +191,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
         tx: withdrawTx,
       });
 
-      return { steps, approvals, quoteExtras: {} };
+      return { steps, approvals, quoteExtras: { gasPlan: ctx.gas.snapshot() } };
     },
   };
 }

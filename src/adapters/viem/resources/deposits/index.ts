@@ -117,7 +117,7 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
     await ROUTES[route].preflight?.(p, ctx);
 
     const { steps, approvals, quoteExtras } = await ROUTES[route].build(p, ctx);
-    const { baseCost, mintValue } = quoteExtras;
+    const { baseCost, mintValue, gasPlan, baseToken, baseIsEth } = quoteExtras;
 
     return {
       route: ctx.route,
@@ -128,6 +128,9 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
         mintValue,
         suggestedL2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
+        gasPlan,
+        baseToken,
+        baseIsEth,
       },
       steps,
     };

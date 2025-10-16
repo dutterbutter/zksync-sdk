@@ -15,6 +15,7 @@ import {
   L2NativeTokenVaultABI,
 } from '../../core/internal/abi-registry.ts';
 import type { Address } from '../../core/types/primitives';
+import { GasPlanner, DEFAULT_GAS_POLICIES } from '../../core/gas';
 
 const IBridgehub = new Interface(IBridgehubABI as any);
 const IL1AssetRouter = new Interface(IL1AssetRouterABI as any);
@@ -390,6 +391,7 @@ export type DepositTestContext<T extends AdapterHarness> = {
     gasPrice?: bigint;
     gasPriceForBaseCost: bigint;
   };
+  gas: GasPlanner<any>;
 } & Record<string, unknown>;
 
 export function makeDepositContext<T extends AdapterHarness>(
@@ -413,6 +415,7 @@ export function makeDepositContext<T extends AdapterHarness>(
     refundRecipient: ADAPTER_TEST_ADDRESSES.signer,
     operatorTip: 7n,
     fee: baseFee,
+    gas: new GasPlanner(DEFAULT_GAS_POLICIES),
   };
 
   const merged = {
@@ -441,6 +444,7 @@ export type WithdrawalTestContext<T extends AdapterHarness> = {
   l2GasLimit: bigint;
   gasBufferPct: number;
   fee?: Record<string, unknown>;
+  gas: GasPlanner<any>;
 } & Record<string, unknown>;
 
 export function makeWithdrawalContext<T extends AdapterHarness>(
@@ -461,6 +465,7 @@ export function makeWithdrawalContext<T extends AdapterHarness>(
     l2GasLimit: 300_000n,
     gasBufferPct: 15,
     fee: { maxFeePerGas: 1n, maxPriorityFeePerGas: 1n },
+    gas: new GasPlanner(DEFAULT_GAS_POLICIES),
   };
 
   return {

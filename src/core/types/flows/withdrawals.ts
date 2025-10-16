@@ -2,6 +2,7 @@
 
 import type { Address, Hex } from '../primitives';
 import type { ApprovalNeed, Plan, Handle } from './base';
+import type { GasPlannerSnapshot } from '../../gas';
 
 /** Input */
 export interface WithdrawParams {
@@ -19,6 +20,7 @@ export interface WithdrawQuote {
   route: WithdrawRoute;
   approvalsNeeded: readonly ApprovalNeed[];
   suggestedL2GasLimit: bigint;
+  gasPlan: GasPlannerSnapshot;
 }
 
 /** Plan (Tx generic) */

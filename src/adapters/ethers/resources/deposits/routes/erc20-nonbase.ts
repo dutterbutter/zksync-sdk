@@ -74,7 +74,13 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       )) as bigint;
 
       const baseCost = BigInt(rawBaseCost);
-      const mintValue = baseCost + ctx.operatorTip;
+      const baseCostQuote = ctx.gas.applyBaseCost(
+        'base-cost:bridgehub:erc20-nonbase',
+        'deposit.base-cost.erc20-nonbase',
+        baseCost,
+        { operatorTip: ctx.operatorTip },
+      );
+      const mintValue = baseCostQuote.recommended;
 
       // Approvals (branch by who pays fees)
       const approvals: ApprovalNeed[] = [];
@@ -101,11 +107,37 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             assetRouter,
             p.amount,
           ]);
+          const approveTx: TransactionRequest = {
+            to: p.token,
+            data,
+            from: ctx.sender,
+            ...ctx.fee,
+          };
+          const approveGas = await ctx.gas.ensure(
+            `approve:${p.token}:${assetRouter}`,
+            'deposit.approval.l1',
+            approveTx,
+            {
+              estimator: (request) =>
+                wrapAs(
+                  'RPC',
+                  OP_DEPOSITS.nonbase.estGas,
+                  () => ctx.client.l1.estimateGas(request),
+                  {
+                    ctx: { where: 'l1.estimateGas', to: p.token },
+                    message: 'Failed to estimate gas for ERC-20 approval (deposit token).',
+                  },
+                ),
+            },
+          );
+          if (approveGas.recommended != null) {
+            approveTx.gasLimit = approveGas.recommended;
+          }
           steps.push({
             key: `approve:${p.token}:${assetRouter}`,
             kind: 'approve',
             description: `Approve ${p.amount} for router (deposit token)`,
-            tx: { to: p.token, data, from: ctx.sender, ...ctx.fee },
+            tx: approveTx,
           });
         }
       }
@@ -127,11 +159,37 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         if (allowanceBase < mintValue) {
           approvals.push({ token: baseToken, spender: assetRouter, amount: mintValue });
           const data = erc20Base.interface.encodeFunctionData('approve', [assetRouter, mintValue]);
+          const approveTx: TransactionRequest = {
+            to: baseToken,
+            data,
+            from: ctx.sender,
+            ...ctx.fee,
+          };
+          const approveGas = await ctx.gas.ensure(
+            `approve:${baseToken}:${assetRouter}`,
+            'deposit.approval.l1',
+            approveTx,
+            {
+              estimator: (request) =>
+                wrapAs(
+                  'RPC',
+                  OP_DEPOSITS.nonbase.estGas,
+                  () => ctx.client.l1.estimateGas(request),
+                  {
+                    ctx: { where: 'l1.estimateGas', to: baseToken },
+                    message: 'Failed to estimate gas for ERC-20 approval (base token).',
+                  },
+                ),
+            },
+          );
+          if (approveGas.recommended != null) {
+            approveTx.gasLimit = approveGas.recommended;
+          }
           steps.push({
             key: `approve:${baseToken}:${assetRouter}`,
             kind: 'approve',
             description: `Approve base token for mintValue`,
-            tx: { to: baseToken, data, from: ctx.sender, ...ctx.fee },
+            tx: approveTx,
           });
         }
       }
@@ -169,20 +227,20 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         ...ctx.fee,
       };
 
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.nonbase.estGas,
-          () => ctx.client.l1.estimateGas(bridgeTx),
-          {
-            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub, baseIsEth },
-            message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        // TODO: refactor to improve gas estimate / fees
-        bridgeTx.gasLimit = (BigInt(est) * 125n) / 100n;
-      } catch {
-        // ignore;
+      const gas = await ctx.gas.ensure(
+        'bridgehub:two-bridges:nonbase',
+        'deposit.bridgehub.two-bridges.erc20.l1',
+        bridgeTx,
+        {
+          estimator: (request) =>
+            wrapAs('RPC', OP_DEPOSITS.nonbase.estGas, () => ctx.client.l1.estimateGas(request), {
+              ctx: { where: 'l1.estimateGas', to: ctx.bridgehub, baseIsEth },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            }),
+        },
+      );
+      if (gas.recommended != null) {
+        bridgeTx.gasLimit = gas.recommended;
       }
 
       steps.push({
@@ -194,7 +252,17 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue, baseToken, baseIsEth } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: {
+          baseCost,
+          mintValue,
+          baseToken,
+          baseIsEth,
+          gasPlan: ctx.gas.snapshot(),
+        },
+      };
     },
   };
 }

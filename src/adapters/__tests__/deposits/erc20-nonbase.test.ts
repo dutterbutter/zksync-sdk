@@ -26,11 +26,8 @@ const ERC20_TOKEN = '0x3333333333333333333333333333333333333333' as const;
 const BASE_TOKEN = ADAPTER_TEST_ADDRESSES.baseTokenFor324;
 const RECEIVER = '0x4444444444444444444444444444444444444444' as const;
 
-const withBuffer = (x: bigint) => (x * 10100n) / 10000n;
-
-function expectedMint(kind: AdapterKind, baseCost: bigint, operatorTip: bigint) {
-  const raw = baseCost + operatorTip;
-  return kind === 'viem' ? withBuffer(raw) : raw;
+function expectedMint(baseCost: bigint, operatorTip: bigint) {
+  return baseCost + operatorTip;
 }
 
 describeForAdapters('adapters/deposits/routeErc20NonBase', (kind, factory) => {
@@ -39,7 +36,7 @@ describeForAdapters('adapters/deposits/routeErc20NonBase', (kind, factory) => {
     const ctx = makeDepositContext(harness, { l2GasLimit: 600_000n });
     const amount = 1_000n;
     const baseCost = 3_000n;
-    const mintValue = expectedMint(kind, baseCost, ctx.operatorTip);
+    const mintValue = expectedMint(baseCost, ctx.operatorTip);
 
     setBridgehubBaseToken(harness, ctx, FORMAL_ETH_ADDRESS);
     setBridgehubBaseCost(harness, ctx, baseCost, { l2GasLimit: MIN_L2_GAS_FOR_ERC20 });
@@ -91,7 +88,7 @@ describeForAdapters('adapters/deposits/routeErc20NonBase', (kind, factory) => {
     const ctx = makeDepositContext(harness);
     const amount = 5_000n;
     const baseCost = 4_000n;
-    const mintValue = expectedMint(kind, baseCost, ctx.operatorTip);
+    const mintValue = expectedMint(baseCost, ctx.operatorTip);
 
     setBridgehubBaseToken(harness, ctx, BASE_TOKEN);
     setBridgehubBaseCost(harness, ctx, baseCost, { l2GasLimit: MIN_L2_GAS_FOR_ERC20 });
@@ -150,7 +147,7 @@ describeForAdapters('adapters/deposits/routeErc20NonBase', (kind, factory) => {
       const ctx = makeDepositContext(harness);
       const amount = 2_000n;
       const baseCost = 3_000n;
-      const mintValue = expectedMint('ethers', baseCost, ctx.operatorTip);
+      const mintValue = expectedMint(baseCost, ctx.operatorTip);
 
       setBridgehubBaseToken(harness, ctx, BASE_TOKEN);
       setBridgehubBaseCost(harness, ctx, baseCost, { l2GasLimit: MIN_L2_GAS_FOR_ERC20 });

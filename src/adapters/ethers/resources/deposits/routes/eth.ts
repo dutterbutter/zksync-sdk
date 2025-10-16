@@ -39,7 +39,13 @@ export function routeEthDirect(): DepositRouteStrategy {
 
       const l2Contract = p.to ?? ctx.sender;
       const l2Value = p.amount;
-      const mintValue = baseCost + ctx.operatorTip + l2Value;
+      const baseCostQuote = ctx.gas.applyBaseCost(
+        'base-cost:bridgehub:direct',
+        'deposit.base-cost.eth-base',
+        baseCost,
+        { operatorTip: ctx.operatorTip, extras: l2Value },
+      );
+      const mintValue = baseCostQuote.recommended;
 
       const req = buildDirectRequestStruct({
         chainId: ctx.chainIdL2,
@@ -59,19 +65,15 @@ export function routeEthDirect(): DepositRouteStrategy {
         from: ctx.sender,
         ...ctx.fee,
       };
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.eth.estGas,
-          () => ctx.client.l1.estimateGas(tx),
-          {
+      const gas = await ctx.gas.ensure('bridgehub:direct', 'deposit.bridgehub.direct.l1', tx, {
+        estimator: (request) =>
+          wrapAs('RPC', OP_DEPOSITS.eth.estGas, () => ctx.client.l1.estimateGas(request), {
             ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
             message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore
+          }),
+      });
+      if (gas.recommended != null) {
+        tx.gasLimit = gas.recommended;
       }
 
       const steps: PlanStep<TransactionRequest>[] = [
@@ -83,7 +85,11 @@ export function routeEthDirect(): DepositRouteStrategy {
         },
       ];
 
-      return { steps, approvals: [], quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals: [],
+        quoteExtras: { baseCost, mintValue, gasPlan: ctx.gas.snapshot() },
+      };
     },
   };
 }

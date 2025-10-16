@@ -1,10 +1,12 @@
 // src/adapters/viem/resources/deposits/context.ts
 import type { ViemClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
+import { GasPlanner, DEFAULT_GAS_POLICIES } from '../../../../core/gas';
 import { getFeeOverrides, type FeeOverrides } from '../utils';
 import { pickDepositRoute } from '../../../../core/resources/deposits/route';
 import type { DepositParams, DepositRoute } from '../../../../core/types/flows/deposits';
 import type { CommonCtx } from '../../../../core/types/flows/base';
+import type { ViemPlanWriteRequest } from './routes/types';
 
 // Common context for building deposit (L1→L2) transactions (Viem)
 export interface BuildCtx extends CommonCtx {
@@ -17,6 +19,7 @@ export interface BuildCtx extends CommonCtx {
   gasPerPubdata: bigint;
   operatorTip: bigint;
   refundRecipient: Address;
+  gas: GasPlanner<ViemPlanWriteRequest>;
 }
 
 // Prepare a common context for deposit operations
@@ -34,6 +37,8 @@ export async function commonCtx(p: DepositParams, client: ViemClient) {
 
   const route = await pickDepositRoute(client, BigInt(chainId), p.token);
 
+  const gas = new GasPlanner<ViemPlanWriteRequest>(DEFAULT_GAS_POLICIES);
+
   return {
     client,
     l1AssetRouter,
@@ -46,5 +51,6 @@ export async function commonCtx(p: DepositParams, client: ViemClient) {
     gasPerPubdata,
     operatorTip,
     refundRecipient,
+    gas,
   } satisfies BuildCtx & { route: DepositRoute };
 }

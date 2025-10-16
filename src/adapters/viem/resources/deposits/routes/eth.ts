@@ -35,7 +35,13 @@ export function routeEthDirect(): DepositRouteStrategy {
 
       const l2Contract = p.to ?? ctx.sender;
       const l2Value = p.amount;
-      const mintValue = baseCost + ctx.operatorTip + l2Value;
+      const baseCostQuote = ctx.gas.applyBaseCost(
+        'base-cost:bridgehub:direct',
+        'deposit.base-cost.eth-base',
+        baseCost,
+        { operatorTip: ctx.operatorTip, extras: l2Value },
+      );
+      const mintValue = baseCostQuote.recommended;
 
       const req = buildDirectRequestStruct({
         chainId: ctx.chainIdL2,
@@ -61,19 +67,20 @@ export function routeEthDirect(): DepositRouteStrategy {
       }
 
       // Simulate to produce a writeContract-ready request
+      const callParams = {
+        address: ctx.bridgehub,
+        abi: IBridgehubABI,
+        functionName: 'requestL2TransactionDirect',
+        args: [req],
+        value: mintValue,
+        account: ctx.client.account,
+        ...feeOverrides,
+      } as const;
+
       const sim = await wrapAs(
         'RPC',
         OP_DEPOSITS.eth.estGas,
-        () =>
-          ctx.client.l1.simulateContract({
-            address: ctx.bridgehub,
-            abi: IBridgehubABI,
-            functionName: 'requestL2TransactionDirect',
-            args: [req],
-            value: mintValue,
-            account: ctx.client.account,
-            ...feeOverrides,
-          }),
+        () => ctx.client.l1.simulateContract(callParams),
         {
           ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
           message: 'Failed to simulate Bridgehub.requestL2TransactionDirect.',
@@ -81,16 +88,38 @@ export function routeEthDirect(): DepositRouteStrategy {
       );
       // TODO: add preview step
       // right now it adds too much noise on response
+      const tx = sim.request as ViemPlanWriteRequest;
+
+      const gas = await ctx.gas.ensure('bridgehub:direct', 'deposit.bridgehub.direct.l1', tx, {
+        estimator: () =>
+          wrapAs(
+            'RPC',
+            OP_DEPOSITS.eth.estGas,
+            () => ctx.client.l1.estimateContractGas(callParams),
+            {
+              ctx: { where: 'l1.estimateContractGas', to: ctx.bridgehub },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            },
+          ),
+      });
+      if (gas.recommended != null) {
+        tx.gas = gas.recommended;
+      }
+
       const steps: PlanStep<ViemPlanWriteRequest>[] = [
         {
           key: 'bridgehub:direct',
           kind: 'bridgehub:direct',
           description: 'Bridge ETH via Bridgehub.requestL2TransactionDirect',
-          tx: sim.request,
+          tx,
         },
       ];
 
-      return { steps, approvals: [], quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals: [],
+        quoteExtras: { baseCost, mintValue, gasPlan: ctx.gas.snapshot() },
+      };
     },
   };
 }
