@@ -56,7 +56,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install build deps
-        run: sudo apt-get update && sudo apt-get install -y lcov
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends lcov
 
       - name: Install Foundry (anvil)
         uses: foundry-rs/foundry-toolchain@v1
@@ -143,6 +143,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: coverage-merge
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
       - name: Download merged LCOV
         uses: actions/download-artifact@v4
         with:
@@ -154,6 +159,9 @@ jobs:
         with:
           files: ./cov/lcov.merged.info
           flags: combined
+          disable_search: true
+          verbose: true
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
