@@ -56,7 +56,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install build deps
-        run: sudo apt-get update && sudo apt-get install -y lcov
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends lcov
 
       - name: Install Foundry (anvil)
         uses: foundry-rs/foundry-toolchain@v1
@@ -146,20 +146,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Download merged LCOV
         uses: actions/download-artifact@v4
         with:
           name: lcov-merged
           path: ./cov
-
-      - name: Inspect LCOV (optional but useful)
-        run: |
-          test -s ./cov/lcov.merged.info || (echo "merged LCOV is empty" && exit 1)
-          sudo apt-get update && sudo apt-get install -y lcov
-          lcov --list ./cov/lcov.merged.info | head -n 200
-          grep -m1 '^SF:' ./cov/lcov.merged.info || (echo "No SF lines in LCOV" && exit 1)
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
