@@ -118,12 +118,13 @@ export function createWithdrawalsResource(client: ViemClient): WithdrawalsResour
     const ctx = await commonCtx(p, client);
 
     await ROUTES[ctx.route].preflight?.(p, ctx);
-    const { steps, approvals } = await ROUTES[ctx.route].build(p, ctx);
+    const { steps, approvals, quoteExtras } = await ROUTES[ctx.route].build(p, ctx);
 
     const summary: WithdrawQuote = {
       route: ctx.route,
       approvalsNeeded: approvals,
       suggestedL2GasLimit: ctx.l2GasLimit,
+      gasPlan: quoteExtras.gasPlan,
     };
     return { route: ctx.route, summary, steps };
   }

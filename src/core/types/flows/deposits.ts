@@ -1,6 +1,7 @@
 // src/types/flows/deposits.ts
 import type { Address, Hex } from '../primitives';
 import type { ApprovalNeed, Plan, Handle } from './base';
+import type { GasPlannerSnapshot } from '../../gas';
 
 /** Input */
 export interface DepositParams {
@@ -24,6 +25,9 @@ export interface DepositQuote {
   mintValue: bigint;
   suggestedL2GasLimit: bigint;
   gasPerPubdata: bigint;
+  gasPlan: GasPlannerSnapshot;
+  baseToken?: Address;
+  baseIsEth?: boolean;
 }
 
 /** Plan (Tx generic) */

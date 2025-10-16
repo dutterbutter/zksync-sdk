@@ -4,8 +4,11 @@ import type { WithdrawParams } from '../../../../../core/types/flows/withdrawals
 import type { RouteStrategy } from '../../../../../core/types/flows/route';
 import type { BuildCtx as WithdrawBuildCtx } from '../context';
 import type { Address, Hex } from '../../../../../core/types';
+import type { GasPlannerSnapshot } from '../../../../../core/gas';
 
-export type WithdrawQuoteExtras = Record<string, never>;
+export interface WithdrawQuoteExtras {
+  gasPlan: GasPlannerSnapshot;
+}
 
 export type WithdrawRouteStrategy = RouteStrategy<
   WithdrawParams,

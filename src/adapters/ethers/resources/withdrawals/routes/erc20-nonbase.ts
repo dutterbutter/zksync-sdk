@@ -54,11 +54,34 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
           p.amount,
         ]);
 
+        const approveTx: TransactionRequest = {
+          to: p.token,
+          data,
+          from: ctx.sender,
+          ...(ctx.fee ?? {}),
+        };
+
+        const approveGas = await ctx.gas.ensure(
+          `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
+          'withdraw.approval.l2',
+          approveTx,
+          {
+            estimator: (request) =>
+              wrapAs('RPC', OP_WITHDRAWALS.erc20.estGas, () => ctx.client.l2.estimateGas(request), {
+                ctx: { where: 'l2.estimateGas', to: p.token },
+                message: 'Failed to estimate gas for L2 ERC-20 approval.',
+              }),
+          },
+        );
+        if (approveGas.recommended != null) {
+          approveTx.gasLimit = approveGas.recommended;
+        }
+
         steps.push({
           key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
           kind: 'approve:l2',
           description: `Approve ${p.amount} to NativeTokenVault`,
-          tx: { to: p.token, data, from: ctx.sender, ...(ctx.fee ?? {}) },
+          tx: approveTx,
         });
       }
 
@@ -110,6 +133,22 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
         ...(ctx.fee ?? {}),
       };
 
+      const withdrawGas = await ctx.gas.ensure(
+        'l2-asset-router:withdraw',
+        'withdraw.erc20-nonbase.l2',
+        withdrawTx,
+        {
+          estimator: (request) =>
+            wrapAs('RPC', OP_WITHDRAWALS.erc20.estGas, () => ctx.client.l2.estimateGas(request), {
+              ctx: { where: 'l2.estimateGas', to: ctx.l2AssetRouter },
+              message: 'Failed to estimate gas for L2 asset-router withdraw.',
+            }),
+        },
+      );
+      if (withdrawGas.recommended != null) {
+        withdrawTx.gasLimit = withdrawGas.recommended;
+      }
+
       steps.push({
         key: 'l2-asset-router:withdraw',
         kind: 'l2-asset-router:withdraw',
@@ -117,7 +156,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
         tx: withdrawTx,
       });
 
-      return { steps, approvals, quoteExtras: {} };
+      return { steps, approvals, quoteExtras: { gasPlan: ctx.gas.snapshot() } };
     },
   };
 }

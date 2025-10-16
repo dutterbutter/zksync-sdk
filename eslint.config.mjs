@@ -22,7 +22,7 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked.map((cfg) => ({
     ...cfg,
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', 'src/adapters/**/*.ts'],
     languageOptions: {
       ...cfg.languageOptions,
       parserOptions: {
@@ -33,7 +33,7 @@ export default [
     },
   })),
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', 'src/adapters/**/*.ts'],
     rules: {
       'no-console': 'warn',
       '@typescript-eslint/consistent-type-imports': 'warn',

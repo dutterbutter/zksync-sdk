@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/adapters/**/**/*.ts"],
   "exclude": [
     "node_modules",
     "build",

@@ -6,6 +6,8 @@ import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route'
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
 import type { CommonCtx } from '../../../../core/types/flows/base';
 import { isEthBasedChain } from '../token-info';
+import { GasPlanner, DEFAULT_GAS_POLICIES } from '../../../../core/gas';
+import type { ViemPlanWriteRequest } from './routes/types';
 
 // TODO: move all fee and gas items to dedicated resource?
 export type ViemFeeOverrides = {
@@ -37,6 +39,7 @@ export interface BuildCtx extends CommonCtx {
 
   // Optional fee overrides for L2 send
   fee?: ViemFeeOverrides;
+  gas: GasPlanner<ViemPlanWriteRequest>;
 }
 
 export async function commonCtx(
@@ -67,6 +70,8 @@ export async function commonCtx(
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasBufferPct = 15;
 
+  const gas = new GasPlanner<ViemPlanWriteRequest>(DEFAULT_GAS_POLICIES);
+
   return {
     client,
     bridgehub,
@@ -81,5 +86,6 @@ export async function commonCtx(
     baseIsEth,
     l2GasLimit,
     gasBufferPct,
+    gas,
   } satisfies BuildCtx & { route: WithdrawRoute };
 }

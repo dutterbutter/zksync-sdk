@@ -10,10 +10,6 @@ import type { Abi } from 'viem';
 
 const { wrapAs } = createErrorHandlers('deposits');
 
-const BASE_COST_BUFFER_BPS = 100n; // 1%
-const BPS = 10_000n;
-const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
-
 export function routeErc20NonBase(): DepositRouteStrategy {
   return {
     async preflight(p, ctx) {
@@ -95,7 +91,13 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       )) as bigint;
 
       const baseCost = rawBaseCost;
-      const mintValue = withBuffer(baseCost + ctx.operatorTip);
+      const baseCostQuote = ctx.gas.applyBaseCost(
+        'base-cost:bridgehub:erc20-nonbase',
+        'deposit.base-cost.erc20-nonbase',
+        baseCost,
+        { operatorTip: ctx.operatorTip },
+      );
+      const mintValue = baseCostQuote.recommended;
 
       // Approvals
       const approvals: ApprovalNeed[] = [];
@@ -119,17 +121,18 @@ export function routeErc20NonBase(): DepositRouteStrategy {
 
       const needsDepositApprove = depositAllowance < p.amount;
       if (needsDepositApprove) {
+        const approveDepParams = {
+          address: p.token,
+          abi: IERC20ABI,
+          functionName: 'approve',
+          args: [ctx.l1AssetRouter, p.amount] as const,
+          account: ctx.client.account,
+        } as const;
+
         const approveDepReq = await wrapAs(
           'CONTRACT',
           OP_DEPOSITS.nonbase.estGas,
-          () =>
-            ctx.client.l1.simulateContract({
-              address: p.token,
-              abi: IERC20ABI,
-              functionName: 'approve',
-              args: [ctx.l1AssetRouter, p.amount] as const,
-              account: ctx.client.account,
-            }),
+          () => ctx.client.l1.simulateContract(approveDepParams),
           {
             ctx: { where: 'l1.simulateContract', to: p.token },
             message: 'Failed to simulate deposit token approve.',
@@ -137,11 +140,33 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         );
 
         approvals.push({ token: p.token, spender: ctx.l1AssetRouter, amount: p.amount });
+        const approveTx = approveDepReq.request as ViemPlanWriteRequest;
+        const approveGas = await ctx.gas.ensure(
+          `approve:${p.token}:${ctx.l1AssetRouter}`,
+          'deposit.approval.l1',
+          approveTx,
+          {
+            estimator: () =>
+              wrapAs(
+                'RPC',
+                OP_DEPOSITS.nonbase.estGas,
+                () => ctx.client.l1.estimateContractGas(approveDepParams),
+                {
+                  ctx: { where: 'l1.estimateContractGas', to: p.token },
+                  message: 'Failed to estimate gas for deposit token approve.',
+                },
+              ),
+          },
+        );
+        if (approveGas.recommended != null) {
+          approveTx.gas = approveGas.recommended;
+        }
+
         steps.push({
           key: `approve:${p.token}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: `Approve deposit token for amount`,
-          tx: approveDepReq.request,
+          tx: approveTx,
         });
       }
 
@@ -166,17 +191,18 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         )) as bigint;
 
         if (baseAllowance < mintValue) {
+          const approveBaseParams = {
+            address: baseToken,
+            abi: IERC20ABI,
+            functionName: 'approve',
+            args: [ctx.l1AssetRouter, mintValue] as const,
+            account: ctx.client.account,
+          } as const;
+
           const approveBaseReq = await wrapAs(
             'CONTRACT',
             OP_DEPOSITS.nonbase.estGas,
-            () =>
-              ctx.client.l1.simulateContract({
-                address: baseToken,
-                abi: IERC20ABI,
-                functionName: 'approve',
-                args: [ctx.l1AssetRouter, mintValue] as const,
-                account: ctx.client.account,
-              }),
+            () => ctx.client.l1.simulateContract(approveBaseParams),
             {
               ctx: { where: 'l1.simulateContract', to: baseToken },
               message: 'Failed to simulate base-token approve.',
@@ -184,11 +210,33 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           );
 
           approvals.push({ token: baseToken, spender: ctx.l1AssetRouter, amount: mintValue });
+          const approveBaseTx = approveBaseReq.request as ViemPlanWriteRequest;
+          const approveBaseGas = await ctx.gas.ensure(
+            `approve:${baseToken}:${ctx.l1AssetRouter}`,
+            'deposit.approval.l1',
+            approveBaseTx,
+            {
+              estimator: () =>
+                wrapAs(
+                  'RPC',
+                  OP_DEPOSITS.nonbase.estGas,
+                  () => ctx.client.l1.estimateContractGas(approveBaseParams),
+                  {
+                    ctx: { where: 'l1.estimateContractGas', to: baseToken },
+                    message: 'Failed to estimate gas for base-token approve.',
+                  },
+                ),
+            },
+          );
+          if (approveBaseGas.recommended != null) {
+            approveBaseTx.gas = approveBaseGas.recommended;
+          }
+
           steps.push({
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: `Approve base token for mintValue`,
-            tx: approveBaseReq.request,
+            tx: approveBaseTx,
           });
         }
 
@@ -227,36 +275,70 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       // viem simulate/write:
       // If any approval is required, skip simulate (can revert) and return a raw write.
       const approvalsNeeded = approvals.length > 0;
+      const feeOverrides: Record<string, unknown> = {};
+      if ('maxFeePerGas' in ctx.fee && ctx.fee.maxFeePerGas != null) {
+        feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
+      }
+      if ('maxPriorityFeePerGas' in ctx.fee && ctx.fee.maxPriorityFeePerGas != null) {
+        feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
+      }
+      if ('gasPrice' in ctx.fee && ctx.fee.gasPrice != null) {
+        feeOverrides.gasPrice = ctx.fee.gasPrice;
+      }
+
       let bridgeTx: ViemPlanWriteRequest;
+      const bridgeParamsBase = {
+        address: ctx.bridgehub,
+        abi: IBridgehubABI,
+        functionName: 'requestL2TransactionTwoBridges',
+        args: [outer],
+        account: ctx.client.account,
+      } as const;
 
       if (approvalsNeeded) {
         bridgeTx = {
-          address: ctx.bridgehub,
-          abi: IBridgehubABI,
-          functionName: 'requestL2TransactionTwoBridges',
-          args: [outer],
+          ...bridgeParamsBase,
           value: msgValue,
-          account: ctx.client.account,
-        } as const;
+          ...feeOverrides,
+        } as ViemPlanWriteRequest;
       } else {
         const sim = await wrapAs(
           'CONTRACT',
           OP_DEPOSITS.nonbase.estGas,
           () =>
             ctx.client.l1.simulateContract({
-              address: ctx.bridgehub,
-              abi: IBridgehubABI,
-              functionName: 'requestL2TransactionTwoBridges',
-              args: [outer],
+              ...bridgeParamsBase,
               value: msgValue,
-              account: ctx.client.account,
+              ...feeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
             message: 'Failed to simulate two-bridges request.',
           },
         );
-        bridgeTx = sim.request;
+        bridgeTx = sim.request as ViemPlanWriteRequest;
+      }
+
+      const bridgeCallParams = { ...bridgeParamsBase, value: msgValue, ...feeOverrides } as const;
+      const bridgeGas = await ctx.gas.ensure(
+        'bridgehub:two-bridges:nonbase',
+        'deposit.bridgehub.two-bridges.erc20.l1',
+        bridgeTx,
+        {
+          estimator: () =>
+            wrapAs(
+              'RPC',
+              OP_DEPOSITS.nonbase.estGas,
+              () => ctx.client.l1.estimateContractGas(bridgeCallParams),
+              {
+                ctx: { where: 'l1.estimateContractGas', to: ctx.bridgehub },
+                message: 'Failed to estimate gas for two-bridges request.',
+              },
+            ),
+        },
+      );
+      if (bridgeGas.recommended != null) {
+        bridgeTx.gas = bridgeGas.recommended;
       }
 
       steps.push({
@@ -268,7 +350,17 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: {
+          baseCost,
+          mintValue,
+          baseToken,
+          baseIsEth,
+          gasPlan: ctx.gas.snapshot(),
+        },
+      };
     },
   };
 }

@@ -13,12 +13,6 @@ import { isETH } from '../../../../../core/utils/addr';
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
 
-// TODO: all gas buffers need to be moved to a dedicated resource
-// this is getting messy
-const BASE_COST_BUFFER_BPS = 100n; // 1%
-const BPS = 10_000n;
-const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
-
 // ETH deposit to a chain whose base token is NOT ETH.
 export function routeEthNonBase(): DepositRouteStrategy {
   return {
@@ -113,9 +107,13 @@ export function routeEthNonBase(): DepositRouteStrategy {
         },
       )) as bigint;
       const baseCost = BigInt(rawBaseCost);
-      const mintValueRaw = baseCost + ctx.operatorTip;
-      // TODO: consider making buffer optional / configurable
-      const mintValue = withBuffer(mintValueRaw);
+      const baseCostQuote = ctx.gas.applyBaseCost(
+        'base-cost:bridgehub:eth-nonbase',
+        'deposit.base-cost.eth-nonbase',
+        baseCost,
+        { operatorTip: ctx.operatorTip },
+      );
+      const mintValue = baseCostQuote.recommended;
 
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
@@ -139,11 +137,37 @@ export function routeEthNonBase(): DepositRouteStrategy {
             ctx.l1AssetRouter,
             mintValue,
           ]);
+          const approveTx: TransactionRequest = {
+            to: baseToken,
+            data,
+            from: ctx.sender,
+            ...ctx.fee,
+          };
+          const approveGas = await ctx.gas.ensure(
+            `approve:${baseToken}:${ctx.l1AssetRouter}`,
+            'deposit.approval.l1',
+            approveTx,
+            {
+              estimator: (request) =>
+                wrapAs(
+                  'RPC',
+                  OP_DEPOSITS.ethNonBase.estGas,
+                  () => ctx.client.l1.estimateGas(request),
+                  {
+                    ctx: { where: 'l1.estimateGas', to: baseToken },
+                    message: 'Failed to estimate gas for ERC-20 approval (base token).',
+                  },
+                ),
+            },
+          );
+          if (approveGas.recommended != null) {
+            approveTx.gasLimit = approveGas.recommended;
+          }
           steps.push({
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: `Approve base token for mintValue`,
-            tx: { to: baseToken, data, from: ctx.sender, ...ctx.fee },
+            tx: approveTx,
           });
         }
       }
@@ -188,19 +212,20 @@ export function routeEthNonBase(): DepositRouteStrategy {
         ...ctx.fee,
       };
 
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.ethNonBase.estGas,
-          () => ctx.client.l1.estimateGas(bridgeTx),
-          {
-            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
-            message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        bridgeTx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore;
+      const gas = await ctx.gas.ensure(
+        'bridgehub:two-bridges:eth-nonbase',
+        'deposit.bridgehub.two-bridges.eth-nonbase.l1',
+        bridgeTx,
+        {
+          estimator: (request) =>
+            wrapAs('RPC', OP_DEPOSITS.ethNonBase.estGas, () => ctx.client.l1.estimateGas(request), {
+              ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            }),
+        },
+      );
+      if (gas.recommended != null) {
+        bridgeTx.gasLimit = gas.recommended;
       }
 
       steps.push({
@@ -211,7 +236,11 @@ export function routeEthNonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, gasPlan: ctx.gas.snapshot() },
+      };
     },
   };
 }

@@ -11,12 +11,6 @@ import { normalizeAddrEq, isETH } from '../../../../../core/utils/addr';
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
 
-// TODO: all gas buffers need to be moved to a dedicated resource
-// this is getting messy
-const BASE_COST_BUFFER_BPS = 100n; // 1%
-const BPS = 10_000n;
-const withBuffer = (x: bigint) => (x * (BPS + BASE_COST_BUFFER_BPS)) / BPS;
-
 //  ERC20 deposit where the deposit token IS the target chain's base token (base ≠ ETH).
 export function routeErc20Base(): DepositRouteStrategy {
   return {
@@ -91,10 +85,16 @@ export function routeErc20Base(): DepositRouteStrategy {
       )) as bigint;
       const baseCost = BigInt(rawBaseCost);
 
-      // Direct path: mintValue must cover fee + the L2 msg.value (amount) → plus a small buffer
+      // Direct path: mintValue must cover fee + the L2 msg.value (amount)
       const l2Value = p.amount;
-      const rawMintValue = baseCost + ctx.operatorTip + l2Value;
-      const mintValue = withBuffer(rawMintValue);
+      const baseCostQuote = ctx.gas.applyBaseCost(
+        'base-cost:bridgehub:erc20-base',
+        'deposit.base-cost.erc20-base',
+        baseCost,
+        { operatorTip: ctx.operatorTip, extras: l2Value },
+      );
+
+      const mintValue = baseCostQuote.recommended;
 
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
@@ -118,11 +118,32 @@ export function routeErc20Base(): DepositRouteStrategy {
             ctx.l1AssetRouter,
             mintValue,
           ]);
+          const approveTx: TransactionRequest = {
+            to: baseToken,
+            data,
+            from: ctx.sender,
+            ...ctx.fee,
+          };
+          const approveGas = await ctx.gas.ensure(
+            `approve:${baseToken}:${ctx.l1AssetRouter}`,
+            'deposit.approval.l1',
+            approveTx,
+            {
+              estimator: (request) =>
+                wrapAs('RPC', OP_DEPOSITS.base.estGas, () => ctx.client.l1.estimateGas(request), {
+                  ctx: { where: 'l1.estimateGas', to: baseToken },
+                  message: 'Failed to estimate gas for ERC-20 approval.',
+                }),
+            },
+          );
+          if (approveGas.recommended != null) {
+            approveTx.gasLimit = approveGas.recommended;
+          }
           steps.push({
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: 'Approve base token for mintValue',
-            tx: { to: baseToken, data, from: ctx.sender, ...ctx.fee },
+            tx: approveTx,
           });
         }
       }
@@ -151,19 +172,20 @@ export function routeErc20Base(): DepositRouteStrategy {
         ...ctx.fee,
       };
 
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.base.estGas,
-          () => ctx.client.l1.estimateGas(tx),
-          {
-            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
-            message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore;
+      const gas = await ctx.gas.ensure(
+        'bridgehub:direct:erc20-base',
+        'deposit.bridgehub.direct.l1',
+        tx,
+        {
+          estimator: (request) =>
+            wrapAs('RPC', OP_DEPOSITS.base.estGas, () => ctx.client.l1.estimateGas(request), {
+              ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            }),
+        },
+      );
+      if (gas.recommended != null) {
+        tx.gasLimit = gas.recommended;
       }
 
       steps.push({
@@ -173,7 +195,11 @@ export function routeErc20Base(): DepositRouteStrategy {
         tx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, gasPlan: ctx.gas.snapshot() },
+      };
     },
   };
 }

@@ -48,21 +48,15 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
         ...(ctx.fee ?? {}),
       };
 
-      // TODO: consider a more robust buffer strategy
-      // best-effort gas estimate
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_WITHDRAWALS.eth.estGas,
-          () => ctx.client.l2.estimateGas(tx),
-          {
+      const gas = await ctx.gas.ensure('l2-base-token:withdraw', 'withdraw.eth-nonbase.l2', tx, {
+        estimator: (request) =>
+          wrapAs('RPC', OP_WITHDRAWALS.eth.estGas, () => ctx.client.l2.estimateGas(request), {
             ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
             message: 'Failed to estimate gas for L2 base-token withdraw.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore
+          }),
+      });
+      if (gas.recommended != null) {
+        tx.gasLimit = gas.recommended;
       }
 
       steps.push({
@@ -72,7 +66,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
         tx,
       });
 
-      return { steps, approvals: [], quoteExtras: {} };
+      return { steps, approvals: [], quoteExtras: { gasPlan: ctx.gas.snapshot() } };
     },
   };
 }
