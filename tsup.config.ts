@@ -17,6 +17,7 @@ const entry = [
   '!src/**/*.e2e.ts',
   '!src/**/e2e/**',
   '!test/**',
+  '!src/adapters/__tests__/**',
 ];
 
 export default defineConfig([
