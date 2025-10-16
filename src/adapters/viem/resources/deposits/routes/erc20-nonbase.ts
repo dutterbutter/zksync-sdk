@@ -53,6 +53,12 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
+      if (!ctx.sender) {
+        throw new Error(
+          'Deposits require a sender account. Provide params.sender or configure the client with an account.',
+        );
+      }
+      const sender = ctx.sender!;
       // Read base token
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -111,7 +117,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             address: p.token,
             abi: IERC20ABI as Abi,
             functionName: 'allowance',
-            args: [ctx.sender, ctx.l1AssetRouter],
+            args: [sender, ctx.l1AssetRouter],
           }),
         {
           ctx: { where: 'erc20.allowance', token: p.token, spender: ctx.l1AssetRouter },
@@ -179,11 +185,11 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           OP_DEPOSITS.nonbase.allowanceFees,
           () =>
             ctx.client.l1.readContract({
-              address: baseToken,
-              abi: IERC20ABI as Abi,
-              functionName: 'allowance',
-              args: [ctx.sender, ctx.l1AssetRouter],
-            }),
+            address: baseToken,
+            abi: IERC20ABI as Abi,
+            functionName: 'allowance',
+            args: [sender, ctx.l1AssetRouter],
+          }),
           {
             ctx: { where: 'erc20.allowance', token: baseToken, spender: ctx.l1AssetRouter },
             message: 'Failed to read base-token allowance.',
@@ -250,7 +256,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,
-        () => Promise.resolve(encodeSecondBridgeErc20Args(p.token, p.amount, p.to ?? ctx.sender)),
+        () => Promise.resolve(encodeSecondBridgeErc20Args(p.token, p.amount, p.to ?? sender)),
         {
           ctx: {
             where: 'encodeSecondBridgeErc20Args',

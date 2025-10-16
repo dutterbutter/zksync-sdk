@@ -8,6 +8,7 @@ export interface DepositParams {
   token: Address;
   amount: bigint;
   to?: Address;
+  sender?: Address;
   refundRecipient?: Address;
   l2GasLimit?: bigint;
   gasPerPubdata?: bigint;

@@ -114,8 +114,11 @@ export function createWithdrawalsResource(client: ViemClient): WithdrawalsResour
   const { wrap, toResult } = createErrorHandlers('withdrawals');
 
   // Build a withdrawal plan (route + steps) without executing it
-  async function buildPlan(p: WithdrawParams): Promise<WithdrawPlan<ViemPlanWriteRequest>> {
-    const ctx = await commonCtx(p, client);
+  async function buildPlan(
+    p: WithdrawParams,
+    opts: { allowMissingSender?: boolean } = {},
+  ): Promise<WithdrawPlan<ViemPlanWriteRequest>> {
+    const ctx = await commonCtx(p, client, opts);
 
     await ROUTES[ctx.route].preflight?.(p, ctx);
     const { steps, approvals, quoteExtras } = await ROUTES[ctx.route].build(p, ctx);
@@ -133,10 +136,14 @@ export function createWithdrawalsResource(client: ViemClient): WithdrawalsResour
 
   // quote prepares a withdrawal and returns its summary without executing it
   const quote = (p: WithdrawParams): Promise<WithdrawQuote> =>
-    wrap(OP_WITHDRAWALS.quote, async () => (await buildPlan(p)).summary, {
-      message: 'Internal error while preparing a withdrawal quote.',
-      ctx: { token: p.token, where: 'withdrawals.quote' },
-    });
+    wrap(
+      OP_WITHDRAWALS.quote,
+      async () => (await buildPlan(p, { allowMissingSender: true })).summary,
+      {
+        message: 'Internal error while preparing a withdrawal quote.',
+        ctx: { token: p.token, where: 'withdrawals.quote' },
+      },
+    );
 
   // tryQuote attempts to prepare a withdrawal and returns its summary without executing it
   const tryQuote = (p: WithdrawParams) =>
@@ -147,10 +154,14 @@ export function createWithdrawalsResource(client: ViemClient): WithdrawalsResour
 
   // prepare prepares a withdrawal plan without executing it
   const prepare = (p: WithdrawParams): Promise<WithdrawPlan<ViemPlanWriteRequest>> =>
-    wrap(OP_WITHDRAWALS.prepare, () => buildPlan(p), {
-      message: 'Internal error while preparing a withdrawal plan.',
-      ctx: { token: p.token, where: 'withdrawals.prepare' },
-    });
+    wrap(
+      OP_WITHDRAWALS.prepare,
+      () => buildPlan(p, { allowMissingSender: true }),
+      {
+        message: 'Internal error while preparing a withdrawal plan.',
+        ctx: { token: p.token, where: 'withdrawals.prepare' },
+      },
+    );
 
   // tryPrepare attempts to prepare a withdrawal plan without executing it
   const tryPrepare = (p: WithdrawParams) =>

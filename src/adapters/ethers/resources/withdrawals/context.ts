@@ -35,8 +35,21 @@ export interface BuildCtx extends CommonCtx {
 export async function commonCtx(
   p: WithdrawParams,
   client: EthersClient,
+  opts: { allowMissingSender?: boolean } = {},
 ): Promise<BuildCtx & { route: WithdrawRoute }> {
-  const sender = (await client.signer.getAddress()) as Address;
+  let sender = p.sender as Address | undefined;
+  if (!sender) {
+    try {
+      sender = (await client.signer.getAddress()) as Address;
+    } catch {
+      sender = undefined;
+    }
+  }
+  if (!sender && !opts.allowMissingSender) {
+    throw new Error(
+      'Withdrawals require a sender account. Provide params.sender or use a client with a connected signer.',
+    );
+  }
 
   const {
     bridgehub,

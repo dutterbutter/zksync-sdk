@@ -2,6 +2,7 @@
 
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
+import type { Address } from '../../../../../core/types/primitives';
 import { IBridgehubABI, IERC20ABI } from '../../../../../core/internal/abi-registry.ts';
 import { encodeSecondBridgeEthArgs } from '../../utils';
 import { createErrorHandlers } from '../../../errors/error-ops';
@@ -16,6 +17,7 @@ const { wrapAs } = createErrorHandlers('deposits');
 export function routeEthNonBase(): DepositRouteStrategy {
   return {
     async preflight(p, ctx) {
+      const sender = ctx.sender;
       // Assert the asset is ETH.
       await wrapAs(
         'VALIDATION',
@@ -57,31 +59,34 @@ export function routeEthNonBase(): DepositRouteStrategy {
       );
 
       // Ensure user has enough ETH for the deposit amount (msg.value).
-      const ethBal = await wrapAs(
-        'RPC',
-        OP_DEPOSITS.ethNonBase.ethBalance,
-        () => ctx.client.l1.getBalance({ address: ctx.sender }),
-        {
-          ctx: { where: 'l1.getBalance', sender: ctx.sender },
-          message: 'Failed to read L1 ETH balance.',
-        },
-      );
+      if (sender) {
+        const ethBal = await wrapAs(
+          'RPC',
+          OP_DEPOSITS.ethNonBase.ethBalance,
+          () => ctx.client.l1.getBalance({ address: sender }),
+          {
+            ctx: { where: 'l1.getBalance', sender },
+            message: 'Failed to read L1 ETH balance.',
+          },
+        );
 
-      await wrapAs(
-        'VALIDATION',
-        OP_DEPOSITS.ethNonBase.assertEthBalance,
-        () => {
-          if (ethBal < p.amount) {
-            throw new Error('Insufficient L1 ETH balance to cover deposit amount.');
-          }
-        },
-        { ctx: { required: p.amount.toString(), balance: ethBal.toString() } },
-      );
+        await wrapAs(
+          'VALIDATION',
+          OP_DEPOSITS.ethNonBase.assertEthBalance,
+          () => {
+            if (ethBal < p.amount) {
+              throw new Error('Insufficient L1 ETH balance to cover deposit amount.');
+            }
+          },
+          { ctx: { required: p.amount.toString(), balance: ethBal.toString() } },
+        );
+      }
 
       return;
     },
 
     async build(p, ctx) {
+      const sender = ctx.sender;
       // Resolve base token
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -136,7 +141,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
             address: baseToken,
             abi: IERC20ABI as Abi,
             functionName: 'allowance',
-            args: [ctx.sender, ctx.l1AssetRouter],
+            args: [sender, ctx.l1AssetRouter],
           }),
         {
           ctx: { where: 'erc20.allowance', token: baseToken, spender: ctx.l1AssetRouter },
@@ -199,12 +204,20 @@ export function routeEthNonBase(): DepositRouteStrategy {
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.ethNonBase.encodeCalldata,
-        () => Promise.resolve(encodeSecondBridgeEthArgs(p.amount, p.to ?? ctx.sender)),
+        () => {
+          const receiver = (p.to ?? sender) as Address | undefined;
+          if (!receiver) {
+            throw new Error(
+              'Deposits require a target L2 address. Provide params.to when no sender account is available.',
+            );
+          }
+          return Promise.resolve(encodeSecondBridgeEthArgs(p.amount, receiver));
+        },
         {
           ctx: {
             where: 'encodeSecondBridgeEthArgs',
             amount: p.amount.toString(),
-            to: p.to ?? ctx.sender,
+            to: p.to ?? sender,
           },
           message: 'Failed to encode ETH bridging calldata.',
         },

@@ -23,17 +23,31 @@ export interface BuildCtx extends CommonCtx {
 }
 
 // Prepare a common context for deposit operations
-export async function commonCtx(p: DepositParams, client: ViemClient) {
+export async function commonCtx(
+  p: DepositParams,
+  client: ViemClient,
+  opts: { allowMissingSender?: boolean } = {},
+) {
   const { bridgehub, l1AssetRouter } = await client.ensureAddresses();
   const chainId = await client.l2.getChainId();
-  const sender = client.account.address;
+  const sender = (p.sender ?? client.account?.address) as Address | undefined;
+  if (!sender && !opts.allowMissingSender) {
+    throw new Error(
+      'Deposits require a sender account. Provide params.sender or configure the client with an account.',
+    );
+  }
   const fee = (await getFeeOverrides(client)) as FeeOverrides & { gasPriceForBaseCost: bigint };
 
   // TODO: gas default values should be refactored
   const l2GasLimit = p.l2GasLimit ?? 300_000n;
   const gasPerPubdata = p.gasPerPubdata ?? 800n;
   const operatorTip = p.operatorTip ?? 0n;
-  const refundRecipient = p.refundRecipient ?? sender;
+  const refundRecipient = (p.refundRecipient ?? sender) as Address | undefined;
+  if (!refundRecipient) {
+    throw new Error(
+      'Deposits require a refund recipient when no sender account is available. Provide params.refundRecipient or params.sender.',
+    );
+  }
 
   const route = await pickDepositRoute(client, BigInt(chainId), p.token);
 
@@ -50,7 +64,7 @@ export async function commonCtx(p: DepositParams, client: ViemClient) {
     l2GasLimit,
     gasPerPubdata,
     operatorTip,
-    refundRecipient,
+    refundRecipient: refundRecipient as Address,
     gas,
   } satisfies BuildCtx & { route: DepositRoute };
 }

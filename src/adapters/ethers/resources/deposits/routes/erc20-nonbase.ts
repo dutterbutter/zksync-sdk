@@ -9,6 +9,7 @@ import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/bas
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 import { isETH, normalizeAddrEq } from '../../../../../core/utils/addr';
+import type { Address } from '../../../../../core/types/primitives.ts';
 
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
@@ -25,6 +26,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
       const assetRouter = ctx.l1AssetRouter;
+      const sender = ctx.sender;
 
       // Resolve target base token once
       const baseToken = (await wrapAs(
@@ -86,22 +88,25 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
 
-      const l1Signer = ctx.client.signer.connect(ctx.client.l1);
+      const l1Provider = ctx.client.l1;
 
       // Always ensure deposit token approval for the amount
       {
-        const erc20Deposit = new Contract(p.token, IERC20ABI, l1Signer);
-        const allowanceToken: bigint = (await wrapAs(
-          'RPC',
-          OP_DEPOSITS.nonbase.allowanceToken,
-          () => erc20Deposit.allowance(ctx.sender, assetRouter),
-          {
-            ctx: { where: 'erc20.allowance', token: p.token, spender: assetRouter },
-            message: 'Failed to read deposit-token allowance.',
-          },
-        )) as bigint;
+        const erc20Deposit = new Contract(p.token, IERC20ABI, l1Provider);
+        let allowanceToken: bigint | undefined;
+        if (sender) {
+          allowanceToken = (await wrapAs(
+            'RPC',
+            OP_DEPOSITS.nonbase.allowanceToken,
+            () => erc20Deposit.allowance(sender, assetRouter),
+            {
+              ctx: { where: 'erc20.allowance', token: p.token, spender: assetRouter },
+              message: 'Failed to read deposit-token allowance.',
+            },
+          )) as bigint;
+        }
 
-        if (allowanceToken < p.amount) {
+        if (allowanceToken == null || allowanceToken < p.amount) {
           approvals.push({ token: p.token, spender: assetRouter, amount: p.amount });
           const data = erc20Deposit.interface.encodeFunctionData('approve', [
             assetRouter,
@@ -110,9 +115,11 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           const approveTx: TransactionRequest = {
             to: p.token,
             data,
-            from: ctx.sender,
             ...ctx.fee,
           };
+          if (sender) {
+            approveTx.from = sender;
+          }
           const approveGas = await ctx.gas.ensure(
             `approve:${p.token}:${assetRouter}`,
             'deposit.approval.l1',
@@ -145,26 +152,31 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       // If base token is NOT ETH, fees are paid in base ERC-20 ⇒ approve base token for mintValue
       const baseIsEth = isETH(baseToken);
       if (!baseIsEth) {
-        const erc20Base = new Contract(baseToken, IERC20ABI, l1Signer);
-        const allowanceBase: bigint = (await wrapAs(
-          'RPC',
-          OP_DEPOSITS.nonbase.allowanceBase,
-          () => erc20Base.allowance(ctx.sender, assetRouter),
-          {
-            ctx: { where: 'erc20.allowance', token: baseToken, spender: assetRouter },
-            message: 'Failed to read base-token allowance.',
-          },
-        )) as bigint;
+        const erc20Base = new Contract(baseToken, IERC20ABI, l1Provider);
+        let allowanceBase: bigint | undefined;
+        if (sender) {
+          allowanceBase = (await wrapAs(
+            'RPC',
+            OP_DEPOSITS.nonbase.allowanceBase,
+            () => erc20Base.allowance(sender, assetRouter),
+            {
+              ctx: { where: 'erc20.allowance', token: baseToken, spender: assetRouter },
+              message: 'Failed to read base-token allowance.',
+            },
+          )) as bigint;
+        }
 
-        if (allowanceBase < mintValue) {
+        if (allowanceBase == null || allowanceBase < mintValue) {
           approvals.push({ token: baseToken, spender: assetRouter, amount: mintValue });
           const data = erc20Base.interface.encodeFunctionData('approve', [assetRouter, mintValue]);
           const approveTx: TransactionRequest = {
             to: baseToken,
             data,
-            from: ctx.sender,
             ...ctx.fee,
           };
+          if (sender) {
+            approveTx.from = sender;
+          }
           const approveGas = await ctx.gas.ensure(
             `approve:${baseToken}:${assetRouter}`,
             'deposit.approval.l1',
@@ -194,10 +206,16 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         }
       }
 
+      const l2Receiver = (p.to ?? sender) as Address | undefined;
+      if (!l2Receiver) {
+        throw new Error(
+          'Deposits require a target L2 address. Provide params.to when no sender account is available.',
+        );
+      }
       const secondBridgeCalldata = await wrapAs(
         'INTERNAL',
         OP_DEPOSITS.nonbase.encodeCalldata,
-        () => Promise.resolve(encodeSecondBridgeErc20Args(p.token, p.amount, p.to ?? ctx.sender)),
+        () => Promise.resolve(encodeSecondBridgeErc20Args(p.token, p.amount, l2Receiver)),
         {
           ctx: { where: 'encodeSecondBridgeErc20Args' },
           message: 'Failed to encode bridging calldata.',
@@ -223,9 +241,11 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         to: ctx.bridgehub,
         data: dataTwo,
         value: baseIsEth ? mintValue : 0n,
-        from: ctx.sender,
         ...ctx.fee,
       };
+      if (sender) {
+        bridgeTx.from = sender;
+      }
 
       const gas = await ctx.gas.ensure(
         'bridgehub:two-bridges:nonbase',

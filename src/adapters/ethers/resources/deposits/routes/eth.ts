@@ -8,6 +8,7 @@ import { IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import type { PlanStep } from '../../../../../core/types/flows/base';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
+import type { Address } from '../../../../../core/types/primitives.ts';
 
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
@@ -18,6 +19,7 @@ export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const sender = ctx.sender;
 
       // base cost
       const rawBaseCost: bigint = (await wrapAs(
@@ -37,7 +39,12 @@ export function routeEthDirect(): DepositRouteStrategy {
       )) as bigint;
       const baseCost = BigInt(rawBaseCost);
 
-      const l2Contract = p.to ?? ctx.sender;
+      const l2Contract = (p.to ?? sender) as Address | undefined;
+      if (!l2Contract) {
+        throw new Error(
+          'Deposits require a target L2 address. Provide params.to when no sender account is available.',
+        );
+      }
       const l2Value = p.amount;
       const baseCostQuote = ctx.gas.applyBaseCost(
         'base-cost:bridgehub:direct',
@@ -62,9 +69,11 @@ export function routeEthDirect(): DepositRouteStrategy {
         to: ctx.bridgehub,
         data,
         value: mintValue,
-        from: ctx.sender,
         ...ctx.fee,
       };
+      if (sender) {
+        tx.from = sender;
+      }
       const gas = await ctx.gas.ensure('bridgehub:direct', 'deposit.bridgehub.direct.l1', tx, {
         estimator: (request) =>
           wrapAs('RPC', OP_DEPOSITS.eth.estGas, () => ctx.client.l1.estimateGas(request), {

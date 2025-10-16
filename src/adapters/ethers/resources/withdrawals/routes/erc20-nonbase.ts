@@ -8,6 +8,7 @@ import {
   L2NativeTokenVaultABI,
   IERC20ABI,
 } from '../../../../../core/internal/abi-registry';
+import type { Address } from '../../../../../core/types/primitives';
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
@@ -27,26 +28,29 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
       const approvals: ApprovalNeed[] = [];
+      const sender = ctx.sender;
 
-      const l2Signer = ctx.client.signer.connect(ctx.client.l2);
       // L2 allowance
-      const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
-      const current: bigint = (await wrapAs(
-        'CONTRACT',
-        OP_WITHDRAWALS.erc20.allowance,
-        () => erc20.allowance(ctx.sender, ctx.l2NativeTokenVault),
-        {
-          ctx: {
-            where: 'erc20.allowance',
-            chain: 'L2',
-            token: p.token,
-            spender: ctx.l2NativeTokenVault,
+      const erc20 = new Contract(p.token, IERC20ABI, ctx.client.l2);
+      let current: bigint | undefined;
+      if (sender) {
+        current = (await wrapAs(
+          'CONTRACT',
+          OP_WITHDRAWALS.erc20.allowance,
+          () => erc20.allowance(sender, ctx.l2NativeTokenVault),
+          {
+            ctx: {
+              where: 'erc20.allowance',
+              chain: 'L2',
+              token: p.token,
+              spender: ctx.l2NativeTokenVault,
+            },
+            message: 'Failed to read L2 ERC-20 allowance.',
           },
-          message: 'Failed to read L2 ERC-20 allowance.',
-        },
-      )) as bigint;
+        )) as bigint;
+      }
 
-      if (current < p.amount) {
+      if (current == null || current < p.amount) {
         approvals.push({ token: p.token, spender: ctx.l2NativeTokenVault, amount: p.amount });
 
         const data = erc20.interface.encodeFunctionData('approve', [
@@ -57,9 +61,11 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
         const approveTx: TransactionRequest = {
           to: p.token,
           data,
-          from: ctx.sender,
           ...(ctx.fee ?? {}),
         };
+        if (sender) {
+          approveTx.from = sender;
+        }
 
         const approveGas = await ctx.gas.ensure(
           `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
@@ -97,6 +103,12 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
         },
       )) as `0x${string}`;
 
+      const recipient = (p.to ?? sender) as Address | undefined;
+      if (!recipient) {
+        throw new Error(
+          'Withdrawals require a destination address. Provide params.to when no sender account is available.',
+        );
+      }
       const assetData = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.erc20.encodeAssetData,
@@ -104,11 +116,11 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
           Promise.resolve(
             AbiCoder.defaultAbiCoder().encode(
               ['uint256', 'address', 'address'],
-              [p.amount, p.to ?? ctx.sender, p.token],
+              [p.amount, recipient, p.token],
             ),
           ),
         {
-          ctx: { where: 'AbiCoder.encode', token: p.token, to: p.to ?? ctx.sender },
+          ctx: { where: 'AbiCoder.encode', token: p.token, to: recipient },
           message: 'Failed to encode burn/withdraw asset data.',
         },
       );
@@ -129,9 +141,11 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
       const withdrawTx: TransactionRequest = {
         to: ctx.l2AssetRouter,
         data: dataWithdraw,
-        from: ctx.sender,
         ...(ctx.fee ?? {}),
       };
+      if (sender) {
+        withdrawTx.from = sender;
+      }
 
       const withdrawGas = await ctx.gas.ensure(
         'l2-asset-router:withdraw',

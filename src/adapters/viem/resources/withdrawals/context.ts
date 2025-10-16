@@ -45,8 +45,14 @@ export interface BuildCtx extends CommonCtx {
 export async function commonCtx(
   p: WithdrawParams,
   client: ViemClient,
+  opts: { allowMissingSender?: boolean } = {},
 ): Promise<BuildCtx & { route: WithdrawRoute }> {
-  const sender = client.account.address;
+  const sender = (p.sender ?? client.account?.address) as Address | undefined;
+  if (!sender && !opts.allowMissingSender) {
+    throw new Error(
+      'Withdrawals require a sender account. Provide params.sender or configure the client with an account.',
+    );
+  }
 
   const {
     bridgehub,

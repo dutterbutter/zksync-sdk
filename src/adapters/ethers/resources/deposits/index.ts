@@ -102,8 +102,11 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
   // buildPlan constructs a DepositPlan for the given params
   // It does not execute any transactions
   // It can run preflight checks and may throw if the deposit cannot be performed
-  async function buildPlan(p: DepositParams): Promise<DepositPlan<TransactionRequest>> {
-    const ctx = await commonCtx(p, client);
+  async function buildPlan(
+    p: DepositParams,
+    opts: { allowMissingSender?: boolean } = {},
+  ): Promise<DepositPlan<TransactionRequest>> {
+    const ctx = await commonCtx(p, client, opts);
 
     const route = ctx.route;
     await ROUTES[route].preflight?.(p, ctx);
@@ -133,7 +136,7 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
     wrap(
       OP_DEPOSITS.quote,
       async () => {
-        const plan = await buildPlan(p);
+        const plan = await buildPlan(p, { allowMissingSender: true });
         return plan.summary;
       },
       {
@@ -151,10 +154,14 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
 
   // prepare prepares a deposit plan without executing it
   const prepare = (p: DepositParams): Promise<DepositPlan<TransactionRequest>> =>
-    wrap(OP_DEPOSITS.prepare, () => buildPlan(p), {
-      message: 'Internal error while preparing a deposit plan.',
-      ctx: { token: p.token, where: 'deposits.prepare' },
-    });
+    wrap(
+      OP_DEPOSITS.prepare,
+      () => buildPlan(p, { allowMissingSender: true }),
+      {
+        message: 'Internal error while preparing a deposit plan.',
+        ctx: { token: p.token, where: 'deposits.prepare' },
+      },
+    );
 
   // tryPrepare is like prepare, but returns a TryResult instead of throwing
   const tryPrepare = (p: DepositParams) =>

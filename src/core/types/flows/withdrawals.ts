@@ -9,6 +9,7 @@ export interface WithdrawParams {
   token: Address;
   amount: bigint;
   to?: Address;
+  sender?: Address;
   l2GasLimit?: bigint;
 }
 

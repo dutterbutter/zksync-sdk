@@ -44,7 +44,7 @@ export type Waitable<HashKey extends string = 'txHash'> =
 
 // Common context for deposits and withdrawal flows
 export interface CommonCtx {
-  sender: Address;
+  sender?: Address;
   chainIdL2: bigint;
   bridgehub: Address;
 }

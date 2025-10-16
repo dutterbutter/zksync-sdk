@@ -30,7 +30,13 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
     },
 
     async build(p, ctx) {
-      const toL1 = p.to ?? ctx.sender;
+      if (!ctx.sender) {
+        throw new Error(
+          'Withdrawals require a sender account. Provide params.sender or configure the client with an account.',
+        );
+      }
+      const sender = ctx.sender!;
+      const toL1 = p.to ?? sender;
 
       const feeOverrides: Record<string, unknown> = {};
       if (ctx.fee?.maxFeePerGas != null) feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;

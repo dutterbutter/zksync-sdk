@@ -19,7 +19,13 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
   return {
     // TODO: add preflight validations here
     async build(p, ctx) {
-      const toL1 = p.to ?? ctx.sender;
+      if (!ctx.sender) {
+        throw new Error(
+          'Withdrawals require a sender account. Provide params.sender or configure the client with an account.',
+        );
+      }
+      const sender = ctx.sender!;
+      const toL1 = p.to ?? sender;
 
       //  L2 allowance
       const current = (await wrapAs(
@@ -30,7 +36,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
             address: p.token,
             abi: IERC20ABI as Abi,
             functionName: 'allowance',
-            args: [ctx.sender, ctx.l2NativeTokenVault],
+            args: [sender, ctx.l2NativeTokenVault],
             account: ctx.client.account,
           }),
         {

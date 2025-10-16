@@ -4,6 +4,7 @@ import type { WithdrawRouteStrategy } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
 import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
 import { IBaseTokenABI } from '../../../../../core/internal/abi-registry.ts';
+import type { Address } from '../../../../../core/types/primitives.ts';
 
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
@@ -15,6 +16,7 @@ export function routeEthBase(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
+      const sender = ctx.sender;
 
       const base = new Contract(
         L2_BASE_TOKEN_ADDRESS,
@@ -23,7 +25,12 @@ export function routeEthBase(): WithdrawRouteStrategy {
         ctx.client.l2,
       );
 
-      const toL1 = p.to ?? ctx.sender;
+      const toL1 = (p.to ?? sender) as Address | undefined;
+      if (!toL1) {
+        throw new Error(
+          'Withdrawals require a destination address. Provide params.to when no sender account is available.',
+        );
+      }
       const data = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.eth.encodeWithdraw,
@@ -37,9 +44,11 @@ export function routeEthBase(): WithdrawRouteStrategy {
       const tx: TransactionRequest = {
         to: L2_BASE_TOKEN_ADDRESS,
         data,
-        from: ctx.sender,
         value: p.amount,
       };
+      if (sender) {
+        tx.from = sender;
+      }
 
       const gas = await ctx.gas.ensure('l2-base-token:withdraw', 'withdraw.eth-base.l2', tx, {
         estimator: (request) =>

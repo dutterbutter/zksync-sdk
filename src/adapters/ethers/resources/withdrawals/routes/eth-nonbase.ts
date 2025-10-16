@@ -6,6 +6,7 @@ import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
 import { IBaseTokenABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
+import type { Address } from '../../../../../core/types/primitives.ts';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
@@ -30,8 +31,14 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
 
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
+      const sender = ctx.sender;
 
-      const toL1 = p.to ?? ctx.sender;
+      const toL1 = (p.to ?? sender) as Address | undefined;
+      if (!toL1) {
+        throw new Error(
+          'Withdrawals require a destination address. Provide params.to when no sender account is available.',
+        );
+      }
       const iface = new Interface(IBaseTokenABI);
       const data = await wrapAs(
         'INTERNAL',
@@ -43,10 +50,12 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
       const tx: TransactionRequest = {
         to: L2_BASE_TOKEN_ADDRESS,
         data,
-        from: ctx.sender,
         value: p.amount,
         ...(ctx.fee ?? {}),
       };
+      if (sender) {
+        tx.from = sender;
+      }
 
       const gas = await ctx.gas.ensure('l2-base-token:withdraw', 'withdraw.eth-nonbase.l2', tx, {
         estimator: (request) =>

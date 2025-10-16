@@ -2,6 +2,7 @@
 
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
+import type { Address } from '../../../../../core/types/primitives';
 import { IBridgehubABI, IERC20ABI } from '../../../../../core/internal/abi-registry.ts';
 import { buildDirectRequestStruct } from '../../utils';
 import { createErrorHandlers } from '../../../errors/error-ops';
@@ -59,6 +60,7 @@ export function routeErc20Base(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
+      const sender = ctx.sender;
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.base.baseToken,
@@ -103,21 +105,24 @@ export function routeErc20Base(): DepositRouteStrategy {
       const mintValue = baseCostQuote.recommended;
 
       // Check allowance for base token -> L1AssetRouter
-      const allowance = (await wrapAs(
-        'CONTRACT',
-        OP_DEPOSITS.base.allowance,
-        () =>
-          ctx.client.l1.readContract({
-            address: baseToken,
-            abi: IERC20ABI as Abi,
-            functionName: 'allowance',
-            args: [ctx.sender, ctx.l1AssetRouter],
-          }),
-        {
-          ctx: { where: 'erc20.allowance', token: baseToken, spender: ctx.l1AssetRouter },
-          message: 'Failed to read base-token allowance.',
-        },
-      )) as bigint;
+      let allowance: bigint | undefined;
+      if (sender) {
+        allowance = (await wrapAs(
+          'CONTRACT',
+          OP_DEPOSITS.base.allowance,
+          () =>
+            ctx.client.l1.readContract({
+              address: baseToken,
+              abi: IERC20ABI as Abi,
+              functionName: 'allowance',
+              args: [sender, ctx.l1AssetRouter],
+            }),
+          {
+            ctx: { where: 'erc20.allowance', token: baseToken, spender: ctx.l1AssetRouter },
+            message: 'Failed to read base-token allowance.',
+          },
+        )) as bigint;
+      }
 
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<ViemPlanWriteRequest>[] = [];
@@ -173,15 +178,23 @@ export function routeErc20Base(): DepositRouteStrategy {
         });
       }
 
-      const req = buildDirectRequestStruct({
-        chainId: ctx.chainIdL2,
-        mintValue,
-        l2GasLimit: ctx.l2GasLimit,
-        gasPerPubdata: ctx.gasPerPubdata,
-        refundRecipient: ctx.refundRecipient,
-        l2Contract: p.to ?? ctx.sender,
-        l2Value,
-      });
+     const req = buildDirectRequestStruct({
+       chainId: ctx.chainIdL2,
+       mintValue,
+       l2GasLimit: ctx.l2GasLimit,
+       gasPerPubdata: ctx.gasPerPubdata,
+       refundRecipient: ctx.refundRecipient,
+        l2Contract: (() => {
+          const target = (p.to ?? sender) as Address | undefined;
+          if (!target) {
+            throw new Error(
+              'Deposits require a target L2 address. Provide params.to when no sender account is available.',
+            );
+          }
+          return target;
+        })(),
+       l2Value,
+     });
 
       // viem: if approval needed, don't simulate (would revert due to insufficient allowance).
       // Just return a write-ready request. Otherwise, simulate to capture gas settings.

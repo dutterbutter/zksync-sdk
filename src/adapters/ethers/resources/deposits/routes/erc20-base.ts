@@ -7,6 +7,7 @@ import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/bas
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 import { normalizeAddrEq, isETH } from '../../../../../core/utils/addr';
+import type { Address } from '../../../../../core/types/primitives.ts';
 
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
@@ -55,6 +56,7 @@ export function routeErc20Base(): DepositRouteStrategy {
 
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const sender = ctx.sender;
 
       // Read base token
       const baseToken = (await wrapAs(
@@ -101,18 +103,21 @@ export function routeErc20Base(): DepositRouteStrategy {
 
       // Check allowance for base token -> L1AssetRouter
       {
-        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.signer.connect(ctx.client.l1));
-        const allowance = (await wrapAs(
-          'RPC',
-          OP_DEPOSITS.base.allowance,
-          () => erc20.allowance(ctx.sender, ctx.l1AssetRouter),
-          {
-            ctx: { where: 'erc20.allowance', token: baseToken, spender: ctx.l1AssetRouter },
-            message: 'Failed to read base-token allowance.',
-          },
-        )) as bigint;
+        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.l1);
+        let allowance: bigint | undefined;
+        if (sender) {
+          allowance = (await wrapAs(
+            'RPC',
+            OP_DEPOSITS.base.allowance,
+            () => erc20.allowance(sender, ctx.l1AssetRouter),
+            {
+              ctx: { where: 'erc20.allowance', token: baseToken, spender: ctx.l1AssetRouter },
+              message: 'Failed to read base-token allowance.',
+            },
+          )) as bigint;
+        }
 
-        if (allowance < mintValue) {
+        if (allowance == null || allowance < mintValue) {
           approvals.push({ token: baseToken, spender: ctx.l1AssetRouter, amount: mintValue });
           const data = erc20.interface.encodeFunctionData('approve', [
             ctx.l1AssetRouter,
@@ -121,9 +126,11 @@ export function routeErc20Base(): DepositRouteStrategy {
           const approveTx: TransactionRequest = {
             to: baseToken,
             data,
-            from: ctx.sender,
             ...ctx.fee,
           };
+          if (sender) {
+            approveTx.from = sender;
+          }
           const approveGas = await ctx.gas.ensure(
             `approve:${baseToken}:${ctx.l1AssetRouter}`,
             'deposit.approval.l1',
@@ -154,7 +161,15 @@ export function routeErc20Base(): DepositRouteStrategy {
         l2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
         refundRecipient: ctx.refundRecipient,
-        l2Contract: p.to ?? ctx.sender,
+        l2Contract: (() => {
+          const target = (p.to ?? sender) as Address | undefined;
+          if (!target) {
+            throw new Error(
+              'Deposits require a target L2 address. Provide params.to when no sender account is available.',
+            );
+          }
+          return target;
+        })(),
         l2Value,
       });
 
@@ -168,9 +183,11 @@ export function routeErc20Base(): DepositRouteStrategy {
         to: ctx.bridgehub,
         data,
         value: 0n, // base token is ERC-20 ⇒ msg.value MUST be 0
-        from: ctx.sender,
         ...ctx.fee,
       };
+      if (sender) {
+        tx.from = sender;
+      }
 
       const gas = await ctx.gas.ensure(
         'bridgehub:direct:erc20-base',

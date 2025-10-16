@@ -6,6 +6,7 @@ import { buildDirectRequestStruct } from '../../utils';
 import { IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
+import type { Address } from '../../../../../core/types/primitives.ts';
 
 // error handling
 const { wrapAs } = createErrorHandlers('deposits');
@@ -15,6 +16,7 @@ const { wrapAs } = createErrorHandlers('deposits');
 export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
+      const sender = ctx.sender;
       // base cost
       const rawBaseCost = await wrapAs(
         'CONTRACT',
@@ -33,7 +35,12 @@ export function routeEthDirect(): DepositRouteStrategy {
       );
       const baseCost = rawBaseCost;
 
-      const l2Contract = p.to ?? ctx.sender;
+      const l2Contract = (p.to ?? sender) as Address | undefined;
+      if (!l2Contract) {
+        throw new Error(
+          'Deposits require a target L2 address. Provide params.to when no sender account is available.',
+        );
+      }
       const l2Value = p.amount;
       const baseCostQuote = ctx.gas.applyBaseCost(
         'base-cost:bridgehub:direct',
