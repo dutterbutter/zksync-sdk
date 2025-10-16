@@ -143,17 +143,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: coverage-merge
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download merged LCOV
         uses: actions/download-artifact@v4
         with:
           name: lcov-merged
           path: ./cov
 
+      - name: Inspect LCOV (optional but useful)
+        run: |
+          test -s ./cov/lcov.merged.info || (echo "merged LCOV is empty" && exit 1)
+          sudo apt-get update && sudo apt-get install -y lcov
+          lcov --list ./cov/lcov.merged.info | head -n 200
+          grep -m1 '^SF:' ./cov/lcov.merged.info || (echo "No SF lines in LCOV" && exit 1)
+
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
           files: ./cov/lcov.merged.info
           flags: combined
+          disable_search: true   # we’re providing explicit files
+          verbose: true
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
