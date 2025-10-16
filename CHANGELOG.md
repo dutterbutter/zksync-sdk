@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.8-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.7-alpha...v0.0.8-alpha) (2025-10-16)
+
+
+### Features
+
+* add adapter test harness, move ethers/viem tests on top ([#47](https://github.com/dutterbutter/zksync-sdk/issues/47)) ([058b2e8](https://github.com/dutterbutter/zksync-sdk/commit/058b2e80833fe5424c201b42037e62b6825ebfa9))
+
+
+### Bug Fixes
+
+* codecov paths ([#48](https://github.com/dutterbutter/zksync-sdk/issues/48)) ([b03817a](https://github.com/dutterbutter/zksync-sdk/commit/b03817a443517ec04a720cf3e957fc4af7309215))
+* update ci-server version ([#43](https://github.com/dutterbutter/zksync-sdk/issues/43)) ([7a6d8b8](https://github.com/dutterbutter/zksync-sdk/commit/7a6d8b8018824fb1e4d1dfac5de6e2a67c9ab934))
+
 ## [0.0.7-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.6-alpha...v0.0.7-alpha) (2025-10-04)
 
 
