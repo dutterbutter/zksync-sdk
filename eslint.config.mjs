@@ -16,7 +16,7 @@ export default [
       '**/*.test.ts',
       'typechain/**/**',
       'tsup.config.ts',
-      "src/adapters/__tests__/**",
+      'src/adapters/__tests__/**',
     ],
   },
   js.configs.recommended,

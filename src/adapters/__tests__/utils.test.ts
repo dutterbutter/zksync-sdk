@@ -97,8 +97,7 @@ describe('adapters/utils — gas helpers', () => {
   it('scaleGasLimit uses the same coefficient across implementations', () => {
     const gas = 1_000_001n;
     const expected =
-      (gas * BigInt(L1_FEE_ESTIMATION_COEF_NUMERATOR)) /
-      BigInt(L1_FEE_ESTIMATION_COEF_DENOMINATOR);
+      (gas * BigInt(L1_FEE_ESTIMATION_COEF_NUMERATOR)) / BigInt(L1_FEE_ESTIMATION_COEF_DENOMINATOR);
     expect(ethersUtils.scaleGasLimit(gas)).toBe(expected);
     expect(viemUtils.scaleGasLimit(gas)).toBe(expected);
   });
@@ -107,8 +106,12 @@ describe('adapters/utils — gas helpers', () => {
     await expect(ethersUtils.checkBaseCost(100n, Promise.resolve(150n))).resolves.toBeUndefined();
     await expect(viemUtils.checkBaseCost(100n, Promise.resolve(150n))).resolves.toBeUndefined();
 
-    await expect(ethersUtils.checkBaseCost(200n, Promise.resolve(150n))).rejects.toThrow(/base cost/i);
-    await expect(viemUtils.checkBaseCost(200n, Promise.resolve(150n))).rejects.toThrow(/base cost/i);
+    await expect(ethersUtils.checkBaseCost(200n, Promise.resolve(150n))).rejects.toThrow(
+      /base cost/i,
+    );
+    await expect(viemUtils.checkBaseCost(200n, Promise.resolve(150n))).rejects.toThrow(
+      /base cost/i,
+    );
   });
 
   it('getFeeOverrides handles 1559 data similarly', async () => {

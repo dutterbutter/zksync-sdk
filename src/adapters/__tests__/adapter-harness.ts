@@ -32,7 +32,10 @@ class CallRegistry {
   set(address: Address, iface: Interface, fn: string, result: ResultValue, args: unknown[] = []) {
     const addr = lower(address);
     const sel = iface.getFunction(fn)!.selector.toLowerCase();
-    const encoded = iface.encodeFunctionResult(fn as any, Array.isArray(result) ? result : [result]);
+    const encoded = iface.encodeFunctionResult(
+      fn as any,
+      Array.isArray(result) ? result : [result],
+    );
 
     this.encoded.set(`${addr}|${sel}`, encoded);
     this.values.set(`${addr}|${fn}|${this.argsKey(args)}`, result);
@@ -47,7 +50,9 @@ class CallRegistry {
   }
 
   private argsKey(args: unknown[]) {
-    return JSON.stringify(args, (_, value) => (typeof value === 'bigint' ? value.toString() : value));
+    return JSON.stringify(args, (_, value) =>
+      typeof value === 'bigint' ? value.toString() : value,
+    );
   }
 }
 
@@ -114,7 +119,8 @@ function makeEthersL1(state: EthersL1State) {
     async call(tx: { to?: string; data?: string }) {
       if (!tx.to || !tx.data) throw new Error('ethers mock: missing to/data');
       const out = state.registry.getEncoded(tx.to, tx.data);
-      if (!out) throw new Error(`ethers mock: no mapping for ${lower(tx.to)}|${tx.data.slice(0, 10)}`);
+      if (!out)
+        throw new Error(`ethers mock: no mapping for ${lower(tx.to)}|${tx.data.slice(0, 10)}`);
       return out;
     },
     async estimateGas(tx: unknown) {
@@ -142,7 +148,8 @@ function makeEthersL2(state: EthersL2State) {
     async call(tx: { to?: string; data?: string }) {
       if (!tx.to || !tx.data) throw new Error('ethers mock l2: missing to/data');
       const out = state.registry.getEncoded(tx.to, tx.data);
-      if (!out) throw new Error(`ethers mock l2: no mapping for ${lower(tx.to)}|${tx.data.slice(0, 10)}`);
+      if (!out)
+        throw new Error(`ethers mock l2: no mapping for ${lower(tx.to)}|${tx.data.slice(0, 10)}`);
       return out;
     },
     async send(method: string, _params: unknown[]) {
@@ -175,7 +182,9 @@ function makeSigner(l1: any, addr: Address) {
   } as Signer;
 }
 
-type SimulateResponder = { request: unknown; result?: unknown } | ((args: unknown) => { request: unknown; result?: unknown });
+type SimulateResponder =
+  | { request: unknown; result?: unknown }
+  | ((args: unknown) => { request: unknown; result?: unknown });
 
 type ViemClientState = {
   registry: CallRegistry;
@@ -214,7 +223,14 @@ function makeViemClient(state: ViemClientState): PublicClient {
         }
         return state.simulateResponse;
       }
-      const { address, abi, functionName, value, account, args: fnArgs } = args as {
+      const {
+        address,
+        abi,
+        functionName,
+        value,
+        account,
+        args: fnArgs,
+      } = args as {
         address: Address;
         abi: unknown;
         functionName: string;
@@ -245,7 +261,12 @@ function makeWallet(account: Account): WalletClient<Transport, any, Account> {
 }
 
 function seedDefaults(registry: CallRegistry, baseToken: Address) {
-  registry.set(ADAPTER_TEST_ADDRESSES.bridgehub, IBridgehub, 'assetRouter', ADAPTER_TEST_ADDRESSES.l1AssetRouter);
+  registry.set(
+    ADAPTER_TEST_ADDRESSES.bridgehub,
+    IBridgehub,
+    'assetRouter',
+    ADAPTER_TEST_ADDRESSES.l1AssetRouter,
+  );
   registry.set(
     ADAPTER_TEST_ADDRESSES.l1AssetRouter,
     IL1AssetRouter,
@@ -475,12 +496,13 @@ export function setBridgehubBaseCost<T extends AdapterHarness>(
   const l2Gas = overrides.l2GasLimit ?? ctx.l2GasLimit;
   const gasPerPubdata = overrides.gasPerPubdata ?? ctx.gasPerPubdata;
 
-  harness.registry.set(ADAPTER_TEST_ADDRESSES.bridgehub, IBridgehub, 'l2TransactionBaseCost', value, [
-    chainId,
-    gasPrice,
-    l2Gas,
-    gasPerPubdata,
-  ]);
+  harness.registry.set(
+    ADAPTER_TEST_ADDRESSES.bridgehub,
+    IBridgehub,
+    'l2TransactionBaseCost',
+    value,
+    [chainId, gasPrice, l2Gas, gasPerPubdata],
+  );
 }
 
 export function setBridgehubBaseToken<T extends AdapterHarness>(
@@ -488,7 +510,9 @@ export function setBridgehubBaseToken<T extends AdapterHarness>(
   ctx: { chainIdL2: bigint },
   value: Address,
 ) {
-  harness.registry.set(ADAPTER_TEST_ADDRESSES.bridgehub, IBridgehub, 'baseToken', value, [ctx.chainIdL2]);
+  harness.registry.set(ADAPTER_TEST_ADDRESSES.bridgehub, IBridgehub, 'baseToken', value, [
+    ctx.chainIdL2,
+  ]);
 }
 
 export function setErc20Allowance<T extends AdapterHarness>(
@@ -521,7 +545,10 @@ export function adapterHarnessMatrix(kinds: Array<'ethers' | 'viem'> = ['ethers'
 }
 
 type AdapterKind = 'ethers' | 'viem';
-type AdapterCallback<T> = (kind: AdapterKind, harnessFactory: (opts?: BaseOpts) => AdapterHarness) => void;
+type AdapterCallback<T> = (
+  kind: AdapterKind,
+  harnessFactory: (opts?: BaseOpts) => AdapterHarness,
+) => void;
 
 export function describeForAdapters(
   label: string,
