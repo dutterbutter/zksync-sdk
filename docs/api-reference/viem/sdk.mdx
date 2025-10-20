@@ -1,0 +1,159 @@
+---
+title: ViemSdk
+description: High-level SDK composed over the Viem adapter - deposits, withdrawals, and chain-aware helpers.
+group: SDK Reference / Viem
+---
+
+## At a glance
+
+- **Factory:** `createViemSdk(client) → ViemSdk`
+- **Composed resources:** `sdk.deposits`, `sdk.withdrawals`, `sdk.helpers`
+- **Client vs SDK:** the **client** wires RPC/signing; the **sdk** adds high-level flows (quote → prepare → create → wait) and convenience helpers.
+- **Wallets by flow:**
+  - **Deposits (L1 tx):** `l1Wallet` required
+  - **Withdrawals (L2 tx):** `l2Wallet` required
+  - **Finalize (L1 tx):** `l1Wallet` required
+
+## Import
+
+```ts
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+```
+
+## Quick start
+
+```ts
+import { createPublicClient, createWalletClient, http } from "viem";
+import { createViemClient, createViemSdk } from "@dutterbutter/zksync-sdk/viem";
+
+// Public clients (reads)
+const l1 = createPublicClient({ transport: http(process.env.ETH_RPC!) });
+const l2 = createPublicClient({ transport: http(process.env.ZKSYNC_RPC!) });
+
+// Wallet clients (writes)
+const l1Wallet = createWalletClient({
+  account: /* your L1 Account */,
+  transport: http(process.env.ETH_RPC!),
+});
+
+const l2Wallet = createWalletClient({
+  account: /* your L2 Account (can be the same key) */,
+  transport: http(process.env.ZKSYNC_RPC!),
+});
+
+const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
+const sdk = createViemSdk(client);
+
+// Example: deposit 0.05 ETH L1 → L2, wait for L2 execution
+const handle = await sdk.deposits.create({
+  token: ETH_ADDRESS,            // 0x…00 sentinel for ETH supported
+  amount: 50_000_000_000_000_000n, // 0.05 ETH in wei
+  to: l2Wallet.account.address,
+});
+await sdk.deposits.wait(handle, { for: "l2" });
+
+// Example: resolve contracts and map an L1 token to its L2 address
+const { l1NativeTokenVault } = await sdk.helpers.contracts();
+const l2Crown = await sdk.helpers.l2TokenAddress(CROWN_ERC20_ADDRESS);
+```
+
+<Tip>
+  You can construct the client with only the wallets you need for a given flow (e.g., just{' '}
+  <code>l2Wallet</code> to create withdrawals; add <code>l1Wallet</code> when you plan to finalize).
+</Tip>
+
+## `createViemSdk(client) → ViemSdk`
+
+<ParamField name="client" type="ViemClient" required>
+Instance returned by <code>`createViemClient({ l1, l2, l1Wallet?, l2Wallet? })`</code>.
+</ParamField>
+
+**Returns:** `ViemSdk`
+
+<Tip>
+  The SDK composes the client with resources: <code>deposits</code>, <code>withdrawals</code>, and
+  convenience <code>helpers</code>.
+</Tip>
+
+## ViemSdk interface
+
+### `deposits: DepositsResource`
+
+L1 → L2 flows. See **[Deposits](/api-reference/viem/deposits)**.
+
+### `withdrawals: WithdrawalsResource`
+
+L2 → L1 flows. See **[Withdrawals](/api-reference/viem/withdrawals)**.
+
+## helpers
+
+Utilities for chain addresses, connected contracts, and L1↔L2 token mapping.
+
+### `addresses() → Promise<ResolvedAddresses>`
+
+Resolve core addresses (Bridgehub, routers, vaults, base-token system).
+
+```ts
+const a = await sdk.helpers.addresses();
+```
+
+### `contracts() → Promise<{ ...contracts }>`
+
+**Typed** Viem contracts for all core components (each exposes `.read` / `.write` / `.simulate`).
+
+```ts
+const c = await sdk.helpers.contracts();
+const bridgehub = c.bridgehub;
+```
+
+### One-off contract getters
+
+`l1AssetRouter() → Promise<Contract>`
+`l1NativeTokenVault() → Promise<Contract>`
+`l1Nullifier() → Promise<Contract>`
+
+```ts
+const nullifier = await sdk.helpers.l1Nullifier();
+```
+
+### `baseToken(chainId?: bigint) → Promise<Address>`
+
+L1 address of the **base token** for the current (or supplied) L2 chain.
+
+```ts
+const base = await sdk.helpers.baseToken(); // infers from the L2 client
+```
+
+### `l2TokenAddress(l1Token: Address) → Promise<Address>`
+
+L2 token address for an L1 token.
+
+- Handles ETH special case (L2 ETH placeholder).
+- If the token is the chain’s base token, returns the L2 base-token system address.
+- Otherwise queries `IL2NativeTokenVault.l2TokenAddress`.
+
+```ts
+const l2Crown = await sdk.helpers.l2TokenAddress(CROWN_ERC20_ADDRESS);
+```
+
+### `l1TokenAddress(l2Token: Address) → Promise<Address>`
+
+L1 token for an L2 token via `IL2AssetRouter.l1TokenAddress`. ETH placeholder resolves to canonical ETH.
+
+```ts
+const l1Crown = await sdk.helpers.l1TokenAddress(L2_CROWN_ADDRESS);
+```
+
+### `assetId(l1Token: Address) → Promise<Hex>`
+
+`bytes32` asset ID via `L1NativeTokenVault.assetId` (ETH handled canonically).
+
+```ts
+const id = await sdk.helpers.assetId(CROWN_ERC20_ADDRESS);
+```
+
+## Notes & pitfalls
+
+- **Wallet placement matters:** deposits sign on **L1**; withdrawals sign on **L2**; finalization signs on **L1**.
+- **Chain-derived behavior:** helpers read from on-chain sources; results depend on connected networks.
+- **Error model:** resource methods throw typed errors; prefer <code>try\*</code> variants on resources for result objects.

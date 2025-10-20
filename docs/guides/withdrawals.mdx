@@ -1,0 +1,408 @@
+---
+title: 'Withdrawals (L2 → L1)'
+description: 'Fast, developer-focused withdrawals with validation, observability, and battle-tested patterns.'
+---
+
+# Guide: Withdrawing funds L2 to L1
+
+This guide provides a complete walkthrough for withdrawing funds from an L2 (ZKsync) back to L1 (Ethereum). We will use the `@dutterbutter/zksync-sdk` to simplify the process.
+
+The SDK intelligently handles the withdrawal flow, automatically selecting the correct route and approval requirements based on the token being used.
+
+### Prerequisites
+
+Before you begin, ensure you have the following:
+
+1. **Node.js v20+** or **Bun.sh** installed.
+
+2. An account with **sufficient L2 balance** of the asset you want to withdraw and **L2 gas** for the withdrawal transaction.
+
+3. RPC endpoints for both the **L2** you’re withdrawing from and the **L1** you’re withdrawing to.
+
+4. A project set up with `viem` or `ethers` and `@dutterbutter/zksync-sdk` installed.
+
+   <CodeGroup>
+     ```bash title="viem" npm install viem @dutterbutter/zksync-sdk dotenv ``` ```bash
+     title="ethers" npm install ethers @dutterbutter/zksync-sdk dotenv ```
+   </CodeGroup>
+
+5. An `.env` file in your project's root directory with the following variables:
+
+   ```ini
+   # .env
+   L1_RPC_URL="YOUR_L1_RPC_ENDPOINT"
+   L2_RPC_URL="YOUR_L2_RPC_ENDPOINT"
+   PRIVATE_KEY="YOUR_WALLET_PRIVATE_KEY"
+   ```
+
+### The Withdrawal Process: Step-by-Step
+
+Withdrawals generally follow **two phases**:
+
+- An **L2 transaction** that burns/transfers the token and emits the L2→L1 message.
+- A **finalization on L1** (after the message is ready) to release funds on L1.
+  The SDK exposes `wait(..., { for: 'ready' })`, `tryFinalize(...)`, and `wait(..., { for: 'finalized' })`.
+
+#### Step 0: Setup and SDK Initialization
+
+Connect to L1 and L2 using your preferred library (`viem` or `ethers`) and initialize the ZKsync SDK.
+
+<CodeGroup>
+```typescript title="viem"
+import 'dotenv/config';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  type Account,
+  type Chain,
+  type Transport,
+  type WalletClient,
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+
+// Load configuration from .env file
+const L1_RPC = process.env.L1_RPC_URL!;
+const L2_RPC = process.env.L2_RPC_URL!;
+const PRIVATE_KEY = process.env.PRIVATE_KEY!;
+
+// --- 1. Initialize Clients and Wallet ---
+const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+const l1 = createPublicClient({ transport: http(L1_RPC) });
+const l2 = createPublicClient({ transport: http(L2_RPC) });
+const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+account,
+transport: http(L1_RPC),
+});
+// Need to provide an L2 wallet client for sending L2 withdraw tx
+const l2Wallet = createWalletClient<Transport, Chain, Account>({
+account,
+transport: http(L2_RPC),
+});
+
+// --- 2. Initialize the SDK ---
+const client = createViemClient({ l1, l2, l2Wallet });
+const sdk = createViemSdk(client);
+
+console.log(`Using account: ${account.address}`);
+
+````
+```typescript title="ethers"
+import 'dotenv/config';
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+
+// Load configuration from .env file
+const L1_RPC = process.env.L1_RPC_URL!;
+const L2_RPC = process.env.L2_RPC_URL!;
+const PRIVATE_KEY = process.env.PRIVATE_KEY!;
+
+// --- 1. Initialize Providers and Signer ---
+// You’ll send the withdraw tx on L2.
+const l1Provider = new JsonRpcProvider(L1_RPC);
+const l2Provider = new JsonRpcProvider(L2_RPC);
+const signer = new Wallet(PRIVATE_KEY, l1Provider);
+
+// --- 2. Initialize the SDK ---
+const client = await createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
+const sdk = createEthersSdk(client);
+
+console.log(`Using account: ${await signer.getAddress()}`);
+````
+
+</CodeGroup>
+
+#### Step 1: Define Withdrawal Parameters
+
+Next, define the parameters for your withdrawal in an object. You’ll specify the **amount**, the **L2 token address** (or `ETH_ADDRESS` for native ETH on ETH-based L2s), and the **recipient’s address on L1**.
+
+<CodeGroup>
+```typescript title="ETH — Base L2"
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+
+const withdrawalParams = {
+amount: parseEther('0.02'),
+token: ETH_ADDRESS, // 👈 For ETH-based L2s, use the ETH sentinel
+to: await signer.getAddress(), // L1 recipient (can be different from the L2 sender)
+} as const;
+
+````
+
+```typescript title="ETH — Non-Base L2"
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+
+// Example: an L2-ETH token address on your L2 (replace with the correct L2 token)
+// You can store/resolve this via config or a helper.
+const L2_ETH_TOKEN = process.env.L2_ETH_TOKEN as Address;
+
+const withdrawalParams = {
+  amount: parseEther('0.02'),
+  token: L2_ETH_TOKEN, // 👈 L2 representation of ETH on non-ETH-base chains
+  to: await signer.getAddress(),
+} as const;
+````
+
+```typescript title="ERC-20"
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+
+// If you have an L1 token and need its L2 counterpart:
+// const l2Token = await sdk.helpers.l2TokenAddress(L1_ERC20_TOKEN);
+// Otherwise, use your known L2 token address directly:
+const L2_ERC20_TOKEN = process.env.L2_ERC20_TOKEN as Address;
+
+const withdrawalParams = {
+  amount: parseEther('10'), // or use parseUnits('amount', decimals) if not 18
+  token: L2_ERC20_TOKEN, // 👈 L2 token address for the ERC-20
+  to: await signer.getAddress(),
+} as const;
+```
+
+```typescript title="Base Token"
+import { L2_BASE_TOKEN_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+
+const withdrawalParams = {
+  amount: parseEther('5'), // adjust to your base token decimals if not 18
+  token: L2_BASE_TOKEN_ADDRESS, // 👈 L2 address of the chain’s Base Token (ERC-20)
+  to: await signer.getAddress(),
+} as const;
+```
+
+ </CodeGroup>
+
+<Accordion title="Advanced Parameters (Optional)">
+
+You can also specify advanced options for finer control over the transaction:
+
+- `l2GasLimit`: The gas limit for the L2 withdrawal transaction.
+- `operatorTip`: A tip for the L2 operator (if supported).
+- `refundRecipient`: An L1 address to receive any L1 finalize-phase refunds (chain-specific).
+
+</Accordion>
+
+#### Step 2: Quote the Withdrawal
+
+Before sending, get an estimate with `sdk.withdrawals.quote`. This returns expected fees and gas for the L2 step and any finalize phase hints.
+
+<Note>You can skip straight to `create`, but quoting helps avoid surprises.</Note>
+
+```typescript
+// --- STEP 2: QUOTE ---
+const quote = await sdk.withdrawals.quote(withdrawalParams);
+console.log('WITHDRAW QUOTE →', quote);
+```
+
+#### Step 3: Prepare the Transaction
+
+Build the execution plan with `sdk.withdrawals.prepare`. For non-base ERC-20s or non-ETH L2-ETH, this may include **L2 approvals**.
+
+```typescript
+// --- STEP 3: PREPARE ---
+const plan = await sdk.withdrawals.prepare(withdrawalParams);
+console.log('TRANSACTION PLAN →', plan);
+```
+
+#### Step 4: Create the Withdrawal
+
+Execute the plan with `sdk.withdrawals.create`. You’ll get a `handle` you can use to track the withdrawal across phases.
+
+```typescript
+// --- STEP 4: CREATE (send L2 tx) ---
+const handle = await sdk.withdrawals.create(withdrawalParams);
+console.log('TRANSACTION CREATED →', handle);
+```
+
+#### Step 5: Track the Withdrawal Lifecycle
+
+Use `status` and `wait` to track all phases:
+
+- `wait(handle, { for: 'l2' })` → L2 inclusion
+- `wait(handle, { for: 'ready' })` → message proven/ready on L1
+- `tryFinalize(l2TxHash)` → submit finalize on L1 (no-op if already finalized)
+- `wait(l2TxHash, { for: 'finalized' })` → finalized on L1
+
+```typescript
+// --- STEP 5: TRACK ---
+// L2 inclusion
+console.log('⏳ Waiting for L2 inclusion...');
+const l2Receipt = await sdk.withdrawals.wait(handle, { for: 'l2' });
+console.log('✅ L2 included at block:', l2Receipt?.blockNumber);
+
+// Ready to finalize on L1
+console.log('⏳ Waiting until ready to finalize on L1...');
+await sdk.withdrawals.wait(handle, { for: 'ready' });
+console.log('STATUS (ready):', await sdk.withdrawals.status(handle));
+
+// Submit finalize (safe to call even if someone else already finalized)
+const finalizeResult = await sdk.withdrawals.tryFinalize(handle.l2TxHash);
+console.log('TRY FINALIZE →', finalizeResult);
+
+// Confirm finalization
+console.log('⏳ Waiting for L1 finalization...');
+const l1Receipt = await sdk.withdrawals.wait(handle.l2TxHash, { for: 'finalized' });
+console.log('✅ Finalized on L1. Receipt:', l1Receipt?.transactionHash ?? '(finalized elsewhere)');
+```
+
+Once the `finalized` phase completes, your funds are available on L1 at the `to` address.
+
+### Full Code Example
+
+Here is the complete, runnable script for your reference.
+
+<Accordion title="Click to view the full script.">
+
+<CodeGroup>
+
+```typescript title="viem"
+/**
+ * Example: Withdraw ETH (ETH-based L2) → L1
+ */
+import 'dotenv/config';
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  parseEther,
+  type Account,
+  type Chain,
+  type Transport,
+  type WalletClient,
+} from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const L1_RPC = process.env.L1_RPC_URL ?? 'http://localhost:8545';
+const L2_RPC = process.env.L2_RPC_URL ?? 'http://localhost:3050';
+const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '';
+
+async function main() {
+  if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
+    throw new Error('⚠️ Set a 0x-prefixed 32-byte PRIVATE_KEY in your .env');
+  }
+
+  const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+  const l1 = createPublicClient({ transport: http(L1_RPC) });
+  const l2 = createPublicClient({ transport: http(L2_RPC) });
+  const l2Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+    account,
+    transport: http(L2_RPC),
+  });
+
+  const client = createViemClient({ l1, l2, l2Wallet });
+  const sdk = createViemSdk(client);
+
+  const meL1 = account.address as Address;
+  const params = {
+    amount: parseEther('0.02'),
+    token: ETH_ADDRESS,
+    to: meL1,
+  } as const;
+
+  const quote = await sdk.withdrawals.quote(params);
+  console.log('QUOTE →', quote);
+
+  const plan = await sdk.withdrawals.prepare(params);
+  console.log('PREPARE →', plan);
+
+  const handle = await sdk.withdrawals.create(params);
+  console.log('CREATE →', handle);
+
+  const l2Receipt = await sdk.withdrawals.wait(handle, { for: 'l2' });
+  console.log('✅ L2 included at block:', l2Receipt?.blockNumber);
+
+  await sdk.withdrawals.wait(handle, { for: 'ready' });
+  console.log('STATUS (ready) →', await sdk.withdrawals.status(handle));
+
+  const fin = await sdk.withdrawals.tryFinalize(handle.l2TxHash);
+  console.log('TRY FINALIZE →', fin);
+
+  const l1Receipt = await sdk.withdrawals.wait(handle.l2TxHash, { for: 'finalized' });
+  console.log('✅ Finalized on L1:', l1Receipt?.transactionHash ?? '(finalized elsewhere)');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+```typescript title="ethers"
+/**
+ * Example: Withdraw Base Token (ERC-20 base) or ETH → L1
+ */
+import 'dotenv/config';
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+import type { Address } from '@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS, L2_BASE_TOKEN_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+const L1_RPC = process.env.L1_RPC_URL ?? 'http://localhost:8545';
+const L2_RPC = process.env.L2_RPC_URL ?? 'http://localhost:3050';
+const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '';
+
+async function main() {
+  if (!PRIVATE_KEY) throw new Error('⚠️ Set your PRIVATE_KEY in the .env file');
+
+  const l1 = new JsonRpcProvider(L1_RPC);
+  const l2 = new JsonRpcProvider(L2_RPC);
+  const signer = new Wallet(PRIVATE_KEY, l2); // withdraw is sent on L2
+
+  const client = await createEthersClient({ l1, l2, signer });
+  const sdk = createEthersSdk(client);
+
+  const meL1 = (await signer.getAddress()) as Address;
+
+  // Toggle either ETH or the L2 base token address:
+  const params = {
+    amount: parseEther('1'),
+    token: ETH_ADDRESS /* or L2_BASE_TOKEN_ADDRESS */,
+    to: meL1,
+  } as const;
+
+  const quote = await sdk.withdrawals.quote(params);
+  console.log('QUOTE →', quote);
+
+  const plan = await sdk.withdrawals.prepare(params);
+  console.log('PREPARE →', plan);
+
+  const handle = await sdk.withdrawals.create(params);
+  console.log('CREATE →', handle);
+
+  const l2Receipt = await sdk.withdrawals.wait(handle, { for: 'l2' });
+  console.log('✅ L2 included at block:', l2Receipt?.blockNumber);
+
+  await sdk.withdrawals.wait(handle, { for: 'ready' });
+  console.log('STATUS (ready) →', await sdk.withdrawals.status(handle));
+
+  const fin = await sdk.withdrawals.tryFinalize(handle.l2TxHash);
+  console.log('TRY FINALIZE →', fin);
+
+  const l1Receipt = await sdk.withdrawals.wait(handle.l2TxHash, { for: 'finalized' });
+  console.log('✅ Finalized on L1:', l1Receipt?.transactionHash ?? '(finalized elsewhere)');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+</CodeGroup>
+</Accordion>
+
+### Related API Reference
+
+For more detailed information on the methods used in this guide, see the official API reference:
+
+- [`sdk.withdrawals.quote()`](/api-reference/ethers/withdrawals#quote-p%3A-withdrawparams-→-promise<withdrawquote>)
+- [`sdk.withdrawals.prepare()`](/api-reference/ethers/withdrawals#prepare-p%3A-withdrawparams-→-promise<withdrawplan<transactionrequest>>)
+- [`sdk.withdrawals.create()`](/api-reference/ethers/withdrawals#create-p%3A-withdrawparams-→-promise<withdrawhandle<transactionrequest>>)
+- [`sdk.withdrawals.status()`](/api-reference/ethers/withdrawals#status-handleorhash-→-promise<withdrawalstatus>)
+- [`sdk.withdrawals.wait()`](/api-reference/ethers/withdrawals#wait-handleorhash%2C-%7B-for%3A-l2-%7C-ready-%7C-finalized-%2C-pollms%3F%2C-timeoutms%3F-%7D)
+- [`sdk.withdrawals.tryFinalize()`](/api-reference/ethers/withdrawals#tryfinalize-l2txhash-→-promise<%7B-ok%3A-true%3B-value%3A-%7B-status%3A-withdrawalstatus%3B-receipt%3F%3A-transactionreceipt-%7D-%7D-%7C-%7B-ok%3A-false%3B-error-%7D>)

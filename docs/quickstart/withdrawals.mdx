@@ -1,0 +1,201 @@
+---
+title: ETH Withdrawal (L2 → L1)
+description: Get your first ETH withdrawal from ZKsync (L2) to Ethereum (L1).
+---
+
+## 1. Prerequisites
+
+- You have [Bun](https://bun.sh/) installed.
+- A funded **L1 wallet** with ETH for both the withdrawal amount and L1 gas fees
+
+<Info>Use a test network like **Sepolia** for experimentation.</Info>
+
+## 2. Installation
+
+Choose your adapter and install the SDK + adapter package:
+
+<CodeGroup>
+    ```bash title="viem"
+    bun install @dutterbutter/zksync-sdk viem dotenv
+    ```
+
+    ```bash title="ethers"
+    bun install @dutterbutter/zksync-sdk ethers dotenv
+    ```
+
+</CodeGroup>
+
+Create a `.env` file in your project root:
+
+```env
+# Your funded L1 private key (0x + 64 hex)
+PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
+
+# RPC endpoints
+L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_ID
+L2_RPC_URL=ZKSYNC-OS-TESTNET-RPC
+```
+
+<Warning>Never commit your `.env` file to source control.</Warning>
+
+## 3. Write the withdrawal script
+
+<CodeGroup>
+    ```ts title="withdrawals/viem.ts"
+    import {
+      createPublicClient,
+      createWalletClient,
+      http,
+      parseEther,
+      type Account,
+      type Chain,
+      type Transport,
+      type WalletClient,
+    } from 'viem';
+    import { privateKeyToAccount } from 'viem/accounts';
+
+    import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+    import type { Address } from '@dutterbutter/zksync-sdk/core';
+    import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+    const L1_RPC = 'http://localhost:8545'; // e.g. https://sepolia.infura.io/v3/XXX
+    const L2_RPC = 'http://localhost:3050'; // your L2 RPC
+    const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+
+    async function main() {
+      if (!PRIVATE_KEY) throw new Error('Set your PRIVATE_KEY in the environment');
+
+      // Clients
+      const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+      const l1 = createPublicClient({ transport: http(L1_RPC) });
+      const l2 = createPublicClient({ transport: http(L2_RPC) });
+      const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
+        account,
+        transport: http(L1_RPC),
+      });
+      // Need to provide an L2 wallet client for sending L2 withdraw tx
+      const l2Wallet = createWalletClient<Transport, Chain, Account>({
+        account,
+        transport: http(L2_RPC),
+      });
+
+      const client = createViemClient({ l1, l2, l1Wallet, l2Wallet });
+      const sdk = createViemSdk(client);
+
+      const me = account.address as Address;
+
+      const params = {
+        token: ETH_ADDRESS, // ETH Address
+        amount: parseEther('0.01'),
+        to: me,
+      } as const;
+
+      const quote = await sdk.withdrawals.quote(params);
+      console.log('QUOTE:', quote);
+
+      const prepared = await sdk.withdrawals.prepare(params);
+      console.log('PREPARE:', prepared);
+
+      const created = await sdk.withdrawals.create(params);
+      console.log('CREATE:', created);
+
+      console.log('STATUS (initial):', await sdk.withdrawals.status(created));
+
+      const l2Receipt = await sdk.withdrawals.wait(created, { for: 'l2' });
+      console.log('L2 included tx:', l2Receipt?.transactionHash);
+
+      await sdk.withdrawals.wait(created, { for: 'ready' });
+      console.log('STATUS (ready):', await sdk.withdrawals.status(created));
+
+      const fin = await sdk.withdrawals.tryFinalize(created.l2TxHash);
+      console.log('TRY FINALIZE:', fin);
+
+      const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });
+      console.log('Finalized. L1 receipt:', l1Receipt?.transactionHash);
+    }
+
+    main().catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+    ```
+
+    ```tsx title="withdrawals/ethers.ts"
+    import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+    import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
+    import type { Address } from '@dutterbutter/zksync-sdk/core';
+    import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
+
+    const L1_RPC = 'http://localhost:8545';
+    const L2_RPC = 'http://localhost:3050';
+    const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+
+    async function main() {
+      if (!PRIVATE_KEY) throw new Error('Set your PRIVATE_KEY in the environment');
+
+      const l1 = new JsonRpcProvider(L1_RPC);
+      const l2 = new JsonRpcProvider(L2_RPC);
+      const signer = new Wallet(PRIVATE_KEY, l1);
+
+      const client = await createEthersClient({ l1, l2, signer });
+      const sdk = createEthersSdk(client);
+
+      const me = (await signer.getAddress()) as Address;
+
+      const params = {
+        token: ETH_ADDRESS, // ETH token on this chain
+        amount: parseEther('1'),
+        to: me,
+        // l2GasLimit?: 300_000n, fee overrides, etc...
+      } as const;
+
+      const quote = await sdk.withdrawals.quote(params);
+      console.log('QUOTE:', quote);
+
+      const prepared = await sdk.withdrawals.prepare(params);
+      console.log('PREPARE:', prepared);
+
+      const created = await sdk.withdrawals.create(params);
+      console.log('CREATE:', created);
+
+      console.log('STATUS (initial):', await sdk.withdrawals.status(created));
+
+      // Wait for L2 inclusion
+      const l2Receipt = await sdk.withdrawals.wait(created, { for: 'l2' });
+      console.log('L2 included:', l2Receipt?.hash);
+
+      // Wait until ready to finalize
+      await sdk.withdrawals.wait(created, { for: 'ready' });
+      console.log('STATUS (ready):', await sdk.withdrawals.status(created));
+
+      // Try to finalize (no-op if already finalized by someone else)
+      const fin = await sdk.withdrawals.tryFinalize(created.l2TxHash);
+      console.log('TRY FINALIZE:', fin);
+
+      // Wait for finalization
+      const l1Receipt = await sdk.withdrawals.wait(created.l2TxHash, { for: 'finalized' });
+      console.log('Finalized. L1 receipt:', l1Receipt?.hash);
+    }
+
+    main().catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+    ```
+
+</CodeGroup>
+
+## 4. Run it
+
+<CodeGroup>
+  ``` bash title="viem" bun run withdrawals/viem.ts ``` ```bash title="ethers" bun run
+  withdrawals/ethers.ts ```
+</CodeGroup>
+
+You’ll see logs for the L2 transaction, then L1 finalization readiness, L1 finalization execution, followed by updated balances.
+
+## 5. Troubleshooting
+
+- **Insufficient funds on L2:** Ensure enough ETH for the withdrawal **and** L1 gas.
+- **Invalid PRIVATE_KEY:** Must be 0x + 64 hex chars.
+- **Stuck at wait(..., `{ for: 'l1' }`):** Verify L2_RPC_URL and network health; check sdk.deposits.status(handle) to see the current phase.

@@ -1,0 +1,163 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "aspen",
+  "name": "ZKsync SDK",
+  "colors": {
+    "primary": "#1755F4",
+    "light": "#BFF351",
+    "dark": "#0C18EC"
+  },
+  "favicon": "/favicon.svg",
+  "appearance": {
+    "default": "dark"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs",
+    "codeblocks": {
+      "theme": {
+        "light": "vitesse-light",
+        "dark": "tokyo-night"
+      }
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Home",
+        "icon": "house",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["index"]
+          }
+        ]
+      },
+      {
+        "tab": "Getting Started",
+        "icon": "play",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "overview/index",
+              "overview/mental-model",
+              "overview/adapters",
+              "overview/status-vs-wait",
+              "overview/finalization"
+            ]
+          },
+          {
+            "group": "Quickstart",
+            "pages": ["quickstart/index", "quickstart/deposits", "quickstart/withdrawals"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/deposits", "guides/withdrawals"]
+          }
+        ]
+      },
+      {
+        "tab": "SDK Reference",
+        "icon": "brackets-curly",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/introduction"]
+          },
+          {
+            "group": "Ethers",
+            "pages": [
+              "api-reference/ethers/client",
+              "api-reference/ethers/sdk",
+              "api-reference/ethers/deposits",
+              "api-reference/ethers/withdrawals"
+            ]
+          },
+          {
+            "group": "Viem",
+            "pages": [
+              "api-reference/viem/client",
+              "api-reference/viem/sdk",
+              "api-reference/viem/deposits",
+              "api-reference/viem/withdrawals"
+            ]
+          },
+          {
+            "group": "Core",
+            "pages": ["api-reference/core/rpc", "api-reference/core/errors"]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "icon": "calendar",
+        "groups": [
+          {
+            "group": "Releases",
+            "pages": ["changelog"]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/zksync-dark.svg",
+    "dark": "/logo/zksync-light.svg",
+    "href": "https://zksync.io"
+  },
+  "search": {
+    "prompt": "Search ZKsync SDK..."
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "https://github.com/zkSync-Community-Hub/zksync-developers/discussions/categories/sdks",
+        "icon": "arrow-up-right-from-square"
+      },
+      {
+        "label": "Examples",
+        "href": "https://github.com/dutterbutter/zksync-sdk/tree/main/examples",
+        "icon": "arrow-up-right-from-square"
+      }
+    ]
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude", "perplexity", "mcp", "cursor", "vscode"]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/zksync",
+      "github": "https://github.com/dutterbutter/zksync-sdk",
+      "linkedin": "https://linkedin.com/company/matter-labs"
+    },
+    "links": [
+      {
+        "header": "Community",
+        "items": [
+          {
+            "label": "Discord",
+            "href": "https://join.zksync.dev/"
+          },
+          {
+            "label": "GitHub Discussions",
+            "href": "https://github.com/zkSync-Community-Hub/zksync-developers/discussions"
+          }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          {
+            "label": "Block Explorer",
+            "href": "https://explorer.zksync.io/"
+          },
+          {
+            "label": "Website",
+            "href": "https://zksync.io/"
+          }
+        ]
+      }
+    ]
+  }
+}

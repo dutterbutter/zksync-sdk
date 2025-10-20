@@ -1,0 +1,120 @@
+---
+title: zks_ RPC
+description: Public ZKsync zks_ RPC methods exposed on the adapters via <code>client.zks</code> (Bridgehub address, L2→L1 log proofs, receipts with <code>l2ToL1Logs</code>).
+group: API Reference / Core
+---
+
+### Standard Ethereum RPC (`eth_*`)
+
+Use your base library for all <code>`eth_*`</code> methods.
+The <code>client.zks</code>
+surface only covers ZKsync-specific RPC (<code>zks\_\*</code>).
+For standard Ethereum JSON-RPC (e.g., <code>eth_call</code>, <code>eth_getLogs</code>, <code>eth_getBalance</code>),
+call them through your chosen library (`ethers` or `viem`).
+
+## zks\_ Interface
+
+```ts
+interface ZksRpc {
+  getBridgehubAddress(): Promise<Address>;
+  getL2ToL1LogProof(txHash: Hex, index: number): Promise<ProofNormalized>;
+  getReceiptWithL2ToL1(txHash: Hex): Promise<ReceiptWithL2ToL1 | null>;
+}
+```
+
+## Methods
+
+### `getBridgehubAddress() → Promise<Address>`
+
+Fetch the on-chain **Bridgehub** contract address.
+
+```ts
+const addr = await client.zks.getBridgehubAddress();
+```
+
+### `getL2ToL1LogProof(txHash: Hex, index: number) → Promise<ProofNormalized>`
+
+Return a normalized proof for the **L2→L1 log** at `index` in `txHash`.
+
+<ParamField name="txHash" type="Hex" required>
+  L2 transaction hash that emitted one or more L2→L1 logs.
+</ParamField>
+<ParamField name="index" type="number" required>
+  Zero-based index of the target L2→L1 log within the transaction.
+</ParamField>
+
+```ts
+const proof = await client.zks.getL2ToL1LogProof(l2TxHash, 0);
+/*
+{
+  id: bigint,
+  batchNumber: bigint,
+  proof: Hex[]
+}
+*/
+```
+
+<Info>
+  If a proof isn’t available yet, this method throws a typed <code>STATE</code> error. Poll based on
+  your app’s cadence.
+</Info>
+
+### `getReceiptWithL2ToL1(txHash: Hex) → Promise<ReceiptWithL2ToL1 | null>`
+
+Fetch the transaction receipt; the returned object **always** includes `l2ToL1Logs` (empty array if none).
+
+```ts
+const rcpt = await client.zks.getReceiptWithL2ToL1(l2TxHash);
+console.log(rcpt?.l2ToL1Logs); // always an array
+```
+
+## Types (overview)
+
+```ts
+type ProofNormalized = {
+  id: bigint;
+  batchNumber: bigint;
+  proof: Hex[];
+};
+
+type ReceiptWithL2ToL1 = {
+  // …standard receipt fields…
+  l2ToL1Logs: unknown[];
+};
+```
+
+## Usage
+
+<CodeGroup>
+
+```ts title="ethers"
+import { JsonRpcProvider, Wallet } from 'ethers';
+import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
+
+const l1 = new JsonRpcProvider(process.env.ETH_RPC!);
+const l2 = new JsonRpcProvider(process.env.ZKSYNC_RPC!);
+const signer = new Wallet(process.env.PRIVATE_KEY!, l1);
+
+const client = createEthersClient({ l1, l2, signer });
+
+// Public RPC surface:
+const bridgehub = await client.zks.getBridgehubAddress();
+```
+
+```ts title="viem"
+import { createPublicClient, http } from "viem";
+import { createViemClient } from "@dutterbutter/zksync-sdk/viem";
+
+const l1 = createPublicClient({ transport: http(process.env.ETH_RPC!) });
+const l2 = createPublicClient({ transport: http(process.env.ZKSYNC_RPC!) });
+
+// Provide a WalletClient with an account for L1 operations.
+const l1Wallet = /* your WalletClient w/ account */;
+
+const client = createViemClient({ l1, l2, l1Wallet });
+
+// Public RPC surface:
+const bridgehub = await client.zks.getBridgehubAddress();
+```
+
+</CodeGroup>

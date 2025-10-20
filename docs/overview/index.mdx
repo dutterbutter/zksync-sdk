@@ -1,0 +1,50 @@
+---
+title: Welcome
+description: Learn what the `@zksync-sdk` is and how it simplifies ZKsync cross-chain flows for viem and ethers.
+---
+
+# Introduction
+
+The **`@zksync-sdk`** is a lightweight extension for [`viem`](https://viem.sh) and [`ethers`](https://docs.ethers.io/) that makes ZKsync cross-chain actions simple and consistent.
+
+Instead of re-implementing accounts or low-level RPC logic, this SDK focuses only on **ZKsync-specific flows**:
+
+- Deposits (L1 → L2)
+- Withdrawals (L2 → L1, including finalization)
+- Try variants for functional error handling (e.g. `tryCreate`)
+- Status & wait helpers
+- ZKsync-specific JSON-RPC methods
+
+<Info>
+  The SDK doesn’t replace your existing Ethereum libraries — it **extends** them with ZKsync-only
+  capabilities while keeping your current tooling intact.
+</Info>
+
+### Key Supported Features
+
+- **Deposits (L1 → L2)** — ETH, Custom Base Token and ERC-20
+  - **Initiate on L1:** build and send the deposit transaction from Ethereum.
+  - **Track progress:** query intermediate states (queued, included, executed).
+  - **Verify completion on L2:** confirm funds credited/available on ZKsync.
+
+- **Withdrawals (L2 → L1)** — ETH, Custom Base Token and ERC-20
+  - **Initiate on L2:** create the withdrawal transaction on ZKsync.
+  - **Track progress:** monitor execution and finalization availability.
+  - **Finalize on L1:** finalize withdrawal to release funds back to Ethereum.
+
+- **ZKsync RPC**
+  - **`getBridgehubAddress`** (`zks_getBridgehubContract`) – resolve the canonical Bridgehub contract address.
+  - **`getL2ToL1LogProof`** (`zks_getL2ToL1LogProof`) – retrieve the log proof for an L2 → L1 transaction.
+  - **`getReceiptWithL2ToL1`** _(receipt extension)_ – returns a standard Ethereum `TransactionReceipt` **augmented** with `l2ToL1Logs`.
+
+## What you’ll find here
+
+- [**Mental model**](./overview/mental-model) — how to think about the core methods (`quote → prepare → create → status → wait → finalize`).
+- [**Adapters (viem & ethers)**](./overview/adapters) — how the SDK integrates with your existing stack.
+- [**Withdrawal Finalization**](./overview/finalization) — understand the finalization process for withdrawals and how to ensure they are completed.
+
+## Next steps
+
+👉 Ready to build? Jump to the [Quickstart](../quickstart/index).
+
+<FooterLinks previous={null} next={{ title: 'Mental model', href: './overview/mental-model' }} />

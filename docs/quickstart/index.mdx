@@ -1,0 +1,42 @@
+---
+title: Adapter Choice
+description: Get your first ZKsync deposit done using the @zksync-sdk.
+---
+
+# Choosing Your Adapter: `viem` vs. `ethers`
+
+The SDK is designed to work with both `viem` and `ethers.js`, the two most popular Ethereum libraries. Since the SDK offers **identical functionality** for both, the choice comes down to your project's needs and your personal preference.
+
+## The Short Answer (TL;DR)
+
+- **If you're adding the SDK to an existing project:** Use the adapter for the library you're already using.
+- **If you're starting a new project:** The choice is yours. `viem` is generally recommended for new projects due to its modern design, smaller bundle size, and excellent TypeScript support.
+
+You can't make a wrong choice. Both adapters are fully supported and provide the same features.
+
+<Columns cols={2}>
+  <Card
+    title="Deposit (L1 → L2)"
+    icon="code"
+    href="quickstart/deposits"
+  >
+    L1 → L2 deposit — submit a deposit, and monitor until confirmed.
+  </Card>
+
+  <Card
+    title="Withdrawal (L2 → L1)"
+    icon="code"
+    href="quickstart/withdrawals"
+  >
+    L2 → L1 withdrawal — submit a withdrawal, and monitor until readied.
+  </Card>
+</Columns>
+
+## What you’ll do
+
+Each Quickstart walks you through how to:
+
+1. **Install** the adapter package.
+2. **Configure** a client or signer.
+3. **Run** a deposit (L1 → L2) or withdrawal (L2 → L1) as a working example.
+4. **Track** the status until it’s complete.

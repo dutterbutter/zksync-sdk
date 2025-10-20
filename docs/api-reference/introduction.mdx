@@ -1,0 +1,127 @@
+---
+title: Introduction
+description: Public, typed API surface for the ZKsyncOS SDK — Incorruptible Financial Infrastructure.
+group: API Reference / Overview
+---
+
+## What is this?
+
+The **ZKsyncOS SDK** provides lightweight adapters for **ethers** and **viem** to build L1 ↔ L2 flows—**deposits** and **withdrawals**—with a small, focused API. You’ll work with:
+
+- Adapter-level **Clients** (providers/wallets, resolved addresses, convenience contracts)
+- High-level **SDKs** (resources for deposits & withdrawals + helpers)
+- ZKsync-specific **RPC** helpers (`client.zks.*`)
+- A consistent, typed **Error model** (`ZKsyncError`, `try*` results)
+
+## Quick start
+
+<Tabs>
+  <Tab title="ethers">
+
+```ts
+import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
+import { createEthersClient, createEthersSdk, ETH_ADDRESS } from '@dutterbutter/zksync-sdk/ethers';
+
+const l1 = new JsonRpcProvider(process.env.ETH_RPC!);
+const l2 = new JsonRpcProvider(process.env.ZKSYNC_RPC!);
+const signer = new Wallet(process.env.PRIVATE_KEY!, l1);
+
+// Low-level client + high-level SDK
+const client = createEthersClient({ l1, l2, signer });
+const sdk = createEthersSdk(client);
+
+// Deposit 0.05 ETH L1 → L2 and wait for L2 execution
+const handle = await sdk.deposits.create({
+  token: ETH_ADDRESS,
+  amount: parseEther('0.05'),
+  to: await signer.getAddress(),
+});
+
+const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
+
+// ZKsync-specific RPC is available via client.zks
+const bridgehub = await client.zks.getBridgehubAddress();
+```
+
+  </Tab>
+  <Tab title="viem">
+
+```ts
+import {
+  createPublicClient,
+  http,
+  createWalletClient,
+  privateKeyToAccount,
+  parseEther,
+} from 'viem';
+import { createViemClient, createViemSdk, ETH_ADDRESS } from '@dutterbutter/zksync-sdk/viem';
+
+const account = privateKeyToAccount(process.env.PRIVATE_KEY! as `0x${string}`);
+const l1 = createPublicClient({ transport: http(process.env.ETH_RPC!) });
+const l2 = createPublicClient({ transport: http(process.env.ZKSYNC_RPC!) });
+const l1Wallet = createWalletClient({ account, transport: http(process.env.ETH_RPC!) });
+
+const client = createViemClient({ l1, l2, l1Wallet });
+const sdk = createViemSdk(client);
+
+const handle = await sdk.withdrawals.create({
+  token: ETH_ADDRESS,
+  amount: parseEther('0.05'),
+  to: account.address, // L1 recipient
+});
+
+await sdk.withdrawals.wait(handle, { for: 'l2' }); // inclusion on L2
+const { status } = await sdk.withdrawals.finalize(handle.l2TxHash); // finalize on L1
+
+const bridgehub = await client.zks.getBridgehubAddress();
+```
+
+  </Tab>
+</Tabs>
+
+## What’s documented here
+
+<Columns cols={3}>
+  <Card title="Ethers · Client" icon="plug" href="/api-reference/ethers/client">
+    Low-level handle: providers/signer, resolved addresses, convenience contracts, ZK RPC access.
+  </Card>
+  <Card title="Ethers · SDK" icon="wand-magic-sparkles" href="/api-reference/ethers/sdk">
+    High-level deposits/withdrawals plus helpers for addresses, contracts, and token mapping.
+  </Card>
+  <Card title="Ethers · Deposits" icon="arrow-down-to-arc" href="/api-reference/ethers/deposits">
+    L1 → L2 flow with quote, prepare, create, status, and wait.
+  </Card>
+  <Card title="Ethers · Withdrawals" icon="arrow-up-from-arc" href="/api-reference/ethers/withdrawals">
+    L2 → L1 flow with quote, prepare, create, status, wait, and finalize.
+  </Card>
+
+<Card title="Viem · Client" icon="plug" href="/api-reference/viem/client">
+  PublicClient/WalletClient integration, resolved addresses, contracts, ZK RPC access.
+</Card>
+<Card title="Viem · SDK" icon="wand-magic-sparkles" href="/api-reference/viem/sdk">
+  Same high-level surface as ethers, typed to viem contracts.
+</Card>
+<Card title="Viem · Deposits" icon="arrow-down-to-arc" href="/api-reference/viem/deposits">
+  L1 → L2 flow with quote, prepare, create, status, and wait.
+</Card>
+<Card title="Viem · Withdrawals" icon="arrow-up-from-arc" href="/api-reference/viem/withdrawals">
+  L2 → L1 flow with quote, prepare, create, status, wait, and finalize.
+</Card>
+
+  <Card title="Core · ZK RPC" icon="terminal" href="/api-reference/core/rpc">
+    ZKsync-specific RPC: <code>getBridgehubAddress</code>, <code>getL2ToL1LogProof</code>, enhanced receipts.
+  </Card>
+  <Card title="Core · Error model" icon="triangle-exclamation" href="/api-reference/core/errors">
+    Typed <code>ZKsyncError</code> envelope and <code>try*</code> result helpers.
+  </Card>
+</Columns>
+
+## Notes & conventions
+
+- **Standard <code>eth\_\*</code> RPC** should be performed through your chosen base library (**ethers** / **viem**).  
+  The SDK only adds ZKsync-specific RPC via <code>client.zks.\*</code> (e.g., <code>getBridgehubAddress</code>, <code>getL2ToL1LogProof</code>, enhanced receipts).
+
+- Every resource method has a <code>try\*</code> variant (e.g., <code>tryCreate</code>) that returns a result object instead of throwing.  
+  When errors occur, the SDK throws <code>ZKsyncError</code> with a stable envelope (see <a href="/api-reference/core/errors">Error model</a>).
+
+- Address resolution comes from on-chain lookups and well-known constants. You can override addresses in the client constructor for forks/tests.
