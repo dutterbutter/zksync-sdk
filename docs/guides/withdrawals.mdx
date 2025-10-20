@@ -1,6 +1,6 @@
 ---
-title: "Withdrawals (L2 → L1)"
-description: "Fast, developer-focused withdrawals with validation, observability, and battle-tested patterns."
+title: 'Withdrawals (L2 → L1)'
+description: 'Fast, developer-focused withdrawals with validation, observability, and battle-tested patterns.'
 ---
 
 # Guide: Withdrawing funds L2 to L1
@@ -22,12 +22,8 @@ Before you begin, ensure you have the following:
 4. A project set up with `viem` or `ethers` and `@dutterbutter/zksync-sdk` installed.
 
    <CodeGroup>
-   ```bash title="viem"
-   npm install viem @dutterbutter/zksync-sdk dotenv
-   ```
-   ```bash title="ethers"
-   npm install ethers @dutterbutter/zksync-sdk dotenv
-   ```
+     ```bash title="viem" npm install viem @dutterbutter/zksync-sdk dotenv ``` ```bash
+     title="ethers" npm install ethers @dutterbutter/zksync-sdk dotenv ```
    </CodeGroup>
 
 5. An `.env` file in your project's root directory with the following variables:
@@ -43,8 +39,8 @@ Before you begin, ensure you have the following:
 
 Withdrawals generally follow **two phases**:
 
-* An **L2 transaction** that burns/transfers the token and emits the L2→L1 message.
-* A **finalization on L1** (after the message is ready) to release funds on L1.
+- An **L2 transaction** that burns/transfers the token and emits the L2→L1 message.
+- A **finalization on L1** (after the message is ready) to release funds on L1.
   The SDK exposes `wait(..., { for: 'ready' })`, `tryFinalize(...)`, and `wait(..., { for: 'finalized' })`.
 
 #### Step 0: Setup and SDK Initialization
@@ -77,13 +73,13 @@ const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
 const l1 = createPublicClient({ transport: http(L1_RPC) });
 const l2 = createPublicClient({ transport: http(L2_RPC) });
 const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
-    account,
-    transport: http(L1_RPC),
+account,
+transport: http(L1_RPC),
 });
 // Need to provide an L2 wallet client for sending L2 withdraw tx
 const l2Wallet = createWalletClient<Transport, Chain, Account>({
-    account,
-    transport: http(L2_RPC),
+account,
+transport: http(L2_RPC),
 });
 
 // --- 2. Initialize the SDK ---
@@ -91,7 +87,8 @@ const client = createViemClient({ l1, l2, l2Wallet });
 const sdk = createViemSdk(client);
 
 console.log(`Using account: ${account.address}`);
-```
+
+````
 ```typescript title="ethers"
 import 'dotenv/config';
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
@@ -113,7 +110,7 @@ const client = await createEthersClient({ l1: l1Provider, l2: l2Provider, signer
 const sdk = createEthersSdk(client);
 
 console.log(`Using account: ${await signer.getAddress()}`);
-```
+````
 
 </CodeGroup>
 
@@ -127,11 +124,12 @@ import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 import type { Address } from '@dutterbutter/zksync-sdk/core';
 
 const withdrawalParams = {
-  amount: parseEther('0.02'),
-  token: ETH_ADDRESS,  // 👈 For ETH-based L2s, use the ETH sentinel
-  to: await signer.getAddress(),  // L1 recipient (can be different from the L2 sender)
+amount: parseEther('0.02'),
+token: ETH_ADDRESS, // 👈 For ETH-based L2s, use the ETH sentinel
+to: await signer.getAddress(), // L1 recipient (can be different from the L2 sender)
 } as const;
-```
+
+````
 
 ```typescript title="ETH — Non-Base L2"
 import type { Address } from '@dutterbutter/zksync-sdk/core';
@@ -145,7 +143,7 @@ const withdrawalParams = {
   token: L2_ETH_TOKEN, // 👈 L2 representation of ETH on non-ETH-base chains
   to: await signer.getAddress(),
 } as const;
-```
+````
 
 ```typescript title="ERC-20"
 import type { Address } from '@dutterbutter/zksync-sdk/core';
@@ -157,7 +155,7 @@ const L2_ERC20_TOKEN = process.env.L2_ERC20_TOKEN as Address;
 
 const withdrawalParams = {
   amount: parseEther('10'), // or use parseUnits('amount', decimals) if not 18
-  token: L2_ERC20_TOKEN,    // 👈 L2 token address for the ERC-20
+  token: L2_ERC20_TOKEN, // 👈 L2 token address for the ERC-20
   to: await signer.getAddress(),
 } as const;
 ```
@@ -167,7 +165,7 @@ import { L2_BASE_TOKEN_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 import type { Address } from '@dutterbutter/zksync-sdk/core';
 
 const withdrawalParams = {
-  amount: parseEther('5'),      // adjust to your base token decimals if not 18
+  amount: parseEther('5'), // adjust to your base token decimals if not 18
   token: L2_BASE_TOKEN_ADDRESS, // 👈 L2 address of the chain’s Base Token (ERC-20)
   to: await signer.getAddress(),
 } as const;
@@ -179,9 +177,9 @@ const withdrawalParams = {
 
 You can also specify advanced options for finer control over the transaction:
 
-* `l2GasLimit`: The gas limit for the L2 withdrawal transaction.
-* `operatorTip`: A tip for the L2 operator (if supported).
-* `refundRecipient`: An L1 address to receive any L1 finalize-phase refunds (chain-specific).
+- `l2GasLimit`: The gas limit for the L2 withdrawal transaction.
+- `operatorTip`: A tip for the L2 operator (if supported).
+- `refundRecipient`: An L1 address to receive any L1 finalize-phase refunds (chain-specific).
 
 </Accordion>
 
@@ -189,9 +187,7 @@ You can also specify advanced options for finer control over the transaction:
 
 Before sending, get an estimate with `sdk.withdrawals.quote`. This returns expected fees and gas for the L2 step and any finalize phase hints.
 
-<Note>
-You can skip straight to `create`, but quoting helps avoid surprises.
-</Note>
+<Note>You can skip straight to `create`, but quoting helps avoid surprises.</Note>
 
 ```typescript
 // --- STEP 2: QUOTE ---
@@ -223,10 +219,10 @@ console.log('TRANSACTION CREATED →', handle);
 
 Use `status` and `wait` to track all phases:
 
-* `wait(handle, { for: 'l2' })` → L2 inclusion
-* `wait(handle, { for: 'ready' })` → message proven/ready on L1
-* `tryFinalize(l2TxHash)` → submit finalize on L1 (no-op if already finalized)
-* `wait(l2TxHash, { for: 'finalized' })` → finalized on L1
+- `wait(handle, { for: 'l2' })` → L2 inclusion
+- `wait(handle, { for: 'ready' })` → message proven/ready on L1
+- `tryFinalize(l2TxHash)` → submit finalize on L1 (no-op if already finalized)
+- `wait(l2TxHash, { for: 'finalized' })` → finalized on L1
 
 ```typescript
 // --- STEP 5: TRACK ---
@@ -308,10 +304,10 @@ async function main() {
     to: meL1,
   } as const;
 
-  const quote  = await sdk.withdrawals.quote(params);
+  const quote = await sdk.withdrawals.quote(params);
   console.log('QUOTE →', quote);
 
-  const plan   = await sdk.withdrawals.prepare(params);
+  const plan = await sdk.withdrawals.prepare(params);
   console.log('PREPARE →', plan);
 
   const handle = await sdk.withdrawals.create(params);
@@ -369,10 +365,10 @@ async function main() {
     to: meL1,
   } as const;
 
-  const quote  = await sdk.withdrawals.quote(params);
+  const quote = await sdk.withdrawals.quote(params);
   console.log('QUOTE →', quote);
 
-  const plan   = await sdk.withdrawals.prepare(params);
+  const plan = await sdk.withdrawals.prepare(params);
   console.log('PREPARE →', plan);
 
   const handle = await sdk.withdrawals.create(params);
@@ -404,9 +400,9 @@ main().catch((err) => {
 
 For more detailed information on the methods used in this guide, see the official API reference:
 
-* [`sdk.withdrawals.quote()`](/api-reference/ethers/withdrawals#quote)
-* [`sdk.withdrawals.prepare()`](/api-reference/ethers/withdrawals#prepare)
-* [`sdk.withdrawals.create()`](/api-reference/ethers/withdrawals#create)
-* [`sdk.withdrawals.status()`](/api-reference/ethers/withdrawals#status)
-* [`sdk.withdrawals.wait()`](/api-reference/ethers/withdrawals#wait)
-* [`sdk.withdrawals.tryFinalize()`](/api-reference/ethers/withdrawals#tryfinalize)
+- [`sdk.withdrawals.quote()`](/api-reference/ethers/withdrawals#quote-p%3A-withdrawparams-→-promise<withdrawquote>)
+- [`sdk.withdrawals.prepare()`](/api-reference/ethers/withdrawals#prepare-p%3A-withdrawparams-→-promise<withdrawplan<transactionrequest>>)
+- [`sdk.withdrawals.create()`](/api-reference/ethers/withdrawals#create-p%3A-withdrawparams-→-promise<withdrawhandle<transactionrequest>>)
+- [`sdk.withdrawals.status()`](/api-reference/ethers/withdrawals#status-handleorhash-→-promise<withdrawalstatus>)
+- [`sdk.withdrawals.wait()`](/api-reference/ethers/withdrawals#wait-handleorhash%2C-%7B-for%3A-l2-%7C-ready-%7C-finalized-%2C-pollms%3F%2C-timeoutms%3F-%7D)
+- [`sdk.withdrawals.tryFinalize()`](/api-reference/ethers/withdrawals#tryfinalize-l2txhash-→-promise<%7B-ok%3A-true%3B-value%3A-%7B-status%3A-withdrawalstatus%3B-receipt%3F%3A-transactionreceipt-%7D-%7D-%7C-%7B-ok%3A-false%3B-error-%7D>)

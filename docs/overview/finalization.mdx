@@ -13,8 +13,8 @@ Withdrawals are a **two-step process**:
    This submits an L1 tx; only then does your ETH or token balance increase on Ethereum.
 
 <Warning>
-  If you **never finalize**, your funds remain locked: visible as “ready to withdraw,” but unavailable on L1.
-  Anyone can finalize on your behalf, but you typically do it.
+  If you **never finalize**, your funds remain locked: visible as “ready to withdraw,” but
+  unavailable on L1. Anyone can finalize on your behalf, but you typically do it.
 </Warning>
 
 ## Why finalization matters
@@ -25,25 +25,26 @@ Withdrawals are a **two-step process**:
 
 ## Finalization methods
 
-| Method | Purpose | Returns |
-| --- | --- | --- |
-| `withdrawals.status(h \| l2TxHash)` | Snapshot phase (`UNKNOWN` → `FINALIZED`) | `WithdrawalStatus` |
-| `withdrawals.wait(h \| l2TxHash, { for })` | Block until a checkpoint (`'l2' \| 'ready' \| 'finalized'`) | Receipt or `null` |
-| `withdrawals.finalize(l2TxHash)` | **Send** the L1 finalize tx | `{ status, receipt }` |
+| Method                                     | Purpose                                                     | Returns               |
+| ------------------------------------------ | ----------------------------------------------------------- | --------------------- |
+| `withdrawals.status(h \| l2TxHash)`        | Snapshot phase (`UNKNOWN` → `FINALIZED`)                    | `WithdrawalStatus`    |
+| `withdrawals.wait(h \| l2TxHash, { for })` | Block until a checkpoint (`'l2' \| 'ready' \| 'finalized'`) | Receipt or `null`     |
+| `withdrawals.finalize(l2TxHash)`           | **Send** the L1 finalize tx                                 | `{ status, receipt }` |
 
 <Note>
-  All methods accept either a **handle** (from `create`) or a **raw L2 tx hash**. If you only have the hash, you can still finalize.
+  All methods accept either a **handle** (from `create`) or a **raw L2 tx hash**. If you only have
+  the hash, you can still finalize.
 </Note>
 
 ## Phases
 
-| Phase | Meaning |
-| --- | --- |
-| `UNKNOWN` | Handle doesn’t contain an L2 hash yet. |
-| `L2_PENDING` | L2 tx not yet included. |
-| `PENDING` | L2 included, but not yet ready to finalize on L1. |
-| `READY_TO_FINALIZE` | Finalization on L1 would succeed now. |
-| `FINALIZED` | Finalized on L1; funds released. |
+| Phase               | Meaning                                           |
+| ------------------- | ------------------------------------------------- |
+| `UNKNOWN`           | Handle doesn’t contain an L2 hash yet.            |
+| `L2_PENDING`        | L2 tx not yet included.                           |
+| `PENDING`           | L2 included, but not yet ready to finalize on L1. |
+| `READY_TO_FINALIZE` | Finalization on L1 would succeed now.             |
+| `FINALIZED`         | Finalized on L1; funds released.                  |
 
 ## Examples
 
@@ -62,9 +63,10 @@ await sdk.withdrawals.wait(withdrawal, { for: 'ready', pollMs: 5500 });
 // 3) Finalize on L1
 const { status, receipt } = await sdk.withdrawals.finalize(withdrawal.l2TxHash);
 
-console.log(status.phase);               // "FINALIZED"
-console.log(receipt?.transactionHash);   // L1 finalize tx hash
-```
+console.log(status.phase); // "FINALIZED"
+console.log(receipt?.transactionHash); // L1 finalize tx hash
+
+````
 
 ```ts finalize-by-hash.ts theme={null}
 // If you only have the L2 tx hash:
@@ -78,12 +80,11 @@ if (s.phase !== 'READY_TO_FINALIZE') {
 
 // Then finalize
 const { status, receipt } = await sdk.withdrawals.finalize(l2TxHash);
-```
+````
 
 </CodeGroup>
 
 Prefer the **no-throw** variants in UIs/services that want explicit flow control:
-
 
 ```ts try-finalize.ts theme={null}
 const r = await sdk.withdrawals.tryFinalize(l2TxHash);
@@ -97,18 +98,17 @@ if (!r.ok) {
 
 ## Operational tips
 
-* **Gate UX with phases:** Display a **Finalize** button only when `status.phase === 'READY_TO_FINALIZE'`.
-* **Polling cadence:** `wait(..., { for: 'ready' })` defaults to ~**5500 ms**. Adjust with `pollMs` if needed.
-* **Timeouts:** Use `timeoutMs` for long windows and fall back to `status(...)` to keep the UI responsive.
-* **Receipts can be `null`:** `wait(..., { for: 'finalized' })` can resolve `null` if finalized but receipt isn’t retrievable; consider showing a link to the L1 explorer based on the tx hash you submitted.
+- **Gate UX with phases:** Display a **Finalize** button only when `status.phase === 'READY_TO_FINALIZE'`.
+- **Polling cadence:** `wait(..., { for: 'ready' })` defaults to ~**5500 ms**. Adjust with `pollMs` if needed.
+- **Timeouts:** Use `timeoutMs` for long windows and fall back to `status(...)` to keep the UI responsive.
+- **Receipts can be `null`:** `wait(..., { for: 'finalized' })` can resolve `null` if finalized but receipt isn’t retrievable; consider showing a link to the L1 explorer based on the tx hash you submitted.
 
 ## Common errors
 
-* **RPC/network hiccups:** thrown `ZKsyncError` with kind **`RPC`**. Retry with backoff.
-* **Internal decode issues:** thrown `ZKsyncError` with kind **`INTERNAL`**. Capture logs and report.
+- **RPC/network hiccups:** thrown `ZKsyncError` with kind **`RPC`**. Retry with backoff.
+- **Internal decode issues:** thrown `ZKsyncError` with kind **`INTERNAL`**. Capture logs and report.
 
 ## See also
 
-* [Status vs Wait](/concepts/status-vs-wait)
-* [Withdrawals guide](/guides/withdrawals)
-
+- [Status vs Wait](/overview/status-vs-wait)
+- [Withdrawals guide](/guides/withdrawals)

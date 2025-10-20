@@ -4,21 +4,21 @@
   "name": "ZKsync SDK",
   "colors": {
     "primary": "#1755F4",
-    "light": "#BFF351", 
+    "light": "#BFF351",
     "dark": "#0C18EC"
   },
   "favicon": "/favicon.svg",
   "appearance": {
     "default": "dark"
   },
-  "styling": { 
+  "styling": {
     "eyebrows": "breadcrumbs",
     "codeblocks": {
       "theme": {
-      "light": "vitesse-light",
-      "dark": "tokyo-night"
+        "light": "vitesse-light",
+        "dark": "tokyo-night"
+      }
     }
-  }
   },
   "navigation": {
     "tabs": [
@@ -28,9 +28,7 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "index"
-            ]
+            "pages": ["index"]
           }
         ]
       },
@@ -38,32 +36,25 @@
         "tab": "Getting Started",
         "icon": "play",
         "groups": [
-        {
-          "group": "Overview",
-          "pages": [
-            "overview/index",
-            "overview/mental-model",
-            "overview/adapters",
-            "overview/status-vs-wait",
-            "overview/finalization"
-          ]
-        },
-        {
-          "group": "Quickstart",
-          "pages": [
-            "quickstart/index",
-            "quickstart/deposits",
-            "quickstart/withdrawals"
-          ]
-        },
-       {
-        "group": "Guides",
-        "pages": [
-          "guides/deposits",
-          "guides/withdrawals"
+          {
+            "group": "Overview",
+            "pages": [
+              "overview/index",
+              "overview/mental-model",
+              "overview/adapters",
+              "overview/status-vs-wait",
+              "overview/finalization"
+            ]
+          },
+          {
+            "group": "Quickstart",
+            "pages": ["quickstart/index", "quickstart/deposits", "quickstart/withdrawals"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/deposits", "guides/withdrawals"]
+          }
         ]
-       }
-      ]
       },
       {
         "tab": "SDK Reference",
@@ -71,9 +62,7 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "api-reference/introduction"
-            ]
+            "pages": ["api-reference/introduction"]
           },
           {
             "group": "Ethers",
@@ -81,7 +70,7 @@
               "api-reference/ethers/client",
               "api-reference/ethers/sdk",
               "api-reference/ethers/deposits",
-              "api-reference/ethers/withdrawals"              
+              "api-reference/ethers/withdrawals"
             ]
           },
           {
@@ -95,10 +84,7 @@
           },
           {
             "group": "Core",
-            "pages": [
-              "api-reference/core/rpc",
-              "api-reference/core/errors"
-            ]
+            "pages": ["api-reference/core/rpc", "api-reference/core/errors"]
           }
         ]
       },
@@ -108,9 +94,7 @@
         "groups": [
           {
             "group": "Releases",
-            "pages": [
-              "changelog"
-            ]
+            "pages": ["changelog"]
           }
         ]
       }
@@ -121,8 +105,8 @@
     "dark": "/logo/zksync-light.svg",
     "href": "https://zksync.io"
   },
-    "search": {
-      "prompt": "Search ZKsync SDK..."
+  "search": {
+    "prompt": "Search ZKsync SDK..."
   },
   "navbar": {
     "links": [
@@ -139,16 +123,7 @@
     ]
   },
   "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+    "options": ["copy", "view", "chatgpt", "claude", "perplexity", "mcp", "cursor", "vscode"]
   },
   "footer": {
     "socials": {

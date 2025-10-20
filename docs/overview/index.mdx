@@ -11,42 +11,40 @@ Instead of re-implementing accounts or low-level RPC logic, this SDK focuses onl
 
 - Deposits (L1 → L2)
 - Withdrawals (L2 → L1, including finalization)
-- Try variants for functional error handling (e.g. )
+- Try variants for functional error handling (e.g. `tryCreate`)
 - Status & wait helpers
 - ZKsync-specific JSON-RPC methods
 
 <Info>
-The SDK doesn’t replace your existing Ethereum libraries — it **extends** them with ZKsync-only capabilities while keeping your current tooling intact.
+  The SDK doesn’t replace your existing Ethereum libraries — it **extends** them with ZKsync-only
+  capabilities while keeping your current tooling intact.
 </Info>
 
 ### Key Supported Features
 
-- **Deposits (L1 → L2)** — ETH, Custom Base Token and ERC-20  
-  - **Initiate on L1:** build and send the deposit transaction from Ethereum.  
-  - **Track progress:** query intermediate states (queued, included, executed).  
+- **Deposits (L1 → L2)** — ETH, Custom Base Token and ERC-20
+  - **Initiate on L1:** build and send the deposit transaction from Ethereum.
+  - **Track progress:** query intermediate states (queued, included, executed).
   - **Verify completion on L2:** confirm funds credited/available on ZKsync.
 
-- **Withdrawals (L2 → L1)** — ETH, Custom Base Token and ERC-20  
-  - **Initiate on L2:** create the withdrawal transaction on ZKsync.  
-  - **Track progress:** monitor execution and finalization availability.  
+- **Withdrawals (L2 → L1)** — ETH, Custom Base Token and ERC-20
+  - **Initiate on L2:** create the withdrawal transaction on ZKsync.
+  - **Track progress:** monitor execution and finalization availability.
   - **Finalize on L1:** finalize withdrawal to release funds back to Ethereum.
 
-- **ZKsync RPC**  
-  - **`getBridgehubAddress`** (`zks_getBridgehubContract`) – resolve the canonical Bridgehub contract address.  
-  - **`getL2ToL1LogProof`** (`zks_getL2ToL1LogProof`) – retrieve the log proof for an L2 → L1 transaction.  
-  - **`getReceiptWithL2ToL1`** *(receipt extension)* – returns a standard Ethereum `TransactionReceipt` **augmented** with `l2ToL1Logs`.
+- **ZKsync RPC**
+  - **`getBridgehubAddress`** (`zks_getBridgehubContract`) – resolve the canonical Bridgehub contract address.
+  - **`getL2ToL1LogProof`** (`zks_getL2ToL1LogProof`) – retrieve the log proof for an L2 → L1 transaction.
+  - **`getReceiptWithL2ToL1`** _(receipt extension)_ – returns a standard Ethereum `TransactionReceipt` **augmented** with `l2ToL1Logs`.
 
 ## What you’ll find here
 
-- [**What this SDK does**](./what-it-does) — the purpose, scope, and non-goals.
-- [**Mental model**](./mental-model) — how to think about the core methods (`quote → prepare → create → status → wait → finalize`).
-- [**Adapters (viem & ethers)**](./adapters) — how the SDK integrates with your existing stack.
+- [**Mental model**](./overview/mental-model) — how to think about the core methods (`quote → prepare → create → status → wait → finalize`).
+- [**Adapters (viem & ethers)**](./overview/adapters) — how the SDK integrates with your existing stack.
+- [**Withdrawal Finalization**](./overview/finalization) — understand the finalization process for withdrawals and how to ensure they are completed.
 
 ## Next steps
 
 👉 Ready to build? Jump to the [Quickstart](../quickstart/index).
 
-<FooterLinks
-previous={null}
-next={{ title: "What this SDK does", href: "./what-it-does" }}
-/>
+<FooterLinks previous={null} next={{ title: 'Mental model', href: './overview/mental-model' }} />

@@ -1,6 +1,6 @@
 ---
-title: "Deposits (L1 → L2)"
-description: "Fast, developer-focused deposits with validation, observability, and battle-tested patterns."
+title: 'Deposits (L1 → L2)'
+description: 'Fast, developer-focused deposits with validation, observability, and battle-tested patterns.'
 ---
 
 # Guide: Depositing funds L1 to L2
@@ -22,12 +22,8 @@ Before you begin, ensure you have the following:
 4.  A project set up with `viem` or `ethers` and `@dutterbutter/zksync-sdk` installed.
 
     <CodeGroup>
-    ```bash title="viem"
-    npm install viem @dutterbutter/zksync-sdk dotenv
-    ```
-    ```bash title="ethers"
-    npm install ethers @dutterbutter/zksync-sdk dotenv
-    ```
+      ```bash title="viem" npm install viem @dutterbutter/zksync-sdk dotenv ``` ```bash
+      title="ethers" npm install ethers @dutterbutter/zksync-sdk dotenv ```
     </CodeGroup>
 
 5.  An `.env` file in your project's root directory with the following variables:
@@ -74,8 +70,8 @@ const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
 const l1 = createPublicClient({ transport: http(L1_RPC) });
 const l2 = createPublicClient({ transport: http(L2_RPC) });
 const l1Wallet: WalletClient<Transport, Chain, Account> = createWalletClient({
-  account,
-  transport: http(L1_RPC),
+account,
+transport: http(L1_RPC),
 });
 
 // --- 2. Initialize the SDK ---
@@ -83,7 +79,8 @@ const client = createViemClient({ l1, l2, l1Wallet });
 const sdk = createViemSdk(client);
 
 console.log(`Using account: ${account.address}`);
-```
+
+````
 ```typescript title="ethers"
 import 'dotenv/config';
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
@@ -105,7 +102,8 @@ const client = await createEthersClient({ l1: l1Provider, l2: l2Provider, signer
 const sdk = createEthersSdk(client);
 
 console.log(`Using account: ${signer.address}`);
-```
+````
+
 </CodeGroup>
 
 #### Step 1: Define Deposit Parameters
@@ -117,11 +115,12 @@ Next, define the parameters for your deposit in an object. You’ll specify the 
 const me = signer.address as Address;
 
 const depositParams = {
-  amount: parseEther('0.01'), // The amount of ETH to deposit (e.g., 0.01 ETH)
-  token: ETH_ADDRESS,         // The address for native ETH
-  to: me,                     // The recipient address on L2 (in this case, our own address)
+amount: parseEther('0.01'), // The amount of ETH to deposit (e.g., 0.01 ETH)
+token: ETH_ADDRESS, // The address for native ETH
+to: me, // The recipient address on L2 (in this case, our own address)
 } as const;
-```
+
+````
 ```typescript title="ERC20 Token Deposit"
 const me = signer.address as Address;
 
@@ -130,26 +129,28 @@ const depositParams = {
   token: ERC20_TOKEN_ADDRESS,  // The address for the ERC20 token
   to: me,                     // The recipient address on L2 (in this case, our own address)
 } as const;
-```
+````
+
 ```typescript title="Base Token Deposit"
 const me = signer.address as Address;
 
 const depositParams = {
   amount: parseEther('0.01'), // The amount of SOPH to deposit (e.g., 0.01 SOPH)
-  token: L1_SOPH_TOKEN_ADDRESS,  // The address for SOPH (or your chain's base token on L1)
-  to: me,                     // The recipient address on L2 (in this case, our own address)
+  token: L1_SOPH_TOKEN_ADDRESS, // The address for SOPH (or your chain's base token on L1)
+  to: me, // The recipient address on L2 (in this case, our own address)
 } as const;
 ```
+
 </CodeGroup>
 
 <Accordion title="Advanced Parameters (Optional)">
 
 You can also specify advanced options for finer control over the transaction:
 
-  * `l2GasLimit`: The gas limit for the L2 part of the transaction.
-  * `gasPerPubdata`: The gas price per byte of public data.
-  * `operatorTip`: A tip for the L2 operator.
-  * `refundRecipient`: An address to receive any L1 gas refunds.
+- `l2GasLimit`: The gas limit for the L2 part of the transaction.
+- `gasPerPubdata`: The gas price per byte of public data.
+- `operatorTip`: A tip for the L2 operator.
+- `refundRecipient`: An address to receive any L1 gas refunds.
 
 </Accordion>
 
@@ -158,7 +159,7 @@ You can also specify advanced options for finer control over the transaction:
 Before sending, it's best practice to get a cost estimate using `sdk.deposits.quote`. This returns information about fees and the expected gas required.
 
 <Note>
-Users can skip this step and go directly to `create`, but quoting helps avoid surprises.
+  Users can skip this step and go directly to `create`, but quoting helps avoid surprises.
 </Note>
 
 ```typescript
@@ -194,8 +195,8 @@ console.log('TRANSACTION CREATED →', handle);
 
 A deposit is a two-stage process: inclusion on L1 and then execution on L2. The SDK provides tools to track both stages.
 
-  * **`sdk.deposits.status(handle)`:** Check the current status of the deposit at any time.
-  * **`sdk.deposits.wait(handle, options)`:** Pause execution until the deposit reaches a specific stage.
+- **`sdk.deposits.status(handle)`:** Check the current status of the deposit at any time.
+- **`sdk.deposits.wait(handle, options)`:** Pause execution until the deposit reaches a specific stage.
 
 ```typescript
 // --- STEP 5: TRACK ---
@@ -325,6 +326,7 @@ main().catch((err) => {
   process.exit(1);
 });
 ```
+
 ```typescript title="ethers"
 /**
  * Example: Deposit ETH from L1 into a ZKsync L2
@@ -391,6 +393,7 @@ main().catch((err) => {
   process.exit(1);
 });
 ```
+
 </CodeGroup>
 </Accordion>
 
@@ -398,8 +401,8 @@ main().catch((err) => {
 
 For more detailed information on the methods used in this guide, see the official API reference:
 
-  * [`sdk.deposits.quote()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#quote-p%3A-depositparams-%E2%86%92-promise%3Cdepositquote%3E)
-  * [`sdk.deposits.prepare()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#prepare-p%3A-depositparams-%E2%86%92-promise%3Cdepositplan%3Ctransactionrequest%3E%3E)
-  * [`sdk.deposits.create()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#create-p%3A-depositparams-%E2%86%92-promise%3Cdeposithandle%3Ctransactionrequest%3E%3E)
-  * [`sdk.deposits.status()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#status-handleorhash-%E2%86%92-promise%3Cdepositstatus%3E)
-  * [`sdk.deposits.wait()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#wait-handleorhash%2C-%7B-for%3A-l1-%7C-l2-%7D-%E2%86%92-promise%3Ctransactionreceipt-%7C-null%3E)
+- [`sdk.deposits.quote()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#quote-p%3A-depositparams-%E2%86%92-promise%3Cdepositquote%3E)
+- [`sdk.deposits.prepare()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#prepare-p%3A-depositparams-%E2%86%92-promise%3Cdepositplan%3Ctransactionrequest%3E%3E)
+- [`sdk.deposits.create()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#create-p%3A-depositparams-%E2%86%92-promise%3Cdeposithandle%3Ctransactionrequest%3E%3E)
+- [`sdk.deposits.status()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#status-handleorhash-%E2%86%92-promise%3Cdepositstatus%3E)
+- [`sdk.deposits.wait()`](https://zksync-sdk.mintlify.app/api-reference/ethers/deposits#wait-handleorhash%2C-%7B-for%3A-l1-%7C-l2-%7D-%E2%86%92-promise%3Ctransactionreceipt-%7C-null%3E)

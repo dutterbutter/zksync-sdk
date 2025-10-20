@@ -19,18 +19,20 @@ Both apply to **deposits** and **withdrawals**. Use `status(...)` for UI refresh
 ### `withdrawals.status(h | l2TxHash): Promise<WithdrawalStatus>`
 
 **Input**
+
 - `h`: a `WithdrawalWaitable` (e.g., from `create`) **or** the L2 tx hash `Hex`.
 
 **Phases**
-| Phase                | Meaning                                                     |
+| Phase | Meaning |
 | -------------------- | ----------------------------------------------------------- |
-| `UNKNOWN`            | Handle doesn’t contain an L2 hash yet.                      |
-| `L2_PENDING`         | L2 tx not yet included.                                     |
-| `PENDING`            | L2 included, **not** yet ready to finalize on L1.          |
-| `READY_TO_FINALIZE`  | Finalization on L1 would succeed now.                       |
-| `FINALIZED`          | Finalized on L1; funds released.                            |
+| `UNKNOWN` | Handle doesn’t contain an L2 hash yet. |
+| `L2_PENDING` | L2 tx not yet included. |
+| `PENDING` | L2 included, **not** yet ready to finalize on L1. |
+| `READY_TO_FINALIZE` | Finalization on L1 would succeed now. |
+| `FINALIZED` | Finalized on L1; funds released. |
 
 **Notes**
+
 - No L2 receipt ⇒ `L2_PENDING`.
 - Finalization key derivable but not ready ⇒ `PENDING`.
 - Already finalized ⇒ `FINALIZED`.
@@ -38,7 +40,7 @@ Both apply to **deposits** and **withdrawals**. Use `status(...)` for UI refresh
 ```ts withdrawals-status.ts theme={null}
 const s = await sdk.withdrawals.status(handleOrHash);
 // s.phase ∈ 'UNKNOWN' | 'L2_PENDING' | 'PENDING' | 'READY_TO_FINALIZE' | 'FINALIZED'
-````
+```
 
 ### `withdrawals.wait(h | l2TxHash, { for, pollMs?, timeoutMs? })`
 
@@ -52,9 +54,9 @@ const s = await sdk.withdrawals.status(handleOrHash);
 
 **Behavior**
 
-* If the handle has **no L2 hash**, returns `null` immediately.
-* Default polling: **5500 ms** (override via `pollMs`).
-* `timeoutMs` returns `null` on deadline.
+- If the handle has **no L2 hash**, returns `null` immediately.
+- Default polling: **5500 ms** (override via `pollMs`).
+- `timeoutMs` returns `null` on deadline.
 
 ```ts withdrawals-wait.ts theme={null}
 // Wait for L2 inclusion → get L2 receipt (augmented with l2ToL1Logs if available)
@@ -68,7 +70,8 @@ const l1Rcpt = await sdk.withdrawals.wait(handle, { for: 'finalized', timeoutMs:
 ```
 
 <Tip>
-  Building a UI? Use `status(...)` to paint current phase and enable/disable the **Finalize** button when phase is `READY_TO_FINALIZE`.
+  Building a UI? Use `status(...)` to paint current phase and enable/disable the **Finalize** button
+  when phase is `READY_TO_FINALIZE`.
 </Tip>
 
 ## Deposits
@@ -77,7 +80,7 @@ const l1Rcpt = await sdk.withdrawals.wait(handle, { for: 'finalized', timeoutMs:
 
 **Input**
 
-* `h`: `DepositWaitable` (from `create`) **or** L1 tx hash `Hex`.
+- `h`: `DepositWaitable` (from `create`) **or** L1 tx hash `Hex`.
 
 **Phases**
 
@@ -117,15 +120,15 @@ const l2Rcpt = await sdk.deposits.wait(handle, { for: 'l2' });
 
 ### Pick the right tool
 
-* **Use `status(...)`** for **poll-less UI refreshes** (e.g., on page focus or interval timers you control).
-* **Use `wait(...)`** for **workflow gating** (scripts, jobs, “continue when X happens”).
+- **Use `status(...)`** for **poll-less UI refreshes** (e.g., on page focus or interval timers you control).
+- **Use `wait(...)`** for **workflow gating** (scripts, jobs, “continue when X happens”).
 
 ### Timeouts & polling
 
 ```ts polling.ts theme={null}
 const ready = await sdk.withdrawals.wait(handle, {
   for: 'ready',
-  pollMs: 5500,           // minimum enforced internally
+  pollMs: 5500, // minimum enforced internally
   timeoutMs: 30 * 60_000, // 30 minutes; returns null on deadline
 });
 if (ready === null) {
@@ -135,8 +138,8 @@ if (ready === null) {
 
 ### Error handling
 
-* Network hiccup while fetching receipts ⇒ throws `ZKsyncError` of kind **`RPC`**.
-* Internal decode issue ⇒ throws `ZKsyncError` of kind **`INTERNAL`**.
+- Network hiccup while fetching receipts ⇒ throws `ZKsyncError` of kind **`RPC`**.
+- Internal decode issue ⇒ throws `ZKsyncError` of kind **`INTERNAL`**.
 
 Prefer no-throw variants if you want explicit flow control:
 
@@ -151,6 +154,6 @@ if (!r.ok) {
 
 ## Tips & edge cases
 
-* **Handles vs hashes:** Passing a handle without the relevant hash yields `UNKNOWN`/`null`. If you already have a hash, pass the hash directly.
-* **Finalization windows:** For withdrawals, `READY_TO_FINALIZE` can take a while. Use `status(...)` to keep the UI responsive and `wait(..., { for: 'finalized' })` only where blocking makes sense.
-* **Retries:** If a wait returns `null` due to `timeoutMs`, you can safely call `status(...)` to decide whether to keep waiting or surface guidance to the user.
+- **Handles vs hashes:** Passing a handle without the relevant hash yields `UNKNOWN`/`null`. If you already have a hash, pass the hash directly.
+- **Finalization windows:** For withdrawals, `READY_TO_FINALIZE` can take a while. Use `status(...)` to keep the UI responsive and `wait(..., { for: 'finalized' })` only where blocking makes sense.
+- **Retries:** If a wait returns `null` due to `timeoutMs`, you can safely call `status(...)` to decide whether to keep waiting or surface guidance to the user.

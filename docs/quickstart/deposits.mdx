@@ -8,9 +8,7 @@ description: Get your first ETH deposit from Ethereum (L1) to ZKsync (L2).
 - You have [Bun](https://bun.sh/) installed.
 - A funded **L1 wallet** with ETH for both the deposit amount and L1 gas fees
 
-<Info>
-Use a test network like **Sepolia** for experimentation.
-</Info>
+<Info>Use a test network like **Sepolia** for experimentation.</Info>
 
 ## 2. Installation
 
@@ -24,6 +22,7 @@ Choose your adapter and install the SDK + adapter package:
     ```bash title="ethers"
     bun install @dutterbutter/zksync-sdk ethers dotenv
     ```
+
 </CodeGroup>
 
 Create a `.env` file in your project root:
@@ -37,9 +36,7 @@ L1_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_ID
 L2_RPC_URL=ZKSYNC-OS-TESTNET-RPC
 ```
 
-<Warning>
-Never commit your `.env` file to source control.
-</Warning>
+<Warning>Never commit your `.env` file to source control.</Warning>
 
 ## 3. Write the deposit script
 
@@ -177,6 +174,7 @@ Never commit your `.env` file to source control.
       process.exit(1);
     });
     ```
+
 </CodeGroup>
 
 ## 4. Run it
@@ -191,6 +189,7 @@ Execute the script using `bun`.
     ```bash title="ethers"
     bun run deposit/ethers.ts
     ```
+
 </CodeGroup>
 
 You’ll see logs for the L1 transaction, then L2 execution, followed by updated balances.

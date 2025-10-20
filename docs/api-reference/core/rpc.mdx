@@ -5,14 +5,14 @@ group: API Reference / Core
 ---
 
 ### Standard Ethereum RPC (`eth_*`)
- 
+
 Use your base library for all <code>`eth_*`</code> methods.
 The <code>client.zks</code>
-surface only covers ZKsync-specific RPC (<code>zks_*</code>). 
+surface only covers ZKsync-specific RPC (<code>zks\_\*</code>).
 For standard Ethereum JSON-RPC (e.g., <code>eth_call</code>, <code>eth_getLogs</code>, <code>eth_getBalance</code>),
 call them through your chosen library (`ethers` or `viem`).
 
-## zks_ Interface
+## zks\_ Interface
 
 ```ts
 interface ZksRpc {
@@ -55,7 +55,8 @@ const proof = await client.zks.getL2ToL1LogProof(l2TxHash, 0);
 ```
 
 <Info>
-If a proof isn’t available yet, this method throws a typed <code>STATE</code> error. Poll based on your app’s cadence.
+  If a proof isn’t available yet, this method throws a typed <code>STATE</code> error. Poll based on
+  your app’s cadence.
 </Info>
 
 ### `getReceiptWithL2ToL1(txHash: Hex) → Promise<ReceiptWithL2ToL1 | null>`
@@ -87,8 +88,8 @@ type ReceiptWithL2ToL1 = {
 <CodeGroup>
 
 ```ts title="ethers"
-import { JsonRpcProvider, Wallet } from "ethers";
-import { createEthersClient } from "@dutterbutter/zksync-sdk/ethers";
+import { JsonRpcProvider, Wallet } from 'ethers';
+import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
 
 const l1 = new JsonRpcProvider(process.env.ETH_RPC!);
 const l2 = new JsonRpcProvider(process.env.ZKSYNC_RPC!);

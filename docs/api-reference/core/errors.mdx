@@ -14,7 +14,8 @@ All SDK operations either:
 This is consistent across both **ethers** and **viem** adapters.
 
 <Tip>
-Prefer the <code>try*</code> variants when you want to avoid exceptions and branch on success/failure.
+  Prefer the <code>try*</code> variants when you want to avoid exceptions and branch on
+  success/failure.
 </Tip>
 
 ## What gets thrown
@@ -79,11 +80,11 @@ type ErrorEnvelope = {
 
   /** If the error is a contract revert, adapters include decoded info when available. */
   revert?: {
-    selector: `0x${string}`;   // 4-byte selector
-    name?: string;             // Decoded Solidity error name
-    args?: unknown[];          // Decoded args
-    contract?: string;         // Best-effort contract label
-    fn?: string;               // Best-effort function label
+    selector: `0x${string}`; // 4-byte selector
+    name?: string; // Decoded Solidity error name
+    args?: unknown[]; // Decoded args
+    contract?: string; // Best-effort contract label
+    fn?: string; // Best-effort function label
   };
 
   /** Originating error (provider/transport/etc.), sanitized for safe logging. */
@@ -99,7 +100,7 @@ type ErrorEnvelope = {
 | `STATE`        | Operation not possible **yet** (e.g., not finalizable). Wait or change state.              |
 | `EXECUTION`    | A send/revert happened (tx reverted or couldn’t be confirmed). Inspect `revert` / `cause`. |
 | `RPC`          | Provider/transport failure (endpoint/network issue). Retry with backoff / check infra.     |
-| `VERIFICATION` | Proof/verification step issue. Usually indicates unable to find deposit log.                   |
+| `VERIFICATION` | Proof/verification step issue. Usually indicates unable to find deposit log.               |
 | `CONTRACT`     | A contract read/encode/allowance failed. Check addresses & ABI compatibility.              |
 | `INTERNAL`     | SDK internal error (please report with `operation` + `selector` if present).               |
 
@@ -137,9 +138,9 @@ try {
 
 Notes:
 
-* The SDK always includes the **4-byte selector**.
-* `name`/`args` appear when decodable against known ABIs; coverage will expand over time.
-* When a revert implies “not ready yet,” you’ll typically see a `STATE` error with a clarifying `message`.
+- The SDK always includes the **4-byte selector**.
+- `name`/`args` appear when decodable against known ABIs; coverage will expand over time.
+- When a revert implies “not ready yet,” you’ll typically see a `STATE` error with a clarifying `message`.
 
 ## Ethers & viem examples
 
@@ -159,10 +160,11 @@ const sdk = createEthersSdk(client);
 
 const res = await sdk.deposits.tryCreate({ token, amount, to });
 if (!res.ok) {
-  // report envelope
-  console.error(res.error.envelope);
+// report envelope
+console.error(res.error.envelope);
 }
-```
+
+````
 
 ```ts title="Viem"
 import { createPublicClient, http, createWalletClient, privateKeyToAccount } from 'viem';
@@ -193,15 +195,16 @@ try {
     throw e;
   }
 }
-```
+````
 
 </CodeGroup>
 
 ## Logging & observability
 
-* `err.toJSON()` returns a safe, structured object you can ship to logs/telemetry.
-* For local debugging, printing `err` shows a compact, human-readable view (category, operation, context, optional revert/cause).
+- `err.toJSON()` returns a safe, structured object you can ship to logs/telemetry.
+- For local debugging, printing `err` shows a compact, human-readable view (category, operation, context, optional revert/cause).
 
 <Warning>
-Avoid parsing <code>err.message</code> for logic. Use the typed fields on <code>err.envelope</code> instead.
+  Avoid parsing <code>err.message</code> for logic. Use the typed fields on{' '}
+  <code>err.envelope</code> instead.
 </Warning>

@@ -17,10 +17,7 @@ group: SDK Reference / Viem
 ## Import
 
 ```ts
-import {
-  createViemClient,
-  createViemSdk,
-} from "@dutterbutter/zksync-sdk/viem";
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
 ```
 
 ## Quick start
@@ -61,7 +58,8 @@ const l2Crown = await sdk.helpers.l2TokenAddress(CROWN_ERC20_ADDRESS);
 ```
 
 <Tip>
-You can construct the client with only the wallets you need for a given flow (e.g., just <code>l2Wallet</code> to create withdrawals; add <code>l1Wallet</code> when you plan to finalize).
+  You can construct the client with only the wallets you need for a given flow (e.g., just{' '}
+  <code>l2Wallet</code> to create withdrawals; add <code>l1Wallet</code> when you plan to finalize).
 </Tip>
 
 ## `createViemSdk(client) → ViemSdk`
@@ -73,7 +71,8 @@ Instance returned by <code>`createViemClient({ l1, l2, l1Wallet?, l2Wallet? })`<
 **Returns:** `ViemSdk`
 
 <Tip>
-The SDK composes the client with resources: <code>deposits</code>, <code>withdrawals</code>, and convenience <code>helpers</code>.
+  The SDK composes the client with resources: <code>deposits</code>, <code>withdrawals</code>, and
+  convenience <code>helpers</code>.
 </Tip>
 
 ## ViemSdk interface
@@ -129,9 +128,9 @@ const base = await sdk.helpers.baseToken(); // infers from the L2 client
 
 L2 token address for an L1 token.
 
-* Handles ETH special case (L2 ETH placeholder).
-* If the token is the chain’s base token, returns the L2 base-token system address.
-* Otherwise queries `IL2NativeTokenVault.l2TokenAddress`.
+- Handles ETH special case (L2 ETH placeholder).
+- If the token is the chain’s base token, returns the L2 base-token system address.
+- Otherwise queries `IL2NativeTokenVault.l2TokenAddress`.
 
 ```ts
 const l2Crown = await sdk.helpers.l2TokenAddress(CROWN_ERC20_ADDRESS);
@@ -155,6 +154,6 @@ const id = await sdk.helpers.assetId(CROWN_ERC20_ADDRESS);
 
 ## Notes & pitfalls
 
-* **Wallet placement matters:** deposits sign on **L1**; withdrawals sign on **L2**; finalization signs on **L1**.
-* **Chain-derived behavior:** helpers read from on-chain sources; results depend on connected networks.
-* **Error model:** resource methods throw typed errors; prefer <code>try*</code> variants on resources for result objects.
+- **Wallet placement matters:** deposits sign on **L1**; withdrawals sign on **L2**; finalization signs on **L1**.
+- **Chain-derived behavior:** helpers read from on-chain sources; results depend on connected networks.
+- **Error model:** resource methods throw typed errors; prefer <code>try\*</code> variants on resources for result objects.

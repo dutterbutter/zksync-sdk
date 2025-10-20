@@ -13,14 +13,14 @@ group: SDK Reference / Ethers
 ## Import
 
 ```ts
-import { createEthersClient } from "@dutterbutter/zksync-sdk/ethers";
+import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
 ```
 
 ## Quick start
 
 ```ts
-import { JsonRpcProvider, Wallet } from "ethers";
-import { createEthersClient } from "@dutterbutter/zksync-sdk/ethers";
+import { JsonRpcProvider, Wallet } from 'ethers';
+import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
 
 const l1 = new JsonRpcProvider(process.env.ETH_RPC!);
 const l2 = new JsonRpcProvider(process.env.ZKSYNC_RPC!);
@@ -36,18 +36,44 @@ const { bridgehub, l1AssetRouter } = await client.contracts();
 ```
 
 <Tip>
-The signer is force-bound to the **L1** provider to make L1 finalization flows work out of the box.
+  The signer is force-bound to the **L1** provider to make L1 finalization flows work out of the
+  box.
 </Tip>
 
 ## `createEthersClient(args) → EthersClient`
 
-<ParamField name="args.l1" type="ethers.AbstractProvider" required>L1 provider for reads and L1 transactions.</ParamField> <ParamField name="args.l2" type="ethers.AbstractProvider" required>L2 (ZKsync) provider for reads and ZK RPC.</ParamField> <ParamField name="args.signer" type="ethers.Signer" required>Signer for sends. If not connected to <code>args.l1</code>, it will be connected.</ParamField> <ParamField name="args.overrides" type="Partial&lt;ResolvedAddresses&gt;">Optional address overrides (forks/tests).</ParamField>
+<ParamField name="args.l1" type="ethers.AbstractProvider" required>
+  L1 provider for reads and L1 transactions.
+</ParamField>
+<ParamField name="args.l2" type="ethers.AbstractProvider" required>
+  L2 (ZKsync) provider for reads and ZK RPC.
+</ParamField>
+<ParamField name="args.signer" type="ethers.Signer" required>
+  Signer for sends. If not connected to <code>args.l1</code>, it will be connected.
+</ParamField>
+<ParamField name="args.overrides" type="Partial&lt;ResolvedAddresses&gt;">
+  Optional address overrides (forks/tests).
+</ParamField>
 
 **Returns:** `EthersClient`
 
 ## EthersClient interface
 
-<ResponseField name="kind" type="'ethers'">Adapter discriminator.</ResponseField> <ResponseField name="l1" type="ethers.AbstractProvider">Public L1 provider.</ResponseField> <ResponseField name="l2" type="ethers.AbstractProvider">Public L2 (ZKsync) provider.</ResponseField> <ResponseField name="signer" type="ethers.Signer">Signer (bound to <code>l1</code> for sends).</ResponseField> <ResponseField name="zks" type="ZksRpc">ZKsync-specific RPC surface bound to <code>l2</code>.</ResponseField>
+<ResponseField name="kind" type="'ethers'">
+  Adapter discriminator.
+</ResponseField>
+<ResponseField name="l1" type="ethers.AbstractProvider">
+  Public L1 provider.
+</ResponseField>
+<ResponseField name="l2" type="ethers.AbstractProvider">
+  Public L2 (ZKsync) provider.
+</ResponseField>
+<ResponseField name="signer" type="ethers.Signer">
+  Signer (bound to <code>l1</code> for sends).
+</ResponseField>
+<ResponseField name="zks" type="ZksRpc">
+  ZKsync-specific RPC surface bound to <code>l2</code>.
+</ResponseField>
 
 ## Methods
 
@@ -109,7 +135,7 @@ type ResolvedAddresses = {
 
 ## Notes & pitfalls
 
-* **Provider roles:** `l1` is used for L1 lookups and finalization sends; `l2` is used for ZKsync reads/RPC via `zks`.
-* **Signer binding:** The signer is connected to `l1` to ensure L1 transactions (e.g., finalize) succeed without extra wiring.
-* **Caching:** `ensureAddresses()` and `contracts()` are cached. Call `refresh()` after network changes or when using new overrides.
-* **Overrides:** For forks or custom deployments, pass `overrides` at construction; they are merged with on-chain resolution.
+- **Provider roles:** `l1` is used for L1 lookups and finalization sends; `l2` is used for ZKsync reads/RPC via `zks`.
+- **Signer binding:** The signer is connected to `l1` to ensure L1 transactions (e.g., finalize) succeed without extra wiring.
+- **Caching:** `ensureAddresses()` and `contracts()` are cached. Call `refresh()` after network changes or when using new overrides.
+- **Overrides:** For forks or custom deployments, pass `overrides` at construction; they are merged with on-chain resolution.
