@@ -14,8 +14,7 @@ import { zksRpcFromViem } from '../../src/adapters/viem/rpc';
 
 async function main() {
   // Replace with your own endpoint
-  const l2Rpc =
-    process.env.L2_RPC_URL ?? 'https://zksyncos-testnet';
+  const l2Rpc = process.env.L2_RPC_URL ?? 'https://zksyncos-testnet';
 
   const l2Client = createPublicClient({ transport: http(l2Rpc) });
   const zks = zksRpcFromViem(l2Client);
