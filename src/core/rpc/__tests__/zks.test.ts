@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'bun:test';
-import { createZksRpc, normalizeProof } from '../zks';
+import { createZksRpc, normalizeProof, normalizeGenesis } from '../zks';
 import type { RpcTransport } from '../types';
 import { isZKsyncError } from '../../types/errors';
 
@@ -60,6 +60,43 @@ describe('rpc/zks.normalizeProof', () => {
     } catch (e) {
       expect(isZKsyncError(e)).toBe(true);
       expect(String(e)).toContain('Malformed proof: invalid numeric field');
+    }
+  });
+});
+
+describe('rpc/zks.normalizeGenesis', () => {
+  const sample = {
+    initial_contracts: [
+      ['0x' + '11'.repeat(20), '0x' + 'aa'.repeat(4)],
+      ['0x' + '22'.repeat(20), '0x' + 'bb'.repeat(4)],
+    ],
+    additional_storage: [['0x' + '33'.repeat(32), '0x' + '44'.repeat(32)]],
+    execution_version: 7,
+    genesis_root: '0x' + '55'.repeat(32),
+  };
+
+  it('normalizes tuples and camel-cases field names', () => {
+    const normalized = normalizeGenesis(sample);
+    expect(normalized).toEqual({
+      initialContracts: [
+        { address: sample.initial_contracts[0][0], bytecode: sample.initial_contracts[0][1] },
+        { address: sample.initial_contracts[1][0], bytecode: sample.initial_contracts[1][1] },
+      ],
+      additionalStorage: [
+        { key: sample.additional_storage[0][0], value: sample.additional_storage[0][1] },
+      ],
+      executionVersion: sample.execution_version,
+      genesisRoot: sample.genesis_root,
+    });
+  });
+
+  it('throws ZKsyncError on malformed response', () => {
+    try {
+      normalizeGenesis(null);
+      throw new Error('expected to throw');
+    } catch (e) {
+      expect(isZKsyncError(e)).toBe(true);
+      expect(String(e)).toContain('Malformed genesis response');
     }
   });
 });
@@ -135,5 +172,28 @@ describe('rpc/zks.getReceiptWithL2ToL1', () => {
     );
     const out3 = await rpc3.getReceiptWithL2ToL1(('0x' + 'ff'.repeat(32)) as `0x${string}`);
     expect(out3?.l2ToL1Logs).toEqual(logs);
+  });
+});
+
+describe('rpc/zks.getGenesis', () => {
+  it('returns normalized genesis data', async () => {
+    const raw = {
+      initial_contracts: [['0x' + '11'.repeat(20), '0x' + 'aa'.repeat(4)]],
+      additional_storage: [['0x' + '22'.repeat(32), '0x' + '33'.repeat(32)]],
+      execution_version: 9,
+      genesis_root: '0x' + '44'.repeat(32),
+    };
+    const rpc = createZksRpc(fakeTransport({ zks_getGenesis: raw }));
+    const out = await rpc.getGenesis();
+    expect(out).toEqual({
+      initialContracts: [
+        { address: raw.initial_contracts[0][0], bytecode: raw.initial_contracts[0][1] },
+      ],
+      additionalStorage: [
+        { key: raw.additional_storage[0][0], value: raw.additional_storage[0][1] },
+      ],
+      executionVersion: raw.execution_version,
+      genesisRoot: raw.genesis_root,
+    });
   });
 });

@@ -28,5 +28,22 @@ export type ProofNormalized = {
   proof: Hex[];
 };
 
+export type GenesisContractDeployment = {
+  address: Address;
+  bytecode: Hex;
+};
+
+export type GenesisStorageEntry = {
+  key: Hex;
+  value: Hex;
+};
+
+export type GenesisInput = {
+  initialContracts: GenesisContractDeployment[];
+  additionalStorage: GenesisStorageEntry[];
+  executionVersion: number;
+  genesisRoot: Hex;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RpcTransport = (method: string, params?: unknown[]) => Promise<any>;
