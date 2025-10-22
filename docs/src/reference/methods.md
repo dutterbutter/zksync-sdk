@@ -23,6 +23,41 @@ console.log('Bridgehub:', bridgehub); // 0x...
 **Returns**
 `Address` (EVM address string, `0x…`)
 
+## `getGenesis()`
+
+**What it does**  
+Retrieves the L2 genesis configuration exposed by the node, including initial contract deployments, storage patches, execution version, and the expected genesis root.
+
+**Example**
+
+```ts
+const genesis = await client.zks.getGenesis();
+
+for (const contract of genesis.initialContracts) {
+  console.log('Contract at', contract.address, 'with bytecode', contract.bytecode);
+}
+
+console.log('Execution version:', genesis.executionVersion);
+console.log('Genesis root:', genesis.genesisRoot);
+```
+
+**Returns**
+
+```ts
+type GenesisInput = {
+  initialContracts: {
+    address: Address;
+    bytecode: `0x${string}`;
+  }[];
+  additionalStorage: {
+    key: `0x${string}`;
+    value: `0x${string}`;
+  }[];
+  executionVersion: number;
+  genesisRoot: `0x${string}`;
+};
+```
+
 ## `getReceiptWithL2ToL1(txHash)`
 
 **What it does**
