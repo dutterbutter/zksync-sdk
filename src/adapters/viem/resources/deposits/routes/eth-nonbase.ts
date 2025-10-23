@@ -88,6 +88,26 @@ export function routeEthNonBase(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
+      const {
+        gasPriceForBaseCost,
+        gasLimit: overrideGasLimit,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+      } = ctx.fee;
+      const simulateOverrides: Record<string, unknown> = {};
+      if (maxFeePerGas != null) simulateOverrides.maxFeePerGas = maxFeePerGas;
+      if (maxPriorityFeePerGas != null) {
+        simulateOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      }
+      if (overrideGasLimit != null) simulateOverrides.gas = overrideGasLimit;
+
+      const requestOverrides: Record<string, unknown> = {};
+      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
+      if (maxPriorityFeePerGas != null) {
+        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      }
+      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
+
       // Resolve base token
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -114,7 +134,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
             address: ctx.bridgehub,
             abi: IBridgehubABI as Abi,
             functionName: 'l2TransactionBaseCost',
-            args: [ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
+            args: [ctx.chainIdL2, gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
           }),
         {
           ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
@@ -158,6 +178,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
               account: ctx.client.account,
+              ...simulateOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -170,7 +191,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
           key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: `Approve base token for mintValue`,
-          tx: approveSim.request,
+          tx: { ...approveSim.request, ...requestOverrides },
         });
       }
 
@@ -212,6 +233,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
           args: [outer],
           value: p.amount, // base ≠ ETH ⇒ msg.value == secondBridgeValue
           account: ctx.client.account,
+          ...requestOverrides,
         } as const;
       } else {
         const twoBridgesSim = await wrapAs(
@@ -225,13 +247,14 @@ export function routeEthNonBase(): DepositRouteStrategy {
               args: [outer],
               value: p.amount, // base ≠ ETH ⇒ msg.value == secondBridgeValue
               account: ctx.client.account,
+              ...simulateOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
             message: 'Failed to simulate Bridgehub two-bridges request.',
           },
         );
-        bridgeTx = twoBridgesSim.request;
+        bridgeTx = { ...twoBridgesSim.request, ...requestOverrides };
       }
 
       steps.push({

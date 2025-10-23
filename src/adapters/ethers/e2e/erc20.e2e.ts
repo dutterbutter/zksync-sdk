@@ -17,7 +17,7 @@ import {
   waitForL2InclusionWithdraw,
   waitUntilReadyToFinalize,
 } from './helpers.ts';
-import { Contract } from 'ethers';
+import type { Contract } from 'ethers';
 
 // Adjust to your token decimals
 const DECIMALS = 6n;

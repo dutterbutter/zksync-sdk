@@ -65,6 +65,26 @@ export function routeErc20Base(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
+      const {
+        gasPriceForBaseCost,
+        gasLimit: overrideGasLimit,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+      } = ctx.fee;
+      const simulateOverrides: Record<string, unknown> = {};
+      if (maxFeePerGas != null) simulateOverrides.maxFeePerGas = maxFeePerGas;
+      if (maxPriorityFeePerGas != null) {
+        simulateOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      }
+      if (overrideGasLimit != null) simulateOverrides.gas = overrideGasLimit;
+
+      const requestOverrides: Record<string, unknown> = {};
+      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
+      if (maxPriorityFeePerGas != null) {
+        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      }
+      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
+
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.base.baseToken,
@@ -90,7 +110,7 @@ export function routeErc20Base(): DepositRouteStrategy {
             address: ctx.bridgehub,
             abi: IBridgehubABI as Abi,
             functionName: 'l2TransactionBaseCost',
-            args: [ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
+            args: [ctx.chainIdL2, gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
           }),
         {
           ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
@@ -136,6 +156,7 @@ export function routeErc20Base(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
               account: ctx.client.account,
+              ...simulateOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -148,7 +169,7 @@ export function routeErc20Base(): DepositRouteStrategy {
           key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: 'Approve base token for mintValue',
-          tx: approveSim.request,
+          tx: { ...approveSim.request, ...requestOverrides },
         });
       }
 
@@ -174,20 +195,9 @@ export function routeErc20Base(): DepositRouteStrategy {
           args: [req],
           value: 0n, // base is ERC-20 ⇒ msg.value MUST be 0
           account: ctx.client.account,
+          ...requestOverrides,
         } as const;
       } else {
-        // Optional fee overrides
-        const feeOverrides: Record<string, unknown> = {};
-        if ('maxFeePerGas' in ctx.fee && ctx.fee.maxFeePerGas != null) {
-          feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
-        }
-        if ('maxPriorityFeePerGas' in ctx.fee && ctx.fee.maxPriorityFeePerGas != null) {
-          feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
-        }
-        if ('gasPrice' in ctx.fee && ctx.fee.gasPrice != null) {
-          feeOverrides.gasPrice = ctx.fee.gasPrice;
-        }
-
         const sim = await wrapAs(
           'RPC',
           OP_DEPOSITS.base.estGas,
@@ -199,14 +209,14 @@ export function routeErc20Base(): DepositRouteStrategy {
               args: [req],
               value: 0n,
               account: ctx.client.account,
-              ...feeOverrides,
+              ...simulateOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
             message: 'Failed to simulate Bridgehub.requestL2TransactionDirect.',
           },
         );
-        bridgeTx = sim.request;
+        bridgeTx = { ...sim.request, ...requestOverrides };
       }
 
       steps.push({

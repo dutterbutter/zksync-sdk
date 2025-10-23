@@ -38,6 +38,11 @@ describe('types/flows/withdrawals — basic shapes', () => {
       amount: 123n as bigint,
       to: '0x2222222222222222222222222222222222222222' as Address,
       l2GasLimit: 500_000n as bigint,
+      l2TxOverrides: {
+        gasLimit: 400_000n as bigint,
+        maxFeePerGas: 2_000_000_000n as bigint,
+        maxPriorityFeePerGas: 1_000_000_000n as bigint,
+      },
     };
     expectType<WithdrawParams>(good);
 
@@ -62,6 +67,11 @@ describe('types/flows/withdrawals — basic shapes', () => {
       route: 'erc20',
       approvalsNeeded: approvals,
       suggestedL2GasLimit: 250_000n as bigint,
+      fees: {
+        gasLimit: 250_000n as bigint,
+        maxFeePerGas: 40n as bigint,
+        maxPriorityFeePerGas: 5n as bigint,
+      },
     };
     expectType<WithdrawQuote>(quote);
 

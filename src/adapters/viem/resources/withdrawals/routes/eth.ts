@@ -16,12 +16,14 @@ export function routeEthBase(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
+      const { gasLimit: overrideGasLimit, maxFeePerGas, maxPriorityFeePerGas } = ctx.fee;
 
-      const feeOverrides: Record<string, unknown> = {};
-      if (ctx.fee?.maxFeePerGas != null && ctx.fee?.maxPriorityFeePerGas != null) {
-        feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
-        feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
+      const simulateOverrides: Record<string, unknown> = {};
+      if (maxFeePerGas != null) simulateOverrides.maxFeePerGas = maxFeePerGas;
+      if (maxPriorityFeePerGas != null) {
+        simulateOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
       }
+      if (overrideGasLimit != null) simulateOverrides.gas = overrideGasLimit;
 
       // Simulate the L2 call to produce a write-ready request
       const sim = await wrapAs(
@@ -35,7 +37,7 @@ export function routeEthBase(): WithdrawRouteStrategy {
             args: [toL1] as const,
             value: p.amount,
             account: ctx.client.account,
-            ...feeOverrides,
+            ...simulateOverrides,
           }),
         {
           ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_ADDRESS },
@@ -43,12 +45,19 @@ export function routeEthBase(): WithdrawRouteStrategy {
         },
       );
 
+      const requestOverrides: Record<string, unknown> = {};
+      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
+      if (maxPriorityFeePerGas != null) {
+        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      }
+      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
+
       const steps: Array<PlanStep<ViemPlanWriteRequest>> = [
         {
           key: 'l2-base-token:withdraw',
           kind: 'l2-base-token:withdraw',
           description: 'Withdraw ETH via L2 Base Token System',
-          tx: sim.request as unknown as ViemPlanWriteRequest,
+          tx: { ...(sim.request as ViemPlanWriteRequest), ...requestOverrides },
         },
       ];
 

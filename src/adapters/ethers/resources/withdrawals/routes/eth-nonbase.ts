@@ -30,6 +30,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
 
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
+      const { gasLimit: overrideGasLimit, maxFeePerGas, maxPriorityFeePerGas } = ctx.fee;
 
       const toL1 = p.to ?? ctx.sender;
       const iface = new Interface(IBaseTokenABI);
@@ -45,24 +46,29 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
         data,
         from: ctx.sender,
         value: p.amount,
-        ...(ctx.fee ?? {}),
+        maxFeePerGas,
+        maxPriorityFeePerGas,
       };
 
       // TODO: consider a more robust buffer strategy
       // best-effort gas estimate
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_WITHDRAWALS.eth.estGas,
-          () => ctx.client.l2.estimateGas(tx),
-          {
-            ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
-            message: 'Failed to estimate gas for L2 base-token withdraw.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore
+      if (overrideGasLimit != null) {
+        tx.gasLimit = overrideGasLimit;
+      } else {
+        try {
+          const est = await wrapAs(
+            'RPC',
+            OP_WITHDRAWALS.eth.estGas,
+            () => ctx.client.l2.estimateGas(tx),
+            {
+              ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
+              message: 'Failed to estimate gas for L2 base-token withdraw.',
+            },
+          );
+          tx.gasLimit = (BigInt(est) * 115n) / 100n;
+        } catch {
+          // ignore
+        }
       }
 
       steps.push({
