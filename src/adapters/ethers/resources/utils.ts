@@ -11,6 +11,16 @@ import type { Eip1559GasOverrides, ResolvedEip1559Fees } from '../../../core/typ
 import { assertNoLegacyGas, assertPriorityFeeBounds } from '../../../core/utils/gas';
 import type { FeeData } from 'ethers';
 
+function supportsGetGasPrice(
+  provider: unknown,
+): provider is { getGasPrice(): Promise<bigint | { toString(): string }> } {
+  return (
+    typeof provider === 'object' &&
+    provider !== null &&
+    typeof (provider as { getGasPrice?: unknown }).getGasPrice === 'function'
+  );
+}
+
 // TODO: refactor this entirely
 // separate encoding, and move gas helpers to new resource
 
@@ -133,9 +143,9 @@ export async function getL2FeeOverrides(
   }
   if (gasPriceFallback == null) {
     try {
-      if ('getGasPrice' in client.l2 && typeof client.l2.getGasPrice === 'function') {
-        const gp = await (client.l2 as { getGasPrice(): Promise<bigint> }).getGasPrice();
-        gasPriceFallback = gp;
+      if (supportsGetGasPrice(client.l2)) {
+        const gp = await client.l2.getGasPrice();
+        gasPriceFallback = typeof gp === 'bigint' ? gp : BigInt(gp.toString());
       }
     } catch {
       // ignore
@@ -144,7 +154,7 @@ export async function getL2FeeOverrides(
 
   const maxFeePerGas = overrides?.maxFeePerGas ?? maxFeeFromProvider ?? gasPriceFallback;
   if (maxFeePerGas == null) {
-    throw new Error('L1 provider returned no gas price data');
+    throw new Error('L2 provider returned no gas price data');
   }
 
   const maxPriorityFeePerGas =
