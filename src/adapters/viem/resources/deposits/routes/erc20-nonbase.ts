@@ -1,7 +1,7 @@
 // src/adapters/viem/resources/deposits/routes/erc20-nonbase.ts
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import { encodeSecondBridgeErc20Args } from '../../utils';
+import { encodeSecondBridgeErc20Args, buildViemFeeOverrides } from '../../utils';
 import { IERC20ABI, IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
@@ -57,25 +57,8 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
-      const {
-        gasPriceForBaseCost,
-        gasLimit: overrideGasLimit,
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-      } = ctx.fee;
-      const simulateOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) simulateOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        simulateOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) simulateOverrides.gas = overrideGasLimit;
-
-      const requestOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
+      const { gasPriceForBaseCost } = ctx.fee;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
 
       // Read base token
       const baseToken = (await wrapAs(
@@ -149,7 +132,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, p.amount] as const,
               account: ctx.client.account,
-              ...simulateOverrides,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: p.token },
@@ -162,7 +145,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           key: `approve:${p.token}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: `Approve deposit token for amount`,
-          tx: { ...approveDepReq.request, ...requestOverrides },
+          tx: { ...approveDepReq.request, ...txFeeOverrides },
         });
       }
 
@@ -197,7 +180,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
                 functionName: 'approve',
                 args: [ctx.l1AssetRouter, mintValue] as const,
                 account: ctx.client.account,
-                ...simulateOverrides,
+                ...txFeeOverrides,
               }),
             {
               ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -210,7 +193,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: `Approve base token for mintValue`,
-            tx: { ...approveBaseReq.request, ...requestOverrides },
+            tx: { ...approveBaseReq.request, ...txFeeOverrides },
           });
         }
 
@@ -259,7 +242,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           args: [outer],
           value: msgValue,
           account: ctx.client.account,
-          ...requestOverrides,
+          ...txFeeOverrides,
         } as const;
       } else {
         const sim = await wrapAs(
@@ -273,14 +256,14 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               args: [outer],
               value: msgValue,
               account: ctx.client.account,
-              ...simulateOverrides,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
             message: 'Failed to simulate two-bridges request.',
           },
         );
-        bridgeTx = { ...sim.request, ...requestOverrides };
+        bridgeTx = { ...sim.request, ...txFeeOverrides };
       }
 
       steps.push({

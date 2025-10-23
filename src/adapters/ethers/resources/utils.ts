@@ -144,7 +144,7 @@ export async function getL2FeeOverrides(
 
   const maxFeePerGas = overrides?.maxFeePerGas ?? maxFeeFromProvider ?? gasPriceFallback;
   if (maxFeePerGas == null) {
-    throw new Error('provider returned no gas price data');
+    throw new Error('L1 provider returned no gas price data');
   }
 
   const maxPriorityFeePerGas =

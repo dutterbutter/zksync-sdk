@@ -5,6 +5,7 @@ import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
 import { IBaseTokenABI } from '../../../../../core/internal/abi-registry';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
+import { buildViemFeeOverrides } from '../../utils';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
@@ -31,14 +32,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
 
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
-      const { gasLimit: overrideGasLimit, maxFeePerGas, maxPriorityFeePerGas } = ctx.fee;
-
-      const simulateOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) simulateOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        simulateOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) simulateOverrides.gas = overrideGasLimit;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
 
       const sim = await wrapAs(
         'CONTRACT',
@@ -51,7 +45,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
             args: [toL1] as const,
             value: p.amount,
             account: ctx.client.account,
-            ...simulateOverrides,
+            ...txFeeOverrides,
           }),
         {
           ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_ADDRESS },
@@ -59,19 +53,12 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
         },
       );
 
-      const requestOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
-
       const steps: Array<PlanStep<ViemPlanWriteRequest>> = [
         {
           key: 'l2-base-token:withdraw',
           kind: 'l2-base-token:withdraw',
           description: 'Withdraw base token via L2 Base Token System (base ≠ ETH)',
-          tx: { ...(sim.request as ViemPlanWriteRequest), ...requestOverrides },
+          tx: { ...(sim.request as ViemPlanWriteRequest), ...txFeeOverrides },
         },
       ];
 

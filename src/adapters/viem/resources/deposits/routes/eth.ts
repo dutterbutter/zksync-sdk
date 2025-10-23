@@ -2,7 +2,7 @@
 
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
-import { buildDirectRequestStruct } from '../../utils';
+import { buildDirectRequestStruct, buildViemFeeOverrides } from '../../utils';
 import { IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
@@ -15,12 +15,8 @@ const { wrapAs } = createErrorHandlers('deposits');
 export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
-      const {
-        gasPriceForBaseCost,
-        gasLimit: overrideGasLimit,
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-      } = ctx.fee;
+      const { gasPriceForBaseCost } = ctx.fee;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
 
       // base cost
       const rawBaseCost = await wrapAs(
@@ -56,11 +52,6 @@ export function routeEthDirect(): DepositRouteStrategy {
 
       // Optional fee overrides for simulate/write
       // viem client requires these to be explicitly set
-      const feeOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) feeOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) feeOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      if (overrideGasLimit != null) feeOverrides.gas = overrideGasLimit;
-
       // Simulate to produce a writeContract-ready request
       const sim = await wrapAs(
         'RPC',
@@ -73,20 +64,13 @@ export function routeEthDirect(): DepositRouteStrategy {
             args: [req],
             value: mintValue,
             account: ctx.client.account,
-            ...feeOverrides,
+            ...txFeeOverrides,
           }),
         {
           ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
           message: 'Failed to simulate Bridgehub.requestL2TransactionDirect.',
         },
       );
-      const requestOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
-
       // TODO: add preview step
       // right now it adds too much noise on response
       const steps: PlanStep<ViemPlanWriteRequest>[] = [
@@ -94,7 +78,7 @@ export function routeEthDirect(): DepositRouteStrategy {
           key: 'bridgehub:direct',
           kind: 'bridgehub:direct',
           description: 'Bridge ETH via Bridgehub.requestL2TransactionDirect',
-          tx: { ...sim.request, ...requestOverrides },
+          tx: { ...sim.request, ...txFeeOverrides },
         },
       ];
 

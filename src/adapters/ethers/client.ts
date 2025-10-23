@@ -89,14 +89,7 @@ export function createEthersClient(args: InitArgs): EthersClient {
 
   const signerProvider = signer.provider;
   // Detect if signer is backed by a BrowserProvider (e.g., MetaMask)
-  const providerCandidate = signerProvider as unknown;
-  const isBrowserProvider =
-    providerCandidate instanceof BrowserProvider ||
-    (typeof providerCandidate === 'object' &&
-      providerCandidate !== null &&
-      'provider' in providerCandidate &&
-      typeof (providerCandidate as { provider?: { request?: unknown } }).provider?.request ===
-        'function');
+  const isBrowserProvider = signerProvider instanceof BrowserProvider;
 
   if (!isBrowserProvider && (!boundSigner.provider || boundSigner.provider !== l1)) {
     // Regular RPC-based signer (e.g. JsonRpcSigner, Wallet)

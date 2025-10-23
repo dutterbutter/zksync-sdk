@@ -11,6 +11,7 @@ import {
 import { type Abi, encodeAbiParameters } from 'viem';
 import { createErrorHandlers } from '../../../errors/error-ops.ts';
 import { OP_WITHDRAWALS } from '../../../../../core/types/index.ts';
+import { buildViemFeeOverrides } from '../../utils';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
@@ -20,20 +21,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
     // TODO: add preflight validations here
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
-      const { gasLimit: overrideGasLimit, maxFeePerGas, maxPriorityFeePerGas } = ctx.fee;
-      const simulateOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) simulateOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        simulateOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) simulateOverrides.gas = overrideGasLimit;
-
-      const requestOverrides: Record<string, unknown> = {};
-      if (maxFeePerGas != null) requestOverrides.maxFeePerGas = maxFeePerGas;
-      if (maxPriorityFeePerGas != null) {
-        requestOverrides.maxPriorityFeePerGas = maxPriorityFeePerGas;
-      }
-      if (overrideGasLimit != null) requestOverrides.gas = overrideGasLimit;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
 
       //  L2 allowance
       const current = (await wrapAs(
@@ -76,7 +64,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
               functionName: 'approve',
               args: [ctx.l2NativeTokenVault, p.amount] as const,
               account: ctx.client.account,
-              ...simulateOverrides,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l2.simulateContract', to: p.token },
@@ -88,7 +76,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
           key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
           kind: 'approve:l2',
           description: `Approve ${p.amount} to NativeTokenVault`,
-          tx: { ...(approveSim.request as ViemPlanWriteRequest), ...requestOverrides },
+          tx: { ...(approveSim.request as ViemPlanWriteRequest), ...txFeeOverrides },
         });
       }
       // ensure token is registered in L2NativeTokenVault
@@ -129,7 +117,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
           functionName: 'withdraw',
           args: [assetId, assetData] as const,
           account: ctx.client.account,
-          ...requestOverrides,
+          ...txFeeOverrides,
         } satisfies ViemPlanWriteRequest;
       } else {
         // L2AssetRouter.withdraw(assetId, assetData)
@@ -143,14 +131,14 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
               functionName: 'withdraw',
               args: [assetId, assetData] as const,
               account: ctx.client.account,
-              ...simulateOverrides,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l2.simulateContract', to: ctx.l2AssetRouter },
             message: 'Failed to simulate L2 ERC-20 withdraw.',
           },
         );
-        withdrawTx = { ...(sim.request as ViemPlanWriteRequest), ...requestOverrides };
+        withdrawTx = { ...(sim.request as ViemPlanWriteRequest), ...txFeeOverrides };
       }
 
       steps.push({

@@ -123,7 +123,7 @@ export async function getFeeOverrides(
 
   const maxFeePerGas = overrides?.maxFeePerGas ?? maxFeePerGasFromProvider ?? gasPriceFromProvider;
   if (maxFeePerGas == null) {
-    throw new Error('provider returned no gas price data');
+    throw new Error('L1 provider returned no gas price data');
   }
 
   const maxPriorityFeePerGas =
@@ -186,6 +186,14 @@ export async function getL2FeeOverrides(
     gasLimit: overrides?.gasLimit,
     maxFeePerGas,
     maxPriorityFeePerGas,
+  };
+}
+
+export function buildViemFeeOverrides(fees: ResolvedEip1559Fees): Record<string, unknown> {
+  return {
+    maxFeePerGas: fees.maxFeePerGas,
+    maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
+    gas: fees.gasLimit,
   };
 }
 
