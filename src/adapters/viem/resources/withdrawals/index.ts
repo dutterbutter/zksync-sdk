@@ -119,11 +119,25 @@ export function createWithdrawalsResource(client: ViemClient): WithdrawalsResour
 
     await ROUTES[ctx.route].preflight?.(p, ctx);
     const { steps, approvals } = await ROUTES[ctx.route].build(p, ctx);
+    const resolveGasLimit = (): bigint | undefined => {
+      if (ctx.fee.gasLimit != null) return ctx.fee.gasLimit;
+      for (let i = steps.length - 1; i >= 0; i--) {
+        const candidate = steps[i].tx.gas;
+        if (candidate != null) return candidate;
+      }
+      return undefined;
+    };
+    const gasLimit = resolveGasLimit();
 
     const summary: WithdrawQuote = {
       route: ctx.route,
       approvalsNeeded: approvals,
       suggestedL2GasLimit: ctx.l2GasLimit,
+      fees: {
+        gasLimit,
+        maxFeePerGas: ctx.fee.maxFeePerGas,
+        maxPriorityFeePerGas: ctx.fee.maxPriorityFeePerGas,
+      },
     };
     return { route: ctx.route, summary, steps };
   }
@@ -169,6 +183,15 @@ export function createWithdrawalsResource(client: ViemClient): WithdrawalsResour
         const l2Wallet = client.getL2Wallet();
 
         for (const step of plan.steps) {
+          if (p.l2TxOverrides) {
+            const overrides = p.l2TxOverrides;
+            if (overrides.maxFeePerGas != null) step.tx.maxFeePerGas = overrides.maxFeePerGas;
+            if (overrides.maxPriorityFeePerGas != null) {
+              step.tx.maxPriorityFeePerGas = overrides.maxPriorityFeePerGas;
+            }
+            if (overrides.gasLimit != null) step.tx.gas = overrides.gasLimit;
+          }
+
           if (step.tx.gas == null) {
             try {
               const feePart =

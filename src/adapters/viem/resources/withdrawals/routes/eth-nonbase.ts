@@ -5,6 +5,7 @@ import { L2_BASE_TOKEN_ADDRESS } from '../../../../../core/constants';
 import { IBaseTokenABI } from '../../../../../core/internal/abi-registry';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_WITHDRAWALS } from '../../../../../core/types';
+import { buildViemFeeOverrides } from '../../utils';
 
 const { wrapAs } = createErrorHandlers('withdrawals');
 
@@ -31,12 +32,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
 
     async build(p, ctx) {
       const toL1 = p.to ?? ctx.sender;
-
-      const feeOverrides: Record<string, unknown> = {};
-      if (ctx.fee?.maxFeePerGas != null && ctx.fee?.maxPriorityFeePerGas != null) {
-        feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
-        feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
-      }
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
 
       const sim = await wrapAs(
         'CONTRACT',
@@ -49,7 +45,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
             args: [toL1] as const,
             value: p.amount,
             account: ctx.client.account,
-            ...feeOverrides,
+            ...txFeeOverrides,
           }),
         {
           ctx: { where: 'l2.simulateContract', to: L2_BASE_TOKEN_ADDRESS },
@@ -62,7 +58,7 @@ export function routeEthNonBase(): WithdrawRouteStrategy {
           key: 'l2-base-token:withdraw',
           kind: 'l2-base-token:withdraw',
           description: 'Withdraw base token via L2 Base Token System (base ≠ ETH)',
-          tx: sim.request as ViemPlanWriteRequest,
+          tx: { ...(sim.request as ViemPlanWriteRequest), ...txFeeOverrides },
         },
       ];
 

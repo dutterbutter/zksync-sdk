@@ -15,6 +15,7 @@ export function routeEthBase(): WithdrawRouteStrategy {
   return {
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
+      const { gasLimit: overrideGasLimit, maxFeePerGas, maxPriorityFeePerGas } = ctx.fee;
 
       const base = new Contract(
         L2_BASE_TOKEN_ADDRESS,
@@ -39,22 +40,28 @@ export function routeEthBase(): WithdrawRouteStrategy {
         data,
         from: ctx.sender,
         value: p.amount,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
       };
 
       // TODO: improve gas estimations
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_WITHDRAWALS.eth.estGas,
-          () => ctx.client.l2.estimateGas(tx),
-          {
-            ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
-            message: 'Failed to estimate gas for L2 ETH withdraw.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore
+      if (overrideGasLimit != null) {
+        tx.gasLimit = overrideGasLimit;
+      } else {
+        try {
+          const est = await wrapAs(
+            'RPC',
+            OP_WITHDRAWALS.eth.estGas,
+            () => ctx.client.l2.estimateGas(tx),
+            {
+              ctx: { where: 'l2.estimateGas', to: L2_BASE_TOKEN_ADDRESS },
+              message: 'Failed to estimate gas for L2 ETH withdraw.',
+            },
+          );
+          tx.gasLimit = (BigInt(est) * 115n) / 100n;
+        } catch {
+          // ignore
+        }
       }
 
       steps.push({

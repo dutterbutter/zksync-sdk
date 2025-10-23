@@ -2,7 +2,7 @@
 
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep } from '../../../../../core/types/flows/base';
-import { buildDirectRequestStruct } from '../../utils';
+import { buildDirectRequestStruct, buildViemFeeOverrides } from '../../utils';
 import { IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
@@ -15,6 +15,9 @@ const { wrapAs } = createErrorHandlers('deposits');
 export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
+      const { gasPriceForBaseCost } = ctx.fee;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
+
       // base cost
       const rawBaseCost = await wrapAs(
         'CONTRACT',
@@ -24,7 +27,7 @@ export function routeEthDirect(): DepositRouteStrategy {
             address: ctx.bridgehub,
             abi: IBridgehubABI,
             functionName: 'l2TransactionBaseCost',
-            args: [ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
+            args: [ctx.chainIdL2, gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
           }),
         {
           ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
@@ -49,17 +52,6 @@ export function routeEthDirect(): DepositRouteStrategy {
 
       // Optional fee overrides for simulate/write
       // viem client requires these to be explicitly set
-      const feeOverrides: Record<string, unknown> = {};
-      if ('maxFeePerGas' in ctx.fee && ctx.fee.maxFeePerGas != null) {
-        feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
-      }
-      if ('maxPriorityFeePerGas' in ctx.fee && ctx.fee.maxPriorityFeePerGas != null) {
-        feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
-      }
-      if ('gasPrice' in ctx.fee && ctx.fee.gasPrice != null) {
-        feeOverrides.gasPrice = ctx.fee.gasPrice;
-      }
-
       // Simulate to produce a writeContract-ready request
       const sim = await wrapAs(
         'RPC',
@@ -72,7 +64,7 @@ export function routeEthDirect(): DepositRouteStrategy {
             args: [req],
             value: mintValue,
             account: ctx.client.account,
-            ...feeOverrides,
+            ...txFeeOverrides,
           }),
         {
           ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
@@ -86,7 +78,7 @@ export function routeEthDirect(): DepositRouteStrategy {
           key: 'bridgehub:direct',
           kind: 'bridgehub:direct',
           description: 'Bridge ETH via Bridgehub.requestL2TransactionDirect',
-          tx: sim.request,
+          tx: { ...sim.request, ...txFeeOverrides },
         },
       ];
 

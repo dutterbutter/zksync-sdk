@@ -1,6 +1,6 @@
 // src/types/flows/deposits.ts
 import type { Address, Hex } from '../primitives';
-import type { ApprovalNeed, Plan, Handle } from './base';
+import type { ApprovalNeed, Plan, Handle, Eip1559GasOverrides, ResolvedEip1559Fees } from './base';
 
 /** Input */
 export interface DepositParams {
@@ -11,6 +11,7 @@ export interface DepositParams {
   l2GasLimit?: bigint;
   gasPerPubdata?: bigint;
   operatorTip?: bigint;
+  l1TxOverrides?: Eip1559GasOverrides;
 }
 
 /** Routes */
@@ -24,6 +25,7 @@ export interface DepositQuote {
   mintValue: bigint;
   suggestedL2GasLimit: bigint;
   gasPerPubdata: bigint;
+  fees: ResolvedEip1559Fees;
 }
 
 /** Plan (Tx generic) */

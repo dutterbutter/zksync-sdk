@@ -37,6 +37,11 @@ describe('types/flows/deposits — basic shapes', () => {
       l2GasLimit: 500_000n as bigint,
       gasPerPubdata: 800n as bigint,
       operatorTip: 10n as bigint,
+      l1TxOverrides: {
+        gasLimit: 280_000n as bigint,
+        maxFeePerGas: 2_500_000_000n as bigint,
+        maxPriorityFeePerGas: 1_500_000_000n as bigint,
+      },
     };
     expectType<DepositParams>(p);
 

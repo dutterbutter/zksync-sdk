@@ -108,11 +108,31 @@ export function createWithdrawalsResource(client: EthersClient): WithdrawalsReso
 
     await ROUTES[ctx.route].preflight?.(p, ctx);
     const { steps, approvals } = await ROUTES[ctx.route].build(p, ctx);
+    const resolveGasLimit = (): bigint | undefined => {
+      if (ctx.fee.gasLimit != null) return ctx.fee.gasLimit;
+      for (let i = steps.length - 1; i >= 0; i--) {
+        const candidate = steps[i].tx.gasLimit;
+        if (candidate == null) continue;
+        if (typeof candidate === 'bigint') return candidate;
+        try {
+          return BigInt(candidate.toString());
+        } catch {
+          // ignore and continue
+        }
+      }
+      return undefined;
+    };
+    const gasLimit = resolveGasLimit();
 
     const summary: WithdrawQuote = {
       route: ctx.route,
       approvalsNeeded: approvals,
       suggestedL2GasLimit: ctx.l2GasLimit,
+      fees: {
+        gasLimit,
+        maxFeePerGas: ctx.fee.maxFeePerGas,
+        maxPriorityFeePerGas: ctx.fee.maxPriorityFeePerGas,
+      },
     };
 
     return { route: ctx.route, summary, steps };
@@ -176,6 +196,15 @@ export function createWithdrawalsResource(client: EthersClient): WithdrawalsReso
 
         for (const step of plan.steps) {
           step.tx.nonce = next++;
+
+          if (p.l2TxOverrides) {
+            const overrides = p.l2TxOverrides;
+            if (overrides.gasLimit != null) step.tx.gasLimit = overrides.gasLimit;
+            if (overrides.maxFeePerGas != null) step.tx.maxFeePerGas = overrides.maxFeePerGas;
+            if (overrides.maxPriorityFeePerGas != null) {
+              step.tx.maxPriorityFeePerGas = overrides.maxPriorityFeePerGas;
+            }
+          }
 
           if (!step.tx.gasLimit) {
             try {

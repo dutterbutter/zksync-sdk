@@ -18,6 +18,7 @@ export function routeEthDirect(): DepositRouteStrategy {
   return {
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const { gasPriceForBaseCost, gasLimit: overrideGasLimit, ...txFeeOverrides } = ctx.fee;
 
       // base cost
       const rawBaseCost: bigint = (await wrapAs(
@@ -26,7 +27,7 @@ export function routeEthDirect(): DepositRouteStrategy {
         () =>
           bh.l2TransactionBaseCost(
             ctx.chainIdL2,
-            ctx.fee.gasPriceForBaseCost,
+            gasPriceForBaseCost,
             ctx.l2GasLimit,
             ctx.gasPerPubdata,
           ),
@@ -57,21 +58,25 @@ export function routeEthDirect(): DepositRouteStrategy {
         data,
         value: mintValue,
         from: ctx.sender,
-        ...ctx.fee,
+        ...txFeeOverrides,
       };
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.eth.estGas,
-          () => ctx.client.l1.estimateGas(tx),
-          {
-            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
-            message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore
+      if (overrideGasLimit != null) {
+        tx.gasLimit = overrideGasLimit;
+      } else {
+        try {
+          const est = await wrapAs(
+            'RPC',
+            OP_DEPOSITS.eth.estGas,
+            () => ctx.client.l1.estimateGas(tx),
+            {
+              ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            },
+          );
+          tx.gasLimit = (BigInt(est) * 115n) / 100n;
+        } catch {
+          // ignore
+        }
       }
 
       const steps: PlanStep<TransactionRequest>[] = [

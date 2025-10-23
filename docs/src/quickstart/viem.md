@@ -108,6 +108,12 @@ async function main() {
       token: ETH_ADDRESS,
       amount: parseEther('0.001'),
       to: account.address,
+      // Optional gas control:
+      // l1TxOverrides: {
+      //   gasLimit: 280_000n,
+      //   maxFeePerGas: parseEther('0.00000002'),
+      //   maxPriorityFeePerGas: parseEther('0.000000002'),
+      // },
     };
 
     // Get a quote for the fees

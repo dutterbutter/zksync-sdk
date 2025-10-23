@@ -118,6 +118,15 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
 
     const { steps, approvals, quoteExtras } = await ROUTES[route].build(p, ctx);
     const { baseCost, mintValue } = quoteExtras;
+    const resolveGasLimit = (): bigint | undefined => {
+      if (ctx.fee.gasLimit != null) return ctx.fee.gasLimit;
+      for (let i = steps.length - 1; i >= 0; i--) {
+        const candidate = steps[i].tx.gas;
+        if (candidate != null) return candidate;
+      }
+      return undefined;
+    };
+    const gasLimit = resolveGasLimit();
 
     return {
       route: ctx.route,
@@ -128,6 +137,11 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
         mintValue,
         suggestedL2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
+        fees: {
+          gasLimit,
+          maxFeePerGas: ctx.fee.maxFeePerGas,
+          maxPriorityFeePerGas: ctx.fee.maxPriorityFeePerGas,
+        },
       },
       steps,
     };
@@ -208,6 +222,19 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
                 },
                 e,
               );
+            }
+          }
+
+          if (p.l1TxOverrides) {
+            const overrides = p.l1TxOverrides;
+            if (overrides.maxFeePerGas != null) {
+              step.tx.maxFeePerGas = overrides.maxFeePerGas;
+            }
+            if (overrides.maxPriorityFeePerGas != null) {
+              step.tx.maxPriorityFeePerGas = overrides.maxPriorityFeePerGas;
+            }
+            if (overrides.gasLimit != null) {
+              step.tx.gas = overrides.gasLimit;
             }
           }
 

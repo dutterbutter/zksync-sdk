@@ -61,6 +61,11 @@ export function routeErc20Base(): DepositRouteStrategy {
 
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const { gasPriceForBaseCost, gasLimit: overrideGasLimit, ...txFeeOverrides } = ctx.fee;
+      const txOverrides =
+        overrideGasLimit != null
+          ? { ...txFeeOverrides, gasLimit: overrideGasLimit }
+          : txFeeOverrides;
 
       // Read base token
       const baseToken = (await wrapAs(
@@ -80,7 +85,7 @@ export function routeErc20Base(): DepositRouteStrategy {
         () =>
           bh.l2TransactionBaseCost(
             ctx.chainIdL2,
-            ctx.fee.gasPriceForBaseCost,
+            gasPriceForBaseCost,
             ctx.l2GasLimit,
             ctx.gasPerPubdata,
           ),
@@ -122,7 +127,7 @@ export function routeErc20Base(): DepositRouteStrategy {
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: 'Approve base token for mintValue',
-            tx: { to: baseToken, data, from: ctx.sender, ...ctx.fee },
+            tx: { to: baseToken, data, from: ctx.sender, ...txOverrides },
           });
         }
       }
@@ -148,22 +153,26 @@ export function routeErc20Base(): DepositRouteStrategy {
         data,
         value: 0n, // base token is ERC-20 ⇒ msg.value MUST be 0
         from: ctx.sender,
-        ...ctx.fee,
+        ...txOverrides,
       };
 
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.base.estGas,
-          () => ctx.client.l1.estimateGas(tx),
-          {
-            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
-            message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        tx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore;
+      if (overrideGasLimit != null) {
+        tx.gasLimit = overrideGasLimit;
+      } else {
+        try {
+          const est = await wrapAs(
+            'RPC',
+            OP_DEPOSITS.base.estGas,
+            () => ctx.client.l1.estimateGas(tx),
+            {
+              ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            },
+          );
+          tx.gasLimit = (BigInt(est) * 115n) / 100n;
+        } catch {
+          // ignore;
+        }
       }
 
       steps.push({

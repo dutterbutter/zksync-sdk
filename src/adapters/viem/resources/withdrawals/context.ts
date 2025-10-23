@@ -4,14 +4,9 @@ import type { ViemClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
 import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
-import type { CommonCtx } from '../../../../core/types/flows/base';
+import type { CommonCtx, ResolvedEip1559Fees } from '../../../../core/types/flows/base';
 import { isEthBasedChain } from '../token-info';
-
-// TODO: move all fee and gas items to dedicated resource?
-export type ViemFeeOverrides = {
-  maxFeePerGas?: bigint;
-  maxPriorityFeePerGas?: bigint;
-};
+import { getL2FeeOverrides } from '../utils';
 
 // Common context for building withdrawal (L2 -> L1) transactions
 export interface BuildCtx extends CommonCtx {
@@ -36,7 +31,7 @@ export interface BuildCtx extends CommonCtx {
   gasBufferPct: number;
 
   // Optional fee overrides for L2 send
-  fee?: ViemFeeOverrides;
+  fee: ResolvedEip1559Fees;
 }
 
 export async function commonCtx(
@@ -56,6 +51,7 @@ export async function commonCtx(
 
   const chainIdL2 = BigInt(await client.l2.getChainId());
   const baseIsEth = await isEthBasedChain(client.l2, l2NativeTokenVault);
+  const fee = await getL2FeeOverrides(client, p.l2TxOverrides);
 
   // route selection
   const route = pickWithdrawRoute({
@@ -81,5 +77,6 @@ export async function commonCtx(
     baseIsEth,
     l2GasLimit,
     gasBufferPct,
+    fee,
   } satisfies BuildCtx & { route: WithdrawRoute };
 }

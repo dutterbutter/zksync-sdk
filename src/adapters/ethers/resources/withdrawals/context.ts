@@ -1,12 +1,12 @@
 // src/adapters/ethers/resources/withdrawals/context.ts
 
-import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
 import { pickWithdrawRoute } from '../../../../core/resources/withdrawals/route';
 import type { WithdrawParams, WithdrawRoute } from '../../../../core/types/flows/withdrawals';
-import type { CommonCtx } from '../../../../core/types/flows/base';
+import type { CommonCtx, ResolvedEip1559Fees } from '../../../../core/types/flows/base';
 import { isEthBasedChain } from '../token-info';
+import { getL2FeeOverrides } from '../utils';
 
 // Common context for building withdrawal (L2 -> L1) transactions
 export interface BuildCtx extends CommonCtx {
@@ -27,7 +27,7 @@ export interface BuildCtx extends CommonCtx {
   gasBufferPct: number;
 
   // Optional fee overrides for L2 send
-  fee?: Partial<TransactionRequest>;
+  fee: ResolvedEip1559Fees;
 }
 
 export async function commonCtx(
@@ -48,6 +48,7 @@ export async function commonCtx(
   const { chainId } = await client.l2.getNetwork();
   const chainIdL2 = BigInt(chainId);
   const baseIsEth = await isEthBasedChain(client.l2, l2NativeTokenVault);
+  const fee = await getL2FeeOverrides(client, p.l2TxOverrides);
 
   // route selection
   const route = pickWithdrawRoute({ token: p.token, baseIsEth });
@@ -70,5 +71,6 @@ export async function commonCtx(
     baseIsEth,
     l2GasLimit,
     gasBufferPct,
+    fee,
   } satisfies BuildCtx & { route: WithdrawRoute };
 }
