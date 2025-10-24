@@ -1,5 +1,5 @@
 {
-  "name": "ethers-deposits-ui",
+  "name": "viem-withdrawals-ui",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,9 +7,9 @@
   },
   "dependencies": {
     "@dutterbutter/zksync-sdk": "latest",
-    "ethers": "^6.13.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "viem": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.4",
