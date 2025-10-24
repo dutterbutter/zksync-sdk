@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { describe, it, expect, beforeAll } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 import { formatEnvelopePretty } from '../formatter';
-import chalk from 'chalk';
-
-beforeAll(() => {
-  chalk.level = 0;
-});
 
 describe('errors/formatter.formatEnvelopePretty', () => {
   it('formats a rich envelope with context, step, revert, and cause', () => {

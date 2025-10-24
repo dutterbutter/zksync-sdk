@@ -2,7 +2,6 @@
 
 /* -------------------- Formatting helpers -------------------- */
 import type { ErrorEnvelope } from '../types';
-import chalk from 'chalk';
 
 function elideMiddle(s: string, max = 96): string {
   if (s.length <= max) return s;
@@ -24,7 +23,7 @@ function shortJSON(v: unknown, max = 240): string {
 function kv(label: string, value: string): string {
   const width = 10;
   const pad = label.length >= width ? ' ' : ' '.repeat(width - label.length);
-  return `${chalk.dim(label + pad)}: ${value}`;
+  return `${label}${pad}: ${value}`;
 }
 
 function formatContextLine(ctx?: Record<string, unknown>): string | undefined {
@@ -55,11 +54,11 @@ function formatRevert(r?: ErrorEnvelope['revert']): string | undefined {
   const first = [`selector=${r.selector}`];
   const lines: string[] = [];
   lines.push(`  ${kv('Revert', first.join(' '))}`);
-  if (r.name) lines.push(`              ${chalk.cyan('name=')}${r.name}`);
-  if (r.contract) lines.push(`              ${chalk.cyan('contract=')}${r.contract}`);
-  if (r.fn) lines.push(`              ${chalk.cyan('fn=')}${r.fn}`);
+  if (r.name) lines.push(`              name=${r.name}`);
+  if (r.contract) lines.push(`              contract=${r.contract}`);
+  if (r.fn) lines.push(`              fn=${r.fn}`);
   if (r.args && r.args.length) {
-    lines.push(`              ${chalk.cyan('args=')}${shortJSON(r.args, 120)}`);
+    lines.push(`              args=${shortJSON(r.args, 120)}`);
   }
   return lines.join('\n');
 }
@@ -121,7 +120,7 @@ export function formatEnvelopePretty(e: ErrorEnvelope): string {
   const lines: string[] = [];
 
   // Header
-  lines.push(`${chalk.red('✖')} ${chalk.bold('ZKsyncError')} [${chalk.yellow(e.type)}]`);
+  lines.push(`✖ ZKsyncError [${e.type}]`);
   lines.push(`  ${kv('Message', e.message)}`);
   lines.push('');
 

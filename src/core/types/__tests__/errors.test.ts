@@ -1,7 +1,6 @@
 // core/types/__tests__/errors.test.ts
-import { describe, it, expect, beforeAll } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 import util from 'node:util';
-import chalk from 'chalk';
 
 import {
   ZKsyncError,
@@ -10,11 +9,6 @@ import {
   OP_WITHDRAWALS,
   type ErrorEnvelope,
 } from '../errors';
-
-// Stabilize pretty output (formatter uses chalk)
-beforeAll(() => {
-  chalk.level = 0;
-});
 
 function makeEnvelope(overrides: Partial<ErrorEnvelope> = {}): ErrorEnvelope {
   return {
