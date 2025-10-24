@@ -15,7 +15,7 @@ import {
 import { sepolia } from 'viem/chains';
 import 'viem/window';
 
-import { createViemClient, createViemSdk, type ViemSdk  } from '@dutterbutter/zksync-sdk/viem';
+import { createViemClient, createViemSdk, type ViemSdk } from '@dutterbutter/zksync-sdk/viem';
 import type {
   DepositHandle,
   DepositPlan,
