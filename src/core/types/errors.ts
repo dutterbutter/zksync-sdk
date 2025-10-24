@@ -2,14 +2,13 @@
 
 import { formatEnvelopePretty } from '../errors/formatter';
 
-// --- tiny, safe helpers for browser/Node ---
+// TODO: revisit safeInspect implementation
 const hasSymbolInspect = typeof Symbol === 'function' && typeof Symbol.for === 'function';
 const kInspect: symbol | undefined = hasSymbolInspect
   ? Symbol.for('nodejs.util.inspect.custom')
   : undefined;
 
 function safeInspect(val: unknown): string {
-  // Lightweight “inspect” that won’t explode in the browser
   try {
     if (typeof val === 'string') return val;
     return JSON.stringify(val, null, 2);
@@ -88,6 +87,7 @@ export class ZKsyncError extends Error {
   }
 }
 
+// TODO: revisit kInspect usage
 if (kInspect) {
   Object.defineProperty(ZKsyncError.prototype, kInspect, {
     value(this: ZKsyncError) {
