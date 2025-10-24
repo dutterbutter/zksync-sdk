@@ -8,21 +8,23 @@ import {
   formatEther,
   parseEther,
 } from 'ethers';
-
-import { createEthersClient } from '../../../../src/adapters/ethers/client';
-import { createEthersSdk, type EthersSdk } from '../../../../src/adapters/ethers/sdk';
+import {
+  createEthersClient,
+  createEthersSdk,
+  type EthersSdk,
+} from '@dutterbutter/zksync-sdk/ethers';
+import {
+  ETH_ADDRESS,
+  L1_SOPH_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
+} from '@dutterbutter/zksync-sdk/core';
 import type {
   DepositHandle,
   DepositPlan,
   DepositQuote,
   DepositStatus,
-} from '../../../../src/core/types/flows/deposits';
+} from '@dutterbutter/zksync-sdk/core';
 import type { Address } from '../../../../src/core/types/primitives';
-import {
-  ETH_ADDRESS,
-  L1_SOPH_TOKEN_ADDRESS,
-  L2_BASE_TOKEN_ADDRESS,
-} from '../../../../src/core/constants';
 
 declare global {
   interface Window {

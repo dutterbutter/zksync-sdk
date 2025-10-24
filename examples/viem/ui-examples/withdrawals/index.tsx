@@ -17,15 +17,14 @@ import {
 import { sepolia } from 'viem/chains';
 import 'viem/window';
 
-import { createViemClient } from '../../../../src/adapters/viem/client';
-import { createViemSdk, type ViemSdk } from '../../../../src/adapters/viem/sdk';
+import { createViemClient, createViemSdk, type ViemSdk } from '@dutterbutter/zksync-sdk/viem';
 import type {
   WithdrawHandle,
   WithdrawPlan,
   WithdrawQuote,
   WithdrawalStatus,
-} from '../../../../src/core/types/flows/withdrawals';
-import { ETH_ADDRESS } from '../../../../src/core/constants';
+} from '@dutterbutter/zksync-sdk/core';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';

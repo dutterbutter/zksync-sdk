@@ -9,16 +9,19 @@ import {
   parseEther,
 } from 'ethers';
 
-import { createEthersClient } from '../../../../src/adapters/ethers/client';
-import { createEthersSdk, type EthersSdk } from '../../../../src/adapters/ethers/sdk';
+import {
+  createEthersClient,
+  createEthersSdk,
+  type EthersSdk,
+} from '@dutterbutter/zksync-sdk/ethers';
 import type {
   WithdrawHandle,
   WithdrawPlan,
   WithdrawQuote,
   WithdrawalStatus,
-} from '../../../../src/core/types/flows/withdrawals';
+} from '@dutterbutter/zksync-sdk/core';
 import type { Address, Hex } from '../../../../src/core/types/primitives';
-import { ETH_ADDRESS } from '../../../../src/core/constants';
+import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 declare global {
   interface Window {

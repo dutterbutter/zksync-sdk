@@ -15,19 +15,18 @@ import {
 import { sepolia } from 'viem/chains';
 import 'viem/window';
 
-import { createViemClient } from '../../../../src/adapters/viem/client';
-import { createViemSdk, type ViemSdk } from '../../../../src/adapters/viem/sdk';
+import { createViemClient, createViemSdk, type ViemSdk  } from '@dutterbutter/zksync-sdk/viem';
 import type {
   DepositHandle,
   DepositPlan,
   DepositQuote,
   DepositStatus,
-} from '../../../../src/core/types/flows/deposits';
+} from '@dutterbutter/zksync-sdk/core';
 import {
   ETH_ADDRESS,
   L1_SOPH_TOKEN_ADDRESS,
   L2_BASE_TOKEN_ADDRESS,
-} from '../../../../src/core/constants';
+} from '@dutterbutter/zksync-sdk/core';
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
