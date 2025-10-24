@@ -18,11 +18,15 @@ import type {
   DepositStatus,
 } from '../../../../src/core/types/flows/deposits';
 import type { Address } from '../../../../src/core/types/primitives';
-import { ETH_ADDRESS } from '../../../../src/core/constants';
+import {
+  ETH_ADDRESS,
+  L1_SOPH_TOKEN_ADDRESS,
+  L2_BASE_TOKEN_ADDRESS,
+} from '../../../../src/core/constants';
 
 declare global {
   interface Window {
-    ethereum?: unknown;
+    ethereum?: import('ethers').Eip1193Provider;
   }
 }
 
@@ -42,7 +46,13 @@ const stringify = (value: unknown) =>
     2,
   );
 
-const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
+const describeAmount = (wei: bigint) => `${formatEther(wei)}`;
+const TOKEN_OPTIONS: Array<{ label: string; value: Address }> = [
+  { label: 'ETH', value: ETH_ADDRESS },
+  { label: 'L2 Base Token', value: L2_BASE_TOKEN_ADDRESS },
+  { label: 'SOPH (L1)', value: L1_SOPH_TOKEN_ADDRESS },
+  { label: 'Test Token', value: '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address },
+];
 
 const parseOptionalBigInt = (value: string, label: string) => {
   const trimmed = value.trim();
@@ -86,6 +96,7 @@ function Example() {
   const [error, setError] = useState<string>();
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
   const [amount, setAmount] = useState('0.001');
+  const [token, setToken] = useState<Address>(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
   const [l1GasLimitInput, setL1GasLimitInput] = useState(DEFAULT_L1_GAS_LIMIT.toString());
   const [l1MaxFeeInput, setL1MaxFeeInput] = useState('');
@@ -110,6 +121,11 @@ function Example() {
     if (chainId === 1) return `Mainnet (${chainId})`;
     return `${chainId}`;
   }, [chainId]);
+
+  const tokenLabel = useMemo(
+    () => TOKEN_OPTIONS.find((option) => option.value === token)?.label ?? 'Token',
+    [token],
+  );
 
   const buildParams = () => {
     if (!account) throw new Error('Connect wallet first.');
@@ -142,7 +158,7 @@ function Example() {
 
     return {
       amount: parsedAmount,
-      token: ETH_ADDRESS,
+      token,
       to: destination,
       ...(hasOverrides ? { l1TxOverrides: overrides } : {}),
     } as const;
@@ -308,14 +324,22 @@ function Example() {
       <>
         <section>
           <h2>Wallet</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              marginBottom: '1rem',
+            }}
+          >
             <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}>
+            <label
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}
+            >
               <span>L2 RPC:</span>
               <input
                 value={l2Rpc}
                 onChange={(event) => setL2Rpc(event.target.value)}
-                spellCheck={false}
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
             </label>
@@ -340,12 +364,19 @@ function Example() {
         <div>Connected: {account}</div>
         <div>Wallet Chain: {chainLabel}</div>
         <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%', marginTop: '0.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.4rem',
+            maxWidth: '100%',
+            marginTop: '0.5rem',
+          }}
+        >
           <span>L2 RPC:</span>
           <input
             value={l2Rpc}
             onChange={(event) => setL2Rpc(event.target.value)}
-            spellCheck={false}
             style={{ minWidth: '420px', maxWidth: '100%' }}
           />
         </div>
@@ -362,21 +393,33 @@ function Example() {
           }}
         >
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Amount (ETH)</span>
+            <span>Amount</span>
             <input
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              spellCheck={false}
               inputMode="decimal"
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <span>Token</span>
+            <select
+              value={token}
+              onChange={(event) => setToken(event.target.value as Address)}
+              style={{ minWidth: '420px', maxWidth: '100%' }}
+            >
+              {TOKEN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <span>Recipient (defaults to connected account)</span>
             <input
               value={recipient}
               onChange={(event) => setRecipient(event.target.value)}
-              spellCheck={false}
               placeholder={account}
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />
@@ -397,7 +440,6 @@ function Example() {
               <input
                 value={l1GasLimitInput}
                 onChange={(event) => setL1GasLimitInput(event.target.value)}
-                spellCheck={false}
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
             </label>
@@ -406,7 +448,6 @@ function Example() {
               <input
                 value={l1MaxFeeInput}
                 onChange={(event) => setL1MaxFeeInput(event.target.value)}
-                spellCheck={false}
                 placeholder="Leave blank to auto-estimate"
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
@@ -416,7 +457,6 @@ function Example() {
               <input
                 value={l1PriorityFeeInput}
                 onChange={(event) => setL1PriorityFeeInput(event.target.value)}
-                spellCheck={false}
                 placeholder="Leave blank to auto-estimate"
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
@@ -424,7 +464,7 @@ function Example() {
           </fieldset>
         </div>
         <p style={{ marginTop: '1rem' }}>
-          Depositing {amountLabel} from Sepolia L1 to {targetL2Rpc}.
+          Depositing {amountLabel} {tokenLabel} from Sepolia L1 to {targetL2Rpc}.
         </p>
       </section>
 

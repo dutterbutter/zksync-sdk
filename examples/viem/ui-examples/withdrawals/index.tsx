@@ -11,7 +11,6 @@ import {
   formatEther,
   http,
   parseEther,
-  stringify,
 } from 'viem';
 import { sepolia } from 'viem/chains';
 import 'viem/window';
@@ -68,19 +67,15 @@ const parseOptionalBigInt = (value: string, label: string) => {
   }
 };
 
-const makeZkSyncChain = (rpc: string): Chain => ({
-  id: 300,
-  name: 'zkSync Sepolia',
-  network: 'zksync-sepolia',
+const makeZkSyncChain = (chainId: number, rpc: string): Chain => ({
+  id: chainId,
+  name: `ZKsync Chain ${chainId}`,
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: { http: [rpc] },
     public: { http: [rpc] },
   },
-  blockExplorers: {
-    default: { name: 'zkSync Explorer', url: 'https://sepolia.explorer.zksync.io' },
-  },
-  testnet: true,
+  testnet: chainId !== 324,
 });
 
 interface ResultCardProps {
@@ -104,6 +99,7 @@ function Example() {
   const [account, setAccount] = useState<Address>();
   const [chainId, setChainId] = useState<number>();
   const [sdk, setSdk] = useState<ViemSdk>();
+  const [connectedL2Chain, setConnectedL2Chain] = useState<Chain>();
   const [quote, setQuote] = useState<WithdrawQuote>();
   const [plan, setPlan] = useState<WithdrawPlan<unknown>>();
   const [handle, setHandle] = useState<WithdrawHandle<unknown>>();
@@ -118,8 +114,8 @@ function Example() {
   const [busy, setBusy] = useState<Action | null>(null);
 
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
-  const [amount, setAmount] = useState('0.01');
-  const [token, setToken] = useState(ETH_ADDRESS);
+  const [amount, setAmount] = useState('0.001');
+  const [token, setToken] = useState<string>(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
   const [l2GasLimitInput, setL2GasLimitInput] = useState(DEFAULT_L2_GAS_LIMIT.toString());
   const [l2MaxFeeInput, setL2MaxFeeInput] = useState('');
@@ -144,6 +140,11 @@ function Example() {
     if (chainId === 1) return `Mainnet (${chainId})`;
     return `${chainId}`;
   }, [chainId]);
+
+  const l2ChainLabel = useMemo(() => {
+    if (!connectedL2Chain) return '—';
+    return `${connectedL2Chain.name} (${connectedL2Chain.id})`;
+  }, [connectedL2Chain]);
 
   const buildParams = () => {
     if (!account) throw new Error('Connect wallet first.');
@@ -222,7 +223,15 @@ function Example() {
         transport,
       });
 
-      const zkSyncChain = makeZkSyncChain(targetL2Rpc);
+      let l2ChainId: number;
+      try {
+        const probe = createPublicClient({ transport: http(targetL2Rpc) });
+        l2ChainId = await probe.getChainId();
+      } catch {
+        throw new Error('Failed to fetch chain ID from the provided L2 RPC.');
+      }
+
+      const zkSyncChain = makeZkSyncChain(l2ChainId, targetL2Rpc);
       const l2Public = createPublicClient({ chain: zkSyncChain, transport: http(targetL2Rpc) });
       const l2Wallet = createWalletClient({
         account: addr,
@@ -230,12 +239,19 @@ function Example() {
         transport,
       });
 
-      const client = createViemClient({ l1: l1Client, l2: l2Public, l1Wallet, l2Wallet });
+      // Cast to any to avoid type incompatibilities between different viem installations in monorepo/examples
+      const client = createViemClient({
+        l1: l1Client as any,
+        l2: l2Public as any,
+        l1Wallet: l1Wallet as any,
+        l2Wallet: l2Wallet as any,
+      } as any);
       const instance = createViemSdk(client);
 
       const chain = await l1Wallet.getChainId().catch(() => undefined);
 
       setSdk(instance);
+      setConnectedL2Chain(zkSyncChain);
       setAccount(addr as Address);
       setChainId(chain ? Number(chain) : undefined);
       setRecipient((prev) => prev || (addr as Address));
@@ -267,6 +283,32 @@ function Example() {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(null);
+    }
+  };
+
+  const assertWalletOnL2 = async () => {
+    if (!connectedL2Chain) {
+      throw new Error('Connect wallet again to resolve the target L2 chain.');
+    }
+    if (!window.ethereum || typeof window.ethereum.request !== 'function') {
+      throw new Error('No injected wallet found. Install MetaMask or a compatible wallet.');
+    }
+
+    let currentChainId: number | undefined;
+    try {
+      const currentHex = await window.ethereum.request({ method: 'eth_chainId' });
+      if (typeof currentHex === 'string') {
+        const parsed = Number.parseInt(currentHex, 16);
+        if (Number.isFinite(parsed)) currentChainId = parsed;
+      }
+    } catch {
+      // ignore inability to read chain id; continue best effort
+    }
+
+    if (currentChainId != null && currentChainId !== connectedL2Chain.id) {
+      throw new Error(
+        `Switch your wallet to chain id ${connectedL2Chain.id} before submitting the withdrawal.`,
+      );
     }
   };
 
@@ -303,6 +345,7 @@ function Example() {
     await run(
       'create',
       async () => {
+        await assertWalletOnL2();
         const params = buildParams();
         const result = await sdk.withdrawals.tryCreate(params);
         if (!result.ok) throw result.error;
@@ -399,14 +442,22 @@ function Example() {
       <>
         <section>
           <h2>Wallet</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              marginBottom: '1rem',
+            }}
+          >
             <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}>
+            <label
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}
+            >
               <span>L2 RPC:</span>
               <input
                 value={l2Rpc}
                 onChange={(event) => setL2Rpc(event.target.value)}
-                spellCheck={false}
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
             </label>
@@ -430,13 +481,21 @@ function Example() {
         <h2>Wallet</h2>
         <div>Connected: {account}</div>
         <div>Wallet Chain: {chainLabel}</div>
+        <div>L2 Chain: {l2ChainLabel}</div>
         <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%', marginTop: '0.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.4rem',
+            maxWidth: '100%',
+            marginTop: '0.5rem',
+          }}
+        >
           <span>L2 RPC:</span>
           <input
             value={l2Rpc}
             onChange={(event) => setL2Rpc(event.target.value)}
-            spellCheck={false}
             style={{ minWidth: '420px', maxWidth: '100%' }}
           />
         </div>
@@ -457,7 +516,6 @@ function Example() {
             <input
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              spellCheck={false}
               inputMode="decimal"
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />
@@ -467,7 +525,6 @@ function Example() {
             <input
               value={token}
               onChange={(event) => setToken(event.target.value)}
-              spellCheck={false}
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />
           </label>
@@ -476,7 +533,6 @@ function Example() {
             <input
               value={recipient}
               onChange={(event) => setRecipient(event.target.value)}
-              spellCheck={false}
               placeholder={account}
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />
@@ -486,7 +542,6 @@ function Example() {
             <input
               value={l2GasLimitInput}
               onChange={(event) => setL2GasLimitInput(event.target.value)}
-              spellCheck={false}
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />
           </label>
@@ -506,7 +561,6 @@ function Example() {
               <input
                 value={l2MaxFeeInput}
                 onChange={(event) => setL2MaxFeeInput(event.target.value)}
-                spellCheck={false}
                 placeholder="Leave blank to auto-estimate"
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
@@ -516,7 +570,6 @@ function Example() {
               <input
                 value={l2PriorityFeeInput}
                 onChange={(event) => setL2PriorityFeeInput(event.target.value)}
-                spellCheck={false}
                 placeholder="Leave blank to auto-estimate"
                 style={{ minWidth: '420px', maxWidth: '100%' }}
               />
@@ -527,7 +580,6 @@ function Example() {
             <input
               value={l2TxInput}
               onChange={(event) => setL2TxInput(event.target.value)}
-              spellCheck={false}
               placeholder="0x…"
               style={{ minWidth: '420px', maxWidth: '100%' }}
             />

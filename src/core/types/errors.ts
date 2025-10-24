@@ -3,10 +3,10 @@
 import { formatEnvelopePretty } from '../errors/formatter';
 
 // --- tiny, safe helpers for browser/Node ---
-const kInspect: symbol | undefined =
-  typeof Symbol === 'function' && typeof (Symbol as any).for === 'function'
-    ? (Symbol as any).for('nodejs.util.inspect.custom')
-    : undefined;
+const hasSymbolInspect = typeof Symbol === 'function' && typeof Symbol.for === 'function';
+const kInspect: symbol | undefined = hasSymbolInspect
+  ? Symbol.for('nodejs.util.inspect.custom')
+  : undefined;
 
 function safeInspect(val: unknown): string {
   // Lightweight “inspect” that won’t explode in the browser
@@ -86,12 +86,15 @@ export class ZKsyncError extends Error {
   toJSON() {
     return { name: this.name, ...this.envelope };
   }
+}
 
-  if (kInspect) {
-  (ZKsyncError.prototype)[kInspect] = function (this: ZKsyncError) {
+if (kInspect) {
+  Object.defineProperty(ZKsyncError.prototype, kInspect, {
+    value(this: ZKsyncError) {
       return `${this.name}: ${formatEnvelopePretty(this.envelope)}`;
-    };
-  }
+    },
+    enumerable: false,
+  });
 }
 
 //  ---- Factory & type guards ----
@@ -158,15 +161,7 @@ export function isReceiptNotFound(e: unknown): boolean {
     if (typeof msg === 'string' && msg) return msg;
     if (e == null) return '';
     if (typeof e === 'string') return e;
-    try {
-      return util.inspect(e, { depth: 5 });
-    } catch {
-      try {
-        return JSON.stringify(e);
-      } catch {
-        return Object.prototype.toString.call(e);
-      }
-    }
+    return safeInspect(e);
   })();
   return MSG_RE.test(raw);
 }

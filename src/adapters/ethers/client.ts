@@ -40,6 +40,10 @@ export interface EthersClient {
   readonly l2: AbstractProvider;
   /** Signer used for sends (must be connected to L1 provider for L1 txs) */
   readonly signer: Signer;
+  /** Returns a signer bound to the L1 provider (never calls connect on browser-backed signers). */
+  getL1Signer(): Signer;
+  /** Returns a signer bound to the L2 provider (never calls connect on browser-backed signers). */
+  getL2Signer(): Signer;
   /** ZK Sync-specific RPC methods */
   readonly zks: ZksRpc;
 
@@ -210,6 +214,28 @@ export function createEthersClient(args: InitArgs): EthersClient {
     cCache = undefined;
   }
 
+  function resolveSignerFor(provider: AbstractProvider): Signer {
+    const signerProvider = boundSigner.provider;
+
+    if (signerProvider === provider) {
+      return boundSigner;
+    }
+
+    if (!isBrowserProvider && typeof boundSigner.connect === 'function') {
+      return boundSigner.connect(provider);
+    }
+
+    if (!signerProvider) {
+      throw createError('STATE', {
+        resource: 'helpers',
+        message: 'Signer has no associated provider; cannot resolve requested signer.',
+        operation: 'client.resolveSignerFor',
+      });
+    }
+
+    return boundSigner;
+  }
+
   // lookup base token for a given chain ID via Bridgehub.baseToken(chainId)
   async function baseToken(chainId: bigint): Promise<Address> {
     const { bridgehub } = await ensureAddresses();
@@ -223,6 +249,12 @@ export function createEthersClient(args: InitArgs): EthersClient {
     l1,
     l2,
     signer: boundSigner,
+    getL1Signer() {
+      return resolveSignerFor(l1);
+    },
+    getL2Signer() {
+      return resolveSignerFor(l2);
+    },
     zks,
     ensureAddresses,
     contracts,

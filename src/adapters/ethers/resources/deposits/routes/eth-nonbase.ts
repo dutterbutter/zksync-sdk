@@ -127,7 +127,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
 
       // Ensure base-token allowance to L1AssetRouter for `mintValue`
       {
-        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.signer.connect(ctx.client.l1));
+        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.getL1Signer());
         const allowance = (await wrapAs(
           'RPC',
           OP_DEPOSITS.ethNonBase.allowanceBase,

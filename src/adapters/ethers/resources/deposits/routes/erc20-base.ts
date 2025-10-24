@@ -106,7 +106,7 @@ export function routeErc20Base(): DepositRouteStrategy {
 
       // Check allowance for base token -> L1AssetRouter
       {
-        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.signer.connect(ctx.client.l1));
+        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.getL1Signer());
         const allowance = (await wrapAs(
           'RPC',
           OP_DEPOSITS.base.allowance,

@@ -85,7 +85,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       const approvals: ApprovalNeed[] = [];
       const steps: PlanStep<TransactionRequest>[] = [];
 
-      const l1Signer = ctx.client.signer.connect(ctx.client.l1);
+      const l1Signer = ctx.client.getL1Signer();
 
       // Always ensure deposit token approval for the amount
       {
