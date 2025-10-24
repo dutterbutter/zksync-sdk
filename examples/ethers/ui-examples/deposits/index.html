@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ethers — deposit ETH to L2</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>ethers — Deposit ETH → zkSync (L1→L2)</h1>
+
+      <div class="card">
+        <button id="connect">Connect Wallet</button>
+        <div id="acct"></div>
+        <div id="net"></div>
+      </div>
+
+      <div class="card">
+        <label>L2 RPC URL</label>
+        <input id="l2Rpc" value="https://sepolia.era.zksync.dev" />
+        <label>Amount (ETH)</label>
+        <input id="amount" value="0.01" />
+        <label>Recipient</label>
+        <input id="to" placeholder="defaults to connected account" />
+        <div class="row">
+          <button id="btn-quote">Quote</button>
+          <button id="btn-prepare">Prepare</button>
+          <button id="btn-create">Create</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Operation ID</label>
+        <input id="opid" placeholder="filled after Create()" />
+        <div class="row">
+          <button id="btn-status">Status</button>
+          <button id="btn-wait">Wait (finalized)</button>
+        </div>
+      </div>
+
+      <pre id="log"></pre>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
