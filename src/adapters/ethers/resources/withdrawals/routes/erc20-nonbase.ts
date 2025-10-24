@@ -33,9 +33,8 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
           ? { maxFeePerGas, maxPriorityFeePerGas, gasLimit: overrideGasLimit }
           : { maxFeePerGas, maxPriorityFeePerGas };
 
-      const l2Signer = ctx.client.signer.connect(ctx.client.l2);
       // L2 allowance
-      const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
+      const erc20 = new Contract(p.token, IERC20ABI, ctx.client.getL2Signer());
       const current: bigint = (await wrapAs(
         'CONTRACT',
         OP_WITHDRAWALS.erc20.allowance,

@@ -189,9 +189,8 @@ export function createWithdrawalsResource(client: EthersClient): WithdrawalsReso
         const plan = await prepare(p);
         const stepHashes: Record<string, Hex> = {};
 
-        const managed = new NonceManager(client.signer);
+        const managed = new NonceManager(client.getL2Signer());
         const from = await managed.getAddress();
-        const l2Signer = managed.connect(client.l2);
         let next = await client.l2.getTransactionCount(from, 'pending');
 
         for (const step of plan.steps) {
@@ -217,7 +216,7 @@ export function createWithdrawalsResource(client: EthersClient): WithdrawalsReso
 
           let hash: Hex | undefined;
           try {
-            const sent = await l2Signer.sendTransaction(step.tx);
+            const sent = await managed.sendTransaction(step.tx);
             hash = sent.hash as Hex;
             stepHashes[step.key] = hash;
 
