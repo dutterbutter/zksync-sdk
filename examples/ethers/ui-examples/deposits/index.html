@@ -3,45 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ethers — deposit ETH to L2</title>
-    <link rel="stylesheet" href="/src/style.css" />
+    <title>Deposit ETH to L2</title>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="wrap">
-      <h1>ethers — Deposit ETH → zkSync (L1→L2)</h1>
-
-      <div class="card">
-        <button id="connect">Connect Wallet</button>
-        <div id="acct"></div>
-        <div id="net"></div>
-      </div>
-
-      <div class="card">
-        <label>L2 RPC URL</label>
-        <input id="l2Rpc" value="https://sepolia.era.zksync.dev" />
-        <label>Amount (ETH)</label>
-        <input id="amount" value="0.01" />
-        <label>Recipient</label>
-        <input id="to" placeholder="defaults to connected account" />
-        <div class="row">
-          <button id="btn-quote">Quote</button>
-          <button id="btn-prepare">Prepare</button>
-          <button id="btn-create">Create</button>
+    <div class="app">
+      <header class="panel header-panel">
+        <div class="header-top">
+          <button id="connect" class="btn btn-primary">Connect Wallet</button>
+          <div class="connected">
+            <span class="label">Connected:</span>
+            <span id="acct" class="value">—</span>
+          </div>
         </div>
-      </div>
+        <div id="net" class="route-banner">From: — → To: —</div>
+      </header>
 
-      <div class="card">
-        <label>Operation ID</label>
-        <input id="opid" placeholder="filled after Create()" />
-        <div class="row">
-          <button id="btn-status">Status</button>
-          <button id="btn-wait">Wait (finalized)</button>
+      <section class="panel inputs-panel">
+        <div class="fields-grid">
+          <div class="field">
+            <label for="l2Rpc">L2 RPC URL</label>
+            <input
+              id="l2Rpc"
+              value="https://zksync-os-testnet-alpha.zksync.dev/"
+            />
+          </div>
+          <div class="field">
+            <label for="amount">Amount (ETH)</label>
+            <input id="amount" inputmode="decimal" value="0.01" />
+          </div>
+          <div class="field">
+            <label for="to">Recipient</label>
+            <input id="to" placeholder="defaults to connected account" />
+          </div>
         </div>
-      </div>
 
-      <pre id="log"></pre>
+        <div class="actions-row">
+          <button id="btn-quote" class="btn">Quote</button>
+          <button id="btn-prepare" class="btn">Prepare</button>
+          <button id="btn-create" class="btn btn-primary">Create</button>
+        </div>
+
+        <div class="tx-row">
+          <div class="field">
+            <label for="opid">L1 transaction hash</label>
+            <input id="opid" placeholder="auto-filled after Create()" />
+          </div>
+          <div class="tx-buttons">
+            <button id="btn-status" class="btn">Status</button>
+            <button id="btn-wait" class="btn">Wait (finalized)</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="results-panel">
+        <div class="results-header">
+          <h2>Results</h2>
+          <div id="create-meta" class="create-meta"></div>
+        </div>
+        <div class="results-grid">
+          <article class="result-card" id="card-quote"></article>
+          <article class="result-card" id="card-prepare"></article>
+          <article class="result-card" id="card-create"></article>
+          <article class="result-card" id="card-status"></article>
+          <article class="result-card" id="card-wait"></article>
+        </div>
+      </section>
     </div>
 
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="main.ts"></script>
   </body>
 </html>

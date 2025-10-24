@@ -1,7 +1,26 @@
 // src/core/types/errors.ts
 
-import util from 'node:util';
 import { formatEnvelopePretty } from '../errors/formatter';
+
+// --- tiny, safe helpers for browser/Node ---
+const kInspect: symbol | undefined =
+  typeof Symbol === 'function' && typeof (Symbol as any).for === 'function'
+    ? (Symbol as any).for('nodejs.util.inspect.custom')
+    : undefined;
+
+function safeInspect(val: unknown): string {
+  // Lightweight “inspect” that won’t explode in the browser
+  try {
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val, null, 2);
+  } catch {
+    try {
+      return String(val);
+    } catch {
+      return Object.prototype.toString.call(val);
+    }
+  }
+}
 
 // TODO: revisit these types
 export type ErrorType =
@@ -64,12 +83,14 @@ export class ZKsyncError extends Error {
     this.name = 'ZKsyncError';
   }
 
-  [util.inspect.custom]() {
-    return `${this.name}: ${formatEnvelopePretty(this.envelope)}`;
-  }
-
   toJSON() {
     return { name: this.name, ...this.envelope };
+  }
+
+  if (kInspect) {
+  (ZKsyncError.prototype)[kInspect] = function (this: ZKsyncError) {
+      return `${this.name}: ${formatEnvelopePretty(this.envelope)}`;
+    };
   }
 }
 

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>zkSync SDK – Ethers Deposit Demo</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="card" id="connect-card">
+        <h1>zkSync Deposit (ethers)</h1>
+        <button id="connect">Connect Wallet</button>
+        <div id="acct" class="label">Not connected</div>
+        <div id="net" class="label route">From: L1 Ethereum Sepolia (Injected Wallet, chainId 11155111) → To: zkSync L2 (RPC: https://sepolia.era.zksync.dev)</div>
+        <p class="hint">If no wallet popup appears, open this demo in a new browser window (iframes block MetaMask prompts).</p>
+      </section>
+
+      <section class="card" id="deposit-card">
+        <h2>Deposit</h2>
+        <label>
+          To (L2 RPC URL)
+          <input id="l2Rpc" type="text" value="https://sepolia.era.zksync.dev" />
+        </label>
+        <label>
+          Amount (ETH)
+          <input id="amount" type="number" min="0" step="0.0001" value="0.01" />
+        </label>
+        <label>
+          Recipient
+          <input id="to" type="text" placeholder="Defaults to connected address" />
+        </label>
+        <div class="actions">
+          <button id="btn-quote">Quote</button>
+          <button id="btn-prepare">Prepare</button>
+          <button id="btn-create">Create</button>
+        </div>
+      </section>
+
+      <section class="card" id="op-card">
+        <h2>Operation</h2>
+        <label>
+          Operation ID
+          <input id="opid" type="text" placeholder="Filled after Create" />
+        </label>
+        <div class="actions">
+          <button id="btn-status">Status</button>
+          <button id="btn-wait">Wait (finalized)</button>
+        </div>
+      </section>
+    </main>
+
+    <pre id="log" class="log"></pre>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
