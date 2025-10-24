@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   BrowserProvider,
@@ -66,11 +66,11 @@ const parseOptionalBigInt = (value: string, label: string) => {
 
 interface ResultCardProps {
   title: string;
-  data: unknown;
+  data: unknown | null | undefined;
 }
 
 function ResultCard({ title, data }: ResultCardProps) {
-  if (data === undefined) return null;
+  if (data == null) return null;
   return (
     <section className="result-card">
       <h3>{title}</h3>
@@ -88,7 +88,8 @@ function Example() {
   const [sdk, setSdk] = useState<EthersSdk>();
   const [l1Provider, setL1Provider] = useState<JsonRpcProvider | null>(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [connectedL2Rpc, setConnectedL2Rpc] = useState<string>(DEFAULT_L2_RPC);
+  const [connectedL2Rpc, setConnectedL2Rpc] = useState(DEFAULT_L2_RPC);
+
   const [quote, setQuote] = useState<WithdrawQuote>();
   const [plan, setPlan] = useState<WithdrawPlan<unknown>>();
   const [handle, setHandle] = useState<WithdrawHandle<unknown>>();
@@ -99,6 +100,7 @@ function Example() {
   const [finalizeResult, setFinalizeResult] = useState<
     { status: WithdrawalStatus; receipt?: TransactionReceipt } | undefined
   >();
+
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState<Action | null>(null);
 
@@ -137,7 +139,39 @@ function Example() {
     return `${connectedL2ChainId}`;
   }, [connectedL2ChainId]);
 
-  const buildParams = () => {
+  const run = useCallback(
+    async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
+      setBusy(action);
+      setError(undefined);
+      try {
+        const value = await fn();
+        onSuccess?.(value);
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setBusy(null);
+      }
+    },
+    [],
+  );
+
+  const refreshSdkIfNeeded = useCallback(async (): Promise<EthersSdk> => {
+    if (!signer || !l1Provider) throw new Error('Connect wallet first.');
+    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
+
+    const l2Provider = new JsonRpcProvider(targetL2Rpc);
+    const client = createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
+    const instance = createEthersSdk(client);
+    const { chainId } = await l2Provider.getNetwork();
+
+    setSdk(instance);
+    setConnectedL2Rpc(targetL2Rpc);
+    setConnectedL2ChainId(Number(chainId));
+    return instance;
+  }, [connectedL2Rpc, l1Provider, sdk, signer, targetL2Rpc]);
+
+  const buildParams = useCallback(() => {
     if (!account) throw new Error('Connect wallet first.');
 
     const trimmedAmount = amount.trim();
@@ -179,6 +213,73 @@ function Example() {
       ...(l2GasLimit != null ? { l2GasLimit } : {}),
       ...(hasOverrides ? { l2TxOverrides: overrides } : {}),
     } as const;
+  }, [account, amount, token, recipient, l2GasLimitInput, l2MaxFeeInput, l2PriorityFeeInput]);
+
+  const connectWallet = useCallback(
+    () =>
+      run(
+        'connect',
+        async () => {
+          if (!window.ethereum) {
+            throw new Error('No injected wallet found. Install MetaMask or another wallet.');
+          }
+
+          const browserProvider = new BrowserProvider(window.ethereum);
+          await browserProvider.send('eth_requestAccounts', []);
+          const nextSigner = (await browserProvider.getSigner()) as JsonRpcSigner;
+          const addr = (await nextSigner.getAddress()) as Address;
+          const walletNetwork = await browserProvider.getNetwork();
+
+          const l1 = new JsonRpcProvider(DEFAULT_L1_RPC);
+          const l2 = new JsonRpcProvider(targetL2Rpc);
+          const client = createEthersClient({ l1, l2, signer: nextSigner });
+          const instance = createEthersSdk(client);
+          const { chainId: l2ChainId } = await l2.getNetwork();
+
+          return {
+            instance,
+            l1Provider: l1,
+            signer: nextSigner,
+            addr,
+            walletChainId: Number(walletNetwork.chainId),
+            l2ChainId: Number(l2ChainId),
+          };
+        },
+        ({ instance, l1Provider: l1, signer: nextSigner, addr, walletChainId, l2ChainId }) => {
+          setSdk(instance);
+          setL1Provider(l1);
+          setSigner(nextSigner);
+          setAccount(addr);
+          setWalletChainId(walletChainId);
+          setConnectedL2ChainId(l2ChainId);
+          setConnectedL2Rpc(targetL2Rpc);
+          setRecipient((prev) => prev || addr);
+          setQuote(undefined);
+          setPlan(undefined);
+          setHandle(undefined);
+          setStatus(undefined);
+          setWaitL2Result(undefined);
+          setWaitReadyResult(undefined);
+          setWaitFinalizedResult(undefined);
+          setFinalizeResult(undefined);
+          setL2TxInput('');
+        },
+      ),
+    [run, targetL2Rpc],
+  );
+
+  const hasWaitableInput = handle != null || Boolean(l2TxInput.trim());
+  const hasFinalizeHash = Boolean(l2TxInput.trim() || handle?.l2TxHash);
+
+  const actionDisabled = (
+    action: Action,
+    opts?: { requiresWaitable?: boolean; requiresHash?: boolean },
+  ) => {
+    if (busy && busy !== action) return true;
+    if (!account && action !== 'connect') return true;
+    if (opts?.requiresWaitable && !hasWaitableInput) return true;
+    if (opts?.requiresHash && !hasFinalizeHash) return true;
+    return false;
   };
 
   const resolveWaitable = () => {
@@ -195,459 +296,333 @@ function Example() {
     return null;
   };
 
-  const refreshSdkIfNeeded = async (): Promise<EthersSdk> => {
-    if (!signer || !l1Provider) throw new Error('Connect wallet first.');
-    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
-
-    const l2Provider = new JsonRpcProvider(targetL2Rpc);
-    const client = createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
-    const instance = createEthersSdk(client);
-
-    const { chainId } = await l2Provider.getNetwork();
-    setSdk(instance);
-    setConnectedL2Rpc(targetL2Rpc);
-    setConnectedL2ChainId(Number(chainId));
-    return instance;
-  };
-
-  const connect = async () => {
-    setBusy('connect');
-    setError(undefined);
-    try {
-      if (!window.ethereum) {
-        throw new Error('No injected wallet found. Install MetaMask or a compatible wallet.');
-      }
-
-      const browserProvider = new BrowserProvider(window.ethereum);
-      await browserProvider.send('eth_requestAccounts', []);
-      const nextSigner = (await browserProvider.getSigner()) as JsonRpcSigner;
-      const addr = (await nextSigner.getAddress()) as Address;
-      const walletNetwork = await browserProvider.getNetwork();
-
-      const l1 = new JsonRpcProvider(DEFAULT_L1_RPC);
-      const l2 = new JsonRpcProvider(targetL2Rpc);
-      const client = createEthersClient({ l1, l2, signer: nextSigner });
-      const instance = createEthersSdk(client);
-
-      const { chainId: l2ChainId } = await l2.getNetwork();
-
-      setSdk(instance);
-      setL1Provider(l1);
-      setSigner(nextSigner);
-      setAccount(addr);
-      setWalletChainId(Number(walletNetwork.chainId));
-      setConnectedL2ChainId(Number(l2ChainId));
-      setConnectedL2Rpc(targetL2Rpc);
-      setRecipient((prev) => prev || addr);
-      setQuote(undefined);
-      setPlan(undefined);
-      setHandle(undefined);
-      setStatus(undefined);
-      setWaitL2Result(undefined);
-      setWaitReadyResult(undefined);
-      setWaitFinalizedResult(undefined);
-      setFinalizeResult(undefined);
-      setL2TxInput('');
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const run = async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
-    setBusy(action);
-    setError(undefined);
-    try {
-      const value = await fn();
-      onSuccess?.(value);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const assertWalletOnL2 = async () => {
+  const assertWalletOnL2 = useCallback(async () => {
     if (!signer) throw new Error('Connect wallet first.');
     if (!connectedL2ChainId) {
       throw new Error('Connect wallet again to resolve the target L2 chain.');
     }
     try {
       const network = await signer.provider?.getNetwork();
-      if (network) {
-        const current = Number(network.chainId);
-        if (current !== connectedL2ChainId) {
-          throw new Error(
-            `Switch your wallet to chain id ${connectedL2ChainId} before submitting the withdrawal.`,
-          );
-        }
+      if (network && Number(network.chainId) !== connectedL2ChainId) {
+        throw new Error(
+          `Switch your wallet to chain id ${connectedL2ChainId} before submitting the withdrawal.`,
+        );
       }
     } catch {
-      // Ignore inability to read; continue best effort.
+      throw new Error('Unable to verify wallet chain. Please switch to the target L2.');
     }
-  };
+  }, [connectedL2ChainId, signer]);
 
-  const assertWalletOnL1 = async () => {
+  const assertWalletOnL1 = useCallback(async () => {
     if (!signer) throw new Error('Connect wallet first.');
     try {
       const network = await signer.provider?.getNetwork();
-      if (network) {
-        const current = Number(network.chainId);
-        if (current !== DEFAULT_L1_CHAIN_ID) {
-          throw new Error(
-            `Switch your wallet to Sepolia (chain id ${DEFAULT_L1_CHAIN_ID}) before finalizing.`,
-          );
-        }
+      if (network && Number(network.chainId) !== DEFAULT_L1_CHAIN_ID) {
+        throw new Error(
+          `Switch your wallet to Sepolia (chain id ${DEFAULT_L1_CHAIN_ID}) before finalizing.`,
+        );
       }
     } catch {
-      // Ignore inability to read chain id.
+      throw new Error('Unable to verify wallet chain. Switch to Sepolia to finalize.');
     }
-  };
+  }, [signer]);
 
-  const quoteWithdrawal = async () => {
-    if (!signer) return;
-    await run(
-      'quote',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        const params = buildParams();
-        const result = await currentSdk.withdrawals.tryQuote(params);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => setQuote(value),
-    );
-  };
+  const quoteWithdrawal = useCallback(
+    () =>
+      run(
+        'quote',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.withdrawals.tryQuote(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setQuote(value),
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
 
-  const prepareWithdrawal = async () => {
-    if (!signer) return;
-    await run(
-      'prepare',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        const params = buildParams();
-        const result = await currentSdk.withdrawals.tryPrepare(params);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => setPlan(value),
-    );
-  };
+  const prepareWithdrawal = useCallback(
+    () =>
+      run(
+        'prepare',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.withdrawals.tryPrepare(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setPlan(value),
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
 
-  const createWithdrawal = async () => {
-    if (!signer) return;
-    await run(
-      'create',
-      async () => {
-        await assertWalletOnL2();
-        const currentSdk = await refreshSdkIfNeeded();
-        const params = buildParams();
-        const result = await currentSdk.withdrawals.tryCreate(params);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => {
-        setHandle(value);
-        setStatus(undefined);
-        setWaitL2Result(undefined);
-        setWaitReadyResult(undefined);
-        setWaitFinalizedResult(undefined);
-        setFinalizeResult(undefined);
-        setL2TxInput(value.l2TxHash ?? '');
-      },
-    );
-  };
+  const createWithdrawal = useCallback(
+    () =>
+      run(
+        'create',
+        async () => {
+          await assertWalletOnL2();
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.withdrawals.tryCreate(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => {
+          setHandle(value);
+          setStatus(undefined);
+          setWaitL2Result(undefined);
+          setWaitReadyResult(undefined);
+          setWaitFinalizedResult(undefined);
+          setFinalizeResult(undefined);
+          setL2TxInput(value.l2TxHash ?? '');
+        },
+      ),
+    [assertWalletOnL2, buildParams, refreshSdkIfNeeded, run],
+  );
 
-  const checkStatus = async () => {
-    if (!signer) return;
-    const waitable = resolveWaitable();
-    if (!waitable) {
-      setError('Provide an L2 transaction hash or create a withdrawal first.');
-      return;
-    }
-    await run(
-      'status',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        return currentSdk.withdrawals.status(waitable);
-      },
-      (value) => setStatus(value),
-    );
-  };
+  const checkStatus = useCallback(
+    () =>
+      run(
+        'status',
+        async () => {
+          const waitable = resolveWaitable();
+          if (!waitable) throw new Error('Provide an L2 transaction hash or create a withdrawal.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.withdrawals.status(waitable);
+        },
+        (value) => setStatus(value),
+      ),
+    [refreshSdkIfNeeded, run],
+  );
 
-  const waitForL2 = async () => {
-    if (!signer) return;
-    const waitable = resolveWaitable();
-    if (!waitable) {
-      setError('Provide an L2 transaction hash or create a withdrawal first.');
-      return;
-    }
-    await run(
-      'waitL2',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        return currentSdk.withdrawals.wait(waitable, { for: 'l2' });
-      },
-      (value) => setWaitL2Result(value),
-    );
-  };
+  const waitForL2 = useCallback(
+    () =>
+      run(
+        'waitL2',
+        async () => {
+          const waitable = resolveWaitable();
+          if (!waitable) throw new Error('Provide an L2 transaction hash or create a withdrawal.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.withdrawals.wait(waitable, { for: 'l2' });
+        },
+        (value) => setWaitL2Result(value),
+      ),
+    [refreshSdkIfNeeded, run],
+  );
 
-  const waitForReady = async () => {
-    if (!signer) return;
-    const waitable = resolveWaitable();
-    if (!waitable) {
-      setError('Provide an L2 transaction hash or create a withdrawal first.');
-      return;
-    }
-    await run(
-      'waitReady',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        return currentSdk.withdrawals.wait(waitable, { for: 'ready' });
-      },
-      (value) => setWaitReadyResult(value ?? { ready: true }),
-    );
-  };
+  const waitForReady = useCallback(
+    () =>
+      run(
+        'waitReady',
+        async () => {
+          const waitable = resolveWaitable();
+          if (!waitable) throw new Error('Provide an L2 transaction hash or create a withdrawal.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.withdrawals.wait(waitable, { for: 'ready' });
+        },
+        (value) => setWaitReadyResult(value ?? { ready: true }),
+      ),
+    [refreshSdkIfNeeded, run],
+  );
 
-  const waitForFinalized = async () => {
-    if (!signer) return;
-    const waitable = resolveWaitable();
-    if (!waitable) {
-      setError('Provide an L2 transaction hash or create a withdrawal first.');
-      return;
-    }
-    await run(
-      'waitFinalized',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        return currentSdk.withdrawals.wait(waitable, { for: 'finalized' });
-      },
-      (value) => setWaitFinalizedResult(value ?? null),
-    );
-  };
+  const waitForFinalized = useCallback(
+    () =>
+      run(
+        'waitFinalized',
+        async () => {
+          const waitable = resolveWaitable();
+          if (!waitable) throw new Error('Provide an L2 transaction hash or create a withdrawal.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.withdrawals.wait(waitable, { for: 'finalized' });
+        },
+        (value) => setWaitFinalizedResult(value ?? null),
+      ),
+    [refreshSdkIfNeeded, run],
+  );
 
-  const finalizeWithdrawal = async () => {
-    if (!signer) return;
-    const hash = resolveL2Hash();
-    if (!hash) {
-      setError('Provide an L2 transaction hash or create a withdrawal first.');
-      return;
-    }
-    await run(
-      'finalize',
-      async () => {
-        await assertWalletOnL1();
-        const currentSdk = await refreshSdkIfNeeded();
-        const result = await currentSdk.withdrawals.tryFinalize(hash as Hex);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => setFinalizeResult(value),
-    );
-  };
-
-  if (!account) {
-    return (
-      <>
-        <section>
-          <h2>Wallet</h2>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              marginBottom: '1rem',
-            }}
-          >
-            <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-            <label
-              style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}
-            >
-              <span>L2 RPC:</span>
-              <input
-                value={l2Rpc}
-                onChange={(event) => setL2Rpc(event.target.value)}
-                style={{ minWidth: '420px', maxWidth: '100%' }}
-              />
-            </label>
-          </div>
-          <button onClick={connect} disabled={busy === 'connect'}>
-            {busy === 'connect' ? 'Connecting…' : 'Connect Wallet'}
-          </button>
-        </section>
-        {error && (
-          <section className="error">
-            <div>Error: {error}</div>
-          </section>
-        )}
-      </>
-    );
-  }
+  const finalizeWithdrawal = useCallback(
+    () =>
+      run(
+        'finalize',
+        async () => {
+          const hash = resolveL2Hash();
+          if (!hash) throw new Error('Provide an L2 transaction hash or create a withdrawal.');
+          await assertWalletOnL1();
+          const currentSdk = await refreshSdkIfNeeded();
+          const result = await currentSdk.withdrawals.tryFinalize(hash);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setFinalizeResult(value),
+      ),
+    [assertWalletOnL1, refreshSdkIfNeeded, run],
+  );
 
   return (
-    <>
+    <main>
+      <h1>Ethers Withdrawals (UI example)</h1>
+
       <section>
         <h2>Wallet</h2>
-        <div>Connected: {account}</div>
-        <div>Wallet Chain: {walletChainLabel}</div>
-        <div>L2 Chain: {l2ChainLabel}</div>
-        <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.4rem',
-            maxWidth: '100%',
-            marginTop: '0.5rem',
-          }}
-        >
-          <span>L2 RPC:</span>
-          <input
-            value={l2Rpc}
-            onChange={(event) => setL2Rpc(event.target.value)}
-            style={{ minWidth: '420px', maxWidth: '100%' }}
-          />
+        <div className="field">
+          <label>Account</label>
+          <input readOnly value={account ?? ''} placeholder="Not connected" />
         </div>
+        <div className="inline-fields">
+          <div className="field">
+            <label>L1 RPC</label>
+            <input readOnly value={DEFAULT_L1_RPC} />
+          </div>
+          <div className="field">
+            <label>Wallet chain</label>
+            <input readOnly value={walletChainLabel} />
+          </div>
+          <div className="field">
+            <label>zkSync RPC</label>
+            <input
+              value={l2Rpc}
+              onChange={(event) => setL2Rpc(event.target.value)}
+              placeholder={DEFAULT_L2_RPC}
+            />
+          </div>
+          <div className="field">
+            <label>zkSync chain</label>
+            <input readOnly value={l2ChainLabel} />
+          </div>
+        </div>
+        <button onClick={connectWallet} disabled={actionDisabled('connect')}>
+          {busy === 'connect' ? 'Connecting…' : account ? 'Reconnect' : 'Connect Wallet'}
+        </button>
       </section>
 
       <section>
-        <h2>Withdrawal Parameters</h2>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-            maxWidth: '520px',
-          }}
-        >
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Amount (ETH)</span>
-            <input
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              inputMode="decimal"
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Token Address</span>
-            <input
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Recipient (defaults to connected account)</span>
-            <input
-              value={recipient}
-              onChange={(event) => setRecipient(event.target.value)}
-              placeholder={account}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>L2 Gas Limit</span>
+        <h2>Withdrawal parameters</h2>
+        <div className="field">
+          <label>Amount (ETH)</label>
+          <input
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            inputMode="decimal"
+            placeholder="0.05"
+          />
+        </div>
+        <div className="field">
+          <label>Token address</label>
+          <input
+            value={token}
+            onChange={(event) => setToken(event.target.value)}
+            placeholder={ETH_ADDRESS}
+          />
+        </div>
+        <div className="field">
+          <label>Recipient (defaults to connected account)</label>
+          <input
+            value={recipient}
+            onChange={(event) => setRecipient(event.target.value)}
+            placeholder={account}
+          />
+        </div>
+        <div className="inline-fields">
+          <div className="field">
+            <label>L2 gas limit</label>
             <input
               value={l2GasLimitInput}
               onChange={(event) => setL2GasLimitInput(event.target.value)}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
+              placeholder={DEFAULT_L2_GAS_LIMIT.toString()}
             />
-          </label>
-          <fieldset
-            style={{
-              border: '1px solid #cbd5e1',
-              borderRadius: '10px',
-              padding: '0.75rem 1rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-            }}
-          >
-            <legend style={{ padding: '0 0.3rem', fontWeight: 600 }}>L2 Tx Overrides (wei)</legend>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <span>Max Fee Per Gas</span>
-              <input
-                value={l2MaxFeeInput}
-                onChange={(event) => setL2MaxFeeInput(event.target.value)}
-                placeholder="Leave blank to auto-estimate"
-                style={{ minWidth: '420px', maxWidth: '100%' }}
-              />
-            </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <span>Max Priority Fee Per Gas</span>
-              <input
-                value={l2PriorityFeeInput}
-                onChange={(event) => setL2PriorityFeeInput(event.target.value)}
-                placeholder="Leave blank to auto-estimate"
-                style={{ minWidth: '420px', maxWidth: '100%' }}
-              />
-            </label>
-          </fieldset>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>L2 Transaction Hash (for status/finalize)</span>
+          </div>
+          <div className="field">
+            <label>Max fee per gas (wei)</label>
             <input
-              value={l2TxInput}
-              onChange={(event) => setL2TxInput(event.target.value)}
-              placeholder="0x…"
-              style={{ minWidth: '420px', maxWidth: '100%' }}
+              value={l2MaxFeeInput}
+              onChange={(event) => setL2MaxFeeInput(event.target.value)}
+              placeholder="Leave blank to auto-estimate"
             />
-          </label>
+          </div>
+          <div className="field">
+            <label>Max priority fee per gas (wei)</label>
+            <input
+              value={l2PriorityFeeInput}
+              onChange={(event) => setL2PriorityFeeInput(event.target.value)}
+              placeholder="Leave blank to auto-estimate"
+            />
+          </div>
         </div>
-        <p style={{ marginTop: '1rem' }}>
+        <div className="field">
+          <label>L2 transaction hash (for status/finalize)</label>
+          <input
+            value={l2TxInput}
+            onChange={(event) => setL2TxInput(event.target.value)}
+            placeholder="0x…"
+          />
+        </div>
+        <p>
           Withdrawing {amountLabel} from {targetL2Rpc}.
         </p>
       </section>
 
       <section>
         <h2>Actions</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-          <button onClick={quoteWithdrawal} disabled={busy !== null}>
-            {busy === 'quote' ? 'Fetching…' : 'Quote'}
+        <div className="inline-fields">
+          <button onClick={quoteWithdrawal} disabled={actionDisabled('quote')}>
+            {busy === 'quote' ? 'Quoting…' : 'Quote'}
           </button>
-          <button onClick={prepareWithdrawal} disabled={busy !== null}>
-            {busy === 'prepare' ? 'Building…' : 'Prepare'}
+          <button onClick={prepareWithdrawal} disabled={actionDisabled('prepare')}>
+            {busy === 'prepare' ? 'Preparing…' : 'Prepare'}
           </button>
-          <button onClick={createWithdrawal} disabled={busy !== null}>
+          <button onClick={createWithdrawal} disabled={actionDisabled('create')}>
             {busy === 'create' ? 'Submitting…' : 'Create'}
           </button>
-          <button onClick={checkStatus} disabled={busy !== null}>
+          <button
+            onClick={checkStatus}
+            disabled={actionDisabled('status', { requiresWaitable: true })}
+          >
             {busy === 'status' ? 'Checking…' : 'Status'}
           </button>
-          <button onClick={waitForL2} disabled={busy !== null}>
+          <button
+            onClick={waitForL2}
+            disabled={actionDisabled('waitL2', { requiresWaitable: true })}
+          >
             {busy === 'waitL2' ? 'Waiting…' : 'Wait (L2)'}
           </button>
-          <button onClick={waitForReady} disabled={busy !== null}>
+          <button
+            onClick={waitForReady}
+            disabled={actionDisabled('waitReady', { requiresWaitable: true })}
+          >
             {busy === 'waitReady' ? 'Waiting…' : 'Wait (Ready)'}
           </button>
-          <button onClick={waitForFinalized} disabled={busy !== null}>
+          <button
+            onClick={waitForFinalized}
+            disabled={actionDisabled('waitFinalized', { requiresWaitable: true })}
+          >
             {busy === 'waitFinalized' ? 'Waiting…' : 'Wait (Finalized)'}
           </button>
-          <button onClick={finalizeWithdrawal} disabled={busy !== null}>
+          <button
+            onClick={finalizeWithdrawal}
+            disabled={actionDisabled('finalize', { requiresHash: true })}
+          >
             {busy === 'finalize' ? 'Submitting…' : 'Finalize on L1'}
           </button>
         </div>
       </section>
 
-      <ResultCard title="Quote" data={quote} />
-      <ResultCard title="Prepare" data={plan} />
-      <ResultCard title="Create" data={handle} />
-      <ResultCard title="Status" data={status} />
-      <ResultCard title="Wait (L2)" data={waitL2Result} />
-      <ResultCard title="Wait (Ready)" data={waitReadyResult} />
-      <ResultCard title="Wait (Finalized)" data={waitFinalizedResult} />
-      <ResultCard title="Finalize" data={finalizeResult} />
+      <section className="results">
+        <ResultCard title="Quote" data={quote} />
+        <ResultCard title="Prepare" data={plan} />
+        <ResultCard title="Create" data={handle} />
+        <ResultCard title="Status" data={status} />
+        <ResultCard title="Wait (L2)" data={waitL2Result} />
+        <ResultCard title="Wait (Ready)" data={waitReadyResult} />
+        <ResultCard title="Wait (Finalized)" data={waitFinalizedResult} />
+        <ResultCard title="Finalize" data={finalizeResult} />
+      </section>
 
-      {error && (
-        <section className="error">
-          <div>Error: {error}</div>
-        </section>
-      )}
-    </>
+      {error && <div className="error">{error}</div>}
+    </main>
   );
 }
 

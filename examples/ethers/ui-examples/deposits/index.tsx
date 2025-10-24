@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   BrowserProvider,
@@ -30,11 +30,12 @@ declare global {
   }
 }
 
-type Action = 'connect' | 'quote' | 'prepare' | 'create' | 'status' | 'wait';
+type Action = 'connect' | 'quote' | 'prepare' | 'create' | 'status' | 'waitL2';
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
 const DEFAULT_L1_GAS_LIMIT = 300_000n;
+const DEFAULT_L1_CHAIN_ID = 11155111;
 
 const stringify = (value: unknown) =>
   JSON.stringify(
@@ -46,7 +47,8 @@ const stringify = (value: unknown) =>
     2,
   );
 
-const describeAmount = (wei: bigint) => `${formatEther(wei)}`;
+const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
+
 const TOKEN_OPTIONS: Array<{ label: string; value: Address }> = [
   { label: 'ETH', value: ETH_ADDRESS },
   { label: 'L2 Base Token', value: L2_BASE_TOKEN_ADDRESS },
@@ -66,13 +68,13 @@ const parseOptionalBigInt = (value: string, label: string) => {
 
 interface ResultCardProps {
   title: string;
-  data: unknown;
+  data: unknown | null | undefined;
 }
 
 function ResultCard({ title, data }: ResultCardProps) {
-  if (data === undefined) return null;
+  if (data == null) return null;
   return (
-    <section>
+    <section className="result-card">
       <h3>{title}</h3>
       <pre>
         <code>{stringify(data)}</code>
@@ -83,25 +85,29 @@ function ResultCard({ title, data }: ResultCardProps) {
 
 function Example() {
   const [account, setAccount] = useState<Address>();
-  const [chainId, setChainId] = useState<number>();
+  const [walletChainId, setWalletChainId] = useState<number>();
+  const [connectedL2ChainId, setConnectedL2ChainId] = useState<number>();
   const [sdk, setSdk] = useState<EthersSdk>();
   const [l1Provider, setL1Provider] = useState<BrowserProvider | null>(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [connectedL2Rpc, setConnectedL2Rpc] = useState<string>(DEFAULT_L2_RPC);
+  const [connectedL2Rpc, setConnectedL2Rpc] = useState(DEFAULT_L2_RPC);
+
   const [quote, setQuote] = useState<DepositQuote>();
   const [plan, setPlan] = useState<DepositPlan<unknown>>();
   const [handle, setHandle] = useState<DepositHandle<unknown>>();
   const [status, setStatus] = useState<DepositStatus>();
-  const [receipt, setReceipt] = useState<TransactionReceipt | null | undefined>(undefined);
+  const [receipt, setReceipt] = useState<TransactionReceipt | null>();
+
   const [error, setError] = useState<string>();
+  const [busy, setBusy] = useState<Action | null>(null);
+
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
-  const [amount, setAmount] = useState('0.001');
+  const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState<Address>(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
   const [l1GasLimitInput, setL1GasLimitInput] = useState(DEFAULT_L1_GAS_LIMIT.toString());
   const [l1MaxFeeInput, setL1MaxFeeInput] = useState('');
   const [l1PriorityFeeInput, setL1PriorityFeeInput] = useState('');
-  const [busy, setBusy] = useState<Action | null>(null);
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
 
@@ -115,30 +121,70 @@ function Example() {
     }
   }, [amount]);
 
-  const chainLabel = useMemo(() => {
-    if (!chainId) return '—';
-    if (chainId === 11155111) return `Sepolia (${chainId})`;
-    if (chainId === 1) return `Mainnet (${chainId})`;
-    return `${chainId}`;
-  }, [chainId]);
-
   const tokenLabel = useMemo(
     () => TOKEN_OPTIONS.find((option) => option.value === token)?.label ?? 'Token',
     [token],
   );
 
-  const buildParams = () => {
+  const walletChainLabel = useMemo(() => {
+    if (!walletChainId) return '—';
+    if (walletChainId === DEFAULT_L1_CHAIN_ID) return `Sepolia (${walletChainId})`;
+    if (walletChainId === 1) return `Mainnet (${walletChainId})`;
+    return `${walletChainId}`;
+  }, [walletChainId]);
+
+  const l2ChainLabel = useMemo(() => {
+    if (!connectedL2ChainId) return '—';
+    if (connectedL2ChainId === 324) return `zkSync Era (${connectedL2ChainId})`;
+    if (connectedL2ChainId === 300) return `zkSync Sepolia (${connectedL2ChainId})`;
+    return `${connectedL2ChainId}`;
+  }, [connectedL2ChainId]);
+
+  const run = useCallback(
+    async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
+      setBusy(action);
+      setError(undefined);
+      try {
+        const value = await fn();
+        onSuccess?.(value);
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setBusy(null);
+      }
+    },
+    [],
+  );
+
+  const refreshSdkIfNeeded = useCallback(async (): Promise<EthersSdk> => {
+    if (!l1Provider || !signer) throw new Error('Connect wallet first.');
+    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
+
+    const l2Provider = new JsonRpcProvider(targetL2Rpc);
+    const client = createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
+    const instance = createEthersSdk(client);
+    const { chainId } = await l2Provider.getNetwork();
+
+    setSdk(instance);
+    setConnectedL2Rpc(targetL2Rpc);
+    setConnectedL2ChainId(Number(chainId));
+    return instance;
+  }, [connectedL2Rpc, l1Provider, sdk, signer, targetL2Rpc]);
+
+  const buildParams = useCallback(() => {
     if (!account) throw new Error('Connect wallet first.');
 
     const trimmedAmount = amount.trim();
-    if (!trimmedAmount) throw new Error('Provide an amount in ETH.');
+    if (!trimmedAmount) throw new Error('Provide an amount.');
 
-    let parsedAmount: bigint;
-    try {
-      parsedAmount = parseEther(trimmedAmount);
-    } catch {
-      throw new Error('Amount must be a valid ETH value.');
-    }
+    const parsedAmount = (() => {
+      try {
+        return parseEther(trimmedAmount);
+      } catch {
+        throw new Error('Amount must be a valid ETH value (e.g. 0.05).');
+      }
+    })();
 
     const destination = (recipient.trim() || account) as Address;
 
@@ -154,7 +200,10 @@ function Example() {
         : undefined,
     };
 
-    const hasOverrides = Object.values(overrides).some((value) => value != null);
+    const hasOverrides =
+      overrides.gasLimit != null ||
+      overrides.maxFeePerGas != null ||
+      overrides.maxPriorityFeePerGas != null;
 
     return {
       amount: parsedAmount,
@@ -162,345 +211,279 @@ function Example() {
       to: destination,
       ...(hasOverrides ? { l1TxOverrides: overrides } : {}),
     } as const;
+  }, [account, amount, token, recipient, l1GasLimitInput, l1MaxFeeInput, l1PriorityFeeInput]);
+
+  const connectWallet = useCallback(
+    () =>
+      run(
+        'connect',
+        async () => {
+          if (!window.ethereum) {
+            throw new Error('No injected wallet found. Install MetaMask or another wallet.');
+          }
+
+          const browserProvider = new BrowserProvider(window.ethereum);
+          await browserProvider.send('eth_requestAccounts', []);
+          const nextSigner = (await browserProvider.getSigner()) as JsonRpcSigner;
+          const addr = (await nextSigner.getAddress()) as Address;
+          const walletNetwork = await browserProvider.getNetwork();
+
+          const l2Provider = new JsonRpcProvider(targetL2Rpc);
+          const client = createEthersClient({
+            l1: browserProvider,
+            l2: l2Provider,
+            signer: nextSigner,
+          });
+          const instance = createEthersSdk(client);
+          const { chainId: l2ChainId } = await l2Provider.getNetwork();
+
+          return {
+            instance,
+            browserProvider,
+            signer: nextSigner,
+            addr,
+            walletChainId: Number(walletNetwork.chainId),
+            l2ChainId: Number(l2ChainId),
+          };
+        },
+        ({ instance, browserProvider, signer: nextSigner, addr, walletChainId, l2ChainId }) => {
+          setSdk(instance);
+          setL1Provider(browserProvider);
+          setSigner(nextSigner);
+          setAccount(addr);
+          setWalletChainId(walletChainId);
+          setConnectedL2ChainId(l2ChainId);
+          setConnectedL2Rpc(targetL2Rpc);
+          setRecipient((prev) => prev || addr);
+          setQuote(undefined);
+          setPlan(undefined);
+          setHandle(undefined);
+          setStatus(undefined);
+          setReceipt(undefined);
+        },
+      ),
+    [run, targetL2Rpc],
+  );
+
+  const actionDisabled = (action: Action, requiresHandle = false) => {
+    if (busy && busy !== action) return true;
+    if (!account && action !== 'connect') return true;
+    if (requiresHandle && !handle) return true;
+    return false;
   };
 
-  const connect = async () => {
-    setBusy('connect');
-    setError(undefined);
-    try {
-      if (!window.ethereum) {
-        throw new Error('No injected wallet found. Install MetaMask or a compatible wallet.');
-      }
+  const quoteDeposit = useCallback(
+    () =>
+      run(
+        'quote',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.deposits.tryQuote(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setQuote(value),
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
 
-      const browserProvider = new BrowserProvider(window.ethereum);
-      await browserProvider.send('eth_requestAccounts', []);
-      const signer = (await browserProvider.getSigner()) as JsonRpcSigner;
-      const addr = (await signer.getAddress()) as Address;
-      const network = await browserProvider.getNetwork();
-      const l2Provider = new JsonRpcProvider(targetL2Rpc);
+  const prepareDeposit = useCallback(
+    () =>
+      run(
+        'prepare',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.deposits.tryPrepare(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setPlan(value),
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
 
-      const client = createEthersClient({ l1: browserProvider, l2: l2Provider, signer });
-      const instance = createEthersSdk(client);
+  const createDeposit = useCallback(
+    () =>
+      run(
+        'create',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.deposits.tryCreate(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => {
+          setHandle(value);
+          setStatus(undefined);
+          setReceipt(undefined);
+        },
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
 
-      setSdk(instance);
-      setL1Provider(browserProvider);
-      setSigner(signer);
-      setConnectedL2Rpc(targetL2Rpc);
-      setAccount(addr);
-      setChainId(Number(network.chainId));
-      setRecipient((prev) => prev || addr);
-      setQuote(undefined);
-      setPlan(undefined);
-      setHandle(undefined);
-      setStatus(undefined);
-      setReceipt(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  };
+  const checkStatus = useCallback(
+    () =>
+      run(
+        'status',
+        async () => {
+          if (!handle) throw new Error('Create a deposit first.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.deposits.status(handle);
+        },
+        (value) => setStatus(value),
+      ),
+    [handle, refreshSdkIfNeeded, run],
+  );
 
-  const refreshSdkIfNeeded = async (): Promise<EthersSdk> => {
-    if (!l1Provider || !signer) {
-      throw new Error('Connect wallet first.');
-    }
-    if (sdk && connectedL2Rpc === targetL2Rpc) {
-      return sdk;
-    }
-    const l2Provider = new JsonRpcProvider(targetL2Rpc);
-    const client = createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
-    const instance = createEthersSdk(client);
-    setSdk(instance);
-    setConnectedL2Rpc(targetL2Rpc);
-    return instance;
-  };
-
-  const run = async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
-    setBusy(action);
-    setError(undefined);
-    try {
-      const value = await fn();
-      onSuccess?.(value);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const quoteDeposit = async () => {
-    if (!sdk && (!l1Provider || !signer)) {
-      setError('Connect wallet first.');
-      return;
-    }
-    await run(
-      'quote',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        const params = buildParams();
-        const result = await currentSdk.deposits.tryQuote(params);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => setQuote(value),
-    );
-  };
-
-  const prepareDeposit = async () => {
-    if (!sdk && (!l1Provider || !signer)) {
-      setError('Connect wallet first.');
-      return;
-    }
-    await run(
-      'prepare',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        const params = buildParams();
-        const result = await currentSdk.deposits.tryPrepare(params);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => setPlan(value),
-    );
-  };
-
-  const createDeposit = async () => {
-    if (!sdk && (!l1Provider || !signer)) {
-      setError('Connect wallet first.');
-      return;
-    }
-    await run(
-      'create',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        const params = buildParams();
-        const result = await currentSdk.deposits.tryCreate(params);
-        if (!result.ok) throw result.error;
-        return result.value;
-      },
-      (value) => {
-        setHandle(value);
-        setStatus(undefined);
-        setReceipt(undefined);
-      },
-    );
-  };
-
-  const checkStatus = async () => {
-    if (!handle) {
-      setError('Create a deposit first to request status.');
-      return;
-    }
-    await run(
-      'status',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        return currentSdk.deposits.status(handle);
-      },
-      (value) => setStatus(value),
-    );
-  };
-
-  const waitForL2 = async () => {
-    if (!handle) {
-      setError('Create a deposit first to wait for finalization.');
-      return;
-    }
-    await run(
-      'wait',
-      async () => {
-        const currentSdk = await refreshSdkIfNeeded();
-        return currentSdk.deposits.wait(handle, { for: 'l2' });
-      },
-      (value) => setReceipt(value ?? null),
-    );
-  };
-
-  if (!account) {
-    return (
-      <>
-        <section>
-          <h2>Wallet</h2>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              marginBottom: '1rem',
-            }}
-          >
-            <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-            <label
-              style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}
-            >
-              <span>L2 RPC:</span>
-              <input
-                value={l2Rpc}
-                onChange={(event) => setL2Rpc(event.target.value)}
-                style={{ minWidth: '420px', maxWidth: '100%' }}
-              />
-            </label>
-          </div>
-          <button onClick={connect} disabled={busy === 'connect'}>
-            {busy === 'connect' ? 'Connecting…' : 'Connect Wallet'}
-          </button>
-        </section>
-        {error && (
-          <section className="error">
-            <div>Error: {error}</div>
-          </section>
-        )}
-      </>
-    );
-  }
+  const waitForL2 = useCallback(
+    () =>
+      run(
+        'waitL2',
+        async () => {
+          if (!handle) throw new Error('Create a deposit first.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.deposits.wait(handle, { for: 'l2' });
+        },
+        (value) => setReceipt(value ?? null),
+      ),
+    [handle, refreshSdkIfNeeded, run],
+  );
 
   return (
-    <>
+    <main>
+      <h1>Ethers Deposits (UI example)</h1>
+
       <section>
         <h2>Wallet</h2>
-        <div>Connected: {account}</div>
-        <div>Wallet Chain: {chainLabel}</div>
-        <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.4rem',
-            maxWidth: '100%',
-            marginTop: '0.5rem',
-          }}
-        >
-          <span>L2 RPC:</span>
-          <input
-            value={l2Rpc}
-            onChange={(event) => setL2Rpc(event.target.value)}
-            style={{ minWidth: '420px', maxWidth: '100%' }}
-          />
+        <div className="field">
+          <label>Account</label>
+          <input readOnly value={account ?? ''} placeholder="Not connected" />
         </div>
+        <div className="inline-fields">
+          <div className="field">
+            <label>L1 RPC</label>
+            <input readOnly value={DEFAULT_L1_RPC} />
+          </div>
+          <div className="field">
+            <label>Wallet chain</label>
+            <input readOnly value={walletChainLabel} />
+          </div>
+          <div className="field">
+            <label>zkSync RPC</label>
+            <input
+              value={l2Rpc}
+              onChange={(event) => setL2Rpc(event.target.value)}
+              placeholder={DEFAULT_L2_RPC}
+            />
+          </div>
+          <div className="field">
+            <label>zkSync chain</label>
+            <input readOnly value={l2ChainLabel} />
+          </div>
+        </div>
+        <button onClick={connectWallet} disabled={actionDisabled('connect')}>
+          {busy === 'connect' ? 'Connecting…' : account ? 'Reconnect' : 'Connect Wallet'}
+        </button>
       </section>
 
       <section>
-        <h2>Deposit Parameters</h2>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-            maxWidth: '520px',
-          }}
-        >
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Amount</span>
-            <input
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              inputMode="decimal"
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Token</span>
-            <select
-              value={token}
-              onChange={(event) => setToken(event.target.value as Address)}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            >
-              {TOKEN_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Recipient (defaults to connected account)</span>
-            <input
-              value={recipient}
-              onChange={(event) => setRecipient(event.target.value)}
-              placeholder={account}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <fieldset
-            style={{
-              border: '1px solid #cbd5e1',
-              borderRadius: '10px',
-              padding: '0.75rem 1rem 1rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-            }}
-          >
-            <legend style={{ padding: '0 0.3rem', fontWeight: 600 }}>L1 Overrides (wei)</legend>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <span>Gas Limit</span>
+        <h2>Deposit parameters</h2>
+        <div className="field">
+          <label>Amount</label>
+          <input
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            inputMode="decimal"
+            placeholder="0.05"
+          />
+        </div>
+        <div className="field">
+          <label>Token</label>
+          <select value={token} onChange={(event) => setToken(event.target.value as Address)}>
+            {TOKEN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label>Recipient (defaults to connected account)</label>
+          <input
+            value={recipient}
+            onChange={(event) => setRecipient(event.target.value)}
+            placeholder={account}
+          />
+        </div>
+
+        <fieldset style={{ border: '1px solid #cbd5e1', borderRadius: '10px', padding: '1rem' }}>
+          <legend>L1 overrides (wei, optional)</legend>
+          <div className="inline-fields">
+            <div className="field">
+              <label>Gas limit</label>
               <input
                 value={l1GasLimitInput}
                 onChange={(event) => setL1GasLimitInput(event.target.value)}
-                style={{ minWidth: '420px', maxWidth: '100%' }}
+                placeholder={DEFAULT_L1_GAS_LIMIT.toString()}
               />
-            </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <span>Max Fee Per Gas</span>
+            </div>
+            <div className="field">
+              <label>Max fee per gas</label>
               <input
                 value={l1MaxFeeInput}
                 onChange={(event) => setL1MaxFeeInput(event.target.value)}
                 placeholder="Leave blank to auto-estimate"
-                style={{ minWidth: '420px', maxWidth: '100%' }}
               />
-            </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <span>Max Priority Fee Per Gas</span>
+            </div>
+            <div className="field">
+              <label>Max priority fee per gas</label>
               <input
                 value={l1PriorityFeeInput}
                 onChange={(event) => setL1PriorityFeeInput(event.target.value)}
                 placeholder="Leave blank to auto-estimate"
-                style={{ minWidth: '420px', maxWidth: '100%' }}
               />
-            </label>
-          </fieldset>
-        </div>
-        <p style={{ marginTop: '1rem' }}>
-          Depositing {amountLabel} {tokenLabel} from Sepolia L1 to {targetL2Rpc}.
+            </div>
+          </div>
+        </fieldset>
+        <p>
+          Depositing {amountLabel} {tokenLabel} from Sepolia (L1) to {targetL2Rpc}.
         </p>
       </section>
 
       <section>
         <h2>Actions</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-          <button onClick={quoteDeposit} disabled={busy !== null}>
-            {busy === 'quote' ? 'Fetching…' : 'Quote'}
+        <div className="inline-fields">
+          <button onClick={quoteDeposit} disabled={actionDisabled('quote')}>
+            {busy === 'quote' ? 'Quoting…' : 'Quote'}
           </button>
-          <button onClick={prepareDeposit} disabled={busy !== null}>
-            {busy === 'prepare' ? 'Building…' : 'Prepare'}
+          <button onClick={prepareDeposit} disabled={actionDisabled('prepare')}>
+            {busy === 'prepare' ? 'Preparing…' : 'Prepare'}
           </button>
-          <button onClick={createDeposit} disabled={busy !== null}>
+          <button onClick={createDeposit} disabled={actionDisabled('create')}>
             {busy === 'create' ? 'Submitting…' : 'Create'}
           </button>
-          <button onClick={checkStatus} disabled={busy !== null}>
+          <button onClick={checkStatus} disabled={actionDisabled('status', true)}>
             {busy === 'status' ? 'Checking…' : 'Status'}
           </button>
-          <button onClick={waitForL2} disabled={busy !== null}>
-            {busy === 'wait' ? 'Waiting…' : 'Wait (L2)'}
+          <button onClick={waitForL2} disabled={actionDisabled('waitL2', true)}>
+            {busy === 'waitL2' ? 'Waiting…' : 'Wait (L2)'}
           </button>
         </div>
       </section>
 
-      <ResultCard title="Quote" data={quote} />
-      <ResultCard title="Prepare" data={plan} />
-      <ResultCard title="Create" data={handle} />
-      <ResultCard title="Status" data={status} />
-      <ResultCard title="Wait (L2)" data={receipt} />
+      <section className="results">
+        <ResultCard title="Quote" data={quote} />
+        <ResultCard title="Prepare" data={plan} />
+        <ResultCard title="Create" data={handle} />
+        <ResultCard title="Status" data={status} />
+        <ResultCard title="Wait (L2)" data={receipt} />
+      </section>
 
-      {error && (
-        <section className="error">
-          <div>Error: {error}</div>
-        </section>
-      )}
-    </>
+      {error && <div className="error">{error}</div>}
+    </main>
   );
 }
 

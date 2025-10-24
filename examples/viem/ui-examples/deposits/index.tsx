@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   type Address,
+  type EIP1193Provider,
   type TransactionReceipt,
   createPublicClient,
   createWalletClient,
@@ -30,22 +31,22 @@ import {
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
+const DEFAULT_L1_CHAIN_ID = sepolia.id;
 
 const l1 = createPublicClient({
   chain: sepolia,
   transport: http(DEFAULT_L1_RPC),
 });
 
-const transport = custom(window.ethereum!);
-const DEFAULT_L1_GAS_LIMIT = 300_000n;
-
-const describeAmount = (wei: bigint) => `${formatEther(wei)}`;
 const TOKEN_OPTIONS: Array<{ label: string; value: Address }> = [
   { label: 'ETH', value: ETH_ADDRESS },
   { label: 'L2 Base Token', value: L2_BASE_TOKEN_ADDRESS },
   { label: 'SOPH (L1)', value: L1_SOPH_TOKEN_ADDRESS },
   { label: 'Test Token', value: '0x42E331a2613Fd3a5bc18b47AE3F01e1537fD8873' as Address },
 ];
+
+const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
+
 const parseOptionalBigInt = (value: string, label: string) => {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
@@ -56,7 +57,31 @@ const parseOptionalBigInt = (value: string, label: string) => {
   }
 };
 
+type Action = 'connect' | 'quote' | 'prepare' | 'create' | 'status' | 'waitL2';
+
+interface ResultCardProps {
+  title: string;
+  data: unknown | null | undefined;
+}
+
+function ResultCard({ title, data }: ResultCardProps) {
+  if (data == null) return null;
+  return (
+    <section className="result-card">
+      <h3>{title}</h3>
+      <pre>
+        <code>{stringify(data, null, 2)}</code>
+      </pre>
+    </section>
+  );
+}
+
 function Example() {
+  const [provider, setProvider] = useState<EIP1193Provider | null>(null);
+  const [walletChainId, setWalletChainId] = useState<number>();
+  const [connectedL2ChainId, setConnectedL2ChainId] = useState<number>();
+  const [connectedL2Rpc, setConnectedL2Rpc] = useState(DEFAULT_L2_RPC);
+
   const [account, setAccount] = useState<Address>();
   const [sdk, setSdk] = useState<ViemSdk>();
   const [quote, setQuote] = useState<DepositQuote>();
@@ -64,17 +89,21 @@ function Example() {
   const [handle, setHandle] = useState<DepositHandle<unknown>>();
   const [status, setStatus] = useState<DepositStatus>();
   const [receipt, setReceipt] = useState<TransactionReceipt | null>(null);
+
   const [error, setError] = useState<string>();
+  const [busy, setBusy] = useState<Action | null>(null);
+
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
-  const [amount, setAmount] = useState('0.001');
+  const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState<Address>(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
-  const [l1GasLimitInput, setL1GasLimitInput] = useState(DEFAULT_L1_GAS_LIMIT.toString());
+  const [l1GasLimitInput, setL1GasLimitInput] = useState('');
   const [l1MaxFeeInput, setL1MaxFeeInput] = useState('');
   const [l1PriorityFeeInput, setL1PriorityFeeInput] = useState('');
 
-  const targetL2Rpc = l2Rpc.trim() || DEFAULT_L2_RPC;
-  const amountLabel = (() => {
+  const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
+
+  const amountLabel = useMemo(() => {
     const trimmed = amount.trim();
     if (!trimmed) return '—';
     try {
@@ -82,33 +111,93 @@ function Example() {
     } catch {
       return '—';
     }
-  })();
-  const tokenLabel = TOKEN_OPTIONS.find((option) => option.value === token)?.label ?? 'Token';
+  }, [amount]);
 
-  const buildParams = () => {
+  const tokenLabel = useMemo(
+    () => TOKEN_OPTIONS.find((option) => option.value === token)?.label ?? 'Token',
+    [token],
+  );
+
+  const walletChainLabel = useMemo(() => {
+    if (!walletChainId) return '—';
+    if (walletChainId === DEFAULT_L1_CHAIN_ID) return `Sepolia (${walletChainId})`;
+    return `${walletChainId}`;
+  }, [walletChainId]);
+
+  const l2ChainLabel = useMemo(() => {
+    if (!connectedL2ChainId) return '—';
+    if (connectedL2ChainId === 324) return `zkSync Era (${connectedL2ChainId})`;
+    if (connectedL2ChainId === 300) return `zkSync Sepolia (${connectedL2ChainId})`;
+    return `${connectedL2ChainId}`;
+  }, [connectedL2ChainId]);
+
+  const run = useCallback(
+    async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
+      setBusy(action);
+      setError(undefined);
+      try {
+        const value = await fn();
+        onSuccess?.(value);
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setBusy(null);
+      }
+    },
+    [],
+  );
+
+  const refreshSdkIfNeeded = useCallback(async (): Promise<ViemSdk> => {
+    if (!provider || !account) throw new Error('Connect wallet first.');
+    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
+
+    const transport = custom(provider);
+    const l1Wallet = createWalletClient({
+      account,
+      chain: sepolia,
+      transport,
+    });
+
+    const l2Client = createPublicClient({
+      transport: http(targetL2Rpc),
+    });
+
+    const client = createViemClient({
+      l1: l1 as any,
+      l2: l2Client as any,
+      l1Wallet: l1Wallet as any,
+    });
+
+    const instance = createViemSdk(client);
+    const l2ChainId = await l2Client.getChainId();
+
+    setSdk(instance);
+    setConnectedL2Rpc(targetL2Rpc);
+    setConnectedL2ChainId(Number(l2ChainId));
+    return instance;
+  }, [account, connectedL2Rpc, provider, sdk, targetL2Rpc]);
+
+  const buildParams = useCallback(() => {
     if (!account) throw new Error('Connect wallet first.');
 
     const trimmedAmount = amount.trim();
-    if (!trimmedAmount) throw new Error('Provide an amount in ETH.');
+    if (!trimmedAmount) throw new Error('Provide an amount.');
 
-    let parsedAmount: bigint;
-    try {
-      parsedAmount = parseEther(trimmedAmount);
-    } catch {
-      throw new Error('Amount must be a valid ETH value.');
-    }
+    const parsedAmount = (() => {
+      try {
+        return parseEther(trimmedAmount);
+      } catch {
+        throw new Error('Amount must be a valid ETH value (e.g. 0.05).');
+      }
+    })();
 
     const destination = (recipient.trim() || account) as Address;
 
     const overrides = {
-      gasLimit: (() => {
-        if (!l1GasLimitInput.trim()) return undefined;
-        try {
-          return parseOptionalBigInt(l1GasLimitInput, 'Gas limit');
-        } catch (err) {
-          throw err;
-        }
-      })(),
+      gasLimit: l1GasLimitInput.trim()
+        ? parseOptionalBigInt(l1GasLimitInput, 'Gas limit')
+        : undefined,
       maxFeePerGas: l1MaxFeeInput.trim()
         ? parseOptionalBigInt(l1MaxFeeInput, 'Max fee per gas')
         : undefined,
@@ -117,7 +206,10 @@ function Example() {
         : undefined,
     };
 
-    const hasOverrides = Object.values(overrides).some((value) => value != null);
+    const hasOverrides =
+      overrides.gasLimit != null ||
+      overrides.maxFeePerGas != null ||
+      overrides.maxPriorityFeePerGas != null;
 
     return {
       amount: parsedAmount,
@@ -125,289 +217,285 @@ function Example() {
       to: destination,
       ...(hasOverrides ? { l1TxOverrides: overrides } : {}),
     } as const;
+  }, [account, amount, token, recipient, l1GasLimitInput, l1MaxFeeInput, l1PriorityFeeInput]);
+
+  const connectWallet = useCallback(
+    () =>
+      run(
+        'connect',
+        async () => {
+          if (!window.ethereum) {
+            throw new Error(
+              'No injected wallet found. Install MetaMask or another EIP-1193 wallet.',
+            );
+          }
+
+          const injected = window.ethereum as EIP1193Provider;
+          const transport = custom(injected);
+
+          const bootstrap = createWalletClient({ chain: sepolia, transport });
+          const [addr] = await bootstrap.requestAddresses();
+          if (!addr) throw new Error('Wallet returned no accounts.');
+
+          const chainId = await bootstrap.getChainId();
+
+          const l1Wallet = createWalletClient({
+            account: addr,
+            chain: sepolia,
+            transport,
+          });
+
+          const l2Client = createPublicClient({
+            transport: http(targetL2Rpc),
+          });
+
+          const client = createViemClient({
+            l1: l1 as any,
+            l2: l2Client as any,
+            l1Wallet: l1Wallet as any,
+          });
+
+          const instance = createViemSdk(client);
+          const l2ChainId = await l2Client.getChainId();
+
+          return { instance, addr, injected, chainId, l2ChainId };
+        },
+        ({ instance, addr, injected, chainId, l2ChainId }) => {
+          setSdk(instance);
+          setAccount(addr);
+          setProvider(injected);
+          setWalletChainId(Number(chainId));
+          setConnectedL2ChainId(Number(l2ChainId));
+          setConnectedL2Rpc(targetL2Rpc);
+          setRecipient((prev) => prev || addr);
+          setQuote(undefined);
+          setPlan(undefined);
+          setHandle(undefined);
+          setStatus(undefined);
+          setReceipt(null);
+        },
+      ),
+    [run, targetL2Rpc],
+  );
+
+  const quoteDeposit = useCallback(
+    () =>
+      run(
+        'quote',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.deposits.tryQuote(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setQuote(value),
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
+
+  const prepareDeposit = useCallback(
+    () =>
+      run(
+        'prepare',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.deposits.tryPrepare(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => setPlan(value),
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
+
+  const createDeposit = useCallback(
+    () =>
+      run(
+        'create',
+        async () => {
+          const currentSdk = await refreshSdkIfNeeded();
+          const params = buildParams();
+          const result = await currentSdk.deposits.tryCreate(params);
+          if (!result.ok) throw result.error;
+          return result.value;
+        },
+        (value) => {
+          setHandle(value);
+          setStatus(undefined);
+          setReceipt(null);
+        },
+      ),
+    [buildParams, refreshSdkIfNeeded, run],
+  );
+
+  const checkStatus = useCallback(
+    () =>
+      run(
+        'status',
+        async () => {
+          if (!handle) throw new Error('Create a deposit first.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.deposits.status(handle);
+        },
+        (value) => setStatus(value),
+      ),
+    [handle, refreshSdkIfNeeded, run],
+  );
+
+  const waitForL2 = useCallback(
+    () =>
+      run(
+        'waitL2',
+        async () => {
+          if (!handle) throw new Error('Create a deposit first.');
+          const currentSdk = await refreshSdkIfNeeded();
+          return currentSdk.deposits.wait(handle, { for: 'l2' });
+        },
+        (value) => setReceipt(value),
+      ),
+    [handle, refreshSdkIfNeeded, run],
+  );
+
+  const actionDisabled = (action: Action) => {
+    if (busy && busy !== action) return true;
+    if (!account && action !== 'connect') return true;
+    return false;
   };
 
-  const connect = async () => {
-    try {
-      const bootstrap = createWalletClient({ chain: sepolia, transport });
-      const [addr] = await bootstrap.requestAddresses();
-      if (!addr) throw new Error('Wallet returned no accounts.');
+  return (
+    <main>
+      <h1>Viem Deposits (UI example)</h1>
 
-      const l1Wallet = createWalletClient({
-        account: addr,
-        chain: sepolia,
-        transport,
-      });
-
-      const l2Client = createPublicClient({
-        transport: http(targetL2Rpc),
-      });
-
-      // Cast to `any` to avoid type incompatibilities when multiple versions of `viem`
-      // are present in the dependency tree (cross-package types mismatch).
-      const client = createViemClient({
-        l1: l1 as any,
-        l2: l2Client as any,
-        l1Wallet: l1Wallet as any,
-      });
-      setSdk(createViemSdk(client));
-      setAccount(addr);
-      setRecipient((prev) => prev || addr);
-      setQuote(undefined);
-      setPlan(undefined);
-      setHandle(undefined);
-      setStatus(undefined);
-      setReceipt(null);
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const quoteDeposit = async () => {
-    if (!sdk) return;
-    try {
-      const built = buildParams();
-      const result = await sdk.deposits.tryQuote(built);
-      if (!result.ok) throw result.error;
-      setQuote(result.value);
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const prepareDeposit = async () => {
-    if (!sdk) return;
-    try {
-      const built = buildParams();
-      const result = await sdk.deposits.tryPrepare(built);
-      if (!result.ok) throw result.error;
-      setPlan(result.value);
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const createDeposit = async () => {
-    if (!sdk) return;
-    try {
-      const built = buildParams();
-      const result = await sdk.deposits.tryCreate(built);
-      if (!result.ok) throw result.error;
-      const nextHandle = result.value;
-      setHandle(nextHandle);
-      setStatus(undefined);
-      setReceipt(null);
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const checkStatus = async () => {
-    if (!sdk || !handle) return;
-    try {
-      setStatus(await sdk.deposits.status(handle));
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const waitForL2 = async () => {
-    if (!sdk || !handle) return;
-    try {
-      setReceipt(await sdk.deposits.wait(handle, { for: 'l2' }));
-      setError(undefined);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  if (!account) {
-    return (
-      <>
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}
-        >
-          <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-          <label
-            style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '100%' }}
-          >
-            <span>L2 RPC:</span>
+      <section>
+        <h2>Wallet</h2>
+        <div className="field">
+          <label>Account</label>
+          <input readOnly value={account ?? ''} placeholder="Not connected" />
+        </div>
+        <div className="inline-fields">
+          <div className="field">
+            <label>L1 RPC (fixed)</label>
+            <input readOnly value={DEFAULT_L1_RPC} />
+          </div>
+          <div className="field">
+            <label>ChainID</label>
+            <input readOnly value={walletChainLabel} />
+          </div>
+          <div className="field">
+            <label>RPC</label>
             <input
               value={l2Rpc}
               onChange={(event) => setL2Rpc(event.target.value)}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
+              placeholder={DEFAULT_L2_RPC}
             />
-          </label>
+          </div>
+          <div className="field">
+            <label>chain</label>
+            <input readOnly value={l2ChainLabel} />
+          </div>
         </div>
-        <button onClick={connect}>Connect Wallet</button>
-        {error && <p>Error: {error}</p>}
-      </>
-    );
-  }
+        <button onClick={connectWallet} disabled={actionDisabled('connect')}>
+          {busy === 'connect' ? 'Connecting…' : account ? 'Reconnect' : 'Connect Wallet'}
+        </button>
+      </section>
 
-  return (
-    <>
-      <div>Connected: {account}</div>
-      <div>L1 RPC: {DEFAULT_L1_RPC}</div>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.4rem',
-          maxWidth: '100%',
-          marginTop: '0.5rem',
-        }}
-      >
-        <span>L2 RPC:</span>
-        <input
-          value={l2Rpc}
-          onChange={(event) => setL2Rpc(event.target.value)}
-          style={{ minWidth: '420px', maxWidth: '100%' }}
-        />
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem',
-          marginTop: '1rem',
-          maxWidth: '520px',
-        }}
-      >
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <span>Amount</span>
+      <section>
+        <h2>Deposit parameters</h2>
+        <div className="field">
+          <label>Amount</label>
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             inputMode="decimal"
-            style={{ minWidth: '420px', maxWidth: '100%' }}
+            placeholder="0.05"
           />
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <span>Token</span>
-          <select
-            value={token}
-            onChange={(event) => setToken(event.target.value as Address)}
-            style={{ minWidth: '420px', maxWidth: '100%' }}
-          >
+        </div>
+        <div className="field">
+          <label>Token</label>
+          <select value={token} onChange={(event) => setToken(event.target.value as Address)}>
             {TOKEN_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <span>Recipient (defaults to connected account)</span>
+        </div>
+        <div className="field">
+          <label>Recipient (defaults to connected account)</label>
           <input
             value={recipient}
             onChange={(event) => setRecipient(event.target.value)}
             placeholder={account}
-            style={{ minWidth: '420px', maxWidth: '100%' }}
           />
-        </label>
-        <fieldset
-          style={{
-            border: '1px solid #cbd5e1',
-            borderRadius: '10px',
-            padding: '0.75rem 1rem 1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-          }}
-        >
-          <legend style={{ padding: '0 0.3rem', fontWeight: 600 }}>L1 Overrides (wei)</legend>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Gas Limit</span>
-            <input
-              value={l1GasLimitInput}
-              onChange={(event) => setL1GasLimitInput(event.target.value)}
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Max Fee Per Gas</span>
-            <input
-              value={l1MaxFeeInput}
-              onChange={(event) => setL1MaxFeeInput(event.target.value)}
-              placeholder="Leave blank to auto-estimate"
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <span>Max Priority Fee Per Gas</span>
-            <input
-              value={l1PriorityFeeInput}
-              onChange={(event) => setL1PriorityFeeInput(event.target.value)}
-              placeholder="Leave blank to auto-estimate"
-              style={{ minWidth: '420px', maxWidth: '100%' }}
-            />
-          </label>
+        </div>
+
+        <fieldset style={{ border: '1px solid #cbd5e1', borderRadius: '10px', padding: '1rem' }}>
+          <legend>L1 overrides (wei, optional)</legend>
+          <div className="inline-fields">
+            <div className="field">
+              <label>Gas limit</label>
+              <input
+                value={l1GasLimitInput}
+                onChange={(event) => setL1GasLimitInput(event.target.value)}
+                placeholder="300000"
+              />
+            </div>
+            <div className="field">
+              <label>Max fee per gas</label>
+              <input
+                value={l1MaxFeeInput}
+                onChange={(event) => setL1MaxFeeInput(event.target.value)}
+                placeholder="Leave blank to auto-estimate"
+              />
+            </div>
+            <div className="field">
+              <label>Max priority fee per gas</label>
+              <input
+                value={l1PriorityFeeInput}
+                onChange={(event) => setL1PriorityFeeInput(event.target.value)}
+                placeholder="Leave blank to auto-estimate"
+              />
+            </div>
+          </div>
         </fieldset>
-      </div>
-      <p>
-        Depositing {amountLabel} {tokenLabel} from Sepolia L1 to {targetL2Rpc}.
-      </p>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-        <button onClick={quoteDeposit}>Quote</button>
-        <button onClick={prepareDeposit}>Prepare</button>
-        <button onClick={createDeposit}>Create</button>
-        <button onClick={checkStatus}>Status</button>
-        <button onClick={waitForL2}>Wait (L2)</button>
-      </div>
-      {quote && (
-        <section>
-          <h3>Quote</h3>
-          <pre>
-            <code>{stringify(quote, null, 2)}</code>
-          </pre>
-        </section>
-      )}
-      {plan && (
-        <section>
-          <h3>Prepare</h3>
-          <pre>
-            <code>{stringify(plan, null, 2)}</code>
-          </pre>
-        </section>
-      )}
-      {handle && (
-        <section>
-          <h3>Create</h3>
-          <pre>
-            <code>{stringify(handle, null, 2)}</code>
-          </pre>
-        </section>
-      )}
-      {status && (
-        <section>
-          <h3>Status</h3>
-          <pre>
-            <code>{stringify(status, null, 2)}</code>
-          </pre>
-        </section>
-      )}
-      {receipt && (
-        <section>
-          <h3>Wait (L2)</h3>
-          <pre>
-            <code>{stringify(receipt, null, 2)}</code>
-          </pre>
-        </section>
-      )}
-      {error && <p>Error: {error}</p>}
-    </>
+        <p>
+          Depositing {amountLabel} {tokenLabel} from Sepolia (L1) to {targetL2Rpc}.
+        </p>
+      </section>
+
+      <section>
+        <h2>Actions</h2>
+        <div className="inline-fields">
+          <button onClick={quoteDeposit} disabled={actionDisabled('quote')}>
+            {busy === 'quote' ? 'Quoting…' : 'Quote'}
+          </button>
+          <button onClick={prepareDeposit} disabled={actionDisabled('prepare')}>
+            {busy === 'prepare' ? 'Preparing…' : 'Prepare'}
+          </button>
+          <button onClick={createDeposit} disabled={actionDisabled('create')}>
+            {busy === 'create' ? 'Submitting…' : 'Create'}
+          </button>
+          <button onClick={checkStatus} disabled={actionDisabled('status') || !handle}>
+            {busy === 'status' ? 'Checking…' : 'Status'}
+          </button>
+          <button onClick={waitForL2} disabled={actionDisabled('waitL2') || !handle}>
+            {busy === 'waitL2' ? 'Waiting…' : 'Wait (L2)'}
+          </button>
+        </div>
+      </section>
+
+      <section className="results">
+        <ResultCard title="Quote" data={quote} />
+        <ResultCard title="Prepare" data={plan} />
+        <ResultCard title="Create" data={handle} />
+        <ResultCard title="Status" data={status} />
+        <ResultCard title="Wait (L2)" data={receipt} />
+      </section>
+
+      {error && <div className="error">{error}</div>}
+    </main>
   );
 }
 
