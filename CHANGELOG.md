@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.9-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.8-alpha...v0.0.9-alpha) (2025-10-24)
+
+
+### Features
+
+* adds runnable examples ([#53](https://github.com/dutterbutter/zksync-sdk/issues/53)) ([51e3b2c](https://github.com/dutterbutter/zksync-sdk/commit/51e3b2c94c74240c80bc980ef9e854df4a7d0a8e))
+
+
+### Bug Fixes
+
+* remove chalk ([#55](https://github.com/dutterbutter/zksync-sdk/issues/55)) ([37d7f8f](https://github.com/dutterbutter/zksync-sdk/commit/37d7f8fa800e127d9bbf25fd382b28f7e9ceeadc))
+
 ## [0.0.8-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.7-alpha...v0.0.8-alpha) (2025-10-23)
 
 
