@@ -23,7 +23,7 @@ function shortJSON(v: unknown, max = 240): string {
 function kv(label: string, value: string): string {
   const width = 10;
   const pad = label.length >= width ? ' ' : ' '.repeat(width - label.length);
-  return `${label}${pad}: ${value}`;
+  return `${label + pad}: ${value}`;
 }
 
 function formatContextLine(ctx?: Record<string, unknown>): string | undefined {
