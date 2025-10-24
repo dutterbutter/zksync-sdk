@@ -24,7 +24,7 @@ Withdrawals are a **two-step process**:
 | `amount`          | Yes      | BigInt/wei (e.g. `parseEther('0.01')`)            |
 | `to`              | Yes      | L1 recipient address                              |
 | `refundRecipient` | No       | L2 address to receive fee refunds (if applicable) |
-| `l2TxOverrides`   | No       | L1 tx overrides (e.g. gasLimit, maxFeePerGas, maxPriorityFeePerGas)     |
+| `l2TxOverrides`   | No       | L2 tx overrides (e.g. gasLimit, maxFeePerGas, maxPriorityFeePerGas)     |
 
 
 ## Fast path (one-shot)
