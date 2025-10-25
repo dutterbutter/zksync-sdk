@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.10-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.9-alpha...v0.0.10-alpha) (2025-10-25)
+
+
+### Bug Fixes
+
+* fix unexported constants issue ([#56](https://github.com/dutterbutter/zksync-sdk/issues/56)) ([771b1d1](https://github.com/dutterbutter/zksync-sdk/commit/771b1d18284a7ae15b6f8a598da76d525a472724))
+
 ## [0.0.9-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.8-alpha...v0.0.9-alpha) (2025-10-24)
 
 
