@@ -242,9 +242,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
         bridgeTx = { ...twoBridgesSim.request, ...txFeeOverrides };
         resolvedL1GasLimit = twoBridgesSim.request.gas ?? ctx.l2GasLimit;
       }
-      if (resolvedL1GasLimit == null) {
-        resolvedL1GasLimit = ctx.l2GasLimit;
-      }
 
       steps.push({
         key: 'bridgehub:two-bridges:eth-nonbase',

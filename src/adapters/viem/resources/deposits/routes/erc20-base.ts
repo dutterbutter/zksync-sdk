@@ -204,9 +204,6 @@ export function routeErc20Base(): DepositRouteStrategy {
         bridgeTx = { ...sim.request, ...txFeeOverrides };
         resolvedL1GasLimit = sim.request.gas ?? ctx.l2GasLimit;
       }
-      if (resolvedL1GasLimit == null) {
-        resolvedL1GasLimit = ctx.l2GasLimit;
-      }
 
       steps.push({
         key: 'bridgehub:direct:erc20-base',
