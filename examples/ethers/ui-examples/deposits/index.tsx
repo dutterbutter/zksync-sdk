@@ -445,7 +445,9 @@ function Example() {
             </div>
           </div>
         </fieldset>
-        <p>Depositing {amountLabel} from Sepolia (L1) to {targetL2Rpc}.</p>
+        <p>
+          Depositing {amountLabel} from Sepolia (L1) to {targetL2Rpc}.
+        </p>
       </section>
 
       <section>
