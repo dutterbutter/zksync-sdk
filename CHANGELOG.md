@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.0.10-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.9-alpha...v0.0.10-alpha) (2025-10-25)
+
+
+### Bug Fixes
+
+* fix unexported constants issue ([#56](https://github.com/dutterbutter/zksync-sdk/issues/56)) ([771b1d1](https://github.com/dutterbutter/zksync-sdk/commit/771b1d18284a7ae15b6f8a598da76d525a472724))
+
+## [0.0.9-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.8-alpha...v0.0.9-alpha) (2025-10-24)
+
+
+### Features
+
+* adds runnable examples ([#53](https://github.com/dutterbutter/zksync-sdk/issues/53)) ([51e3b2c](https://github.com/dutterbutter/zksync-sdk/commit/51e3b2c94c74240c80bc980ef9e854df4a7d0a8e))
+
+
+### Bug Fixes
+
+* remove chalk ([#55](https://github.com/dutterbutter/zksync-sdk/issues/55)) ([37d7f8f](https://github.com/dutterbutter/zksync-sdk/commit/37d7f8fa800e127d9bbf25fd382b28f7e9ceeadc))
+
+## [0.0.8-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.7-alpha...v0.0.8-alpha) (2025-10-23)
+
+
+### Features
+
+* add adapter test harness, move ethers/viem tests on top ([#47](https://github.com/dutterbutter/zksync-sdk/issues/47)) ([058b2e8](https://github.com/dutterbutter/zksync-sdk/commit/058b2e80833fe5424c201b42037e62b6825ebfa9))
+* add support get_genesis zks method ([#50](https://github.com/dutterbutter/zksync-sdk/issues/50)) ([e0b1558](https://github.com/dutterbutter/zksync-sdk/commit/e0b15582b973c2c0182a685ba7d052e5f65e7a1e))
+
+
+### Bug Fixes
+
+* add override params, and fix ethers browser wallet issue ([#51](https://github.com/dutterbutter/zksync-sdk/issues/51)) ([b9d56b8](https://github.com/dutterbutter/zksync-sdk/commit/b9d56b88b9d10e04df2ed81aa83d59c75e6f53c1))
+* codecov paths ([#48](https://github.com/dutterbutter/zksync-sdk/issues/48)) ([b03817a](https://github.com/dutterbutter/zksync-sdk/commit/b03817a443517ec04a720cf3e957fc4af7309215))
+* update ci-server version ([#43](https://github.com/dutterbutter/zksync-sdk/issues/43)) ([7a6d8b8](https://github.com/dutterbutter/zksync-sdk/commit/7a6d8b8018824fb1e4d1dfac5de6e2a67c9ab934))
+
 ## [0.0.7-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.6-alpha...v0.0.7-alpha) (2025-10-04)
 
 

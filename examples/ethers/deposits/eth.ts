@@ -54,6 +54,11 @@ async function main() {
     // gasPerPubdata: 800n,
     // operatorTip: 0n,
     // refundRecipient: me,
+    // l1TxOverrides: {
+    //   gasLimit: 280_000n,
+    //   maxFeePerGas: parseEther('0.00000002'), // 20 gwei
+    //   maxPriorityFeePerGas: parseEther('0.000000002'), // 2 gwei
+    // },
   } as const;
 
   // --- STEP 1: QUOTE ---

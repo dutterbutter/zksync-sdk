@@ -6,8 +6,20 @@ import {
   L1_FEE_ESTIMATION_COEF_NUMERATOR,
   ETH_ADDRESS,
 } from '../../../core/constants';
-import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../client';
+import type { Eip1559GasOverrides, ResolvedEip1559Fees } from '../../../core/types/flows/base';
+import { assertNoLegacyGas, assertPriorityFeeBounds } from '../../../core/utils/gas';
+import type { FeeData } from 'ethers';
+
+function supportsGetGasPrice(
+  provider: unknown,
+): provider is { getGasPrice(): Promise<bigint | { toString(): string }> } {
+  return (
+    typeof provider === 'object' &&
+    provider !== null &&
+    typeof (provider as { getGasPrice?: unknown }).getGasPrice === 'function'
+  );
+}
 
 // TODO: refactor this entirely
 // separate encoding, and move gas helpers to new resource
@@ -76,27 +88,93 @@ export async function checkBaseCost(
 }
 
 // --- Gas + fees ---
+export type ResolvedFeeOverrides = ResolvedEip1559Fees & {
+  gasPriceForBaseCost: bigint;
+};
+
 export async function getFeeOverrides(
   client: EthersClient,
-): Promise<Partial<TransactionRequest> & { gasPriceForBaseCost: bigint }> {
-  const fd = await client.l1.getFeeData();
-  const use1559 = fd.maxFeePerGas != null && fd.maxPriorityFeePerGas != null;
-  const feeOverrides = use1559
-    ? { maxFeePerGas: fd.maxFeePerGas, maxPriorityFeePerGas: fd.maxPriorityFeePerGas }
-    : { gasPrice: fd.gasPrice };
+  overrides?: Eip1559GasOverrides,
+): Promise<ResolvedFeeOverrides> {
+  assertNoLegacyGas(overrides);
 
-  const gasPriceForBaseCostBn = fd.gasPrice ?? fd.maxFeePerGas;
-  if (gasPriceForBaseCostBn == null) throw new Error('provider returned no gas price data');
+  const fd: FeeData = await client.l1.getFeeData();
+  const maxFeeFromProvider = fd.maxFeePerGas ?? undefined;
+  const maxPriorityFromProvider = fd.maxPriorityFeePerGas ?? undefined;
+  const gasPriceFallback = fd.gasPrice ?? undefined;
 
-  return { ...feeOverrides, gasPriceForBaseCost: BigInt(gasPriceForBaseCostBn.toString()) };
+  const maxFeePerGas = overrides?.maxFeePerGas ?? maxFeeFromProvider ?? gasPriceFallback;
+  if (maxFeePerGas == null) throw new Error('provider returned no gas price data');
+
+  const maxPriorityFeePerGas =
+    overrides?.maxPriorityFeePerGas ?? maxPriorityFromProvider ?? maxFeePerGas;
+
+  assertPriorityFeeBounds({ maxFeePerGas, maxPriorityFeePerGas });
+
+  const gasPriceForBaseCost =
+    overrides?.maxFeePerGas ?? maxFeeFromProvider ?? gasPriceFallback ?? maxFeePerGas;
+
+  return {
+    gasLimit: overrides?.gasLimit,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasPriceForBaseCost,
+  };
+}
+
+export async function getL2FeeOverrides(
+  client: EthersClient,
+  overrides?: Eip1559GasOverrides,
+): Promise<ResolvedEip1559Fees> {
+  assertNoLegacyGas(overrides);
+
+  let maxFeeFromProvider: bigint | undefined;
+  let maxPriorityFromProvider: bigint | undefined;
+  let gasPriceFallback: bigint | undefined;
+  try {
+    const fd: FeeData = await client.l2.getFeeData();
+    if (fd?.maxFeePerGas != null) maxFeeFromProvider = fd.maxFeePerGas;
+    if (fd?.maxPriorityFeePerGas != null) {
+      maxPriorityFromProvider = fd.maxPriorityFeePerGas;
+    }
+    if (fd?.gasPrice != null) gasPriceFallback = fd.gasPrice;
+  } catch {
+    // ignore
+  }
+  if (gasPriceFallback == null) {
+    try {
+      if (supportsGetGasPrice(client.l2)) {
+        const gp = await client.l2.getGasPrice();
+        gasPriceFallback = typeof gp === 'bigint' ? gp : BigInt(gp.toString());
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const maxFeePerGas = overrides?.maxFeePerGas ?? maxFeeFromProvider ?? gasPriceFallback;
+  if (maxFeePerGas == null) {
+    throw new Error('L2 provider returned no gas price data');
+  }
+
+  const maxPriorityFeePerGas =
+    overrides?.maxPriorityFeePerGas ?? maxPriorityFromProvider ?? maxFeePerGas;
+
+  assertPriorityFeeBounds({ maxFeePerGas, maxPriorityFeePerGas });
+
+  return {
+    gasLimit: overrides?.gasLimit,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+  };
 }
 
 // Fetches the gas price in wei
 export async function getGasPriceWei(client: EthersClient): Promise<bigint> {
   // prefer FeeData.gasPrice if available; fallback to FeeData.maxFeePerGas
-  const fd = await client.l1.getFeeData();
-  if (fd.gasPrice != null) return BigInt(fd.gasPrice.toString());
-  if (fd.maxFeePerGas != null) return BigInt(fd.maxFeePerGas.toString());
+  const fd: FeeData = await client.l1.getFeeData();
+  if (fd.gasPrice != null) return fd.gasPrice;
+  if (fd.maxFeePerGas != null) return fd.maxFeePerGas;
   throw new Error('provider returned no gas price data');
 }
 

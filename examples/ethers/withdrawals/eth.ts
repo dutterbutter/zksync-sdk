@@ -45,6 +45,11 @@ async function main() {
     amount: parseEther('.0001'),
     to: me,
     // l2GasLimit?: 300_000n, fee overrides, etc...
+    // l2TxOverrides: {
+    //   gasLimit: 400_000n,
+    //   maxFeePerGas: parseEther('0.00000002'),
+    //   maxPriorityFeePerGas: parseEther('0.000000002'),
+    // },
   } as const;
 
   const quote = await sdk.withdrawals.quote(params);

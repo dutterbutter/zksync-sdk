@@ -1,6 +1,6 @@
 // src/adapters/ethers/client.ts
-import type { AbstractProvider, ContractRunner, Signer } from 'ethers';
-import { Contract, Interface, JsonRpcProvider } from 'ethers';
+import type { AbstractProvider, Signer } from 'ethers';
+import { BrowserProvider, Contract, Interface } from 'ethers';
 import type { Address } from '../../core/types/primitives';
 import type { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromEthers } from './rpc';
@@ -24,6 +24,7 @@ import {
   InteropCenterABI,
   IInteropHandlerABI,
 } from '../../core/internal/abi-registry';
+import { createError } from '../../core/errors/factory';
 
 /** ---------------- Types ---------------- */
 
@@ -56,6 +57,11 @@ export interface EthersClient {
   readonly signer: Signer;
 
   /** ZKsync-specific RPC bound to the current/source L2 */
+  /** Returns a signer bound to the L1 provider (never calls connect on browser-backed signers). */
+  getL1Signer(): Signer;
+  /** Returns a signer bound to the L2 provider (never calls connect on browser-backed signers). */
+  getL2Signer(): Signer;
+  /** ZK Sync-specific RPC methods */
   readonly zks: ZksRpc;
 
   /** Cached resolved addresses (L1/L2 + interop) */
@@ -124,9 +130,49 @@ export function createEthersClient(args: InitArgs): EthersClient {
   const { l1, l2, signer, chains, overrides } = args;
 
   // Ensure signer is connected to L1 by default; resources can re-bind with signerFor('l1'|chainId).
+  // -------------------------------------------------------------------------
+  // Signer binding logic
+  // -------------------------------------------------------------------------
   let boundSigner = signer;
-  if (!boundSigner.provider || (boundSigner.provider as unknown as ContractRunner) !== l1) {
+
+  const signerProvider = signer.provider;
+  // Detect if signer is backed by a BrowserProvider (e.g., MetaMask)
+  const isBrowserProvider = signerProvider instanceof BrowserProvider;
+
+  if (!isBrowserProvider && (!boundSigner.provider || boundSigner.provider !== l1)) {
+    // Regular RPC-based signer (e.g. JsonRpcSigner, Wallet)
     boundSigner = signer.connect(l1);
+  } else if (isBrowserProvider && signerProvider) {
+    // For BrowserProvider signers, we trust their internal connection.
+    // Run an async network check in the background (non-blocking)
+    void (async () => {
+      try {
+        const [signerNet, l1Net] = await Promise.all([
+          signerProvider.getNetwork(),
+          l1.getNetwork(),
+        ]);
+
+        if (signerNet.chainId !== l1Net.chainId) {
+          // Non-fatal consistency warning
+          const warning = createError('STATE', {
+            message:
+              `BrowserProvider signer chainId (${signerNet.chainId}) != ` +
+              `L1 provider chainId (${l1Net.chainId}). Ensure the wallet is connected to the correct network.`,
+            resource: 'helpers',
+            operation: 'client.browserProvider.networkMismatch',
+            context: {
+              signerChainId: signerNet.chainId,
+              l1ChainId: l1Net.chainId,
+            },
+          });
+          // eslint-disable-next-line no-console
+          console.debug('[zksync-sdk] non-fatal warning:', warning);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        // ignore
+      }
+    })();
   }
 
   // Chain registry for interop destinations
@@ -273,7 +319,29 @@ export function createEthersClient(args: InitArgs): EthersClient {
     cCache = undefined;
   }
 
-  /** Bridgehub convenience */
+  function resolveSignerFor(provider: AbstractProvider): Signer {
+    const signerProvider = boundSigner.provider;
+
+    if (signerProvider === provider) {
+      return boundSigner;
+    }
+
+    if (!isBrowserProvider && typeof boundSigner.connect === 'function') {
+      return boundSigner.connect(provider);
+    }
+
+    if (!signerProvider) {
+      throw createError('STATE', {
+        resource: 'helpers',
+        message: 'Signer has no associated provider; cannot resolve requested signer.',
+        operation: 'client.resolveSignerFor',
+      });
+    }
+
+    return boundSigner;
+  }
+
+  // lookup base token for a given chain ID via Bridgehub.baseToken(chainId)
   async function baseToken(chainId: bigint): Promise<Address> {
     const { bridgehub } = await ensureAddresses();
     const bh = new Contract(bridgehub, IBridgehubABI, l1);
@@ -285,6 +353,12 @@ export function createEthersClient(args: InitArgs): EthersClient {
     l1,
     l2,
     signer: boundSigner,
+    getL1Signer() {
+      return resolveSignerFor(l1);
+    },
+    getL2Signer() {
+      return resolveSignerFor(l2);
+    },
     zks,
     ensureAddresses,
     contracts,

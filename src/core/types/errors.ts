@@ -1,7 +1,25 @@
 // src/core/types/errors.ts
 
-import util from 'node:util';
 import { formatEnvelopePretty } from '../errors/formatter';
+
+// TODO: revisit safeInspect implementation
+const hasSymbolInspect = typeof Symbol === 'function' && typeof Symbol.for === 'function';
+const kInspect: symbol | undefined = hasSymbolInspect
+  ? Symbol.for('nodejs.util.inspect.custom')
+  : undefined;
+
+function safeInspect(val: unknown): string {
+  try {
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val, null, 2);
+  } catch {
+    try {
+      return String(val);
+    } catch {
+      return Object.prototype.toString.call(val);
+    }
+  }
+}
 
 // TODO: revisit these types
 export type ErrorType =
@@ -65,13 +83,19 @@ export class ZKsyncError extends Error {
     this.name = 'ZKsyncError';
   }
 
-  [util.inspect.custom]() {
-    return `${this.name}: ${formatEnvelopePretty(this.envelope)}`;
-  }
-
   toJSON() {
     return { name: this.name, ...this.envelope };
   }
+}
+
+// TODO: revisit kInspect usage
+if (kInspect) {
+  Object.defineProperty(ZKsyncError.prototype, kInspect, {
+    value(this: ZKsyncError) {
+      return `${this.name}: ${formatEnvelopePretty(this.envelope)}`;
+    },
+    enumerable: false,
+  });
 }
 
 //  ---- Factory & type guards ----
@@ -138,15 +162,7 @@ export function isReceiptNotFound(e: unknown): boolean {
     if (typeof msg === 'string' && msg) return msg;
     if (e == null) return '';
     if (typeof e === 'string') return e;
-    try {
-      return util.inspect(e, { depth: 5 });
-    } catch {
-      try {
-        return JSON.stringify(e);
-      } catch {
-        return Object.prototype.toString.call(e);
-      }
-    }
+    return safeInspect(e);
   })();
   return MSG_RE.test(raw);
 }

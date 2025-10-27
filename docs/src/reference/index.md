@@ -10,6 +10,7 @@ Unlike the high-level flows (`deposits`, `withdrawals`), these helpers give you 
   - `getBridgehubAddress()`
   - `getL2ToL1LogProof()`
   - `getReceiptWithL2ToL1()`
+  - `getGenesis()`
 
 - **Common Helpers**  
   Utility getters for frequently used contracts and addresses, such as:

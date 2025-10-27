@@ -1,7 +1,7 @@
 // src/types/flows/withdrawals.ts
 
 import type { Address, Hex } from '../primitives';
-import type { ApprovalNeed, Plan, Handle } from './base';
+import type { ApprovalNeed, Plan, Handle, Eip1559GasOverrides, ResolvedEip1559Fees } from './base';
 
 /** Input */
 export interface WithdrawParams {
@@ -9,6 +9,7 @@ export interface WithdrawParams {
   amount: bigint;
   to?: Address;
   l2GasLimit?: bigint;
+  l2TxOverrides?: Eip1559GasOverrides;
 }
 
 /** Routes */
@@ -19,6 +20,7 @@ export interface WithdrawQuote {
   route: WithdrawRoute;
   approvalsNeeded: readonly ApprovalNeed[];
   suggestedL2GasLimit: bigint;
+  fees: ResolvedEip1559Fees;
 }
 
 /** Plan (Tx generic) */

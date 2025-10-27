@@ -133,14 +133,94 @@ describe('adapters/utils — gas helpers', () => {
       },
     };
     await expect(ethersUtils.getFeeOverrides(ethersClient)).resolves.toEqual({
+      gasLimit: undefined,
       maxFeePerGas: 100n,
       maxPriorityFeePerGas: 2n,
       gasPriceForBaseCost: 100n,
     });
     await expect(viemUtils.getFeeOverrides(viemClient)).resolves.toEqual({
+      gasLimit: undefined,
       maxFeePerGas: 100n,
       maxPriorityFeePerGas: 2n,
       gasPriceForBaseCost: 100n,
+    });
+  });
+
+  it('getFeeOverrides applies explicit overrides', async () => {
+    const ethersClient: any = {
+      l1: {
+        async getFeeData() {
+          return { maxFeePerGas: 100n, maxPriorityFeePerGas: 5n, gasPrice: null };
+        },
+      },
+    };
+    const viemClient: any = {
+      l1: {
+        async estimateFeesPerGas() {
+          return { maxFeePerGas: 100n, maxPriorityFeePerGas: 5n, gasPrice: null };
+        },
+        async getGasPrice() {
+          return Promise.reject(new Error('should not be used'));
+        },
+      },
+    };
+    const overrides = { gasLimit: 999_999n, maxFeePerGas: 200n, maxPriorityFeePerGas: 10n };
+    await expect(ethersUtils.getFeeOverrides(ethersClient, overrides)).resolves.toEqual({
+      gasLimit: 999_999n,
+      maxFeePerGas: 200n,
+      maxPriorityFeePerGas: 10n,
+      gasPriceForBaseCost: 200n,
+    });
+    await expect(viemUtils.getFeeOverrides(viemClient, overrides)).resolves.toEqual({
+      gasLimit: 999_999n,
+      maxFeePerGas: 200n,
+      maxPriorityFeePerGas: 10n,
+      gasPriceForBaseCost: 200n,
+    });
+  });
+
+  it('getL2FeeOverrides handles provider data and overrides', async () => {
+    const ethersClient: any = {
+      l2: {
+        async getFeeData() {
+          return { maxFeePerGas: 99n, maxPriorityFeePerGas: 3n, gasPrice: 88n };
+        },
+        async getGasPrice() {
+          return 77n;
+        },
+      },
+    };
+    const viemClient: any = {
+      l2: {
+        async estimateFeesPerGas() {
+          return { maxFeePerGas: 99n, maxPriorityFeePerGas: 3n, gasPrice: 88n };
+        },
+        async getGasPrice() {
+          return 77n;
+        },
+      },
+    };
+    await expect(ethersUtils.getL2FeeOverrides(ethersClient, undefined)).resolves.toEqual({
+      gasLimit: undefined,
+      maxFeePerGas: 99n,
+      maxPriorityFeePerGas: 3n,
+    });
+    await expect(viemUtils.getL2FeeOverrides(viemClient, undefined)).resolves.toEqual({
+      gasLimit: undefined,
+      maxFeePerGas: 99n,
+      maxPriorityFeePerGas: 3n,
+    });
+
+    const overrides = { gasLimit: 123_456n, maxFeePerGas: 200n };
+    await expect(ethersUtils.getL2FeeOverrides(ethersClient, overrides)).resolves.toEqual({
+      gasLimit: 123_456n,
+      maxFeePerGas: 200n,
+      maxPriorityFeePerGas: 3n,
+    });
+    await expect(viemUtils.getL2FeeOverrides(viemClient, overrides)).resolves.toEqual({
+      gasLimit: 123_456n,
+      maxFeePerGas: 200n,
+      maxPriorityFeePerGas: 3n,
     });
   });
 
@@ -163,11 +243,15 @@ describe('adapters/utils — gas helpers', () => {
       },
     };
     await expect(ethersUtils.getFeeOverrides(ethersClient)).resolves.toEqual({
-      gasPrice: 55n,
+      gasLimit: undefined,
+      maxFeePerGas: 55n,
+      maxPriorityFeePerGas: 55n,
       gasPriceForBaseCost: 55n,
     });
     await expect(viemUtils.getFeeOverrides(viemClient)).resolves.toEqual({
-      gasPrice: 55n,
+      gasLimit: undefined,
+      maxFeePerGas: 55n,
+      maxPriorityFeePerGas: 55n,
       gasPriceForBaseCost: 55n,
     });
   });

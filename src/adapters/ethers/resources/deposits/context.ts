@@ -1,8 +1,7 @@
 // context.ts
-import { type TransactionRequest } from 'ethers';
 import type { EthersClient } from '../../client';
 import type { Address } from '../../../../core/types/primitives';
-import { getFeeOverrides } from '../utils';
+import { getFeeOverrides, type ResolvedFeeOverrides } from '../utils';
 import { pickDepositRoute } from '../../../../core/resources/deposits/route';
 import type { DepositParams, DepositRoute } from '../../../../core/types/flows/deposits';
 import type { CommonCtx } from '../../../../core/types/flows/base';
@@ -13,7 +12,7 @@ export interface BuildCtx extends CommonCtx {
 
   l1AssetRouter: Address;
 
-  fee: Partial<TransactionRequest> & { gasPriceForBaseCost: bigint };
+  fee: ResolvedFeeOverrides;
   l2GasLimit: bigint;
   gasPerPubdata: bigint;
   operatorTip: bigint;
@@ -25,7 +24,7 @@ export async function commonCtx(p: DepositParams, client: EthersClient) {
   const { bridgehub, l1AssetRouter } = await client.ensureAddresses();
   const { chainId } = await client.l2.getNetwork();
   const sender = (await client.signer.getAddress()) as Address;
-  const fee = await getFeeOverrides(client);
+  const fee = await getFeeOverrides(client, p.l1TxOverrides);
 
   // TODO: gas default values should be refactored
   const l2GasLimit = p.l2GasLimit ?? 300_000n;

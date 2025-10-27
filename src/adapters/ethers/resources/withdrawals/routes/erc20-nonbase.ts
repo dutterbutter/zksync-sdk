@@ -27,10 +27,14 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
     async build(p, ctx) {
       const steps: Array<PlanStep<TransactionRequest>> = [];
       const approvals: ApprovalNeed[] = [];
+      const { gasLimit: overrideGasLimit, maxFeePerGas, maxPriorityFeePerGas } = ctx.fee;
+      const txOverrides =
+        overrideGasLimit != null
+          ? { maxFeePerGas, maxPriorityFeePerGas, gasLimit: overrideGasLimit }
+          : { maxFeePerGas, maxPriorityFeePerGas };
 
-      const l2Signer = ctx.client.signer.connect(ctx.client.l2);
       // L2 allowance
-      const erc20 = new Contract(p.token, IERC20ABI, l2Signer);
+      const erc20 = new Contract(p.token, IERC20ABI, ctx.client.getL2Signer());
       const current: bigint = (await wrapAs(
         'CONTRACT',
         OP_WITHDRAWALS.erc20.allowance,
@@ -58,7 +62,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
           key: `approve:l2:${p.token}:${ctx.l2NativeTokenVault}`,
           kind: 'approve:l2',
           description: `Approve ${p.amount} to NativeTokenVault`,
-          tx: { to: p.token, data, from: ctx.sender, ...(ctx.fee ?? {}) },
+          tx: { to: p.token, data, from: ctx.sender, ...txOverrides },
         });
       }
 
@@ -107,7 +111,7 @@ export function routeErc20NonBase(): WithdrawRouteStrategy {
         to: ctx.l2AssetRouter,
         data: dataWithdraw,
         from: ctx.sender,
-        ...(ctx.fee ?? {}),
+        ...txOverrides,
       };
 
       steps.push({

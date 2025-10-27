@@ -85,6 +85,11 @@ export function routeEthNonBase(): DepositRouteStrategy {
 
     async build(p, ctx) {
       const bh = new Contract(ctx.bridgehub, IBridgehubABI, ctx.client.l1);
+      const { gasPriceForBaseCost, gasLimit: overrideGasLimit, ...txFeeOverrides } = ctx.fee;
+      const txOverrides =
+        overrideGasLimit != null
+          ? { ...txFeeOverrides, gasLimit: overrideGasLimit }
+          : txFeeOverrides;
 
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -103,7 +108,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
         () =>
           bh.l2TransactionBaseCost(
             ctx.chainIdL2,
-            ctx.fee.gasPriceForBaseCost,
+            gasPriceForBaseCost,
             ctx.l2GasLimit,
             ctx.gasPerPubdata,
           ),
@@ -122,7 +127,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
 
       // Ensure base-token allowance to L1AssetRouter for `mintValue`
       {
-        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.signer.connect(ctx.client.l1));
+        const erc20 = new Contract(baseToken, IERC20ABI, ctx.client.getL1Signer());
         const allowance = (await wrapAs(
           'RPC',
           OP_DEPOSITS.ethNonBase.allowanceBase,
@@ -143,7 +148,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: `Approve base token for mintValue`,
-            tx: { to: baseToken, data, from: ctx.sender, ...ctx.fee },
+            tx: { to: baseToken, data, from: ctx.sender, ...txOverrides },
           });
         }
       }
@@ -185,22 +190,26 @@ export function routeEthNonBase(): DepositRouteStrategy {
         data: dataTwo,
         value: p.amount, // base ≠ ETH ⇒ msg.value == secondBridgeValue
         from: ctx.sender,
-        ...ctx.fee,
+        ...txOverrides,
       };
 
-      try {
-        const est = await wrapAs(
-          'RPC',
-          OP_DEPOSITS.ethNonBase.estGas,
-          () => ctx.client.l1.estimateGas(bridgeTx),
-          {
-            ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
-            message: 'Failed to estimate gas for Bridgehub request.',
-          },
-        );
-        bridgeTx.gasLimit = (BigInt(est) * 115n) / 100n;
-      } catch {
-        // ignore;
+      if (overrideGasLimit != null) {
+        bridgeTx.gasLimit = overrideGasLimit;
+      } else {
+        try {
+          const est = await wrapAs(
+            'RPC',
+            OP_DEPOSITS.ethNonBase.estGas,
+            () => ctx.client.l1.estimateGas(bridgeTx),
+            {
+              ctx: { where: 'l1.estimateGas', to: ctx.bridgehub },
+              message: 'Failed to estimate gas for Bridgehub request.',
+            },
+          );
+          bridgeTx.gasLimit = (BigInt(est) * 115n) / 100n;
+        } catch {
+          // ignore;
+        }
       }
 
       steps.push({

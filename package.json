@@ -1,12 +1,11 @@
 {
   "name": "@dutterbutter/zksync-sdk",
-  "version": "0.0.7-alpha",
+  "version": "0.0.10-alpha",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "devDependencies": {
     "@types/bun": "latest",
     "bun-types": "^1.2.19",
-    "chalk": "^5.6.2",
     "eslint": "^9.7.0",
     "ncp": "^2.0.0",
     "prettier": "^3.3.3",

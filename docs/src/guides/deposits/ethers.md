@@ -21,6 +21,7 @@ A fast path to deposit **ETH / ERC-20** from L1 → ZKsync (L2) using the **ethe
 | `gasPerPubdata`   | No       | Pubdata price hint                     |
 | `operatorTip`     | No       | Optional tip to operator               |
 | `refundRecipient` | No       | L2 address to receive fee refunds      |
+| `l1TxOverrides`   | No       | L1 tx overrides (e.g. gasLimit, maxFeePerGas, maxPriorityFeePerGas)     |
 
 > ERC-20 deposits may require an L1 `approve()`. **`quote()`** surfaces required steps.
 

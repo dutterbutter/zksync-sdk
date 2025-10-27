@@ -1,7 +1,7 @@
 // src/adapters/viem/resources/deposits/routes/erc20-nonbase.ts
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
-import { encodeSecondBridgeErc20Args } from '../../utils';
+import { encodeSecondBridgeErc20Args, buildViemFeeOverrides } from '../../utils';
 import { IERC20ABI, IBridgehubABI } from '../../../../../core/internal/abi-registry.ts';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
@@ -57,6 +57,9 @@ export function routeErc20NonBase(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
+      const { gasPriceForBaseCost } = ctx.fee;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
+
       // Read base token
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -89,7 +92,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             address: ctx.bridgehub,
             abi: IBridgehubABI as Abi,
             functionName: 'l2TransactionBaseCost',
-            args: [ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, l2GasLimitUsed, ctx.gasPerPubdata],
+            args: [ctx.chainIdL2, gasPriceForBaseCost, l2GasLimitUsed, ctx.gasPerPubdata],
           }),
         { ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 } },
       )) as bigint;
@@ -129,6 +132,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, p.amount] as const,
               account: ctx.client.account,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: p.token },
@@ -141,7 +145,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           key: `approve:${p.token}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: `Approve deposit token for amount`,
-          tx: approveDepReq.request,
+          tx: { ...approveDepReq.request, ...txFeeOverrides },
         });
       }
 
@@ -176,6 +180,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
                 functionName: 'approve',
                 args: [ctx.l1AssetRouter, mintValue] as const,
                 account: ctx.client.account,
+                ...txFeeOverrides,
               }),
             {
               ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -188,7 +193,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
             kind: 'approve',
             description: `Approve base token for mintValue`,
-            tx: approveBaseReq.request,
+            tx: { ...approveBaseReq.request, ...txFeeOverrides },
           });
         }
 
@@ -237,6 +242,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           args: [outer],
           value: msgValue,
           account: ctx.client.account,
+          ...txFeeOverrides,
         } as const;
       } else {
         const sim = await wrapAs(
@@ -250,13 +256,14 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               args: [outer],
               value: msgValue,
               account: ctx.client.account,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
             message: 'Failed to simulate two-bridges request.',
           },
         );
-        bridgeTx = sim.request;
+        bridgeTx = { ...sim.request, ...txFeeOverrides };
       }
 
       steps.push({

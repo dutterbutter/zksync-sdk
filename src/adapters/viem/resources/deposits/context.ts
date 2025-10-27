@@ -12,7 +12,7 @@ export interface BuildCtx extends CommonCtx {
 
   l1AssetRouter: Address;
 
-  fee: FeeOverrides & { gasPriceForBaseCost: bigint };
+  fee: FeeOverrides;
   l2GasLimit: bigint;
   gasPerPubdata: bigint;
   operatorTip: bigint;
@@ -24,7 +24,7 @@ export async function commonCtx(p: DepositParams, client: ViemClient) {
   const { bridgehub, l1AssetRouter } = await client.ensureAddresses();
   const chainId = await client.l2.getChainId();
   const sender = client.account.address;
-  const fee = (await getFeeOverrides(client)) as FeeOverrides & { gasPriceForBaseCost: bigint };
+  const fee = await getFeeOverrides(client, p.l1TxOverrides);
 
   // TODO: gas default values should be refactored
   const l2GasLimit = p.l2GasLimit ?? 300_000n;

@@ -60,7 +60,7 @@ For exhaustive examples please refer to [`./examples`](./examples/) directory.
 
 ```ts
 import { JsonRpcProvider, Wallet, parseEther } from 'ethers';
-import { createEthersClient } from '@dutterbutter/zksync-sdk/ethers';
+import { createEthersClient, createEthersSdk } from '@dutterbutter/zksync-sdk/ethers';
 import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const l1Provider = new JsonRpcProvider('https://sepolia.infura.io/v3/...');
@@ -84,7 +84,7 @@ console.log('Deposit complete ✅');
 
 ```ts
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
-import { createViemSdk } from '@dutterbutter/zksync-sdk/viem';
+import { createViemClient, createViemSdk } from '@dutterbutter/zksync-sdk/viem';
 import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const l1 = createPublicClient({ transport: http('https://sepolia.infura.io/v3/...') });

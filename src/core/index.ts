@@ -6,6 +6,7 @@ export {
   L1_MESSENGER_ADDRESS,
   L2_ASSET_ROUTER_ADDRESS,
   L2_NATIVE_TOKEN_VAULT_ADDRESS,
+  L1_SOPH_TOKEN_ADDRESS,
 } from './constants';
 
 export * as errors from './errors/factory';

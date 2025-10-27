@@ -3,7 +3,7 @@
 import type { DepositRouteStrategy, ViemPlanWriteRequest } from './types';
 import type { PlanStep, ApprovalNeed } from '../../../../../core/types/flows/base';
 import { IBridgehubABI, IERC20ABI } from '../../../../../core/internal/abi-registry.ts';
-import { buildDirectRequestStruct } from '../../utils';
+import { buildDirectRequestStruct, buildViemFeeOverrides } from '../../utils';
 import { createErrorHandlers } from '../../../errors/error-ops';
 import { OP_DEPOSITS } from '../../../../../core/types';
 import { normalizeAddrEq, isETH } from '../../../../../core/utils/addr';
@@ -65,6 +65,9 @@ export function routeErc20Base(): DepositRouteStrategy {
     },
 
     async build(p, ctx) {
+      const { gasPriceForBaseCost } = ctx.fee;
+      const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
+
       const baseToken = (await wrapAs(
         'CONTRACT',
         OP_DEPOSITS.base.baseToken,
@@ -90,7 +93,7 @@ export function routeErc20Base(): DepositRouteStrategy {
             address: ctx.bridgehub,
             abi: IBridgehubABI as Abi,
             functionName: 'l2TransactionBaseCost',
-            args: [ctx.chainIdL2, ctx.fee.gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
+            args: [ctx.chainIdL2, gasPriceForBaseCost, ctx.l2GasLimit, ctx.gasPerPubdata],
           }),
         {
           ctx: { where: 'l2TransactionBaseCost', chainIdL2: ctx.chainIdL2 },
@@ -136,6 +139,7 @@ export function routeErc20Base(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
               account: ctx.client.account,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -148,7 +152,7 @@ export function routeErc20Base(): DepositRouteStrategy {
           key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: 'Approve base token for mintValue',
-          tx: approveSim.request,
+          tx: { ...approveSim.request, ...txFeeOverrides },
         });
       }
 
@@ -174,20 +178,9 @@ export function routeErc20Base(): DepositRouteStrategy {
           args: [req],
           value: 0n, // base is ERC-20 ⇒ msg.value MUST be 0
           account: ctx.client.account,
+          ...txFeeOverrides,
         } as const;
       } else {
-        // Optional fee overrides
-        const feeOverrides: Record<string, unknown> = {};
-        if ('maxFeePerGas' in ctx.fee && ctx.fee.maxFeePerGas != null) {
-          feeOverrides.maxFeePerGas = ctx.fee.maxFeePerGas;
-        }
-        if ('maxPriorityFeePerGas' in ctx.fee && ctx.fee.maxPriorityFeePerGas != null) {
-          feeOverrides.maxPriorityFeePerGas = ctx.fee.maxPriorityFeePerGas;
-        }
-        if ('gasPrice' in ctx.fee && ctx.fee.gasPrice != null) {
-          feeOverrides.gasPrice = ctx.fee.gasPrice;
-        }
-
         const sim = await wrapAs(
           'RPC',
           OP_DEPOSITS.base.estGas,
@@ -199,14 +192,14 @@ export function routeErc20Base(): DepositRouteStrategy {
               args: [req],
               value: 0n,
               account: ctx.client.account,
-              ...feeOverrides,
+              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
             message: 'Failed to simulate Bridgehub.requestL2TransactionDirect.',
           },
         );
-        bridgeTx = sim.request;
+        bridgeTx = { ...sim.request, ...txFeeOverrides };
       }
 
       steps.push({
