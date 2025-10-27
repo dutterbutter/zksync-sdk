@@ -118,6 +118,13 @@ function Example() {
   const [l2TxInput, setL2TxInput] = useState('');
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
+  const walletClient = useMemo(() => {
+    if (typeof window === 'undefined' || !window.ethereum) return null;
+    return createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum as EIP1193Provider),
+    });
+  }, []);
 
   const amountLabel = useMemo(() => {
     const trimmed = amount.trim();
@@ -245,74 +252,45 @@ function Example() {
     } as const;
   }, [account, amount, token, recipient, l2GasLimitInput, l2MaxFeeInput, l2PriorityFeeInput]);
 
-  const connectWallet = useCallback(
-    () =>
-      run(
-        'connect',
-        async () => {
-          if (!window.ethereum) {
-            throw new Error('No injected wallet found. Install MetaMask or another wallet.');
-          }
-
-          const transport = custom(window.ethereum!);
-          const injected = window.ethereum as EIP1193Provider;
-          const walletClient = createWalletClient({ chain: sepolia, transport });
-          const [addr] = await walletClient.requestAddresses();
-          if (!addr) throw new Error('Wallet returned no accounts.');
-
-          const l1Wallet = createWalletClient({
-            account: addr,
-            chain: sepolia,
-            transport,
-          });
-
-          const l1ChainId = await l1Wallet.getChainId();
-          const l2Probe = createPublicClient({ transport: http(targetL2Rpc) });
-          const l2ChainId = await l2Probe.getChainId();
-          const zkSyncChain = makeZkSyncChain(Number(l2ChainId), targetL2Rpc);
-
-          const l2Public = createPublicClient({
-            chain: zkSyncChain,
-            transport: http(targetL2Rpc),
-          });
-
-          const l2Wallet = createWalletClient({
-            account: addr,
-            chain: zkSyncChain,
-            transport,
-          });
-
-          const client = createViemClient({
-            l1: l1Client as any,
-            l2: l2Public as any,
-            l1Wallet: l1Wallet as any,
-            l2Wallet: l2Wallet as any,
-          } as any);
-
-          const instance = createViemSdk(client);
-          return { instance, addr, injected, l1ChainId: Number(l1ChainId), zkSyncChain };
-        },
-        ({ instance, addr, injected, l1ChainId, zkSyncChain }) => {
-          setSdk(instance);
-          setAccount(addr);
-          setProvider(injected);
-          setWalletChainId(l1ChainId);
-          setConnectedL2Chain(zkSyncChain);
-          setConnectedL2Rpc(targetL2Rpc);
-          setRecipient((prev) => prev || addr);
-          setQuote(undefined);
-          setPlan(undefined);
-          setHandle(undefined);
-          setStatus(undefined);
-          setWaitL2Result(undefined);
-          setWaitReadyResult(undefined);
-          setWaitFinalizedResult(undefined);
-          setFinalizeResult(undefined);
-          setL2TxInput('');
-        },
-      ),
-    [run, targetL2Rpc],
+  const handleConnected = useCallback(
+    (address: Address, chainId: number) => {
+      setSdk(undefined);
+      setAccount(address);
+      setProvider(window.ethereum as EIP1193Provider);
+      setWalletChainId(chainId);
+      setConnectedL2Chain(undefined);
+      setConnectedL2Rpc(targetL2Rpc);
+      setRecipient((prev) => prev || address);
+      setQuote(undefined);
+      setPlan(undefined);
+      setHandle(undefined);
+      setStatus(undefined);
+      setWaitL2Result(undefined);
+      setWaitReadyResult(undefined);
+      setWaitFinalizedResult(undefined);
+      setFinalizeResult(undefined);
+      setL2TxInput('');
+    },
+    [targetL2Rpc],
   );
+
+  const connectWallet = useCallback(() => {
+    if (!walletClient) {
+      setError('No injected wallet found. Install MetaMask or another wallet.');
+      return;
+    }
+
+    return run(
+      'connect',
+      async () => {
+        const [address] = await walletClient.requestAddresses();
+        if (!address) throw new Error('Wallet returned no accounts.');
+        const chainId = await walletClient.getChainId();
+        return { address, chainId };
+      },
+      ({ address, chainId }) => handleConnected(address, chainId),
+    );
+  }, [handleConnected, run, walletClient]);
 
   const hasWaitableInput = handle != null || Boolean(l2TxInput.trim());
   const hasFinalizableHash = Boolean(l2TxInput.trim() || handle?.l2TxHash);
@@ -329,19 +307,19 @@ function Example() {
     return false;
   };
 
-  const resolveWaitable = () => {
+  const resolveWaitable = useCallback(() => {
     const trimmed = l2TxInput.trim();
     if (trimmed) return trimmed as Hex;
     if (handle) return handle;
     return null;
-  };
+  }, [handle, l2TxInput]);
 
-  const resolveL2Hash = () => {
+  const resolveL2Hash = useCallback(() => {
     const trimmed = l2TxInput.trim();
     if (trimmed) return trimmed as Hex;
     if (handle?.l2TxHash) return handle.l2TxHash as Hex;
     return null;
-  };
+  }, [handle, l2TxInput]);
 
   const assertWalletOnChain = useCallback(
     async (expectedChainId: number, label: string) => {
@@ -445,7 +423,7 @@ function Example() {
         },
         (value) => setStatus(value),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForL2 = useCallback(
@@ -460,7 +438,7 @@ function Example() {
         },
         (value) => setWaitL2Result(value),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForReady = useCallback(
@@ -475,7 +453,7 @@ function Example() {
         },
         (value) => setWaitReadyResult(value ?? { ready: true }),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForFinalized = useCallback(
@@ -490,7 +468,7 @@ function Example() {
         },
         (value) => setWaitFinalizedResult(value ?? null),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const finalizeWithdrawal = useCallback(
@@ -508,7 +486,7 @@ function Example() {
         },
         (value) => setFinalizeResult(value),
       ),
-    [assertWalletOnL1, refreshSdkIfNeeded, run],
+    [assertWalletOnL1, refreshSdkIfNeeded, resolveL2Hash, run],
   );
 
   return (

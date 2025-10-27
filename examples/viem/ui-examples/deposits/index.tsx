@@ -101,6 +101,13 @@ function Example() {
   const [l1PriorityFeeInput, setL1PriorityFeeInput] = useState('');
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
+  const walletClient = useMemo(() => {
+    if (typeof window === 'undefined' || !window.ethereum) return null;
+    return createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum as EIP1193Provider),
+    });
+  }, []);
 
   const amountLabel = useMemo(() => {
     const trimmed = amount.trim();
@@ -218,63 +225,41 @@ function Example() {
     } as const;
   }, [account, amount, token, recipient, l1GasLimitInput, l1MaxFeeInput, l1PriorityFeeInput]);
 
-  const connectWallet = useCallback(
-    () =>
-      run(
-        'connect',
-        async () => {
-          if (!window.ethereum) {
-            throw new Error(
-              'No injected wallet found. Install MetaMask or another EIP-1193 wallet.',
-            );
-          }
-
-          const transport = custom(window.ethereum!);
-          const injected = window.ethereum as EIP1193Provider;
-          const walletClient = createWalletClient({ chain: sepolia, transport });
-          const [addr] = await walletClient.requestAddresses();
-          if (!addr) throw new Error('Wallet returned no accounts.');
-
-          const l1Wallet = createWalletClient({
-            account: addr,
-            chain: sepolia,
-            transport,
-          });
-
-          const chainId = await l1Wallet.getChainId();
-
-          const l2Client = createPublicClient({
-            transport: http(targetL2Rpc),
-          });
-
-          const client = createViemClient({
-            l1: l1 as any,
-            l2: l2Client as any,
-            l1Wallet: l1Wallet as any,
-          });
-
-          const instance = createViemSdk(client);
-          const l2ChainId = await l2Client.getChainId();
-
-          return { instance, addr, injected, chainId, l2ChainId };
-        },
-        ({ instance, addr, injected, chainId, l2ChainId }) => {
-          setSdk(instance);
-          setAccount(addr);
-          setProvider(injected);
-          setWalletChainId(Number(chainId));
-          setConnectedL2ChainId(Number(l2ChainId));
-          setConnectedL2Rpc(targetL2Rpc);
-          setRecipient((prev) => prev || addr);
-          setQuote(undefined);
-          setPlan(undefined);
-          setHandle(undefined);
-          setStatus(undefined);
-          setReceipt(null);
-        },
-      ),
-    [run, targetL2Rpc],
+  const handleConnected = useCallback(
+    (address: Address, chainId: number) => {
+      setSdk(undefined);
+      setAccount(address);
+      setProvider(window.ethereum as EIP1193Provider);
+      setWalletChainId(chainId);
+      setConnectedL2ChainId(undefined);
+      setConnectedL2Rpc(targetL2Rpc);
+      setRecipient((prev) => prev || address);
+      setQuote(undefined);
+      setPlan(undefined);
+      setHandle(undefined);
+      setStatus(undefined);
+      setReceipt(null);
+    },
+    [targetL2Rpc],
   );
+
+  const connectWallet = useCallback(() => {
+    if (!walletClient) {
+      setError('No injected wallet found. Install MetaMask or another EIP-1193 wallet.');
+      return;
+    }
+
+    return run(
+      'connect',
+      async () => {
+        const [address] = await walletClient.requestAddresses();
+        if (!address) throw new Error('Wallet returned no accounts.');
+        const chainId = await walletClient.getChainId();
+        return { address, chainId };
+      },
+      ({ address, chainId }) => handleConnected(address, chainId),
+    );
+  }, [handleConnected, run, walletClient]);
 
   const quoteDeposit = useCallback(
     () =>

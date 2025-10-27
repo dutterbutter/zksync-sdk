@@ -285,19 +285,19 @@ function Example() {
     return false;
   };
 
-  const resolveWaitable = () => {
+  const resolveWaitable = useCallback(() => {
     const trimmed = l2TxInput.trim();
     if (trimmed) return trimmed as Hex;
     if (handle) return handle;
     return null;
-  };
+  }, [handle, l2TxInput]);
 
-  const resolveL2Hash = () => {
+  const resolveL2Hash = useCallback(() => {
     const trimmed = l2TxInput.trim();
     if (trimmed) return trimmed as Hex;
     if (handle?.l2TxHash) return handle.l2TxHash as Hex;
     return null;
-  };
+  }, [handle, l2TxInput]);
 
   const assertWalletOnL2 = useCallback(async () => {
     if (!signer) throw new Error('Connect wallet first.');
@@ -399,7 +399,7 @@ function Example() {
         },
         (value) => setStatus(value),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForL2 = useCallback(
@@ -414,7 +414,7 @@ function Example() {
         },
         (value) => setWaitL2Result(value),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForReady = useCallback(
@@ -429,7 +429,7 @@ function Example() {
         },
         (value) => setWaitReadyResult(value ?? { ready: true }),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForFinalized = useCallback(
@@ -444,7 +444,7 @@ function Example() {
         },
         (value) => setWaitFinalizedResult(value ?? null),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const finalizeWithdrawal = useCallback(
@@ -462,7 +462,7 @@ function Example() {
         },
         (value) => setFinalizeResult(value),
       ),
-    [assertWalletOnL1, refreshSdkIfNeeded, run],
+    [assertWalletOnL1, refreshSdkIfNeeded, resolveL2Hash, run],
   );
 
   return (
