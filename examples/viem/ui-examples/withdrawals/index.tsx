@@ -256,21 +256,20 @@ function Example() {
 
           const injected = window.ethereum as EIP1193Provider;
           const transport = custom(injected);
-
-          const bootstrap = createWalletClient({ chain: sepolia, transport });
-          const [addr] = await bootstrap.requestAddresses();
+          const walletClient = createWalletClient({ chain: sepolia, transport });
+          const [addr] = await walletClient.requestAddresses();
           if (!addr) throw new Error('Wallet returned no accounts.');
-
-          const l1ChainId = await bootstrap.getChainId();
-          const l2Probe = createPublicClient({ transport: http(targetL2Rpc) });
-          const l2ChainId = await l2Probe.getChainId();
-          const zkSyncChain = makeZkSyncChain(Number(l2ChainId), targetL2Rpc);
 
           const l1Wallet = createWalletClient({
             account: addr,
             chain: sepolia,
             transport,
           });
+
+          const l1ChainId = await l1Wallet.getChainId();
+          const l2Probe = createPublicClient({ transport: http(targetL2Rpc) });
+          const l2ChainId = await l2Probe.getChainId();
+          const zkSyncChain = makeZkSyncChain(Number(l2ChainId), targetL2Rpc);
 
           const l2Public = createPublicClient({
             chain: zkSyncChain,
