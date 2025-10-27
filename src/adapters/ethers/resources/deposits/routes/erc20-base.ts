@@ -66,7 +66,7 @@ export function routeErc20Base(): DepositRouteStrategy {
         overrideGasLimit != null
           ? { ...txFeeOverrides, gasLimit: overrideGasLimit }
           : txFeeOverrides;
-      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
+      let resolvedL1GasLimit: bigint = overrideGasLimit ?? ctx.l2GasLimit;
 
       // Read base token
       const baseToken = (await wrapAs(
@@ -178,10 +178,6 @@ export function routeErc20Base(): DepositRouteStrategy {
           // ignore;
         }
       }
-      if (resolvedL1GasLimit == null) {
-        resolvedL1GasLimit = ctx.l2GasLimit;
-      }
-
       steps.push({
         key: 'bridgehub:direct:erc20-base',
         kind: 'bridgehub:direct',

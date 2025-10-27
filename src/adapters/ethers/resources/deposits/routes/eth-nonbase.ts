@@ -185,7 +185,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
         ctx.client.l1,
       ).interface.encodeFunctionData('requestL2TransactionTwoBridges', [outer]);
 
-      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
+      let resolvedL1GasLimit: bigint = overrideGasLimit ?? ctx.l2GasLimit;
       const bridgeTx: TransactionRequest = {
         to: ctx.bridgehub,
         data: dataTwo,
@@ -215,10 +215,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
           // ignore;
         }
       }
-      if (resolvedL1GasLimit == null) {
-        resolvedL1GasLimit = ctx.l2GasLimit;
-      }
-
       steps.push({
         key: 'bridgehub:two-bridges:eth-nonbase',
         kind: 'bridgehub:two-bridges',

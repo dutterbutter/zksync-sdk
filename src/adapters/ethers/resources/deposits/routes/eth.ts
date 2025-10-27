@@ -53,7 +53,7 @@ export function routeEthDirect(): DepositRouteStrategy {
       });
 
       const data = bh.interface.encodeFunctionData('requestL2TransactionDirect', [req]);
-      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
+      let resolvedL1GasLimit: bigint = overrideGasLimit ?? ctx.l2GasLimit;
       const tx: TransactionRequest = {
         to: ctx.bridgehub,
         data,
@@ -82,10 +82,6 @@ export function routeEthDirect(): DepositRouteStrategy {
           // ignore
         }
       }
-      if (resolvedL1GasLimit == null) {
-        resolvedL1GasLimit = ctx.l2GasLimit;
-      }
-
       const steps: PlanStep<TransactionRequest>[] = [
         {
           key: 'bridgehub:direct',
