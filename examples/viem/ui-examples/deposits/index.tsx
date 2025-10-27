@@ -227,7 +227,6 @@ function Example() {
 
   const handleConnected = useCallback(
     (address: Address, chainId: number) => {
-      setSdk(undefined);
       setAccount(address);
       setProvider(window.ethereum as EIP1193Provider);
       setWalletChainId(chainId);
