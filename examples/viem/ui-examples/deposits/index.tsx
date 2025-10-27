@@ -229,8 +229,8 @@ function Example() {
             );
           }
 
+          const transport = custom(window.ethereum!);
           const injected = window.ethereum as EIP1193Provider;
-          const transport = custom(injected);
           const walletClient = createWalletClient({ chain: sepolia, transport });
           const [addr] = await walletClient.requestAddresses();
           if (!addr) throw new Error('Wallet returned no accounts.');
