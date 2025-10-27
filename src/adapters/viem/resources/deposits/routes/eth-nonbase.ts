@@ -207,6 +207,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
       // viem: if approval needed, don't simulate the bridge call (could revert).
       // Return a write-ready request with correct `value = p.amount`.
       let bridgeTx: ViemPlanWriteRequest;
+      let resolvedL1GasLimit: bigint | undefined;
 
       if (needsApprove) {
         bridgeTx = {
@@ -218,6 +219,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
           account: ctx.client.account,
           ...txFeeOverrides,
         } as const;
+        resolvedL1GasLimit = ctx.l2GasLimit;
       } else {
         const twoBridgesSim = await wrapAs(
           'CONTRACT',
@@ -238,6 +240,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
           },
         );
         bridgeTx = { ...twoBridgesSim.request, ...txFeeOverrides };
+        resolvedL1GasLimit = twoBridgesSim.request.gas ?? ctx.l2GasLimit;
       }
 
       steps.push({
@@ -248,7 +251,11 @@ export function routeEthNonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }

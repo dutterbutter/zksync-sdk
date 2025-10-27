@@ -8,6 +8,7 @@ import type { BuildCtx as DepositBuildCtx } from '../context';
 export type DepositQuoteExtras = {
   baseCost: bigint;
   mintValue: bigint;
+  l1GasLimit?: bigint;
 };
 
 // A Deposit route strategy for building a deposit transaction request
