@@ -9,14 +9,17 @@ import {
   createWithdrawalsResource,
   type WithdrawalsResource as WithdrawalsResourceType,
 } from './resources/withdrawals/index';
+import { type InteropResource as InteropResourceType } from './resources/interop/index';
 import { type Address, type Hex } from '../../core/types';
 import { isAddressEq } from '../../core/utils/addr';
 import { L2_BASE_TOKEN_ADDRESS, ETH_ADDRESS, FORMAL_ETH_ADDRESS } from '../../core/constants';
+import { createInteropResource } from './resources/interop';
 
 // SDK interface, combining deposits, withdrawals, and helpers
 export interface EthersSdk {
   deposits: DepositsResourceType;
   withdrawals: WithdrawalsResourceType;
+  interop: InteropResourceType;
   helpers: {
     // addresses & contracts
     addresses(): Promise<ResolvedAddresses>;
@@ -45,6 +48,7 @@ export function createEthersSdk(client: EthersClient): EthersSdk {
   return {
     deposits: createDepositsResource(client),
     withdrawals: createWithdrawalsResource(client),
+    interop: createInteropResource(client),
 
     // TODO: might update to create dedicated resources for these
     helpers: {

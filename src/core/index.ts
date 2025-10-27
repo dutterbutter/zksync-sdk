@@ -29,6 +29,7 @@ export * from './resources/interop/actions';
 export * from './resources/interop/events';
 export * from './resources/interop/logs';
 export * from './resources/interop/route';
+export * from './resources/interop/address';
 
 // Core types (type-only)
 export type * from './types';

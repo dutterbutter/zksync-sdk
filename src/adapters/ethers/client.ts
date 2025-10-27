@@ -1,6 +1,6 @@
 // src/adapters/ethers/client.ts
 import type { AbstractProvider, Signer } from 'ethers';
-import { BrowserProvider, Contract, Interface } from 'ethers';
+import { BrowserProvider, Contract, Interface, JsonRpcProvider } from 'ethers';
 import type { Address } from '../../core/types/primitives';
 import type { ZksRpc } from '../../core/rpc/zks';
 import { zksRpcFromEthers } from './rpc';
@@ -113,10 +113,7 @@ type InitArgs = {
 
   /** Optional manual overrides for addresses */
   overrides?: Partial<
-    Omit<
-      ResolvedAddresses,
-      'l2AssetRouter' | 'l2NativeTokenVault' | 'l2BaseTokenSystem'
-    >
+    Omit<ResolvedAddresses, 'l2AssetRouter' | 'l2NativeTokenVault' | 'l2BaseTokenSystem'>
   > & {
     l2AssetRouter?: Address;
     l2NativeTokenVault?: Address;

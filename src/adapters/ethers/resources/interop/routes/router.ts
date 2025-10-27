@@ -7,6 +7,10 @@ import type { Address, Hex } from '../../../../../core/types/primitives';
 import { AttributesEncoder } from '../attributes';
 import { sumActionMsgValue, sumErc20Amounts } from '../../../../../core/resources/interop/route';
 import { IERC20ABI } from '../../../../../core/internal/abi-registry';
+import {
+  formatInteropEvmAddress,
+  formatInteropEvmChain,
+} from '../../../../../core/resources/interop/address';
 
 export function routeRouter(): InteropRouteStrategy {
   return {
@@ -74,15 +78,17 @@ export function routeRouter(): InteropRouteStrategy {
         return list;
       });
 
-      const starters: Array<[Address, Hex, Hex[]]> = p.actions.map((a, i) => {
-        if (a.type === 'sendNative') return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
-        if (a.type === 'sendErc20') return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
-        return [a.to, a.data, perCallAttrs[i] ?? []];
+      const starters: Array<[Hex, Hex, Hex[]]> = p.actions.map((a, i) => {
+        const to = formatInteropEvmAddress(a.to);
+        if (a.type === 'sendNative') return [to, '0x' as Hex, perCallAttrs[i] ?? []];
+        if (a.type === 'sendErc20') return [to, '0x' as Hex, perCallAttrs[i] ?? []];
+        return [to, a.data, perCallAttrs[i] ?? []];
       });
 
       const center = ctx.addresses.interopCenter;
+      const dstChain = formatInteropEvmChain(ctx.dstChainId);
       const data = ctx.ifaces.interopCenter.encodeFunctionData('sendBundle', [
-        ctx.dstChainId,
+        dstChain,
         starters,
         bundleAttrs,
       ]) as Hex;

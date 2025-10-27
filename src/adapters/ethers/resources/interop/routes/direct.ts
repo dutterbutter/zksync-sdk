@@ -3,10 +3,14 @@ import type { TransactionRequest } from 'ethers';
 
 import type { InteropRouteStrategy, BuildCtx } from './types';
 import type { InteropParams } from '../../../../../core/types/flows/interop';
-import type { Address, Hex } from '../../../../../core/types/primitives';
+import type { Hex } from '../../../../../core/types/primitives';
 
 import { AttributesEncoder } from '../attributes';
 import { sumActionMsgValue, sumErc20Amounts } from '../../../../../core/resources/interop/route';
+import {
+  formatInteropEvmAddress,
+  formatInteropEvmChain,
+} from '../../../../../core/resources/interop/address';
 
 /** Route: 'direct'
  *  Preconditions:
@@ -72,53 +76,37 @@ export function routeDirect(): InteropRouteStrategy {
       });
 
       // Encode starters: (to, data, attributes)
-      const starters: Array<[Address, Hex, Hex[]]> = p.actions.map((a, i) => {
+      const starters: Array<[Hex, Hex, Hex[]]> = p.actions.map((a, i) => {
+        const to = formatInteropEvmAddress(a.to);
         switch (a.type) {
           case 'sendNative':
             // Send value to a receiver contract on dst.
-            return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
+            return [to, '0x' as Hex, perCallAttrs[i] ?? []];
 
           case 'call':
-            return [a.to, a.data ?? '0x', perCallAttrs[i] ?? []];
+            return [to, a.data ?? ('0x' as Hex), perCallAttrs[i] ?? []];
 
           default:
-            return [a.to, '0x' as Hex, perCallAttrs[i] ?? []];
+            return [to, '0x' as Hex, perCallAttrs[i] ?? []];
         }
       });
 
       // Choose sendCall vs sendBundle – single pure call can be sendCall
       const center = ctx.addresses.interopCenter;
+      const dstChain = formatInteropEvmChain(ctx.dstChainId);
+      const data = ctx.ifaces.interopCenter.encodeFunctionData('sendBundle', [
+        dstChain,
+        starters,
+        bundleAttrs,
+      ]) as Hex;
 
-      if (p.actions.length === 1 && p.actions[0].type === 'call') {
-        const only = p.actions[0];
-        const data = ctx.ifaces.interopCenter.encodeFunctionData('sendCall', [
-          ctx.dstChainId,
-          only.to,
-          only.data ?? '0x',
-          [...(perCallAttrs[0] ?? []), ...bundleAttrs],
-        ]) as Hex;
-
-        steps.push({
-          key: 'sendCall',
-          kind: 'interop.center',
-          description: 'Send single interop call (direct route)',
-          tx: { to: center, data, value: only.value ?? 0n },
-        });
-      } else {
-        const data = ctx.ifaces.interopCenter.encodeFunctionData('sendBundle', [
-          ctx.dstChainId,
-          starters,
-          bundleAttrs,
-        ]) as Hex;
-
-        steps.push({
-          key: 'sendBundle',
-          kind: 'interop.center',
-          description: `Send interop bundle (direct route; ${p.actions.length} actions)`,
-          // In direct route, msg.value equals total destination msg.value
-          tx: { to: center, data, value: totalActionValue },
-        });
-      }
+      steps.push({
+        key: 'sendBundle',
+        kind: 'interop.center',
+        description: `Send interop bundle (direct route; ${p.actions.length} actions)`,
+        // In direct route, msg.value equals total destination msg.value
+        tx: { to: center, data, value: totalActionValue },
+      });
 
       return {
         steps,

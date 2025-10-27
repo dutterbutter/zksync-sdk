@@ -78,7 +78,7 @@ export function createInteropResource(client: EthersClient): InteropResource {
   async function buildPlan(p: InteropParams): Promise<InteropPlan<TransactionRequest>> {
     // 1) Build adapter context (providers, signer, addresses, ABIs, topics, base tokens)
     const ethCtx = await wrap(
-      OP_INTEROP.prepare, // “build context” phase
+      OP_INTEROP.prepare,
       () => makeInteropContext(client, p.dst),
       {
         message: 'Failed to build interop context.',
