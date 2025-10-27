@@ -110,7 +110,8 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
 
     const { steps, approvals, quoteExtras } = await ROUTES[route].build(p, ctx);
     const { baseCost, mintValue } = quoteExtras;
-    const resolveGasLimit = (): bigint | undefined => {
+    const fallbackGasLimit = (quoteExtras as { l1GasLimit?: bigint }).l1GasLimit;
+    const resolveGasLimit = (): bigint => {
       if (ctx.fee.gasLimit != null) return ctx.fee.gasLimit;
       for (let i = steps.length - 1; i >= 0; i--) {
         const candidate = steps[i].tx.gasLimit;
@@ -122,7 +123,8 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
           // ignore and continue searching
         }
       }
-      return undefined;
+      if (fallbackGasLimit != null) return fallbackGasLimit;
+      return ctx.l2GasLimit;
     };
     const gasLimit = resolveGasLimit();
 
@@ -133,7 +135,6 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
         approvalsNeeded: approvals,
         baseCost,
         mintValue,
-        suggestedL2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
         fees: {
           gasLimit,

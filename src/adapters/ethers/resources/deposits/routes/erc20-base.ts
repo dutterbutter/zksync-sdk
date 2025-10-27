@@ -66,6 +66,7 @@ export function routeErc20Base(): DepositRouteStrategy {
         overrideGasLimit != null
           ? { ...txFeeOverrides, gasLimit: overrideGasLimit }
           : txFeeOverrides;
+      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
 
       // Read base token
       const baseToken = (await wrapAs(
@@ -158,6 +159,7 @@ export function routeErc20Base(): DepositRouteStrategy {
 
       if (overrideGasLimit != null) {
         tx.gasLimit = overrideGasLimit;
+        resolvedL1GasLimit = overrideGasLimit;
       } else {
         try {
           const est = await wrapAs(
@@ -169,10 +171,15 @@ export function routeErc20Base(): DepositRouteStrategy {
               message: 'Failed to estimate gas for Bridgehub request.',
             },
           );
-          tx.gasLimit = (BigInt(est) * 115n) / 100n;
+          const buffered = (BigInt(est) * 115n) / 100n;
+          tx.gasLimit = buffered;
+          resolvedL1GasLimit = buffered;
         } catch {
           // ignore;
         }
+      }
+      if (resolvedL1GasLimit == null) {
+        resolvedL1GasLimit = ctx.l2GasLimit;
       }
 
       steps.push({
@@ -182,7 +189,11 @@ export function routeErc20Base(): DepositRouteStrategy {
         tx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }

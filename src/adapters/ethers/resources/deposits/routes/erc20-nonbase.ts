@@ -30,6 +30,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         overrideGasLimit != null
           ? { ...txFeeOverrides, gasLimit: overrideGasLimit }
           : txFeeOverrides;
+      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
 
       // Resolve target base token once
       const baseToken = (await wrapAs(
@@ -176,6 +177,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
 
       if (overrideGasLimit != null) {
         bridgeTx.gasLimit = overrideGasLimit;
+        resolvedL1GasLimit = overrideGasLimit;
       } else {
         try {
           const est = await wrapAs(
@@ -188,10 +190,15 @@ export function routeErc20NonBase(): DepositRouteStrategy {
             },
           );
           // TODO: refactor to improve gas estimate / fees
-          bridgeTx.gasLimit = (BigInt(est) * 125n) / 100n;
+          const buffered = (BigInt(est) * 125n) / 100n;
+          bridgeTx.gasLimit = buffered;
+          resolvedL1GasLimit = buffered;
         } catch {
           // ignore;
         }
+      }
+      if (resolvedL1GasLimit == null) {
+        resolvedL1GasLimit = ctx.l2GasLimit;
       }
 
       steps.push({
@@ -203,7 +210,11 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue, baseToken, baseIsEth } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, baseToken, baseIsEth, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }

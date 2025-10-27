@@ -185,6 +185,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
         ctx.client.l1,
       ).interface.encodeFunctionData('requestL2TransactionTwoBridges', [outer]);
 
+      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
       const bridgeTx: TransactionRequest = {
         to: ctx.bridgehub,
         data: dataTwo,
@@ -195,6 +196,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
 
       if (overrideGasLimit != null) {
         bridgeTx.gasLimit = overrideGasLimit;
+        resolvedL1GasLimit = overrideGasLimit;
       } else {
         try {
           const est = await wrapAs(
@@ -206,10 +208,15 @@ export function routeEthNonBase(): DepositRouteStrategy {
               message: 'Failed to estimate gas for Bridgehub request.',
             },
           );
-          bridgeTx.gasLimit = (BigInt(est) * 115n) / 100n;
+          const buffered = (BigInt(est) * 115n) / 100n;
+          bridgeTx.gasLimit = buffered;
+          resolvedL1GasLimit = buffered;
         } catch {
           // ignore;
         }
+      }
+      if (resolvedL1GasLimit == null) {
+        resolvedL1GasLimit = ctx.l2GasLimit;
       }
 
       steps.push({
@@ -220,7 +227,11 @@ export function routeEthNonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }

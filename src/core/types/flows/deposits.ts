@@ -23,7 +23,6 @@ export interface DepositQuote {
   approvalsNeeded: readonly ApprovalNeed[];
   baseCost: bigint;
   mintValue: bigint;
-  suggestedL2GasLimit: bigint;
   gasPerPubdata: bigint;
   fees: ResolvedEip1559Fees;
 }

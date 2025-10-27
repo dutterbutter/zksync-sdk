@@ -53,6 +53,7 @@ export function routeEthDirect(): DepositRouteStrategy {
       });
 
       const data = bh.interface.encodeFunctionData('requestL2TransactionDirect', [req]);
+      let resolvedL1GasLimit: bigint | undefined = overrideGasLimit ?? undefined;
       const tx: TransactionRequest = {
         to: ctx.bridgehub,
         data,
@@ -62,6 +63,7 @@ export function routeEthDirect(): DepositRouteStrategy {
       };
       if (overrideGasLimit != null) {
         tx.gasLimit = overrideGasLimit;
+        resolvedL1GasLimit = overrideGasLimit;
       } else {
         try {
           const est = await wrapAs(
@@ -73,10 +75,15 @@ export function routeEthDirect(): DepositRouteStrategy {
               message: 'Failed to estimate gas for Bridgehub request.',
             },
           );
-          tx.gasLimit = (BigInt(est) * 115n) / 100n;
+          const buffered = (BigInt(est) * 115n) / 100n;
+          tx.gasLimit = buffered;
+          resolvedL1GasLimit = buffered;
         } catch {
           // ignore
         }
+      }
+      if (resolvedL1GasLimit == null) {
+        resolvedL1GasLimit = ctx.l2GasLimit;
       }
 
       const steps: PlanStep<TransactionRequest>[] = [
@@ -88,7 +95,11 @@ export function routeEthDirect(): DepositRouteStrategy {
         },
       ];
 
-      return { steps, approvals: [], quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals: [],
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }

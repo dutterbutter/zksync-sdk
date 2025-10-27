@@ -49,8 +49,6 @@ const stringify = (value: unknown) =>
     2,
   );
 
-const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
-
 const TOKEN_OPTIONS: Array<{ label: string; value: Address }> = [
   { label: 'ETH', value: ETH_ADDRESS },
   { label: 'L2 Base Token', value: L2_BASE_TOKEN_ADDRESS },
@@ -117,16 +115,15 @@ function Example() {
     const trimmed = amount.trim();
     if (!trimmed) return '—';
     try {
-      return describeAmount(parseEther(trimmed));
+      const parsed = parseEther(trimmed);
+      const formatted = formatEther(parsed);
+      if (token === ETH_ADDRESS) return `${formatted} ETH`;
+      const selected = TOKEN_OPTIONS.find((option) => option.value === token)?.label;
+      return selected ? `${formatted} ${selected}` : formatted;
     } catch {
       return '—';
     }
-  }, [amount]);
-
-  const tokenLabel = useMemo(
-    () => TOKEN_OPTIONS.find((option) => option.value === token)?.label ?? 'Token',
-    [token],
-  );
+  }, [amount, token]);
 
   const walletChainLabel = useMemo(() => {
     if (!walletChainId) return '—';
@@ -135,12 +132,10 @@ function Example() {
     return `${walletChainId}`;
   }, [walletChainId]);
 
-  const l2ChainLabel = useMemo(() => {
-    if (!connectedL2ChainId) return '—';
-    if (connectedL2ChainId === 324) return `zkSync Era (${connectedL2ChainId})`;
-    if (connectedL2ChainId === 300) return `zkSync Sepolia (${connectedL2ChainId})`;
-    return `${connectedL2ChainId}`;
-  }, [connectedL2ChainId]);
+  const l2ChainLabel = useMemo(
+    () => (!connectedL2ChainId ? '—' : `${connectedL2ChainId}`),
+    [connectedL2ChainId],
+  );
 
   const run = useCallback(
     async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
@@ -450,9 +445,7 @@ function Example() {
             </div>
           </div>
         </fieldset>
-        <p>
-          Depositing {amountLabel} {tokenLabel} from Sepolia (L1) to {targetL2Rpc}.
-        </p>
+        <p>Depositing {amountLabel} from Sepolia (L1) to {targetL2Rpc}.</p>
       </section>
 
       <section>

@@ -71,6 +71,7 @@ export function routeEthDirect(): DepositRouteStrategy {
           message: 'Failed to simulate Bridgehub.requestL2TransactionDirect.',
         },
       );
+      const resolvedL1GasLimit = sim.request.gas ?? ctx.l2GasLimit;
       // TODO: add preview step
       // right now it adds too much noise on response
       const steps: PlanStep<ViemPlanWriteRequest>[] = [
@@ -82,7 +83,11 @@ export function routeEthDirect(): DepositRouteStrategy {
         },
       ];
 
-      return { steps, approvals: [], quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals: [],
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }
