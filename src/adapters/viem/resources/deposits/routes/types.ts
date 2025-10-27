@@ -17,6 +17,7 @@ export type ViemPlanWriteRequest = Omit<WriteParams, 'value'> & { value?: bigint
 export type DepositQuoteExtras = {
   baseCost: bigint;
   mintValue: bigint;
+  l1GasLimit?: bigint;
 };
 
 // Route strategy
