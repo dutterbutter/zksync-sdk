@@ -6,7 +6,7 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@dutterbutter/zksync-sdk": "file:/Users/dustinbrickwood/Documents/dev/zk/zksync-sdk",
+    "@dutterbutter/zksync-sdk": "latest",
     "ethers": "^6.13.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
