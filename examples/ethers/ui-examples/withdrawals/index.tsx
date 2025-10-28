@@ -42,7 +42,6 @@ type Action =
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
-const DEFAULT_L2_GAS_LIMIT = 300_000n;
 const DEFAULT_L1_CHAIN_ID = 11155111;
 
 const stringify = (value: unknown) =>
@@ -111,7 +110,7 @@ function Example() {
   const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
-  const [l2GasLimitInput, setL2GasLimitInput] = useState(DEFAULT_L2_GAS_LIMIT.toString());
+  const [l2GasLimitInput, setL2GasLimitInput] = useState('');
   const [l2MaxFeeInput, setL2MaxFeeInput] = useState('');
   const [l2PriorityFeeInput, setL2PriorityFeeInput] = useState('');
   const [l2TxInput, setL2TxInput] = useState('');
@@ -304,17 +303,104 @@ function Example() {
     if (!connectedL2ChainId) {
       throw new Error('Connect wallet again to resolve the target L2 chain.');
     }
+
+    const chainHex = `0x${connectedL2ChainId.toString(16)}`;
+    const readChainId = async (): Promise<number | null> => {
+      const provider = window.ethereum as
+        | { request?: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
+        | undefined;
+      if (provider && typeof provider.request === 'function') {
+        try {
+          const hex = (await provider.request({ method: 'eth_chainId' })) as string;
+          if (typeof hex === 'string') {
+            return Number(BigInt(hex));
+          }
+        } catch {
+          // ignore and fall back to signer.provider
+        }
+      }
+
+      try {
+        const net = await signer.provider?.getNetwork();
+        return net ? Number(net.chainId) : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const ensureSwitch = async () => {
+      const provider = window.ethereum as
+        | { request?: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
+        | undefined;
+      if (!provider || typeof provider.request !== 'function') {
+        return false;
+      }
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainHex }],
+        });
+        return true;
+      } catch (err: unknown) {
+        const code =
+          typeof err === 'object' && err && 'code' in err
+            ? (err as { code?: number }).code
+            : undefined;
+        if (code === 4902) {
+          try {
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: chainHex,
+                  chainName: `Custom L2 (${connectedL2ChainId})`,
+                  rpcUrls: [targetL2Rpc],
+                  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                },
+              ],
+            });
+            await provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: chainHex }],
+            });
+            return true;
+          } catch (addErr) {
+            if (addErr instanceof Error) {
+              throw new Error(
+                `Add the target L2 (chain id ${connectedL2ChainId}) in your wallet and try again.`,
+              );
+            }
+            throw new Error(
+              'Your wallet does not recognize the target L2. Add it manually and try again.',
+            );
+          }
+        }
+        if (code === 4001) {
+          throw new Error(
+            'Switch rejected. Approve the network switch in your wallet to continue.',
+          );
+        }
+        if (err instanceof Error) throw err;
+        throw new Error('Unable to switch wallet network. Change it manually and retry.');
+      }
+    };
+
+    const currentChain = await readChainId();
+    if (currentChain != null && currentChain === connectedL2ChainId) return;
+
     try {
-      const network = await signer.provider?.getNetwork();
-      if (network && Number(network.chainId) !== connectedL2ChainId) {
+      await ensureSwitch();
+      const after = await readChainId();
+      if (after == null || after !== connectedL2ChainId) {
         throw new Error(
           `Switch your wallet to chain id ${connectedL2ChainId} before submitting the withdrawal.`,
         );
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof Error) throw err;
       throw new Error('Unable to verify wallet chain. Please switch to the target L2.');
     }
-  }, [connectedL2ChainId, signer]);
+  }, [connectedL2ChainId, signer, targetL2Rpc]);
 
   const assertWalletOnL1 = useCallback(async () => {
     if (!signer) throw new Error('Connect wallet first.');
@@ -535,7 +621,7 @@ function Example() {
             <input
               value={l2GasLimitInput}
               onChange={(event) => setL2GasLimitInput(event.target.value)}
-              placeholder={DEFAULT_L2_GAS_LIMIT.toString()}
+              placeholder="Leave blank to auto-estimate"
             />
           </div>
           <div className="field">
