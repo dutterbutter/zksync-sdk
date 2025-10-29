@@ -5,7 +5,6 @@ import {
   JsonRpcProvider,
   type JsonRpcSigner,
   type TransactionReceipt,
-  formatEther,
   parseEther,
 } from 'ethers';
 
@@ -45,16 +44,7 @@ const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
 const DEFAULT_L1_CHAIN_ID = 11155111;
 
 const stringify = (value: unknown) =>
-  JSON.stringify(
-    value,
-    (_, v) => {
-      if (typeof v === 'bigint') return v.toString();
-      return v;
-    },
-    2,
-  );
-
-const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
+  JSON.stringify(value, (_, v) => (typeof v === 'bigint' ? v.toString() : v), 2);
 
 const parseOptionalBigInt = (value: string, label: string) => {
   const trimmed = value.trim();
@@ -85,7 +75,6 @@ function ResultCard({ title, data }: ResultCardProps) {
 
 function Example() {
   const [account, setAccount] = useState<Address>();
-  const [walletChainId, setWalletChainId] = useState<number>();
   const [connectedL2ChainId, setConnectedL2ChainId] = useState<number>();
   const [sdk, setSdk] = useState<EthersSdk>();
   const [l1Provider, setL1Provider] = useState<JsonRpcProvider | null>(null);
@@ -106,6 +95,7 @@ function Example() {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState<Action | null>(null);
 
+  // Minimal user inputs
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
   const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState(ETH_ADDRESS);
@@ -116,30 +106,6 @@ function Example() {
   const [l2TxInput, setL2TxInput] = useState('');
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
-
-  const amountLabel = useMemo(() => {
-    const trimmed = amount.trim();
-    if (!trimmed) return '—';
-    try {
-      return describeAmount(parseEther(trimmed));
-    } catch {
-      return '—';
-    }
-  }, [amount]);
-
-  const walletChainLabel = useMemo(() => {
-    if (!walletChainId) return '—';
-    if (walletChainId === DEFAULT_L1_CHAIN_ID) return `Sepolia (${walletChainId})`;
-    if (walletChainId === 1) return `Mainnet (${walletChainId})`;
-    return `${walletChainId}`;
-  }, [walletChainId]);
-
-  const l2ChainLabel = useMemo(() => {
-    if (!connectedL2ChainId) return '—';
-    if (connectedL2ChainId === 324) return `zkSync Era (${connectedL2ChainId})`;
-    if (connectedL2ChainId === 300) return `zkSync Sepolia (${connectedL2ChainId})`;
-    return `${connectedL2ChainId}`;
-  }, [connectedL2ChainId]);
 
   const run = useCallback(
     async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
@@ -230,7 +196,6 @@ function Example() {
           await browserProvider.send('eth_requestAccounts', []);
           const nextSigner = (await browserProvider.getSigner()) as JsonRpcSigner;
           const addr = (await nextSigner.getAddress()) as Address;
-          const walletNetwork = await browserProvider.getNetwork();
 
           const l1 = new JsonRpcProvider(DEFAULT_L1_RPC);
           const l2 = new JsonRpcProvider(targetL2Rpc);
@@ -243,16 +208,14 @@ function Example() {
             l1Provider: l1,
             signer: nextSigner,
             addr,
-            walletChainId: Number(walletNetwork.chainId),
             l2ChainId: Number(l2ChainId),
           };
         },
-        ({ instance, l1Provider: l1, signer: nextSigner, addr, walletChainId, l2ChainId }) => {
+        ({ instance, l1Provider: l1, signer: nextSigner, addr, l2ChainId }) => {
           setSdk(instance);
           setL1Provider(l1);
           setSigner(nextSigner);
           setAccount(addr);
-          setWalletChainId(walletChainId);
           setConnectedL2ChainId(l2ChainId);
           setConnectedL2Rpc(targetL2Rpc);
           setRecipient((prev) => prev || addr);
@@ -300,26 +263,23 @@ function Example() {
 
   const assertWalletOnL2 = useCallback(async () => {
     if (!signer) throw new Error('Connect wallet first.');
-    if (!connectedL2ChainId) {
+    if (!connectedL2ChainId)
       throw new Error('Connect wallet again to resolve the target L2 chain.');
-    }
 
     const chainHex = `0x${connectedL2ChainId.toString(16)}`;
+
     const readChainId = async (): Promise<number | null> => {
       const provider = window.ethereum as
         | { request?: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
         | undefined;
-      if (provider && typeof provider.request === 'function') {
+      if (provider?.request) {
         try {
           const hex = (await provider.request({ method: 'eth_chainId' })) as string;
-          if (typeof hex === 'string') {
-            return Number(BigInt(hex));
-          }
+          if (typeof hex === 'string') return Number(BigInt(hex));
         } catch {
-          // ignore and fall back to signer.provider
+          // ignore
         }
       }
-
       try {
         const net = await signer.provider?.getNetwork();
         return net ? Number(net.chainId) : null;
@@ -332,9 +292,8 @@ function Example() {
       const provider = window.ethereum as
         | { request?: (args: { method: string; params?: unknown[] }) => Promise<unknown> }
         | undefined;
-      if (!provider || typeof provider.request !== 'function') {
-        return false;
-      }
+      if (!provider?.request) return false;
+
       try {
         await provider.request({
           method: 'wallet_switchEthereumChain',
@@ -364,41 +323,25 @@ function Example() {
               params: [{ chainId: chainHex }],
             });
             return true;
-          } catch (addErr) {
-            if (addErr instanceof Error) {
-              throw new Error(
-                `Add the target L2 (chain id ${connectedL2ChainId}) in your wallet and try again.`,
-              );
-            }
+          } catch {
             throw new Error(
-              'Your wallet does not recognize the target L2. Add it manually and try again.',
+              `Add the target L2 (chain id ${connectedL2ChainId}) in your wallet and try again.`,
             );
           }
         }
-        if (code === 4001) {
-          throw new Error(
-            'Switch rejected. Approve the network switch in your wallet to continue.',
-          );
-        }
+        if (code === 4001) throw new Error('Switch rejected. Approve the network switch.');
         if (err instanceof Error) throw err;
         throw new Error('Unable to switch wallet network. Change it manually and retry.');
       }
     };
 
-    const currentChain = await readChainId();
-    if (currentChain != null && currentChain === connectedL2ChainId) return;
+    const current = await readChainId();
+    if (current != null && current === connectedL2ChainId) return;
 
-    try {
-      await ensureSwitch();
-      const after = await readChainId();
-      if (after == null || after !== connectedL2ChainId) {
-        throw new Error(
-          `Switch your wallet to chain id ${connectedL2ChainId} before submitting the withdrawal.`,
-        );
-      }
-    } catch (err) {
-      if (err instanceof Error) throw err;
-      throw new Error('Unable to verify wallet chain. Please switch to the target L2.');
+    await ensureSwitch();
+    const after = await readChainId();
+    if (after == null || after !== connectedL2ChainId) {
+      throw new Error(`Switch your wallet to chain id ${connectedL2ChainId} to continue.`);
     }
   }, [connectedL2ChainId, signer, targetL2Rpc]);
 
@@ -427,7 +370,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setQuote(value),
+        setQuote,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -443,7 +386,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setPlan(value),
+        setPlan,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -483,7 +426,7 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.withdrawals.status(waitable);
         },
-        (value) => setStatus(value),
+        setStatus,
       ),
     [refreshSdkIfNeeded, resolveWaitable, run],
   );
@@ -498,7 +441,7 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.withdrawals.wait(waitable, { for: 'l2' });
         },
-        (value) => setWaitL2Result(value),
+        setWaitL2Result,
       ),
     [refreshSdkIfNeeded, resolveWaitable, run],
   );
@@ -546,7 +489,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setFinalizeResult(value),
+        setFinalizeResult,
       ),
     [assertWalletOnL1, refreshSdkIfNeeded, resolveL2Hash, run],
   );
@@ -561,28 +504,22 @@ function Example() {
           <label>Account</label>
           <input readOnly value={account ?? ''} placeholder="Not connected" />
         </div>
+
         <div className="inline-fields">
           <div className="field">
             <label>L1 RPC</label>
             <input readOnly value={DEFAULT_L1_RPC} />
           </div>
           <div className="field">
-            <label>Wallet chain</label>
-            <input readOnly value={walletChainLabel} />
-          </div>
-          <div className="field">
-            <label>zkSync RPC</label>
+            <label>L2 RPC</label>
             <input
               value={l2Rpc}
-              onChange={(event) => setL2Rpc(event.target.value)}
+              onChange={(e) => setL2Rpc(e.target.value)}
               placeholder={DEFAULT_L2_RPC}
             />
           </div>
-          <div className="field">
-            <label>zkSync chain</label>
-            <input readOnly value={l2ChainLabel} />
-          </div>
         </div>
+
         <button onClick={connectWallet} disabled={actionDisabled('connect')}>
           {busy === 'connect' ? 'Connecting…' : account ? 'Reconnect' : 'Connect Wallet'}
         </button>
@@ -591,10 +528,10 @@ function Example() {
       <section>
         <h2>Withdrawal parameters</h2>
         <div className="field">
-          <label>Amount (ETH)</label>
+          <label>Amount</label>
           <input
             value={amount}
-            onChange={(event) => setAmount(event.target.value)}
+            onChange={(e) => setAmount(e.target.value)}
             inputMode="decimal"
             placeholder="0.05"
           />
@@ -603,7 +540,7 @@ function Example() {
           <label>Token address</label>
           <input
             value={token}
-            onChange={(event) => setToken(event.target.value)}
+            onChange={(e) => setToken(e.target.value)}
             placeholder={ETH_ADDRESS}
           />
         </div>
@@ -611,16 +548,17 @@ function Example() {
           <label>Recipient (defaults to connected account)</label>
           <input
             value={recipient}
-            onChange={(event) => setRecipient(event.target.value)}
+            onChange={(e) => setRecipient(e.target.value)}
             placeholder={account}
           />
         </div>
+
         <div className="inline-fields">
           <div className="field">
             <label>L2 gas limit</label>
             <input
               value={l2GasLimitInput}
-              onChange={(event) => setL2GasLimitInput(event.target.value)}
+              onChange={(e) => setL2GasLimitInput(e.target.value)}
               placeholder="Leave blank to auto-estimate"
             />
           </div>
@@ -628,7 +566,7 @@ function Example() {
             <label>Max fee per gas (wei)</label>
             <input
               value={l2MaxFeeInput}
-              onChange={(event) => setL2MaxFeeInput(event.target.value)}
+              onChange={(e) => setL2MaxFeeInput(e.target.value)}
               placeholder="Leave blank to auto-estimate"
             />
           </div>
@@ -636,22 +574,21 @@ function Example() {
             <label>Max priority fee per gas (wei)</label>
             <input
               value={l2PriorityFeeInput}
-              onChange={(event) => setL2PriorityFeeInput(event.target.value)}
+              onChange={(e) => setL2PriorityFeeInput(e.target.value)}
               placeholder="Leave blank to auto-estimate"
             />
           </div>
         </div>
+
         <div className="field">
           <label>L2 transaction hash (for status/finalize)</label>
           <input
             value={l2TxInput}
-            onChange={(event) => setL2TxInput(event.target.value)}
+            onChange={(e) => setL2TxInput(e.target.value)}
             placeholder="0x…"
           />
         </div>
-        <p>
-          Withdrawing {amountLabel} from {targetL2Rpc}.
-        </p>
+        {/* Removed preview sentence */}
       </section>
 
       <section>

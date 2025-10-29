@@ -9,7 +9,6 @@ import {
   createPublicClient,
   createWalletClient,
   custom,
-  formatEther,
   http,
   parseEther,
   stringify,
@@ -28,14 +27,11 @@ import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
-const DEFAULT_L2_GAS_LIMIT = 300_000n;
 
 const l1Client = createPublicClient({
   chain: sepolia,
   transport: http(DEFAULT_L1_RPC),
 });
-
-const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
 
 const parseOptionalBigInt = (value: string, label: string) => {
   const trimmed = value.trim();
@@ -49,13 +45,12 @@ const parseOptionalBigInt = (value: string, label: string) => {
 
 const makeZkSyncChain = (chainId: number, rpc: string): Chain => ({
   id: chainId,
-  name: `zkSync chain ${chainId}`,
+  name: `Connected ChainID ${chainId}`,
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: { http: [rpc] },
     public: { http: [rpc] },
   },
-  testnet: chainId !== 324,
 });
 
 type Action =
@@ -88,7 +83,6 @@ function ResultCard({ title, data }: ResultCardProps) {
 
 function Example() {
   const [provider, setProvider] = useState<EIP1193Provider | null>(null);
-  const [walletChainId, setWalletChainId] = useState<number>();
   const [connectedL2Chain, setConnectedL2Chain] = useState<Chain>();
   const [connectedL2Rpc, setConnectedL2Rpc] = useState(DEFAULT_L2_RPC);
 
@@ -108,11 +102,12 @@ function Example() {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState<Action | null>(null);
 
+  // Minimal inputs
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
   const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
-  const [l2GasLimitInput, setL2GasLimitInput] = useState(DEFAULT_L2_GAS_LIMIT.toString());
+  const [l2GasLimitInput, setL2GasLimitInput] = useState(''); // leave blank to auto-estimate
   const [l2MaxFeeInput, setL2MaxFeeInput] = useState('');
   const [l2PriorityFeeInput, setL2PriorityFeeInput] = useState('');
   const [l2TxInput, setL2TxInput] = useState('');
@@ -125,30 +120,6 @@ function Example() {
       transport: custom(window.ethereum as EIP1193Provider),
     });
   }, []);
-
-  const amountLabel = useMemo(() => {
-    const trimmed = amount.trim();
-    if (!trimmed) return '—';
-    try {
-      return describeAmount(parseEther(trimmed));
-    } catch {
-      return '—';
-    }
-  }, [amount]);
-
-  const walletChainLabel = useMemo(() => {
-    if (!walletChainId) return '—';
-    if (walletChainId === sepolia.id) return `Sepolia (${walletChainId})`;
-    if (walletChainId === 1) return `Mainnet (${walletChainId})`;
-    return `${walletChainId}`;
-  }, [walletChainId]);
-
-  const l2ChainLabel = useMemo(() => {
-    if (!connectedL2Chain) return '—';
-    if (connectedL2Chain.id === 324) return `zkSync Era (${connectedL2Chain.id})`;
-    if (connectedL2Chain.id === 300) return `zkSync Sepolia (${connectedL2Chain.id})`;
-    return `${connectedL2Chain.name} (${connectedL2Chain.id})`;
-  }, [connectedL2Chain]);
 
   const run = useCallback(
     async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
@@ -253,10 +224,9 @@ function Example() {
   }, [account, amount, token, recipient, l2GasLimitInput, l2MaxFeeInput, l2PriorityFeeInput]);
 
   const handleConnected = useCallback(
-    (address: Address, chainId: number) => {
+    (address: Address) => {
       setAccount(address);
       setProvider(window.ethereum as EIP1193Provider);
-      setWalletChainId(chainId);
       setConnectedL2Chain(undefined);
       setConnectedL2Rpc(targetL2Rpc);
       setRecipient((prev) => prev || address);
@@ -284,10 +254,9 @@ function Example() {
       async () => {
         const [address] = await walletClient.requestAddresses();
         if (!address) throw new Error('Wallet returned no accounts.');
-        const chainId = await walletClient.getChainId();
-        return { address, chainId };
+        return { address };
       },
-      ({ address, chainId }) => handleConnected(address, chainId),
+      ({ address }) => handleConnected(address),
     );
   }, [handleConnected, run, walletClient]);
 
@@ -346,7 +315,7 @@ function Example() {
     if (!connectedL2Chain) {
       throw new Error('Connect wallet again to resolve the target L2 chain.');
     }
-    await assertWalletOnChain(connectedL2Chain.id, `zkSync chain ${connectedL2Chain.id}`);
+    await assertWalletOnChain(connectedL2Chain.id, `target L2`);
   }, [assertWalletOnChain, connectedL2Chain]);
 
   const assertWalletOnL1 = useCallback(async () => {
@@ -364,7 +333,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setQuote(value),
+        setQuote,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -380,7 +349,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setPlan(value),
+        setPlan,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -420,7 +389,7 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.withdrawals.status(waitable);
         },
-        (value) => setStatus(value),
+        setStatus,
       ),
     [refreshSdkIfNeeded, resolveWaitable, run],
   );
@@ -435,7 +404,7 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.withdrawals.wait(waitable, { for: 'l2' });
         },
-        (value) => setWaitL2Result(value),
+        setWaitL2Result,
       ),
     [refreshSdkIfNeeded, resolveWaitable, run],
   );
@@ -483,7 +452,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setFinalizeResult(value),
+        setFinalizeResult,
       ),
     [assertWalletOnL1, refreshSdkIfNeeded, resolveL2Hash, run],
   );
@@ -500,24 +469,16 @@ function Example() {
         </div>
         <div className="inline-fields">
           <div className="field">
-            <label>L1 RPC (fixed)</label>
+            <label>L1 RPC</label>
             <input readOnly value={DEFAULT_L1_RPC} />
           </div>
           <div className="field">
-            <label>Wallet chain</label>
-            <input readOnly value={walletChainLabel} />
-          </div>
-          <div className="field">
-            <label>zkSync RPC</label>
+            <label>L2 RPC</label>
             <input
               value={l2Rpc}
               onChange={(event) => setL2Rpc(event.target.value)}
               placeholder={DEFAULT_L2_RPC}
             />
-          </div>
-          <div className="field">
-            <label>zkSync chain</label>
-            <input readOnly value={l2ChainLabel} />
           </div>
         </div>
         <button onClick={connectWallet} disabled={actionDisabled('connect')}>
@@ -528,7 +489,7 @@ function Example() {
       <section>
         <h2>Withdrawal parameters</h2>
         <div className="field">
-          <label>Amount (ETH)</label>
+          <label>Amount</label>
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
@@ -558,7 +519,7 @@ function Example() {
             <input
               value={l2GasLimitInput}
               onChange={(event) => setL2GasLimitInput(event.target.value)}
-              placeholder={DEFAULT_L2_GAS_LIMIT.toString()}
+              placeholder="Leave blank to auto-estimate"
             />
           </div>
           <div className="field">
@@ -586,9 +547,7 @@ function Example() {
             placeholder="0x…"
           />
         </div>
-        <p>
-          Withdrawing {amountLabel} from {targetL2Rpc}.
-        </p>
+        {/* Removed preview sentence */}
       </section>
 
       <section>
