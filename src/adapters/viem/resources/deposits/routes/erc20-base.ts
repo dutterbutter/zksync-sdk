@@ -192,8 +192,7 @@ export function routeErc20Base(): DepositRouteStrategy {
               functionName: 'requestL2TransactionDirect',
               args: [req],
               value: 0n,
-              account: ctx.client.account,
-              ...txFeeOverrides,
+              account: ctx.client.account
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
