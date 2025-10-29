@@ -161,7 +161,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
