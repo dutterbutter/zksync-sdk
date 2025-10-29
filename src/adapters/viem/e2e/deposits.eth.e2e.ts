@@ -12,7 +12,7 @@ import { ETH_ADDRESS } from '../../../core/constants.ts';
 import { createTestClientAndSdk, waitForL1Inclusion, verifyDepositBalances } from './helpers.ts';
 import { sleep } from 'bun';
 
-const DEPOSIT_WEI = 1_000_000_000_000_000n; // 0.001 ETH
+const DEPOSIT_WEI = 1_000_000_000_000_000_000n; // 1 ETH
 
 describe('deposits.e2e (viem): ETH deposit', () => {
   let client: any, sdk: any, me: Address;
