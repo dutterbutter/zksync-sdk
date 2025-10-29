@@ -64,7 +64,6 @@ export function routeEthDirect(): DepositRouteStrategy {
             args: [req],
             value: mintValue,
             account: ctx.client.account,
-            ...txFeeOverrides,
           }),
         {
           ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },

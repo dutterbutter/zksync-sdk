@@ -138,8 +138,7 @@ export function routeErc20Base(): DepositRouteStrategy {
               abi: IERC20ABI as Abi,
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
-              account: ctx.client.account,
-              ...txFeeOverrides,
+              account: ctx.client.account
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },

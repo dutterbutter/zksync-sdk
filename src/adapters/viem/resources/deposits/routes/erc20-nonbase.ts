@@ -132,7 +132,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, p.amount] as const,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: p.token },
