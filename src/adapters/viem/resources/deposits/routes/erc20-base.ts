@@ -67,6 +67,7 @@ export function routeErc20Base(): DepositRouteStrategy {
     async build(p, ctx) {
       const { gasPriceForBaseCost } = ctx.fee;
       const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
+      const gasOverride = txFeeOverrides.gas as bigint | undefined;
 
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -139,7 +140,6 @@ export function routeErc20Base(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -169,6 +169,7 @@ export function routeErc20Base(): DepositRouteStrategy {
       // viem: if approval needed, don't simulate (would revert due to insufficient allowance).
       // Just return a write-ready request. Otherwise, simulate to capture gas settings.
       let bridgeTx: ViemPlanWriteRequest;
+      let resolvedL1GasLimit: bigint | undefined;
 
       if (needsApprove) {
         bridgeTx = {
@@ -180,6 +181,7 @@ export function routeErc20Base(): DepositRouteStrategy {
           account: ctx.client.account,
           ...txFeeOverrides,
         } as const;
+        resolvedL1GasLimit = gasOverride ?? ctx.l2GasLimit;
       } else {
         const sim = await wrapAs(
           'RPC',
@@ -192,7 +194,6 @@ export function routeErc20Base(): DepositRouteStrategy {
               args: [req],
               value: 0n,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
@@ -200,6 +201,7 @@ export function routeErc20Base(): DepositRouteStrategy {
           },
         );
         bridgeTx = { ...sim.request, ...txFeeOverrides };
+        resolvedL1GasLimit = sim.request.gas ?? ctx.l2GasLimit;
       }
 
       steps.push({
@@ -209,7 +211,11 @@ export function routeErc20Base(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }

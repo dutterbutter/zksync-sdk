@@ -5,7 +5,6 @@ import {
   JsonRpcProvider,
   type JsonRpcSigner,
   type TransactionReceipt,
-  formatEther,
   parseEther,
 } from 'ethers';
 import {
@@ -36,20 +35,9 @@ type Action = 'connect' | 'quote' | 'prepare' | 'create' | 'status' | 'waitL2';
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
-const DEFAULT_L1_GAS_LIMIT = 300_000n;
-const DEFAULT_L1_CHAIN_ID = 11155111;
 
 const stringify = (value: unknown) =>
-  JSON.stringify(
-    value,
-    (_, v) => {
-      if (typeof v === 'bigint') return v.toString();
-      return v;
-    },
-    2,
-  );
-
-const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
+  JSON.stringify(value, (_, v) => (typeof v === 'bigint' ? v.toString() : v), 2);
 
 const TOKEN_OPTIONS: Array<{ label: string; value: Address }> = [
   { label: 'ETH', value: ETH_ADDRESS },
@@ -72,7 +60,6 @@ interface ResultCardProps {
   title: string;
   data: unknown | null | undefined;
 }
-
 function ResultCard({ title, data }: ResultCardProps) {
   if (data == null) return null;
   return (
@@ -87,8 +74,6 @@ function ResultCard({ title, data }: ResultCardProps) {
 
 function Example() {
   const [account, setAccount] = useState<Address>();
-  const [walletChainId, setWalletChainId] = useState<number>();
-  const [connectedL2ChainId, setConnectedL2ChainId] = useState<number>();
   const [sdk, setSdk] = useState<EthersSdk>();
   const [l1Provider, setL1Provider] = useState<BrowserProvider | null>(null);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
@@ -103,44 +88,16 @@ function Example() {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState<Action | null>(null);
 
+  // Minimal inputs
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
   const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState<Address>(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
-  const [l1GasLimitInput, setL1GasLimitInput] = useState(DEFAULT_L1_GAS_LIMIT.toString());
+  const [l1GasLimitInput, setL1GasLimitInput] = useState(''); // leave blank to auto-estimate
   const [l1MaxFeeInput, setL1MaxFeeInput] = useState('');
   const [l1PriorityFeeInput, setL1PriorityFeeInput] = useState('');
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
-
-  const amountLabel = useMemo(() => {
-    const trimmed = amount.trim();
-    if (!trimmed) return '—';
-    try {
-      return describeAmount(parseEther(trimmed));
-    } catch {
-      return '—';
-    }
-  }, [amount]);
-
-  const tokenLabel = useMemo(
-    () => TOKEN_OPTIONS.find((option) => option.value === token)?.label ?? 'Token',
-    [token],
-  );
-
-  const walletChainLabel = useMemo(() => {
-    if (!walletChainId) return '—';
-    if (walletChainId === DEFAULT_L1_CHAIN_ID) return `Sepolia (${walletChainId})`;
-    if (walletChainId === 1) return `Mainnet (${walletChainId})`;
-    return `${walletChainId}`;
-  }, [walletChainId]);
-
-  const l2ChainLabel = useMemo(() => {
-    if (!connectedL2ChainId) return '—';
-    if (connectedL2ChainId === 324) return `zkSync Era (${connectedL2ChainId})`;
-    if (connectedL2ChainId === 300) return `zkSync Sepolia (${connectedL2ChainId})`;
-    return `${connectedL2ChainId}`;
-  }, [connectedL2ChainId]);
 
   const run = useCallback(
     async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
@@ -166,11 +123,9 @@ function Example() {
     const l2Provider = new JsonRpcProvider(targetL2Rpc);
     const client = createEthersClient({ l1: l1Provider, l2: l2Provider, signer });
     const instance = createEthersSdk(client);
-    const { chainId } = await l2Provider.getNetwork();
 
     setSdk(instance);
     setConnectedL2Rpc(targetL2Rpc);
-    setConnectedL2ChainId(Number(chainId));
     return instance;
   }, [connectedL2Rpc, l1Provider, sdk, signer, targetL2Rpc]);
 
@@ -228,7 +183,6 @@ function Example() {
           await browserProvider.send('eth_requestAccounts', []);
           const nextSigner = (await browserProvider.getSigner()) as JsonRpcSigner;
           const addr = (await nextSigner.getAddress()) as Address;
-          const walletNetwork = await browserProvider.getNetwork();
 
           const l2Provider = new JsonRpcProvider(targetL2Rpc);
           const client = createEthersClient({
@@ -237,24 +191,14 @@ function Example() {
             signer: nextSigner,
           });
           const instance = createEthersSdk(client);
-          const { chainId: l2ChainId } = await l2Provider.getNetwork();
 
-          return {
-            instance,
-            browserProvider,
-            signer: nextSigner,
-            addr,
-            walletChainId: Number(walletNetwork.chainId),
-            l2ChainId: Number(l2ChainId),
-          };
+          return { instance, browserProvider, signer: nextSigner, addr };
         },
-        ({ instance, browserProvider, signer: nextSigner, addr, walletChainId, l2ChainId }) => {
+        ({ instance, browserProvider, signer: nextSigner, addr }) => {
           setSdk(instance);
           setL1Provider(browserProvider);
           setSigner(nextSigner);
           setAccount(addr);
-          setWalletChainId(walletChainId);
-          setConnectedL2ChainId(l2ChainId);
           setConnectedL2Rpc(targetL2Rpc);
           setRecipient((prev) => prev || addr);
           setQuote(undefined);
@@ -285,7 +229,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setQuote(value),
+        setQuote,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -301,7 +245,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setPlan(value),
+        setPlan,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -335,7 +279,7 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.deposits.status(handle);
         },
-        (value) => setStatus(value),
+        setStatus,
       ),
     [handle, refreshSdkIfNeeded, run],
   );
@@ -370,20 +314,12 @@ function Example() {
             <input readOnly value={DEFAULT_L1_RPC} />
           </div>
           <div className="field">
-            <label>Wallet chain</label>
-            <input readOnly value={walletChainLabel} />
-          </div>
-          <div className="field">
-            <label>zkSync RPC</label>
+            <label>L2 RPC</label>
             <input
               value={l2Rpc}
               onChange={(event) => setL2Rpc(event.target.value)}
               placeholder={DEFAULT_L2_RPC}
             />
-          </div>
-          <div className="field">
-            <label>zkSync chain</label>
-            <input readOnly value={l2ChainLabel} />
           </div>
         </div>
         <button onClick={connectWallet} disabled={actionDisabled('connect')}>
@@ -429,7 +365,7 @@ function Example() {
               <input
                 value={l1GasLimitInput}
                 onChange={(event) => setL1GasLimitInput(event.target.value)}
-                placeholder={DEFAULT_L1_GAS_LIMIT.toString()}
+                placeholder="Leave blank to auto-estimate"
               />
             </div>
             <div className="field">
@@ -450,9 +386,7 @@ function Example() {
             </div>
           </div>
         </fieldset>
-        <p>
-          Depositing {amountLabel} {tokenLabel} from Sepolia (L1) to {targetL2Rpc}.
-        </p>
+        {/* Removed preview sentence */}
       </section>
 
       <section>

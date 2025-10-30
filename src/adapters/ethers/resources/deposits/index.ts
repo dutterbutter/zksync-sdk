@@ -110,7 +110,8 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
 
     const { steps, approvals, quoteExtras } = await ROUTES[route].build(p, ctx);
     const { baseCost, mintValue } = quoteExtras;
-    const resolveGasLimit = (): bigint | undefined => {
+    const fallbackGasLimit = (quoteExtras as { l1GasLimit?: bigint }).l1GasLimit;
+    const resolveGasLimit = (): bigint => {
       if (ctx.fee.gasLimit != null) return ctx.fee.gasLimit;
       for (let i = steps.length - 1; i >= 0; i--) {
         const candidate = steps[i].tx.gasLimit;
@@ -122,7 +123,8 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
           // ignore and continue searching
         }
       }
-      return undefined;
+      if (fallbackGasLimit != null) return fallbackGasLimit;
+      return ctx.l2GasLimit;
     };
     const gasLimit = resolveGasLimit();
 
@@ -133,7 +135,6 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
         approvalsNeeded: approvals,
         baseCost,
         mintValue,
-        suggestedL2GasLimit: ctx.l2GasLimit,
         gasPerPubdata: ctx.gasPerPubdata,
         fees: {
           gasLimit,
@@ -199,7 +200,12 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
             try {
               const [, token, router] = step.key.split(':');
               const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
-              const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
+              const target =
+                plan.summary.approvalsNeeded.find(
+                  (need) =>
+                    need.token.toLowerCase() === (token ?? '').toLowerCase() &&
+                    need.spender.toLowerCase() === (router ?? '').toLowerCase(),
+                )?.amount ?? 0n;
 
               const current = (await erc20.allowance(from, router as Address)) as bigint;
               if (current >= target) {

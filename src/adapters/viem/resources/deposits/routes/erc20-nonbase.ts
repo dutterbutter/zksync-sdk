@@ -132,7 +132,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, p.amount] as const,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: p.token },
@@ -180,7 +179,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
                 functionName: 'approve',
                 args: [ctx.l1AssetRouter, mintValue] as const,
                 account: ctx.client.account,
-                ...txFeeOverrides,
               }),
             {
               ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -233,6 +231,8 @@ export function routeErc20NonBase(): DepositRouteStrategy {
       // If any approval is required, skip simulate (can revert) and return a raw write.
       const approvalsNeeded = approvals.length > 0;
       let bridgeTx: ViemPlanWriteRequest;
+      let resolvedL1GasLimit: bigint | undefined;
+      const gasOverride = txFeeOverrides.gas as bigint | undefined;
 
       if (approvalsNeeded) {
         bridgeTx = {
@@ -244,6 +244,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           account: ctx.client.account,
           ...txFeeOverrides,
         } as const;
+        resolvedL1GasLimit = gasOverride ?? ctx.l2GasLimit;
       } else {
         const sim = await wrapAs(
           'CONTRACT',
@@ -256,7 +257,6 @@ export function routeErc20NonBase(): DepositRouteStrategy {
               args: [outer],
               value: msgValue,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
@@ -264,6 +264,7 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           },
         );
         bridgeTx = { ...sim.request, ...txFeeOverrides };
+        resolvedL1GasLimit = sim.request.gas ?? ctx.l2GasLimit;
       }
 
       steps.push({
@@ -275,7 +276,11 @@ export function routeErc20NonBase(): DepositRouteStrategy {
         tx: bridgeTx,
       });
 
-      return { steps, approvals, quoteExtras: { baseCost, mintValue } };
+      return {
+        steps,
+        approvals,
+        quoteExtras: { baseCost, mintValue, l1GasLimit: resolvedL1GasLimit },
+      };
     },
   };
 }
