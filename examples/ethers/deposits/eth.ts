@@ -23,7 +23,8 @@ import { ETH_ADDRESS } from '../../../src/core/constants';
 // Replace with your own endpoints or load from .env
 const L1_RPC = process.env.L1_RPC_URL ?? 'http://localhost:8545';
 const L2_RPC = process.env.L2_RPC_URL ?? 'http://localhost:3050';
-const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '';
+const PRIVATE_KEY =
+  process.env.PRIVATE_KEY ?? '0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba';
 
 async function main() {
   if (!PRIVATE_KEY) throw new Error('⚠️ Set your PRIVATE_KEY in the .env file');
@@ -46,7 +47,7 @@ async function main() {
 
   // --- DEPOSIT PARAMS ---
   const params = {
-    amount: parseEther('0.01'),
+    amount: parseEther('1'),
     token: ETH_ADDRESS, // ETH Address
     to: me,
     // optional advanced params:
@@ -62,32 +63,32 @@ async function main() {
   } as const;
 
   // --- STEP 1: QUOTE ---
-  const quote = await sdk.deposits.quote(params);
-  console.log('QUOTE →', quote);
+  // const quote = await sdk.deposits.quote(params);
+  // console.log('QUOTE →', quote);
 
-  // --- STEP 2: PREPARE ---
-  const plan = await sdk.deposits.prepare(params);
-  console.log('PREPARE →', plan);
+  // // --- STEP 2: PREPARE ---
+  // const plan = await sdk.deposits.prepare(params);
+  // console.log('PREPARE →', plan);
 
   // --- STEP 3: CREATE (send tx) ---
   const handle = await sdk.deposits.create(params);
   console.log('CREATE →', handle);
 
-  // --- STEP 4: STATUS ---
-  const status = await sdk.deposits.status(handle);
-  console.log('STATUS →', status);
+  //   // --- STEP 4: STATUS ---
+  //   const status = await sdk.deposits.status(handle);
+  //   console.log('STATUS →', status);
 
-  // --- STEP 5: WAIT ---
-  console.log('⏳ Waiting for L1 inclusion...');
-  const l1Receipt = await sdk.deposits.wait(handle, { for: 'l1' });
-  console.log('✅ L1 included at block:', l1Receipt?.blockNumber);
+  //   // --- STEP 5: WAIT ---
+  //   console.log('⏳ Waiting for L1 inclusion...');
+  //   const l1Receipt = await sdk.deposits.wait(handle, { for: 'l1' });
+  //   console.log('✅ L1 included at block:', l1Receipt?.blockNumber);
 
-  const statusAfterL1 = await sdk.deposits.status(handle);
-  console.log('STATUS (after L1) →', statusAfterL1);
+  //   const statusAfterL1 = await sdk.deposits.status(handle);
+  //   console.log('STATUS (after L1) →', statusAfterL1);
 
-  console.log('⏳ Waiting for L2 execution...');
-  const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
-  console.log('✅ L2 executed at block:', l2Receipt?.blockNumber);
+  //   console.log('⏳ Waiting for L2 execution...');
+  //   const l2Receipt = await sdk.deposits.wait(handle, { for: 'l2' });
+  //   console.log('✅ L2 executed at block:', l2Receipt?.blockNumber);
 }
 
 main().catch((err) => {

@@ -67,6 +67,7 @@ export function routeErc20Base(): DepositRouteStrategy {
     async build(p, ctx) {
       const { gasPriceForBaseCost } = ctx.fee;
       const txFeeOverrides = buildViemFeeOverrides(ctx.fee);
+      const gasOverride = txFeeOverrides.gas as bigint | undefined;
 
       const baseToken = (await wrapAs(
         'CONTRACT',
@@ -138,7 +139,7 @@ export function routeErc20Base(): DepositRouteStrategy {
               abi: IERC20ABI as Abi,
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
-              account: ctx.client.account
+              account: ctx.client.account,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -177,10 +178,10 @@ export function routeErc20Base(): DepositRouteStrategy {
           functionName: 'requestL2TransactionDirect',
           args: [req],
           value: 0n, // base is ERC-20 ⇒ msg.value MUST be 0
-          account: ctx.client.account,
           ...txFeeOverrides,
+          account: ctx.client.account,
         } as const;
-        resolvedL1GasLimit = ctx.l2GasLimit;
+        resolvedL1GasLimit = gasOverride ?? ctx.l2GasLimit;
       } else {
         const sim = await wrapAs(
           'RPC',
@@ -192,7 +193,7 @@ export function routeErc20Base(): DepositRouteStrategy {
               functionName: 'requestL2TransactionDirect',
               args: [req],
               value: 0n,
-              account: ctx.client.account
+              account: ctx.client.account,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },
