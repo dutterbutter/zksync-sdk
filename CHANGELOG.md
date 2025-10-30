@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.11-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.10-alpha...v0.0.11-alpha) (2025-10-30)
+
+
+### Bug Fixes
+
+* avoid undefined gas limit responses ([#59](https://github.com/dutterbutter/zksync-sdk/issues/59)) ([9b5cd44](https://github.com/dutterbutter/zksync-sdk/commit/9b5cd44c74e11eeca96a12b169aee60f70117ffc))
+
 ## [0.0.10-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.9-alpha...v0.0.10-alpha) (2025-10-25)
 
 
