@@ -31,12 +31,9 @@ import { createViemSdk } from '../../../src/adapters/viem/sdk';
 import type { Address } from '../../../src/core/types/primitives';
 import { IERC20ABI } from '../../../src/core/internal/abi-registry';
 
-const L1_RPC =
-  process.env.L1_RPC_URL ??
-  'https://rpc.ankr.com/eth_sepolia/070715f5f3878124fc8e3b05fa7e5f8ec165ffc887f2ffd3a51c9e906681492c';
-const L2_RPC = process.env.L2_RPC_URL ?? 'https://zksync-os-testnet-sophon.zksync.dev';
-const PRIVATE_KEY =
-  process.env.PRIVATE_KEY ?? '0xbb17a9f1c841b5b162fcc192105ff4ce469e322eb79f5e657da1db6e65a99735';
+const L1_RPC = process.env.L1_RPC_URL ?? 'http://localhost:8545';
+const L2_RPC = process.env.L2_RPC_URL ?? 'http://localhost:3050';
+const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '';
 
 async function main() {
   if (!PRIVATE_KEY || PRIVATE_KEY.length !== 66) {
@@ -73,7 +70,7 @@ async function main() {
     functionName: 'decimals',
   })) as number;
 
-  const amount = parseUnits('2', decimals); // deposit 250 tokens
+  const amount = parseUnits('250', decimals); // deposit 250 tokens
 
   // // QUOTE → no sends
   const quote = await sdk.deposits.quote({ token: TOKEN, to: me, amount });
