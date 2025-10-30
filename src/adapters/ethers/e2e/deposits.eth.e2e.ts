@@ -10,7 +10,7 @@ import type { Address, Hex } from '../../../core/types/primitives.ts';
 import { ETH_ADDRESS } from '../../../core/constants.ts';
 import { createTestClientAndSdk, waitForL1Inclusion, verifyDepositBalances } from './helpers.ts';
 
-const DEPOSIT_WEI = 1_000_000_000_000_000n; // 0.001 ETH
+const DEPOSIT_WEI = 1_000_000_000_000_000_000n; // 1 ETH
 
 describe('deposits.e2e (ethers): ETH deposit', () => {
   // Shared state for all tests in this suite

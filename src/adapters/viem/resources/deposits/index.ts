@@ -207,7 +207,12 @@ export function createDepositsResource(client: ViemClient): DepositsResource {
                 args: [from, router as Address],
               })) as bigint;
 
-              const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
+              const target =
+                plan.summary.approvalsNeeded.find(
+                  (need) =>
+                    need.token.toLowerCase() === (token ?? '').toLowerCase() &&
+                    need.spender.toLowerCase() === (router ?? '').toLowerCase(),
+                )?.amount ?? 0n;
               if (current >= target) {
                 // Skip redundant approve
                 continue;

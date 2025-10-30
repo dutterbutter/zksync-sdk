@@ -200,7 +200,12 @@ export function createDepositsResource(client: EthersClient): DepositsResource {
             try {
               const [, token, router] = step.key.split(':');
               const erc20 = new Contract(token as Address, IERC20ABI, client.signer);
-              const target = plan.summary.approvalsNeeded[0]?.amount ?? 0n;
+              const target =
+                plan.summary.approvalsNeeded.find(
+                  (need) =>
+                    need.token.toLowerCase() === (token ?? '').toLowerCase() &&
+                    need.spender.toLowerCase() === (router ?? '').toLowerCase(),
+                )?.amount ?? 0n;
 
               const current = (await erc20.allowance(from, router as Address)) as bigint;
               if (current >= target) {

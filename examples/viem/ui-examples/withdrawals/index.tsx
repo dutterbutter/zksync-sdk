@@ -9,7 +9,6 @@ import {
   createPublicClient,
   createWalletClient,
   custom,
-  formatEther,
   http,
   parseEther,
   stringify,
@@ -28,14 +27,11 @@ import { ETH_ADDRESS } from '@dutterbutter/zksync-sdk/core';
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
-const DEFAULT_L2_GAS_LIMIT = 300_000n;
 
 const l1Client = createPublicClient({
   chain: sepolia,
   transport: http(DEFAULT_L1_RPC),
 });
-
-const describeAmount = (wei: bigint) => `${formatEther(wei)} ETH`;
 
 const parseOptionalBigInt = (value: string, label: string) => {
   const trimmed = value.trim();
@@ -49,13 +45,12 @@ const parseOptionalBigInt = (value: string, label: string) => {
 
 const makeZkSyncChain = (chainId: number, rpc: string): Chain => ({
   id: chainId,
-  name: `zkSync chain ${chainId}`,
+  name: `Connected ChainID ${chainId}`,
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: { http: [rpc] },
     public: { http: [rpc] },
   },
-  testnet: chainId !== 324,
 });
 
 type Action =
@@ -88,7 +83,6 @@ function ResultCard({ title, data }: ResultCardProps) {
 
 function Example() {
   const [provider, setProvider] = useState<EIP1193Provider | null>(null);
-  const [walletChainId, setWalletChainId] = useState<number>();
   const [connectedL2Chain, setConnectedL2Chain] = useState<Chain>();
   const [connectedL2Rpc, setConnectedL2Rpc] = useState(DEFAULT_L2_RPC);
 
@@ -108,40 +102,24 @@ function Example() {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState<Action | null>(null);
 
+  // Minimal inputs
   const [l2Rpc, setL2Rpc] = useState(DEFAULT_L2_RPC);
   const [amount, setAmount] = useState('0.01');
   const [token, setToken] = useState(ETH_ADDRESS);
   const [recipient, setRecipient] = useState('');
-  const [l2GasLimitInput, setL2GasLimitInput] = useState(DEFAULT_L2_GAS_LIMIT.toString());
+  const [l2GasLimitInput, setL2GasLimitInput] = useState(''); // leave blank to auto-estimate
   const [l2MaxFeeInput, setL2MaxFeeInput] = useState('');
   const [l2PriorityFeeInput, setL2PriorityFeeInput] = useState('');
   const [l2TxInput, setL2TxInput] = useState('');
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
-
-  const amountLabel = useMemo(() => {
-    const trimmed = amount.trim();
-    if (!trimmed) return '—';
-    try {
-      return describeAmount(parseEther(trimmed));
-    } catch {
-      return '—';
-    }
-  }, [amount]);
-
-  const walletChainLabel = useMemo(() => {
-    if (!walletChainId) return '—';
-    if (walletChainId === sepolia.id) return `Sepolia (${walletChainId})`;
-    if (walletChainId === 1) return `Mainnet (${walletChainId})`;
-    return `${walletChainId}`;
-  }, [walletChainId]);
-
-  const l2ChainLabel = useMemo(() => {
-    if (!connectedL2Chain) return '—';
-    if (connectedL2Chain.id === 324) return `zkSync Era (${connectedL2Chain.id})`;
-    if (connectedL2Chain.id === 300) return `zkSync Sepolia (${connectedL2Chain.id})`;
-    return `${connectedL2Chain.name} (${connectedL2Chain.id})`;
-  }, [connectedL2Chain]);
+  const walletClient = useMemo(() => {
+    if (typeof window === 'undefined' || !window.ethereum) return null;
+    return createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum as EIP1193Provider),
+    });
+  }, []);
 
   const run = useCallback(
     async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
@@ -160,29 +138,26 @@ function Example() {
     [],
   );
 
-  const refreshSdkIfNeeded = useCallback(async (): Promise<ViemSdk> => {
-    if (!provider || !account) throw new Error('Connect wallet first.');
-    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
-
-    const transport = custom(provider);
+  const instantiateSdk = useCallback(async (addr: Address, prov: EIP1193Provider, rpc: string) => {
+    const transport = custom(prov);
 
     const l1Wallet = createWalletClient({
-      account,
+      account: addr,
       chain: sepolia,
       transport,
     });
 
-    const probe = createPublicClient({ transport: http(targetL2Rpc) });
+    const probe = createPublicClient({ transport: http(rpc) });
     const l2ChainId = await probe.getChainId();
-    const zkSyncChain = makeZkSyncChain(Number(l2ChainId), targetL2Rpc);
+    const zkSyncChain = makeZkSyncChain(Number(l2ChainId), rpc);
 
     const l2Public = createPublicClient({
       chain: zkSyncChain,
-      transport: http(targetL2Rpc),
+      transport: http(rpc),
     });
 
     const l2Wallet = createWalletClient({
-      account,
+      account: addr,
       chain: zkSyncChain,
       transport,
     });
@@ -195,11 +170,19 @@ function Example() {
     } as any);
 
     const instance = createViemSdk(client);
+    return { instance, chain: zkSyncChain };
+  }, []);
+
+  const refreshSdkIfNeeded = useCallback(async (): Promise<ViemSdk> => {
+    if (!provider || !account) throw new Error('Connect wallet first.');
+    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
+
+    const { instance, chain } = await instantiateSdk(account, provider, targetL2Rpc);
     setSdk(instance);
-    setConnectedL2Chain(zkSyncChain);
+    setConnectedL2Chain(chain);
     setConnectedL2Rpc(targetL2Rpc);
     return instance;
-  }, [account, connectedL2Rpc, provider, sdk, targetL2Rpc]);
+  }, [account, connectedL2Rpc, instantiateSdk, provider, sdk, targetL2Rpc]);
 
   const buildParams = useCallback(() => {
     if (!account) throw new Error('Connect wallet first.');
@@ -245,75 +228,60 @@ function Example() {
     } as const;
   }, [account, amount, token, recipient, l2GasLimitInput, l2MaxFeeInput, l2PriorityFeeInput]);
 
-  const connectWallet = useCallback(
-    () =>
-      run(
-        'connect',
-        async () => {
-          if (!window.ethereum) {
-            throw new Error('No injected wallet found. Install MetaMask or another wallet.');
-          }
-
-          const injected = window.ethereum as EIP1193Provider;
-          const transport = custom(injected);
-
-          const bootstrap = createWalletClient({ chain: sepolia, transport });
-          const [addr] = await bootstrap.requestAddresses();
-          if (!addr) throw new Error('Wallet returned no accounts.');
-
-          const l1ChainId = await bootstrap.getChainId();
-          const l2Probe = createPublicClient({ transport: http(targetL2Rpc) });
-          const l2ChainId = await l2Probe.getChainId();
-          const zkSyncChain = makeZkSyncChain(Number(l2ChainId), targetL2Rpc);
-
-          const l1Wallet = createWalletClient({
-            account: addr,
-            chain: sepolia,
-            transport,
-          });
-
-          const l2Public = createPublicClient({
-            chain: zkSyncChain,
-            transport: http(targetL2Rpc),
-          });
-
-          const l2Wallet = createWalletClient({
-            account: addr,
-            chain: zkSyncChain,
-            transport,
-          });
-
-          const client = createViemClient({
-            l1: l1Client as any,
-            l2: l2Public as any,
-            l1Wallet: l1Wallet as any,
-            l2Wallet: l2Wallet as any,
-          } as any);
-
-          const instance = createViemSdk(client);
-          return { instance, addr, injected, l1ChainId: Number(l1ChainId), zkSyncChain };
-        },
-        ({ instance, addr, injected, l1ChainId, zkSyncChain }) => {
-          setSdk(instance);
-          setAccount(addr);
-          setProvider(injected);
-          setWalletChainId(l1ChainId);
-          setConnectedL2Chain(zkSyncChain);
-          setConnectedL2Rpc(targetL2Rpc);
-          setRecipient((prev) => prev || addr);
-          setQuote(undefined);
-          setPlan(undefined);
-          setHandle(undefined);
-          setStatus(undefined);
-          setWaitL2Result(undefined);
-          setWaitReadyResult(undefined);
-          setWaitFinalizedResult(undefined);
-          setFinalizeResult(undefined);
-          setL2TxInput('');
-        },
-      ),
-    [run, targetL2Rpc],
+  const handleConnected = useCallback(
+    ({
+      address,
+      provider: nextProvider,
+      chain,
+      sdk: instance,
+    }: {
+      address: Address;
+      provider: EIP1193Provider;
+      chain: Chain;
+      sdk: ViemSdk;
+    }) => {
+      setAccount(address);
+      setProvider(nextProvider);
+      setSdk(instance);
+      setConnectedL2Chain(chain);
+      setConnectedL2Rpc(targetL2Rpc);
+      setRecipient((prev) => prev || address);
+      setQuote(undefined);
+      setPlan(undefined);
+      setHandle(undefined);
+      setStatus(undefined);
+      setWaitL2Result(undefined);
+      setWaitReadyResult(undefined);
+      setWaitFinalizedResult(undefined);
+      setFinalizeResult(undefined);
+      setL2TxInput('');
+    },
+    [targetL2Rpc],
   );
+
+  const connectWallet = useCallback(() => {
+    if (!walletClient) {
+      setError('No injected wallet found. Install MetaMask or another wallet.');
+      return;
+    }
+
+    return run(
+      'connect',
+      async () => {
+        const [address] = await walletClient.requestAddresses();
+        if (!address) throw new Error('Wallet returned no accounts.');
+        const providerObj = window.ethereum as EIP1193Provider | undefined;
+        if (!providerObj) {
+          throw new Error('No injected wallet found. Connect your wallet again.');
+        }
+        const addr = address as Address;
+        const { instance, chain } = await instantiateSdk(addr, providerObj, targetL2Rpc);
+        return { address: addr, provider: providerObj, sdk: instance, chain };
+      },
+      ({ address, provider: nextProvider, sdk: instance, chain }) =>
+        handleConnected({ address, provider: nextProvider, sdk: instance, chain }),
+    );
+  }, [handleConnected, instantiateSdk, run, targetL2Rpc, walletClient]);
 
   const hasWaitableInput = handle != null || Boolean(l2TxInput.trim());
   const hasFinalizableHash = Boolean(l2TxInput.trim() || handle?.l2TxHash);
@@ -330,19 +298,19 @@ function Example() {
     return false;
   };
 
-  const resolveWaitable = () => {
+  const resolveWaitable = useCallback(() => {
     const trimmed = l2TxInput.trim();
     if (trimmed) return trimmed as Hex;
     if (handle) return handle;
     return null;
-  };
+  }, [handle, l2TxInput]);
 
-  const resolveL2Hash = () => {
+  const resolveL2Hash = useCallback(() => {
     const trimmed = l2TxInput.trim();
     if (trimmed) return trimmed as Hex;
     if (handle?.l2TxHash) return handle.l2TxHash as Hex;
     return null;
-  };
+  }, [handle, l2TxInput]);
 
   const assertWalletOnChain = useCallback(
     async (expectedChainId: number, label: string) => {
@@ -370,7 +338,7 @@ function Example() {
     if (!connectedL2Chain) {
       throw new Error('Connect wallet again to resolve the target L2 chain.');
     }
-    await assertWalletOnChain(connectedL2Chain.id, `zkSync chain ${connectedL2Chain.id}`);
+    await assertWalletOnChain(connectedL2Chain.id, `target L2`);
   }, [assertWalletOnChain, connectedL2Chain]);
 
   const assertWalletOnL1 = useCallback(async () => {
@@ -388,7 +356,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setQuote(value),
+        setQuote,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -404,7 +372,7 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setPlan(value),
+        setPlan,
       ),
     [buildParams, refreshSdkIfNeeded, run],
   );
@@ -444,9 +412,9 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.withdrawals.status(waitable);
         },
-        (value) => setStatus(value),
+        setStatus,
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForL2 = useCallback(
@@ -459,9 +427,9 @@ function Example() {
           const currentSdk = await refreshSdkIfNeeded();
           return currentSdk.withdrawals.wait(waitable, { for: 'l2' });
         },
-        (value) => setWaitL2Result(value),
+        setWaitL2Result,
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForReady = useCallback(
@@ -476,7 +444,7 @@ function Example() {
         },
         (value) => setWaitReadyResult(value ?? { ready: true }),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const waitForFinalized = useCallback(
@@ -491,7 +459,7 @@ function Example() {
         },
         (value) => setWaitFinalizedResult(value ?? null),
       ),
-    [refreshSdkIfNeeded, run],
+    [refreshSdkIfNeeded, resolveWaitable, run],
   );
 
   const finalizeWithdrawal = useCallback(
@@ -507,9 +475,9 @@ function Example() {
           if (!result.ok) throw result.error;
           return result.value;
         },
-        (value) => setFinalizeResult(value),
+        setFinalizeResult,
       ),
-    [assertWalletOnL1, refreshSdkIfNeeded, run],
+    [assertWalletOnL1, refreshSdkIfNeeded, resolveL2Hash, run],
   );
 
   return (
@@ -524,24 +492,16 @@ function Example() {
         </div>
         <div className="inline-fields">
           <div className="field">
-            <label>L1 RPC (fixed)</label>
+            <label>L1 RPC</label>
             <input readOnly value={DEFAULT_L1_RPC} />
           </div>
           <div className="field">
-            <label>Wallet chain</label>
-            <input readOnly value={walletChainLabel} />
-          </div>
-          <div className="field">
-            <label>zkSync RPC</label>
+            <label>L2 RPC</label>
             <input
               value={l2Rpc}
               onChange={(event) => setL2Rpc(event.target.value)}
               placeholder={DEFAULT_L2_RPC}
             />
-          </div>
-          <div className="field">
-            <label>zkSync chain</label>
-            <input readOnly value={l2ChainLabel} />
           </div>
         </div>
         <button onClick={connectWallet} disabled={actionDisabled('connect')}>
@@ -552,7 +512,7 @@ function Example() {
       <section>
         <h2>Withdrawal parameters</h2>
         <div className="field">
-          <label>Amount (ETH)</label>
+          <label>Amount</label>
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
@@ -582,7 +542,7 @@ function Example() {
             <input
               value={l2GasLimitInput}
               onChange={(event) => setL2GasLimitInput(event.target.value)}
-              placeholder={DEFAULT_L2_GAS_LIMIT.toString()}
+              placeholder="Leave blank to auto-estimate"
             />
           </div>
           <div className="field">
@@ -610,9 +570,7 @@ function Example() {
             placeholder="0x…"
           />
         </div>
-        <p>
-          Withdrawing {amountLabel} from {targetL2Rpc}.
-        </p>
+        {/* Removed preview sentence */}
       </section>
 
       <section>

@@ -161,7 +161,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
               functionName: 'approve',
               args: [ctx.l1AssetRouter, mintValue] as const,
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: baseToken },
@@ -174,7 +173,7 @@ export function routeEthNonBase(): DepositRouteStrategy {
           key: `approve:${baseToken}:${ctx.l1AssetRouter}`,
           kind: 'approve',
           description: `Approve base token for mintValue`,
-          tx: { ...approveSim.request, ...txFeeOverrides },
+          tx: { ...approveSim.request },
         });
       }
 
@@ -217,7 +216,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
           args: [outer],
           value: p.amount, // base ≠ ETH ⇒ msg.value == secondBridgeValue
           account: ctx.client.account,
-          ...txFeeOverrides,
         } as const;
         resolvedL1GasLimit = ctx.l2GasLimit;
       } else {
@@ -232,7 +230,6 @@ export function routeEthNonBase(): DepositRouteStrategy {
               args: [outer],
               value: p.amount, // base ≠ ETH ⇒ msg.value == secondBridgeValue
               account: ctx.client.account,
-              ...txFeeOverrides,
             }),
           {
             ctx: { where: 'l1.simulateContract', to: ctx.bridgehub },

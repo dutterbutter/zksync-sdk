@@ -7,7 +7,6 @@ import {
   createPublicClient,
   createWalletClient,
   custom,
-  formatEther,
   http,
   parseEther,
   stringify,
@@ -30,7 +29,6 @@ import {
 
 const DEFAULT_L1_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 const DEFAULT_L2_RPC = 'https://zksync-os-testnet-alpha.zksync.dev/';
-const DEFAULT_L1_CHAIN_ID = sepolia.id;
 
 const l1 = createPublicClient({
   chain: sepolia,
@@ -75,8 +73,6 @@ function ResultCard({ title, data }: ResultCardProps) {
 
 function Example() {
   const [provider, setProvider] = useState<EIP1193Provider | null>(null);
-  const [walletChainId, setWalletChainId] = useState<number>();
-  const [connectedL2ChainId, setConnectedL2ChainId] = useState<number>();
   const [connectedL2Rpc, setConnectedL2Rpc] = useState(DEFAULT_L2_RPC);
 
   const [account, setAccount] = useState<Address>();
@@ -99,31 +95,13 @@ function Example() {
   const [l1PriorityFeeInput, setL1PriorityFeeInput] = useState('');
 
   const targetL2Rpc = useMemo(() => l2Rpc.trim() || DEFAULT_L2_RPC, [l2Rpc]);
-
-  const amountLabel = useMemo(() => {
-    const trimmed = amount.trim();
-    if (!trimmed) return '—';
-    try {
-      const parsed = parseEther(trimmed);
-      const formatted = formatEther(parsed);
-      if (token === ETH_ADDRESS) return `${formatted} ETH`;
-      const selected = TOKEN_OPTIONS.find((option) => option.value === token)?.label;
-      return selected ? `${formatted} ${selected}` : formatted;
-    } catch {
-      return '—';
-    }
-  }, [amount, token]);
-
-  const walletChainLabel = useMemo(() => {
-    if (!walletChainId) return '—';
-    if (walletChainId === DEFAULT_L1_CHAIN_ID) return `Sepolia (${walletChainId})`;
-    return `${walletChainId}`;
-  }, [walletChainId]);
-
-  const l2ChainLabel = useMemo(
-    () => (!connectedL2ChainId ? '—' : `${connectedL2ChainId}`),
-    [connectedL2ChainId],
-  );
+  const walletClient = useMemo(() => {
+    if (typeof window === 'undefined' || !window.ethereum) return null;
+    return createWalletClient({
+      chain: sepolia,
+      transport: custom(window.ethereum as EIP1193Provider),
+    });
+  }, []);
 
   const run = useCallback(
     async <T,>(action: Action, fn: () => Promise<T>, onSuccess?: (value: T) => void) => {
@@ -147,15 +125,9 @@ function Example() {
     if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
 
     const transport = custom(provider);
-    const l1Wallet = createWalletClient({
-      account,
-      chain: sepolia,
-      transport,
-    });
+    const l1Wallet = createWalletClient({ account, chain: sepolia, transport });
 
-    const l2Client = createPublicClient({
-      transport: http(targetL2Rpc),
-    });
+    const l2Client = createPublicClient({ transport: http(targetL2Rpc) });
 
     const client = createViemClient({
       l1: l1 as any,
@@ -164,11 +136,8 @@ function Example() {
     });
 
     const instance = createViemSdk(client);
-    const l2ChainId = await l2Client.getChainId();
-
     setSdk(instance);
     setConnectedL2Rpc(targetL2Rpc);
-    setConnectedL2ChainId(Number(l2ChainId));
     return instance;
   }, [account, connectedL2Rpc, provider, sdk, targetL2Rpc]);
 
@@ -213,64 +182,36 @@ function Example() {
     } as const;
   }, [account, amount, token, recipient, l1GasLimitInput, l1MaxFeeInput, l1PriorityFeeInput]);
 
-  const connectWallet = useCallback(
-    () =>
-      run(
-        'connect',
-        async () => {
-          if (!window.ethereum) {
-            throw new Error(
-              'No injected wallet found. Install MetaMask or another EIP-1193 wallet.',
-            );
-          }
-
-          const injected = window.ethereum as EIP1193Provider;
-          const transport = custom(injected);
-
-          const bootstrap = createWalletClient({ chain: sepolia, transport });
-          const [addr] = await bootstrap.requestAddresses();
-          if (!addr) throw new Error('Wallet returned no accounts.');
-
-          const chainId = await bootstrap.getChainId();
-
-          const l1Wallet = createWalletClient({
-            account: addr,
-            chain: sepolia,
-            transport,
-          });
-
-          const l2Client = createPublicClient({
-            transport: http(targetL2Rpc),
-          });
-
-          const client = createViemClient({
-            l1: l1 as any,
-            l2: l2Client as any,
-            l1Wallet: l1Wallet as any,
-          });
-
-          const instance = createViemSdk(client);
-          const l2ChainId = await l2Client.getChainId();
-
-          return { instance, addr, injected, chainId, l2ChainId };
-        },
-        ({ instance, addr, injected, chainId, l2ChainId }) => {
-          setSdk(instance);
-          setAccount(addr);
-          setProvider(injected);
-          setWalletChainId(Number(chainId));
-          setConnectedL2ChainId(Number(l2ChainId));
-          setConnectedL2Rpc(targetL2Rpc);
-          setRecipient((prev) => prev || addr);
-          setQuote(undefined);
-          setPlan(undefined);
-          setHandle(undefined);
-          setStatus(undefined);
-          setReceipt(null);
-        },
-      ),
-    [run, targetL2Rpc],
+  const handleConnected = useCallback(
+    (address: Address) => {
+      setAccount(address);
+      setProvider(window.ethereum as EIP1193Provider);
+      setConnectedL2Rpc(targetL2Rpc);
+      setRecipient((prev) => prev || address);
+      setQuote(undefined);
+      setPlan(undefined);
+      setHandle(undefined);
+      setStatus(undefined);
+      setReceipt(null);
+    },
+    [targetL2Rpc],
   );
+
+  const connectWallet = useCallback(() => {
+    if (!walletClient) {
+      setError('No injected wallet found. Install MetaMask or another EIP-1193 wallet.');
+      return;
+    }
+    return run(
+      'connect',
+      async () => {
+        const [address] = await walletClient.requestAddresses();
+        if (!address) throw new Error('Wallet returned no accounts.');
+        return { address };
+      },
+      ({ address }) => handleConnected(address),
+    );
+  }, [handleConnected, run, walletClient]);
 
   const quoteDeposit = useCallback(
     () =>
@@ -370,24 +311,16 @@ function Example() {
         </div>
         <div className="inline-fields">
           <div className="field">
-            <label>L1 RPC (fixed)</label>
+            <label>L1 RPC</label>
             <input readOnly value={DEFAULT_L1_RPC} />
           </div>
           <div className="field">
-            <label>ChainID</label>
-            <input readOnly value={walletChainLabel} />
-          </div>
-          <div className="field">
-            <label>RPC</label>
+            <label>L2 RPC</label>
             <input
               value={l2Rpc}
               onChange={(event) => setL2Rpc(event.target.value)}
               placeholder={DEFAULT_L2_RPC}
             />
-          </div>
-          <div className="field">
-            <label>chain</label>
-            <input readOnly value={l2ChainLabel} />
           </div>
         </div>
         <button onClick={connectWallet} disabled={actionDisabled('connect')}>
@@ -433,7 +366,7 @@ function Example() {
               <input
                 value={l1GasLimitInput}
                 onChange={(event) => setL1GasLimitInput(event.target.value)}
-                placeholder="300000"
+                placeholder="Leave blank to auto-estimate"
               />
             </div>
             <div className="field">
@@ -454,9 +387,7 @@ function Example() {
             </div>
           </div>
         </fieldset>
-        <p>
-          Depositing {amountLabel} from Sepolia (L1) to {targetL2Rpc}.
-        </p>
+        {/* Removed preview sentence */}
       </section>
 
       <section>
