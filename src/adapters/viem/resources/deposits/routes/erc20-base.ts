@@ -178,8 +178,8 @@ export function routeErc20Base(): DepositRouteStrategy {
           functionName: 'requestL2TransactionDirect',
           args: [req],
           value: 0n, // base is ERC-20 ⇒ msg.value MUST be 0
-          ...txFeeOverrides,
           account: ctx.client.account,
+          ...txFeeOverrides,
         } as const;
         resolvedL1GasLimit = gasOverride ?? ctx.l2GasLimit;
       } else {

@@ -241,8 +241,8 @@ export function routeErc20NonBase(): DepositRouteStrategy {
           functionName: 'requestL2TransactionTwoBridges',
           args: [outer],
           value: msgValue,
-          ...txFeeOverrides,
           account: ctx.client.account,
+          ...txFeeOverrides,
         } as const;
         resolvedL1GasLimit = gasOverride ?? ctx.l2GasLimit;
       } else {
