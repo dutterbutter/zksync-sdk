@@ -138,29 +138,26 @@ function Example() {
     [],
   );
 
-  const refreshSdkIfNeeded = useCallback(async (): Promise<ViemSdk> => {
-    if (!provider || !account) throw new Error('Connect wallet first.');
-    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
-
-    const transport = custom(provider);
+  const instantiateSdk = useCallback(async (addr: Address, prov: EIP1193Provider, rpc: string) => {
+    const transport = custom(prov);
 
     const l1Wallet = createWalletClient({
-      account,
+      account: addr,
       chain: sepolia,
       transport,
     });
 
-    const probe = createPublicClient({ transport: http(targetL2Rpc) });
+    const probe = createPublicClient({ transport: http(rpc) });
     const l2ChainId = await probe.getChainId();
-    const zkSyncChain = makeZkSyncChain(Number(l2ChainId), targetL2Rpc);
+    const zkSyncChain = makeZkSyncChain(Number(l2ChainId), rpc);
 
     const l2Public = createPublicClient({
       chain: zkSyncChain,
-      transport: http(targetL2Rpc),
+      transport: http(rpc),
     });
 
     const l2Wallet = createWalletClient({
-      account,
+      account: addr,
       chain: zkSyncChain,
       transport,
     });
@@ -173,11 +170,19 @@ function Example() {
     } as any);
 
     const instance = createViemSdk(client);
+    return { instance, chain: zkSyncChain };
+  }, []);
+
+  const refreshSdkIfNeeded = useCallback(async (): Promise<ViemSdk> => {
+    if (!provider || !account) throw new Error('Connect wallet first.');
+    if (sdk && connectedL2Rpc === targetL2Rpc) return sdk;
+
+    const { instance, chain } = await instantiateSdk(account, provider, targetL2Rpc);
     setSdk(instance);
-    setConnectedL2Chain(zkSyncChain);
+    setConnectedL2Chain(chain);
     setConnectedL2Rpc(targetL2Rpc);
     return instance;
-  }, [account, connectedL2Rpc, provider, sdk, targetL2Rpc]);
+  }, [account, connectedL2Rpc, instantiateSdk, provider, sdk, targetL2Rpc]);
 
   const buildParams = useCallback(() => {
     if (!account) throw new Error('Connect wallet first.');
@@ -224,10 +229,21 @@ function Example() {
   }, [account, amount, token, recipient, l2GasLimitInput, l2MaxFeeInput, l2PriorityFeeInput]);
 
   const handleConnected = useCallback(
-    (address: Address) => {
+    ({
+      address,
+      provider: nextProvider,
+      chain,
+      sdk: instance,
+    }: {
+      address: Address;
+      provider: EIP1193Provider;
+      chain: Chain;
+      sdk: ViemSdk;
+    }) => {
       setAccount(address);
-      setProvider(window.ethereum as EIP1193Provider);
-      setConnectedL2Chain(undefined);
+      setProvider(nextProvider);
+      setSdk(instance);
+      setConnectedL2Chain(chain);
       setConnectedL2Rpc(targetL2Rpc);
       setRecipient((prev) => prev || address);
       setQuote(undefined);
@@ -254,11 +270,18 @@ function Example() {
       async () => {
         const [address] = await walletClient.requestAddresses();
         if (!address) throw new Error('Wallet returned no accounts.');
-        return { address };
+        const providerObj = window.ethereum as EIP1193Provider | undefined;
+        if (!providerObj) {
+          throw new Error('No injected wallet found. Connect your wallet again.');
+        }
+        const addr = address as Address;
+        const { instance, chain } = await instantiateSdk(addr, providerObj, targetL2Rpc);
+        return { address: addr, provider: providerObj, sdk: instance, chain };
       },
-      ({ address }) => handleConnected(address),
+      ({ address, provider: nextProvider, sdk: instance, chain }) =>
+        handleConnected({ address, provider: nextProvider, sdk: instance, chain }),
     );
-  }, [handleConnected, run, walletClient]);
+  }, [handleConnected, instantiateSdk, run, targetL2Rpc, walletClient]);
 
   const hasWaitableInput = handle != null || Boolean(l2TxInput.trim());
   const hasFinalizableHash = Boolean(l2TxInput.trim() || handle?.l2TxHash);
