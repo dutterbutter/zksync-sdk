@@ -24,9 +24,9 @@ export interface InteropParams {
 
 /** === Routing ===
  * 'direct'  → burn/mint value (native/base) when chains share the same base token
- * 'router'  → route value via asset router / bridge (erc20s or base mismatch)
+ * 'indirect'  → route value via asset router / bridge (erc20s or base mismatch)
  */
-export type InteropRoute = 'direct' | 'router';
+export type InteropRoute = 'direct' | 'indirect';
 
 /** === Quote === */
 export interface InteropQuote {
@@ -81,6 +81,33 @@ export interface InteropStatus {
   l1MsgHash?: Hex;
   bundleHash?: Hex;
   dstExecTxHash?: Hex;
+  dstChainId?: bigint;
 }
 
-/** === Minimal receipt/log shapes used by core (adapter can adapt) === */
+export interface InteropFinalizationResult {
+  bundleHash: Hex;
+  dstChainId: bigint;
+  dstExecTxHash: Hex;
+}
+
+// === Attributes (encoded/decoded) ===
+
+export type EncodedAttribute = Hex;
+
+// Attributes that apply to a single InteropCallStarter / call in the bundle
+export type EncodedCallAttributes = EncodedAttribute[];
+
+// Attributes that apply to the whole InteropBundle
+export type EncodedBundleAttributes = EncodedAttribute[];
+
+// High-level decoded form for debug / status surfaces
+export interface DecodedAttribute {
+  selector: string; // e.g. "interopCallValue(uint256)"
+  name: string; // human label, e.g. "interopCallValue"
+  args: unknown[]; // raw decoded args
+}
+
+export interface DecodedAttributesSummary {
+  call: DecodedAttribute[];
+  bundle: DecodedAttribute[];
+}

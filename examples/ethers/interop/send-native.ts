@@ -5,16 +5,13 @@ import {
   createEthersSdk,
   createInteropResource,
 } from '../../../src/adapters/ethers';
-import {
-  actions as interopActions,
-  type Address,
-  type InteropParams,
-} from '../../../src/core';
+import { actions as interopActions, type Address, type InteropParams } from '../../../src/core';
 
 const L1_RPC = process.env.L1_RPC ?? 'http://127.0.0.1:8545';
 const SRC_L2_RPC = process.env.SRC_L2_RPC ?? 'http://127.0.0.1:3150';
 const DST_L2_RPC = process.env.DST_L2_RPC ?? 'http://127.0.0.1:3250';
-const PRIVATE_KEY = process.env.PRIVATE_KEY ?? '0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110';
+const PRIVATE_KEY =
+  process.env.PRIVATE_KEY ?? '0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110';
 
 async function main() {
   if (!PRIVATE_KEY) {
@@ -35,7 +32,6 @@ async function main() {
   const dstChainId = BigInt(dstNet.chainId);
   client.registerChain(dstChainId, dstL2);
 
-  
   const sender = (await signer.getAddress()) as Address;
   const amount = parseEther('0.01'); // 0.01 ETH
 

@@ -5,17 +5,27 @@ import type { InteropRouteStrategy, BuildCtx } from './types';
 import type { InteropParams } from '../../../../../core/types/flows/interop';
 import type { Hex } from '../../../../../core/types/primitives';
 
-import { AttributesEncoder } from '../attributes';
+import { callAttributesEncoder, bundleAttributesEncoder } from '../attributes';
 import { sumActionMsgValue, sumErc20Amounts } from '../../../../../core/resources/interop/route';
 import {
   formatInteropEvmAddress,
   formatInteropEvmChain,
 } from '../../../../../core/resources/interop/address';
 
-/** Route: 'direct'
- *  Preconditions:
- *   - No ERC-20 actions present
- *   - Source and destination base tokens match
+/**
+ * Route: 'direct'
+ *
+ * Preconditions:
+ *  - No ERC-20 actions present
+ *  - Source and destination base tokens match
+ *  - Value can be forwarded directly (no router hop / bridgehub deposit)
+ *
+ * Semantics:
+ *  - We DO NOT mark calls as `indirectCall(...)`
+ *    → InteropCenter will treat them as direct calls on destination.
+ *  - For any call that carries value (sendNative, call.value),
+ *    we still attach `interopCallValue(amount)` as a per-call attribute,
+ *    so the destination callee can assert the forwarded msg.value.
  */
 export function routeDirect(): InteropRouteStrategy {
   return {
@@ -29,8 +39,8 @@ export function routeDirect(): InteropRouteStrategy {
         throw new Error('route "direct" does not support ERC-20 actions; use the router route.');
       }
 
-      const match = ctx.baseTokens.src.toLowerCase() === ctx.baseTokens.dst.toLowerCase();
-      if (!match) {
+      const baseMatch = ctx.baseTokens.src.toLowerCase() === ctx.baseTokens.dst.toLowerCase();
+      if (!baseMatch) {
         throw new Error(
           'route "direct" requires matching base tokens between source and destination.',
         );
@@ -46,10 +56,8 @@ export function routeDirect(): InteropRouteStrategy {
         }
       }
     },
-
     // eslint-disable-next-line @typescript-eslint/require-await
     async build(p: InteropParams, ctx: BuildCtx) {
-      const enc = new AttributesEncoder(ctx.ifaces.attributes);
       const steps: Array<{
         key: string;
         kind: string;
@@ -57,43 +65,84 @@ export function routeDirect(): InteropRouteStrategy {
         tx: TransactionRequest;
       }> = [];
 
-      // Totals
+      //
+      // Compute totals
+      //
       const totalActionValue = sumActionMsgValue(p.actions);
-      const bridgedTokenTotal = sumErc20Amounts(p.actions);
+      const bridgedTokenTotal = sumErc20Amounts(p.actions); // will be 0n here
 
-      // Bundle-level attributes (executor / unbundler)
+      //
+      // Build bundle-level attributes
+      //    These apply to the entire bundle and gate who can execute/unbundle
+      //    on the destination chain.
+      //
       const bundleAttrs: Hex[] = [];
-      if (p.execution?.only) bundleAttrs.push(enc.executionAddress(p.execution.only));
-      if (p.unbundling?.by) bundleAttrs.push(enc.unbundlerAddress(p.unbundling.by));
-      // NOTE: NO indirectCall in direct route.
-
-      // Per-call attributes (interopCallValue for value-carrying calls)
+      if (p.execution?.only) {
+        bundleAttrs.push(bundleAttributesEncoder.executionAddress(p.execution.only));
+      }
+      if (p.unbundling?.by) {
+        bundleAttrs.push(bundleAttributesEncoder.unbundlerAddress(p.unbundling.by));
+      }
+      // NOTE: We do NOT push indirectCall(...) here.
+      // direct route never goes through initiateIndirectCall().
+      //
+      // Build per-call attributes
+      //    For value-bearing calls we include interopCallValue(amount).
+      //    No indirectCall(...) in direct mode.
+      //
       const perCallAttrs: Hex[][] = p.actions.map((a) => {
-        const list: Hex[] = [];
-        if (a.type === 'sendNative') list.push(enc.interopCallValue(a.amount));
-        if (a.type === 'call' && a.value && a.value > 0n) list.push(enc.interopCallValue(a.value));
-        return list;
+        // sendNative: "just send ETH/native to this recipient on dest"
+        if (a.type === 'sendNative') {
+          return [callAttributesEncoder.interopCallValue(a.amount)];
+        }
+
+        // payable arbitrary call
+        if (a.type === 'call' && a.value && a.value > 0n) {
+          return [callAttributesEncoder.interopCallValue(a.value)];
+        }
+
+        // non-payable call / no-value
+        return [];
       });
 
-      // Encode starters: (to, data, attributes)
+      //
+      // Encode starters for sendBundle
+      //
+      // Each starter is:
+      //   [to, data, callAttributes[]]
+      //
+      // `to`       becomes InteroperableAddress for the destination callee.
+      // `data`     is calldata to invoke on destination.
+      // `attrs[]`  are per-call attributes (like interopCallValue).
+      //
+      // For sendNative we use empty calldata ('0x'), meaning:
+      //   "just send value to this address."
+      //
       const starters: Array<[Hex, Hex, Hex[]]> = p.actions.map((a, i) => {
         const to = formatInteropEvmAddress(a.to);
-        switch (a.type) {
-          case 'sendNative':
-            // Send value to a receiver contract on dst.
-            return [to, '0x' as Hex, perCallAttrs[i] ?? []];
 
-          case 'call':
-            return [to, a.data ?? ('0x' as Hex), perCallAttrs[i] ?? []];
-
-          default:
-            return [to, '0x' as Hex, perCallAttrs[i] ?? []];
+        if (a.type === 'sendNative') {
+          // Send raw value to recipient (no calldata).
+          return [to, '0x' as Hex, perCallAttrs[i] ?? []];
         }
+
+        if (a.type === 'call') {
+          // Arbitrary call to destination contract with optional value.
+          const data = a.data ?? '0x';
+          return [to, data, perCallAttrs[i] ?? []];
+        }
+
+        // We should never see sendErc20 here because preflight rejects it,
+        // but default defensively anyway.
+        return [to, '0x' as Hex, perCallAttrs[i] ?? []];
       });
 
-      // Choose sendCall vs sendBundle – single pure call can be sendCall
+      //
+      // Encode InteropCenter.sendBundle(...)
+      //
       const center = ctx.addresses.interopCenter;
       const dstChain = formatInteropEvmChain(ctx.dstChainId);
+
       const data = ctx.ifaces.interopCenter.encodeFunctionData('sendBundle', [
         dstChain,
         starters,
@@ -104,13 +153,21 @@ export function routeDirect(): InteropRouteStrategy {
         key: 'sendBundle',
         kind: 'interop.center',
         description: `Send interop bundle (direct route; ${p.actions.length} actions)`,
-        // In direct route, msg.value equals total destination msg.value
-        tx: { to: center, data, value: totalActionValue },
+        // In direct route, msg.value equals the total forwarded value across
+        // all calls (sendNative.amount + call.value).
+        tx: {
+          to: center,
+          data,
+          value: totalActionValue,
+        },
       });
 
+      //
+      // Return route plan
+      //
       return {
         steps,
-        approvals: [], // none in direct route
+        approvals: [], // No ERC-20 approvals in direct route
         quoteExtras: {
           totalActionValue,
           bridgedTokenTotal,

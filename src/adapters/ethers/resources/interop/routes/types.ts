@@ -2,12 +2,16 @@ import type { TransactionRequest } from 'ethers';
 import type { ApprovalNeed, PlanStep } from '../../../../../core/types/flows/base';
 import type { InteropParams, InteropRoute } from '../../../../../core/types/flows/interop';
 import type { InteropEthersContext } from '../types';
+import type { Address } from '../../../../../core/types';
 
 /** Build context for route strategies:
  *  - the picked route (direct | router)
  *  - the ethers interop context (providers, chain ids, addresses, ifaces, base tokens)
  */
-export type BuildCtx = InteropEthersContext & { route: InteropRoute };
+export type BuildCtx = InteropEthersContext & {
+  route: InteropRoute;
+  sender: Address;
+};
 
 /** Quote add-ons a route can compute */
 export interface QuoteExtras {

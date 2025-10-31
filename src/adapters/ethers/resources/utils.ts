@@ -23,6 +23,7 @@ function supportsGetGasPrice(
 
 // TODO: refactor this entirely
 // separate encoding, and move gas helpers to new resource
+// TOO much going on here.
 
 // Returns the assetId for a token in the Native Token Vault with specific origin chainId and address
 export function encodeNativeTokenVaultAssetId(chainId: bigint, address: string) {

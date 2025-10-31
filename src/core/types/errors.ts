@@ -29,7 +29,8 @@ export type ErrorType =
   | 'RPC'
   | 'INTERNAL'
   | 'VERIFICATION'
-  | 'CONTRACT';
+  | 'CONTRACT'
+  | 'TIMEOUT';
 
 /** Resource surface */
 export type Resource =
@@ -286,6 +287,8 @@ export const OP_INTEROP = {
   status: 'interop.status',
   wait: 'interop.wait',
   tryWait: 'interop.tryWait',
+  finalize: 'interop.finalize',
+  tryFinalize: 'interop.tryFinalize',
 
   // route-specific ops (keep names aligned with files)
   routes: {
@@ -295,12 +298,12 @@ export const OP_INTEROP = {
       encodeSendCall: 'interop.routes.direct:encodeSendCall',
       encodeSendBundle: 'interop.routes.direct:encodeSendBundle',
     },
-    router: {
-      preflight: 'interop.routes.router:preflight',
-      build: 'interop.routes.router:build',
-      approvals: 'interop.routes.router:approvals',
-      encodeApprove: 'interop.routes.router:encodeApprove',
-      encodeSendBundle: 'interop.routes.router:encodeSendBundle',
+    indirect: {
+      preflight: 'interop.routes.indirect:preflight',
+      build: 'interop.routes.indirect:build',
+      approvals: 'interop.routes.indirect:approvals',
+      encodeApprove: 'interop.routes.indirect:encodeApprove',
+      encodeSendBundle: 'interop.routes.indirect:encodeSendBundle',
     },
   },
 
