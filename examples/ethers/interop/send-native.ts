@@ -8,59 +8,164 @@ import {
 import { actions as interopActions, type Address, type InteropParams } from '../../../src/core';
 
 const L1_RPC = process.env.L1_RPC ?? 'http://127.0.0.1:8545';
-const SRC_L2_RPC = process.env.SRC_L2_RPC ?? 'http://127.0.0.1:3150';
+const SRC_L2_RPC = process.env.SRC_L2_RPC ?? 'http://127.0.0.1:3050';
 const DST_L2_RPC = process.env.DST_L2_RPC ?? 'http://127.0.0.1:3250';
+const GW_RPC = process.env.GW_RPC ?? 'http://127.0.0.1:3150';
 const PRIVATE_KEY =
   process.env.PRIVATE_KEY ?? '0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110';
 
+const SRC_CHAIN_ID = 271n;
+const DST_CHAIN_ID = 260n;
+
 async function main() {
-  if (!PRIVATE_KEY) {
-    throw new Error('Set PRIVATE_KEY (hex string) in your environment before running.');
-  }
+  if (!PRIVATE_KEY) throw new Error('Set your PRIVATE_KEY in env');
 
+  // Providers:
+  // - l2: source chain where we initiate the interop send
+  // - l1: still required by client for address discovery / proofs
   const l1 = new JsonRpcProvider(L1_RPC);
-  const srcL2 = new JsonRpcProvider(SRC_L2_RPC);
-  const dstL2 = new JsonRpcProvider(DST_L2_RPC);
+  const l2 = new JsonRpcProvider(SRC_L2_RPC);
 
-  // Bind the signer to L1 initially; the SDK will re-bind per operation.
-  const signer = new Wallet(PRIVATE_KEY, l1);
-  const client = createEthersClient({ l1, l2: srcL2, signer });
+  // Signer must be funded on source L2 (client.l2)
+  const signer = new Wallet(PRIVATE_KEY, l2);
+
+  // Build low-level client + high-level sdk
+  const client = await createEthersClient({
+    l1: new JsonRpcProvider(L1_RPC),
+    l2: new JsonRpcProvider(SRC_L2_RPC),
+    signer: new Wallet(PRIVATE_KEY),
+    chains: {
+      [SRC_CHAIN_ID.toString()]: new JsonRpcProvider(SRC_L2_RPC), // register source too
+      [DST_CHAIN_ID.toString()]: new JsonRpcProvider(DST_L2_RPC), // and destination
+    },
+  });
   const sdk = createEthersSdk(client);
 
-  // Register the destination chain so interop knows how to reach it.
-  const dstNet = await dstL2.getNetwork();
-  const dstChainId = BigInt(dstNet.chainId);
-  client.registerChain(dstChainId, dstL2);
+  // Sender (on source chain) and recipient (on destination chain).
+  const me = (await signer.getAddress()) as Address;
+  const recipientOnDst = me as Address; // send to self on destination for demo
 
-  const sender = (await signer.getAddress()) as Address;
-  const amount = parseEther('0.01'); // 0.01 ETH
+  // Interop params: single native transfer
+  //
+  // This says:
+  //  - "bridge/forward 0.01 ETH-equivalent from source to DST_CHAIN_ID"
+  //  - "deliver it to recipientOnDst"
+  //
+  // Route selection ('direct' vs 'indirect') will be decided automatically
+  // based on base token match & ERC20 usage.
+  const params = {
+    sender: me, // optional; will default to connected signer anyway
+    dst: DST_CHAIN_ID, // destination EIP-155 chain ID
+    actions: [
+      {
+        type: 'sendNative',
+        to: recipientOnDst,
+        amount: parseEther('0.01'),
+      },
+    ],
+    // Optional bundle-level execution constraints:
+    // execution: { only: someExecAddress },
+    // unbundling: { by: someUnbundlerAddress },
+  } as const;
 
-  const params: InteropParams = {
-    sender,
-    dst: dstChainId,
-    actions: [interopActions.sendNative(sender, amount)],
-  };
-
-  console.log('Preparing interop quote...');
+  // --------
+  // 1. QUOTE
+  // --------
   const quote = await sdk.interop.quote(params);
-  console.log('Quote:', quote);
+  console.log('QUOTE:', quote);
+  // {
+  //   route: 'direct' | 'indirect',
+  //   approvalsNeeded: [],
+  //   totalActionValue: ...,
+  //   bridgedTokenTotal: ...,
+  //   l1Fee?: ...,
+  //   l2Fee?: ...
+  // }
 
-  console.log('Sending bundle from source L2...');
-  const handle = await sdk.interop.create(params);
-  console.log('Bundle sent. Source tx hash:', handle.l2SrcTxHash);
+  // ---------
+  // 2. PREPARE
+  // ---------
+  const prepared = await sdk.interop.prepare(params);
+  console.log('PREPARE:', prepared);
+  // {
+  //   route: 'direct' | 'indirect',
+  //   summary: <InteropQuote>,
+  //   steps: [
+  //     {
+  //       key: 'sendBundle',
+  //       kind: 'interop.center',
+  //       description: 'Send interop bundle (...)',
+  //       tx: { to, data, value, gasLimit?, ... }
+  //     }
+  //   ]
+  // }
 
-  console.log('Waiting for verification on destination L2...');
-  await sdk.interop.wait(handle, { for: 'verified', pollMs: 5_000, timeoutMs: 300_000 });
-  console.log('Bundle verified.');
+  // --------------
+  // 3. CREATE (src)
+  // --------------
+  const created = await sdk.interop.create(params);
+  console.log('CREATE:', created);
+  // {
+  //   kind: 'interop',
+  //   stepHashes: { sendBundle: '0xabc...' },
+  //   plan: <the same plan we saw in prepare()>,
+  //   l2SrcTxHash: '0xabc...',       // tx that emitted InteropBundleSent
+  //   dstChainId: 260n,              // destination chain ID
+  // }
 
-  console.log('Waiting for execution on destination L2...');
-  await sdk.interop.wait(handle, { for: 'executed', pollMs: 5_000, timeoutMs: 300_000 });
+  // --------------------------
+  // 4. STATUS (initial, SENT)
+  // --------------------------
+  const st0 = await sdk.interop.status(created);
+  console.log('STATUS after create:', st0);
+  // {
+  //   phase: 'SENT' | 'VERIFIED' | 'EXECUTED' | ...,
+  //   l2SrcTxHash?: '0x...',
+  //   bundleHash?:  '0x...',
+  //   dstChainId?:  260n,
+  //   dstExecTxHash?: '0x...'
+  // }
 
-  const status = await sdk.interop.status(handle);
-  console.log('Final status:', status);
+  // -------------------------------------------------
+  // 5. WAIT UNTIL VERIFIED ON DEST (PROVABLE / READY)
+  // -------------------------------------------------
+  // This polls until the destination chain marks the bundle as verified
+  // (BundleVerified event / handler logic).
+  await sdk.interop.wait(created, { for: 'verified', pollMs: 5_000 });
+  console.log('Bundle is VERIFIED / ready to execute on destination.');
+
+  // You can inspect updated status again here if you want:
+  const st1 = await sdk.interop.status(created);
+  console.log('STATUS after verified:', st1);
+  // phase should now be 'VERIFIED'
+  // st1.bundleHash should be known
+  // st1.dstChainId should be known
+
+  // -----------------------------------------------------
+  // 6. FINALIZE (EXECUTE ON DESTINATION AND BLOCK UNTIL DONE)
+  // -----------------------------------------------------
+  // finalize() calls executeBundle(...) on the destination chain,
+  // waits for the tx to mine, then returns { bundleHash, dstChainId, dstExecTxHash }.
+  const fin = await sdk.interop.finalize(created);
+  console.log('FINALIZE RESULT:', fin);
+  // {
+  //   bundleHash: '0x...',
+  //   dstChainId: 260n,
+  //   dstExecTxHash: '0x...'
+  // }
+
+  // After this point, the value should be delivered / available on dst.
+
+  // --------------------------------
+  // 7. STATUS (terminal: EXECUTED)
+  // --------------------------------
+  const st2 = await sdk.interop.status(created);
+  console.log('STATUS after finalize:', st2);
+  // phase should now be 'EXECUTED' (or 'UNBUNDLED' in partial-exec flows)
+  // dstExecTxHash should match fin.dstExecTxHash
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exitCode = 1;
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
 });

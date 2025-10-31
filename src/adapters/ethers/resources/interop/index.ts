@@ -181,27 +181,36 @@ export function createInteropResource(client: EthersClient): InteropResource {
     wrap(
       OP_INTEROP.create,
       async () => {
+        // Build plan (like before)
         const plan = await prepare(p);
+
+        // Build the SAME interop context we used to build that plan
+        const ethCtx = await makeInteropContext(client, p.dst);
+        // source signer MUST be bound to ethCtx.srcChainId
+        const signer = client.signerFor(ethCtx.srcChainId);
+        const srcProvider = ethCtx.srcProvider;
+
+        const from = await signer.getAddress();
+        let next = await srcProvider.getTransactionCount(from, 'latest');
+
         const stepHashes: Record<string, Hex> = {};
 
-        // NOTE:
-        // For now we assume source is the client's "l2" provider/signing context.
-        // If/when we add multi-L2 or L3 support, this should come from makeInteropContext().
-        const signer = client.signerFor();
-        const from = await signer.getAddress();
-        let next = await client.l2.getTransactionCount(from, 'latest');
-
         for (const step of plan.steps) {
-          // Ensure deterministic nonce ordering
+          // lock in nonce
           step.tx.nonce = step.tx.nonce ?? next++;
 
-          // best-effort gasLimit with 15% buffer
+          // lock in chainId so ethers doesn't guess
+          if (!step.tx.chainId) {
+            step.tx.chainId = Number(ethCtx.srcChainId);
+          }
+
+          // best-effort gasLimit with buffer
           if (!step.tx.gasLimit) {
             try {
-              const est = await client.l2.estimateGas(step.tx);
+              const est = await srcProvider.estimateGas(step.tx);
               step.tx.gasLimit = (BigInt(est) * 115n) / 100n;
             } catch {
-              // fallback: signer/provider can still populate gasLimit on send
+              // ignore; signer can still populate
             }
           }
 

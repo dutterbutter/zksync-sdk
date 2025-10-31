@@ -371,7 +371,7 @@ export function createInteropFinalizationServices(
       }
 
       // poll loop
-       
+
       while (true) {
         // timeout check
         if (Date.now() - start > timeoutMs) {
