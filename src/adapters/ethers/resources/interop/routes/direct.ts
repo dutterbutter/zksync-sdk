@@ -12,6 +12,8 @@ import {
   formatInteropEvmChain,
 } from '../../../../../core/resources/interop/address';
 
+// TODO: Update to wrap errors with ZKSyncError and codes.
+
 /**
  * Route: 'direct'
  *

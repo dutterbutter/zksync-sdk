@@ -36,14 +36,4 @@ export class BundleAttributesEncoder {
   unbundlerAddress(addr: Address): Hex {
     return this.core.encode('unbundlerAddress', [addr]);
   }
-
-  /**
-   * Optional future pattern:
-   * deadline(uint256 ts)
-   * cancelAfter(uint256 ts)
-   * maxGas(uint256 gasLimit)
-   *
-   * If these are present in IERC7786AttributesAbi, we should add
-   * helpers here that just wrap core.encode("<fnName>", [value]).
-   */
 }

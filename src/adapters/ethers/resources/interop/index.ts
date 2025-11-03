@@ -148,8 +148,6 @@ export function createInteropResource(client: EthersClient): InteropResource {
       approvalsNeeded: approvals,
       totalActionValue: quoteExtras.totalActionValue,
       bridgedTokenTotal: quoteExtras.bridgedTokenTotal,
-      l1Fee: quoteExtras.l1Fee,
-      l2Fee: quoteExtras.l2Fee,
     };
 
     return { route, summary, steps };

@@ -208,8 +208,9 @@ export function encodeRouterPayloadForAction(
     }
 
     default: {
-      // TypeScript exhaustive check protection. If a new InteropAction type
-      // gets added and not handled, we'll fall back to "0x" but you should
+      // TODO:
+      // If a new InteropAction type
+      // gets added and not handled, we'll fall back to "0x" but we should
       // update the switch.
       return '0x' as Hex;
     }

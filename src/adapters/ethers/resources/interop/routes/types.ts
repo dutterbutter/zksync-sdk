@@ -5,7 +5,7 @@ import type { InteropEthersContext } from '../types';
 import type { Address } from '../../../../../core/types';
 
 /** Build context for route strategies:
- *  - the picked route (direct | router)
+ *  - the picked route (direct | indirect)
  *  - the ethers interop context (providers, chain ids, addresses, ifaces, base tokens)
  */
 export type BuildCtx = InteropEthersContext & {
@@ -19,9 +19,6 @@ export interface QuoteExtras {
   totalActionValue: bigint;
   /** Sum of ERC-20 amounts across actions (for approvals/bridging). */
   bridgedTokenTotal: bigint;
-  /** Optional fee estimates . */
-  l1Fee?: bigint;
-  l2Fee?: bigint;
 }
 
 /** Route strategy contract (mirrors deposits style). */

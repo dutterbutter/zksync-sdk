@@ -1,6 +1,6 @@
 // src/adapters/ethers/resources/interop/services/finalization.ts
 
-import { Contract, Interface, type TransactionReceipt } from 'ethers';
+import { Contract, type ContractTransactionResponse, Interface, type TransactionReceipt } from 'ethers';
 
 import type { Hex } from '../../../../../core/types/primitives';
 import type { EthersClient } from '../../../client';
@@ -17,7 +17,7 @@ import { OP_INTEROP } from '../../../../../core/types';
 import InteropCenterAbi from '../../../../../core/internal/abis/InteropCenter';
 import IInteropHandlerAbi from '../../../../../core/internal/abis/IInteropHandler';
 
-// same pattern we used for withdrawals service
+// error handling
 const { wrap } = createErrorHandlers('interop');
 
 /**
@@ -219,6 +219,7 @@ async function queryDstBundleLifecycle(args: {
       rawData: Hex;
     }>
   > {
+    // TODO: revisit this
     // NOTE: fromBlock/toBlock are naive here.
     // We can optimize later by caching a "deployment block" or passing hint ranges.
     const rawLogs = await dstProvider.getLogs({
@@ -404,7 +405,7 @@ export function createInteropFinalizationServices(
       // 1. get signer for destination chain
       const signer = await wrap(
         OP_INTEROP.exec.sendStep,
-        async () => client.signerFor(dstChainId),
+        () => client.signerFor(dstChainId),
         {
           ctx: { dstChainId, bundleHash },
           message: 'Failed to resolve destination signer.',
@@ -422,11 +423,12 @@ export function createInteropFinalizationServices(
       );
 
       // 3. send executeBundle(bundleHash)
-      const handler = new Contract(interopHandler, IInteropHandlerAbi, signer);
+      const handler = new Contract(interopHandler, IInteropHandlerAbi, signer) as Contract & {
+        executeBundle: (bundleHash: Hex) => Promise<ContractTransactionResponse>;
+      };
 
       try {
-        // ethers v6 style: txResp is a TransactionResponse that has .hash and .wait()
-        const txResp = await handler.executeBundle(bundleHash);
+        const txResp: ContractTransactionResponse = await handler.executeBundle(bundleHash);
 
         const hash = txResp.hash as Hex;
 
@@ -466,7 +468,7 @@ export function createInteropFinalizationServices(
 }
 
 // -----------------------------
-// Thin wrappers that the resource calls
+// Thin wrappers that the resource factory calls
 // -----------------------------
 
 export async function status(client: EthersClient, h: InteropWaitable): Promise<InteropStatus> {

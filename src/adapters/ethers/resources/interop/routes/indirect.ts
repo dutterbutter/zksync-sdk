@@ -19,8 +19,11 @@ import {
 
 import { encodeRouterPayloadForAction } from './payload';
 
+//TODO:
+// - Update to wrap errors with ZKSyncError and codes.
+
 /**
- * Route: 'indirect' (aka "router route")
+ * Route: 'indirect'
  *
  * Preconditions:
  *  - At least one ERC-20 action OR

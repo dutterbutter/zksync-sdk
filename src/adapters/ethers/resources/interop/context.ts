@@ -20,6 +20,7 @@ function buildTopics(): InteropTopics {
   };
 }
 
+// Create an InteropEthersContext for src/dst chain pair.
 export async function makeInteropContext(
   client: EthersClient,
   dstChain: bigint,
