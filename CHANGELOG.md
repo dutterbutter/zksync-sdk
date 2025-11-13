@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.12-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.11-alpha...v0.0.12-alpha) (2025-11-13)
+
+
+### Features
+
+* export finalization services and add finalization estimate mthod ([#62](https://github.com/dutterbutter/zksync-sdk/issues/62)) ([bfc36cf](https://github.com/dutterbutter/zksync-sdk/commit/bfc36cf7c4a7895add40089265ae8979b9b31fff))
+
 ## [0.0.11-alpha](https://github.com/dutterbutter/zksync-sdk/compare/v0.0.10-alpha...v0.0.11-alpha) (2025-10-30)
 
 
