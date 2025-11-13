@@ -324,14 +324,16 @@ export function createFinalizationServices(client: ViemClient): FinalizationServ
           },
         );
 
-        maxFeePerGas = fee.maxFeePerGas ?? (() => {
-          throw createError('RPC', {
-            resource: 'withdrawals',
-            operation: OP_WITHDRAWALS.finalize.estimate,
-            message: 'Provider did not return maxFeePerGas.',
-            context: { fee },
-          });
-        })();
+        maxFeePerGas =
+          fee.maxFeePerGas ??
+          (() => {
+            throw createError('RPC', {
+              resource: 'withdrawals',
+              operation: OP_WITHDRAWALS.finalize.estimate,
+              message: 'Provider did not return maxFeePerGas.',
+              context: { fee },
+            });
+          })();
         maxPriorityFeePerGas = fee.maxPriorityFeePerGas ?? 0n;
       } catch {
         const gasPrice = await wrapAs(
