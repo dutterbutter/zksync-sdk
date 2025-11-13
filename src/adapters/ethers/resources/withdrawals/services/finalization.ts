@@ -185,7 +185,6 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
     },
 
     async simulateFinalizeReadiness(params: FinalizeDepositParams): Promise<FinalizeReadiness> {
-      // Resolve L1 Nullifier once
       const { l1Nullifier } = await wrapAs(
         'INTERNAL',
         OP_WITHDRAWALS.finalize.readiness.ensureAddresses,
@@ -196,14 +195,14 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
         },
       );
 
-      // First, check if the withdrawal is already finalized
-      const done: boolean = (await (async () => {
+      // check if the withdrawal is already finalized
+      const done = await (async (): Promise<boolean> => {
         try {
           const cMini = new Contract(l1Nullifier, IL1NullifierMini, l1);
-          const result = await wrapAs(
+          const isFinalized = await wrapAs(
             'RPC',
             OP_WITHDRAWALS.finalize.readiness.isFinalized,
-            () =>
+            (): Promise<boolean> =>
               cMini.isWithdrawalFinalized(
                 params.chainId,
                 params.l2BatchNumber,
@@ -215,12 +214,12 @@ export function createFinalizationServices(client: EthersClient): FinalizationSe
             },
           );
 
-          return Boolean(result);
+          return Boolean(isFinalized);
         } catch {
           // If this read fails for any reason, treat as "not finalized" and fall through
           return false;
         }
-      })()) as boolean;
+      })();
 
       if (done) return { kind: 'FINALIZED' };
 
