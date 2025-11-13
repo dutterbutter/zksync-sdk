@@ -9,6 +9,8 @@ export { createDepositsResource } from './resources/deposits';
 export type { DepositsResource } from './resources/deposits';
 export { createWithdrawalsResource } from './resources/withdrawals';
 export type { WithdrawalsResource } from './resources/withdrawals';
+export { createFinalizationServices } from './resources/withdrawals';
+export type { FinalizationServices } from './resources/withdrawals';
 
 // Errors adapted for ethers
 export * from './errors/error-ops';
