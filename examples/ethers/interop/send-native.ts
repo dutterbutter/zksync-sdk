@@ -22,14 +22,13 @@ async function main() {
 
   // Providers:
   // - l2: source chain where we initiate the interop send
-  // - l1: still required by client for address discovery / proofs
+  // - l1: still required by client
   const l1 = new JsonRpcProvider(L1_RPC);
   const l2 = new JsonRpcProvider(SRC_L2_RPC);
 
   // Signer must be funded on source L2 (client.l2)
   const signer = new Wallet(PRIVATE_KEY, l2);
 
-  // Build low-level client + high-level sdk
   const client = await createEthersClient({
     l1: new JsonRpcProvider(L1_RPC),
     l2: new JsonRpcProvider(SRC_L2_RPC),
@@ -41,21 +40,14 @@ async function main() {
   });
   const sdk = createEthersSdk(client);
 
-  // Sender (on source chain) and recipient (on destination chain).
   const me = (await signer.getAddress()) as Address;
-  const recipientOnDst = me as Address; // send to self on destination for demo
+  const recipientOnDst = me as Address;
 
-  // Interop params: single native transfer
-  //
-  // This says:
-  //  - "bridge/forward 0.01 ETH-equivalent from source to DST_CHAIN_ID"
-  //  - "deliver it to recipientOnDst"
-  //
   // Route selection ('direct' vs 'indirect') will be decided automatically
   // based on base token match & ERC20 usage.
   const params = {
-    sender: me, // optional; will default to connected signer anyway
-    dst: DST_CHAIN_ID, // destination EIP-155 chain ID
+    sender: me,
+    dst: DST_CHAIN_ID,
     actions: [
       {
         type: 'sendNative',
@@ -101,7 +93,7 @@ async function main() {
   // }
 
   // --------------
-  // 3. CREATE (src)
+  // 3. CREATE
   // --------------
   const created = await sdk.interop.create(params);
   console.log('CREATE:', created);
@@ -114,7 +106,7 @@ async function main() {
   // }
 
   // --------------------------
-  // 4. STATUS (initial, SENT)
+  // 4. STATUS 
   // --------------------------
   const st0 = await sdk.interop.status(created);
   console.log('STATUS after create:', st0);
@@ -130,7 +122,6 @@ async function main() {
   // 5. WAIT UNTIL VERIFIED ON DEST (PROVABLE / READY)
   // -------------------------------------------------
   // This polls until the destination chain marks the bundle as verified
-  // (BundleVerified event / handler logic).
   await sdk.interop.wait(created, { for: 'verified', pollMs: 5_000 });
   console.log('Bundle is VERIFIED / ready to execute on destination.');
 
@@ -162,7 +153,6 @@ async function main() {
   const st2 = await sdk.interop.status(created);
   console.log('STATUS after finalize:', st2);
   // phase should now be 'EXECUTED' (or 'UNBUNDLED' in partial-exec flows)
-  // dstExecTxHash should match fin.dstExecTxHash
 }
 
 main().catch((e) => {
